@@ -49,6 +49,10 @@ rm -rf Ace3-temp
 echo "📚 Downloading oUF..."
 update_lib "oUF" "https://github.com/oUF-wow/oUF.git" "main"
 
+# LibActionButton-1.0
+echo "📚 Downloading LibActionButton-1.0..."
+update_lib "LibActionButton-1.0" "https://github.com/Nevcairiel/LibActionButton-1.0.git" "main"
+
 # LibSharedMedia-3.0 (from p3lim's repo as single file)
 echo "📚 Downloading LibSharedMedia-3.0..."
 mkdir -p LibSharedMedia-3.0

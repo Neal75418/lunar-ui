@@ -21,6 +21,9 @@ externals:
     url: https://repos.curseforge.com/wow/ace3/trunk/AceHook-3.0
   LunarUI/Libs/LibSharedMedia-3.0:
     url: https://repos.curseforge.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
+  LunarUI/Libs/LibActionButton-1.0:
+    url: https://github.com/Nevcairiel/LibActionButton-1.0.git
+    tag: main
   LunarUI/Libs/oUF:
     url: https://github.com/oUF-wow/oUF.git
     tag: main
