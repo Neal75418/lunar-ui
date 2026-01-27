@@ -1,0 +1,46 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Lua
+*.luac
+
+# Old source directory (migrated to LunarUI/)
+src/
+
+# Build output
+.release/
+.pkgmeta.bak
+
+# External libraries (downloaded via .pkgmeta or manually)
+# These are fetched automatically during packaging
+LunarUI/Libs/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*~
+
+# Package manager files
+node_modules/
+package-lock.json
+
+# BigWigsMods Packager output
+.release/
+
+# CurseForge/Wago release zips
+*.zip

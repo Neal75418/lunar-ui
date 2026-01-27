@@ -1,0 +1,39 @@
+## Interface: 120000
+## Title: |cff8882ffLunar|r|cffffffffUI|r
+## Notes: Phase-driven combat UI system inspired by lunar cycles
+## Notes-zhTW: 月相驅動的戰鬥 UI 系統
+## Author: NealChen
+## Version: 0.1.0
+## SavedVariables: LunarUIDB
+## IconTexture: Interface\Icons\Spell_Nature_MoonKey
+## X-oUF: LunarUF
+
+# Libraries
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\AceAddon-3.0\AceAddon-3.0.lua
+Libs\AceDB-3.0\AceDB-3.0.lua
+Libs\AceEvent-3.0\AceEvent-3.0.lua
+Libs\AceTimer-3.0\AceTimer-3.0.lua
+Libs\AceConsole-3.0\AceConsole-3.0.lua
+Libs\AceHook-3.0\AceHook-3.0.lua
+Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua
+Libs\oUF\oUF.xml
+
+# Locales
+Locales\enUS.lua
+Locales\zhTW.lua
+
+# Core
+Core\Init.lua
+Core\Tokens.lua
+Core\PhaseManager.lua
+Core\Config.lua
+Core\Commands.lua
+Core\Debug.lua
+
+# UnitFrames
+UnitFrames\Layout.lua
+
+# HUD
+HUD\PhaseIndicator.lua
