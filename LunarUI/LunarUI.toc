@@ -3,7 +3,7 @@
 ## Notes: Phase-driven combat UI system inspired by lunar cycles
 ## Notes-zhTW: 月相驅動的戰鬥 UI 系統
 ## Author: NealChen
-## Version: 0.1.0
+## Version: 0.2.0
 ## SavedVariables: LunarUIDB
 ## IconTexture: Interface\Icons\Spell_Nature_MoonKey
 ## X-oUF: LunarUF
