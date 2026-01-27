@@ -107,6 +107,43 @@ local defaults = {
             },
         },
 
+        -- Nameplates settings
+        nameplates = {
+            enabled = true,
+            width = 120,
+            height = 12,
+            -- Enemy nameplates
+            enemy = {
+                enabled = true,
+                showHealth = true,
+                showCastbar = true,
+                showAuras = true,
+                auraSize = 18,
+                maxAuras = 5,
+            },
+            -- Friendly nameplates
+            friendly = {
+                enabled = true,
+                showHealth = true,
+                showCastbar = false,
+                showAuras = false,
+            },
+            -- Threat colors
+            threat = {
+                enabled = true,
+            },
+            -- Important target highlighting
+            highlight = {
+                rare = true,
+                elite = true,
+                boss = true,
+            },
+            -- Classification icons
+            classification = {
+                enabled = true,
+            },
+        },
+
         -- ActionBars settings (future)
         actionbars = {
             bar1 = { enabled = true, buttons = 12, buttonSize = 36 },
