@@ -45,7 +45,7 @@ Effects\PhaseGlow.lua
 # 逐一取消註解以找出 taint 來源
 
 # UnitFrames
-#UnitFrames\Layout.lua
+UnitFrames\Layout.lua
 
 # Nameplates
 #Nameplates\Nameplates.lua
