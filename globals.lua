@@ -93,6 +93,48 @@ LibStub = {}
 ---@field SetValue fun(self: StatusBar, value: number)
 ---@field GetValue fun(self: StatusBar): number
 
+---@class Button : Frame
+---@field SetText fun(self: Button, text: string)
+---@field GetText fun(self: Button): string
+---@field SetNormalFontObject fun(self: Button, font: any)
+---@field SetHighlightFontObject fun(self: Button, font: any)
+---@field SetDisabledFontObject fun(self: Button, font: any)
+---@field GetFontString fun(self: Button): FontString
+---@field SetNormalTexture fun(self: Button, texture: string|number)
+---@field SetPushedTexture fun(self: Button, texture: string|number)
+---@field SetHighlightTexture fun(self: Button, texture: string|number)
+---@field SetDisabledTexture fun(self: Button, texture: string|number)
+---@field Click fun(self: Button)
+---@field Disable fun(self: Button)
+---@field Enable fun(self: Button)
+---@field IsEnabled fun(self: Button): boolean
+
+---@class EditBox : Frame
+---@field SetText fun(self: EditBox, text: string)
+---@field GetText fun(self: EditBox): string
+---@field SetMultiLine fun(self: EditBox, multiLine: boolean)
+---@field SetFont fun(self: EditBox, font: string, size: number, flags?: string)
+---@field SetAutoFocus fun(self: EditBox, autoFocus: boolean)
+---@field SetFocus fun(self: EditBox)
+---@field ClearFocus fun(self: EditBox)
+---@field HighlightText fun(self: EditBox, start?: number, stop?: number)
+---@field SetMaxLetters fun(self: EditBox, maxLetters: number)
+---@field SetNumeric fun(self: EditBox, numeric: boolean)
+---@field SetPassword fun(self: EditBox, password: boolean)
+---@field SetTextInsets fun(self: EditBox, left: number, right: number, top: number, bottom: number)
+---@field SetCursorPosition fun(self: EditBox, position: number)
+---@field GetCursorPosition fun(self: EditBox): number
+
+---@class ScrollFrame : Frame
+---@field SetScrollChild fun(self: ScrollFrame, child: Frame)
+---@field GetScrollChild fun(self: ScrollFrame): Frame?
+---@field SetVerticalScroll fun(self: ScrollFrame, offset: number)
+---@field GetVerticalScroll fun(self: ScrollFrame): number
+---@field SetHorizontalScroll fun(self: ScrollFrame, offset: number)
+---@field GetHorizontalScroll fun(self: ScrollFrame): number
+---@field UpdateScrollChildRect fun(self: ScrollFrame)
+---@field editBox EditBox?
+
 ---@type fun(frameType: string, name?: string, parent?: Frame|string, template?: string, id?: number): Frame
 CreateFrame = nil
 

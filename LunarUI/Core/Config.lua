@@ -1,9 +1,10 @@
+---@diagnostic disable: unbalanced-assignments, need-check-nil
 --[[
     LunarUI - 設定模組（AceDB）
     資料庫預設值與設定檔管理
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
@@ -284,7 +285,7 @@ local function SerializeValue(val, depth)
         return string.format("%q", val)
     elseif valType == "table" then
         local parts = {}
-        local isArray = #val > 0
+        local _isArray = #val > 0  -- 保留供未來 JSON 相容
         for k, v in pairs(val) do
             local keyStr
             if type(k) == "string" then
@@ -326,7 +327,7 @@ local function DeserializeString(str)
             return nil, "預期字串"
         end
         pos = pos + 1
-        local startPos = pos
+        local _startPos = pos  -- 用於除錯
         local result = ""
 
         while pos <= len do
@@ -676,8 +677,6 @@ end
     顯示匯入視窗
 ]]
 function LunarUI:ShowImportFrame()
-    local L = Engine.L or {}
-
     -- 建立或顯示匯入視窗
     if not self.importFrame then
         local frame = CreateFrame("Frame", "LunarUI_ImportFrame", UIParent, "BackdropTemplate")

@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, unnecessary-if
 --[[
     LunarUI - 斜線命令
     /lunar 命令實作
