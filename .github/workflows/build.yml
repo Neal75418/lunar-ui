@@ -1,0 +1,51 @@
+# GitHub Actions workflow for LunarUI build validation
+# Runs on every push to main and pull requests
+
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate TOC files
+        run: |
+          echo "Validating TOC files..."
+          for toc in $(find . -name "*.toc" -not -path "./*/Libs/*"); do
+            echo "Checking $toc"
+            if ! grep -q "## Interface:" "$toc"; then
+              echo "ERROR: Missing Interface in $toc"
+              exit 1
+            fi
+            if ! grep -q "## Title:" "$toc"; then
+              echo "ERROR: Missing Title in $toc"
+              exit 1
+            fi
+          done
+          echo "All TOC files valid!"
+
+      - name: Check Lua syntax
+        run: |
+          echo "Checking Lua syntax..."
+          sudo apt-get update && sudo apt-get install -y lua5.1
+          find . -name "*.lua" -not -path "./*/Libs/*" | while read file; do
+            echo "Checking $file"
+            luac5.1 -p "$file" || exit 1
+          done
+          echo "All Lua files have valid syntax!"
+
+      - name: Package addon (dry run)
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -d  # Dry run

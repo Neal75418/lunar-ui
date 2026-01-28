@@ -1,0 +1,15 @@
+## Interface: 120000
+## Title: |cff8882ffLunar|r|cffffffffUI|r Options
+## Notes: Configuration interface for LunarUI
+## Notes-zhTW: LunarUI 設定介面
+## Author: NealChen
+## Version: 0.7.0
+## Dependencies: LunarUI
+## LoadOnDemand: 1
+## IconTexture: Interface\Icons\Spell_Nature_MoonKey
+
+# Note: Libraries are loaded by the main LunarUI addon
+# AceConfig-3.0, AceConfigDialog-3.0, AceGUI-3.0, AceDBOptions-3.0
+
+# Core
+Options.lua

@@ -1,0 +1,36 @@
+# GitHub Actions workflow for LunarUI release
+# Uses BigWigsMods packager to build and optionally upload to CurseForge/Wago
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags (e.g., v0.7.0)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for changelog generation
+
+      - name: Package addon
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -d  # Dry run - don't upload anywhere
+        # To enable actual uploads, uncomment and add secrets:
+        # env:
+        #   CF_API_KEY: ${{ secrets.CF_API_KEY }}
+        #   WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+        #   GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: LunarUI-release
+          path: .release/
+          retention-days: 30

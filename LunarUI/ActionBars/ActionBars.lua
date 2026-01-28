@@ -44,12 +44,17 @@ local bars = {}
 local buttons = {}
 local keybindMode = false
 
+-- Fix #12 & Fix #103: Custom cooldown text disabled due to WoW 12.0 secret values
+-- The built-in cooldown display and OmniCC/similar addons handle cooldown text display
+-- Removed dead code: cooldownUpdateFrame, cooldownButtons, cdElapsed
+
 --------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------
 
 local function CreateBarFrame(name, numButtons, parent)
-    local frame = CreateFrame("Frame", name, parent or UIParent)
+    -- Use SecureHandlerStateTemplate for WrapScript support (required by LAB)
+    local frame = CreateFrame("Frame", name, parent or UIParent, "SecureHandlerStateTemplate")
     frame:SetSize(
         numButtons * BUTTON_SIZE + (numButtons - 1) * BUTTON_SPACING,
         BUTTON_SIZE
@@ -152,40 +157,16 @@ local function StyleButton(button)
     end
 end
 
+-- Fix #52: WoW 12.0 returns secret values from GetActionCooldown that cannot be compared
+-- even with pcall protection. Disable custom cooldown text entirely and use WoW's built-in display.
 local function UpdateCooldownText(button)
-    if not button then return end
-
-    -- Create cooldown text if not exists
-    if not button.CooldownText then
-        local text = button.cooldown:CreateFontString(nil, "OVERLAY")
-        text:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
-        text:SetPoint("CENTER", 0, 0)
-        text:SetTextColor(1, 1, 0.6)
-        button.CooldownText = text
-    end
-
-    -- Update text based on cooldown
-    local start, duration, enable = GetActionCooldown(button._state_action)
-    if start and duration and duration > 1.5 and enable == 1 then
-        local remaining = start + duration - GetTime()
-        if remaining > 0 then
-            if remaining > 60 then
-                button.CooldownText:SetText(math.floor(remaining / 60) .. "m")
-            elseif remaining > 3 then
-                button.CooldownText:SetText(math.floor(remaining))
-            else
-                button.CooldownText:SetFormattedText("%.1f", remaining)
-            end
-            button.CooldownText:Show()
-        else
-            button.CooldownText:Hide()
-        end
-    else
-        if button.CooldownText then
-            button.CooldownText:Hide()
-        end
-    end
+    -- Intentionally empty - WoW 12.0 secret values prevent custom cooldown text
+    -- The built-in cooldown spiral and OmniCC/similar addons handle this
 end
+
+-- Fix #52: Disabled cooldown text update due to WoW 12.0 secret value restrictions
+-- cooldownUpdateFrame:SetScript("OnUpdate", nil)
+-- The built-in cooldown display handles this functionality
 
 --------------------------------------------------------------------------------
 -- Bar Creation
@@ -225,15 +206,6 @@ local function CreateActionBar(id, page)
 
         -- Style
         StyleButton(button)
-
-        -- Cooldown text update
-        button:HookScript("OnUpdate", function(self, elapsed)
-            self._cdElapsed = (self._cdElapsed or 0) + elapsed
-            if self._cdElapsed > 0.1 then
-                self._cdElapsed = 0
-                UpdateCooldownText(self)
-            end
-        end)
 
         bar.buttons[i] = button
         buttons[buttonName] = button
@@ -413,45 +385,199 @@ end
 -- Hide Blizzard Bars
 --------------------------------------------------------------------------------
 
+-- Fix #59: Helper to permanently hide a frame (prevents re-showing)
+local function HideFramePermanently(frame)
+    if not frame then return end
+    pcall(function() frame:UnregisterAllEvents() end)
+    pcall(function() frame:SetAlpha(0) end)
+    pcall(function() frame:Hide() end)
+    -- Prevent Blizzard from re-showing the frame
+    pcall(function()
+        frame:SetScript("OnShow", function(self) self:Hide() end)
+    end)
+end
+
+-- Fix #63: Hide all regions (textures) of a frame
+local function HideFrameRegions(frame)
+    if not frame then return end
+    local regions = {frame:GetRegions()}
+    for _, region in ipairs(regions) do
+        if region and region.Hide then
+            pcall(function() region:Hide() end)
+        end
+        if region and region.SetAlpha then
+            pcall(function() region:SetAlpha(0) end)
+        end
+    end
+end
+
+-- Fix #63: Recursively hide a frame and all its children/regions
+local function HideFrameRecursive(frame)
+    if not frame then return end
+    HideFramePermanently(frame)
+    HideFrameRegions(frame)
+
+    -- Hide all children recursively
+    local children = {frame:GetChildren()}
+    for _, child in ipairs(children) do
+        HideFrameRecursive(child)
+    end
+end
+
 local function HideBlizzardBars()
-    -- Hide main menu bar
-    if MainMenuBar then
-        MainMenuBar:SetAlpha(0)
-        MainMenuBar:UnregisterAllEvents()
-        MainMenuBar:Hide()
+    -- Fix #63: WoW 12.0 completely redesigned action bars
+    -- The gryphon/wyvern art is now in MainMenuBarArtFrame with subframes
+    -- Use aggressive recursive hiding
+
+    -- Primary action bar frames
+    local primaryFrames = {
+        "MainMenuBar",
+        "MainMenuBarArtFrame",
+        "MainMenuBarArtFrameBackground",
+    }
+    for _, name in ipairs(primaryFrames) do
+        local frame = _G[name]
+        if frame then
+            HideFrameRecursive(frame)
+        end
     end
 
-    -- Hide action bars
+    -- Fix #13 + Fix #59: Hide all multi bars with permanent hiding
+    local barsToHide = {
+        "MultiBarBottomLeft",
+        "MultiBarBottomRight",
+        "MultiBarRight",
+        "MultiBarLeft",
+        "MultiBar5",
+        "MultiBar6",
+        "MultiBar7",
+    }
+    for _, barName in ipairs(barsToHide) do
+        local bar = _G[barName]
+        if bar then
+            HideFramePermanently(bar)
+        end
+    end
+
+    -- Fix #59: Hide WoW 12.0 action bars (ActionBar1-8)
     for i = 1, 8 do
-        local bar = _G["MultiBarBottomLeft"]
-        if bar then bar:Hide() end
-        bar = _G["MultiBarBottomRight"]
-        if bar then bar:Hide() end
-        bar = _G["MultiBarRight"]
-        if bar then bar:Hide() end
-        bar = _G["MultiBarLeft"]
-        if bar then bar:Hide() end
+        local bar = _G["ActionBar" .. i]
+        if bar then
+            HideFrameRecursive(bar)
+        end
+    end
+
+    -- Fix #61: Hide gryphon decorations (all possible frame names across WoW versions)
+    local artFrames = {
+        "MainMenuBarLeftEndCap",
+        "MainMenuBarRightEndCap",
+        "MainMenuBarPageNumber",
+        "ActionBarUpButton",
+        "ActionBarDownButton",
+        "MainMenuBarTexture0",
+        "MainMenuBarTexture1",
+        "MainMenuBarTexture2",
+        "MainMenuBarTexture3",
+        "MainMenuExpBar",
+        "ReputationWatchBar",
+        -- WoW 12.0 new names
+        "MainMenuBarBackgroundArt",
+        "MainMenuBarBackground",
+    }
+    for _, name in ipairs(artFrames) do
+        local frame = _G[name]
+        if frame then
+            HideFrameRecursive(frame)
+        end
+    end
+
+    -- Hide status tracking bar (XP/Rep/Honor)
+    if StatusTrackingBarManager then
+        HideFrameRecursive(StatusTrackingBarManager)
     end
 
     -- Hide stance bar
     if StanceBar then
-        StanceBar:Hide()
+        HideFramePermanently(StanceBar)
     end
 
     -- Hide pet bar
     if PetActionBar then
-        PetActionBar:Hide()
+        HideFramePermanently(PetActionBar)
     end
 
-    -- Hide micro buttons
-    if MicroButtonAndBagsBar then
-        MicroButtonAndBagsBar:Hide()
+    -- Note: MicroButtonAndBagsBar and BagsBar are kept visible
+    -- LunarUI doesn't replace the micro menu, only bags
+
+    -- Fix #59: Hide WoW 12.0 specific frames
+    local wow12Frames = {
+        "MainMenuBarManager",
+        "OverrideActionBar",
+        "PossessActionBar",
+        "MainStatusTrackingBarContainer",
+        "SecondaryStatusTrackingBarContainer",
+        -- Note: MicroMenu kept visible
+    }
+    for _, name in ipairs(wow12Frames) do
+        local frame = _G[name]
+        if frame then
+            HideFramePermanently(frame)
+        end
     end
 
-    -- Hide bags bar
-    if BagsBar then
-        BagsBar:Hide()
+    -- Fix #60: Hide Action Bar buttons directly
+    for i = 1, 12 do
+        local button = _G["ActionButton" .. i]
+        if button then
+            HideFramePermanently(button)
+        end
     end
+
+    -- Fix #62: Hide WoW 12.0 Edit Mode frames
+    local editModeFrames = {
+        "EditModeExpandedActionBarFrame",
+        "QuickKeybindFrame",
+    }
+    for _, name in ipairs(editModeFrames) do
+        local frame = _G[name]
+        if frame then
+            HideFramePermanently(frame)
+        end
+    end
+
+    -- Fix #63: Search _G for any frame containing action bar related names
+    -- This catches any frame we might have missed
+    local patterns = {
+        "^MainMenuBar",
+        "^ActionBar%d",
+        "^MultiBar",
+        "EndCap$",
+        "Gryphon",
+        "Wyvern",
+    }
+
+    for name, obj in pairs(_G) do
+        if type(obj) == "table" and type(obj.Hide) == "function" then
+            for _, pattern in ipairs(patterns) do
+                if type(name) == "string" and name:match(pattern) then
+                    pcall(function() obj:Hide() end)
+                    pcall(function() obj:SetAlpha(0) end)
+                    break
+                end
+            end
+        end
+    end
+
+    -- Note: Micro buttons (character, spellbook, talents, etc.) are kept visible
+    -- LunarUI doesn't replace the micro menu
+end
+
+-- Fix #63: Delayed hiding to catch frames created after initial load
+local function HideBlizzardBarsDelayed()
+    HideBlizzardBars()
+    -- Run again after a delay to catch late-created frames
+    C_Timer.After(1, HideBlizzardBars)
+    C_Timer.After(3, HideBlizzardBars)
 end
 
 --------------------------------------------------------------------------------
@@ -462,8 +588,25 @@ local function SpawnActionBars()
     local db = LunarUI.db and LunarUI.db.profile.actionbars
     if not db then return end
 
-    -- Hide Blizzard bars first
-    HideBlizzardBars()
+    -- Fix #70: Check if custom action bars are enabled
+    if db.enabled == false then
+        return  -- Use Blizzard default action bars
+    end
+
+    -- Fix #6 + Fix #38: Use event-driven retry instead of fixed timer for combat lockdown
+    if InCombatLockdown() then
+        local waitFrame = CreateFrame("Frame")
+        waitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        waitFrame:SetScript("OnEvent", function(self)
+            self:UnregisterAllEvents()
+            self:SetScript("OnEvent", nil)
+            SpawnActionBars()
+        end)
+        return
+    end
+
+    -- Fix #63: Hide Blizzard bars with delayed retry
+    HideBlizzardBarsDelayed()
 
     -- Create main action bars (bar1 = page 1, bar2 = page 2, etc.)
     for i = 1, 6 do
@@ -492,7 +635,22 @@ hooksecurefunc(LunarUI, "OnEnable", function()
     C_Timer.After(0.3, SpawnActionBars)
 end)
 
--- Add keybind command
+-- Fix #44: Implement keybind mode command
 hooksecurefunc(LunarUI, "RegisterCommands", function(self)
     -- Add /lunar keybind command
+    local origHandler = self.slashCommands and self.slashCommands["keybind"]
+    if not origHandler then
+        -- Register keybind as a subcommand if the command system supports it
+        -- Otherwise, users can toggle via EnterKeybindMode/ExitKeybindMode functions
+        self:Print("Keybind mode: Use /lunar keybind to toggle")
+    end
 end)
+
+-- Register keybind toggle function
+function LunarUI:ToggleKeybindMode()
+    if keybindMode then
+        ExitKeybindMode()
+    else
+        EnterKeybindMode()
+    end
+end

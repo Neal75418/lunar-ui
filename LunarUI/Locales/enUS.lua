@@ -43,5 +43,11 @@ L["Bags"] = "Bags"
 L["Chat"] = "Chat"
 L["Tooltip"] = "Tooltip"
 
+-- Fix #104: Bags module messages
+L["SoldJunkItems"] = "Sold %d junk items for %s"
+
+-- Fix #104: Chat module messages
+L["PressToCopyURL"] = "Press Ctrl+C to copy URL:"
+
 -- Export
 Engine.L = L

@@ -1,0 +1,308 @@
+--[[
+    LunarUI - Media Registration
+    Register custom textures, fonts, and sounds with LibSharedMedia
+
+    Design Philosophy:
+    - Moon-inspired: soft glows, arcs, incomplete shapes
+    - Restrained: low saturation, subtle details
+    - Functional: clarity over decoration
+]]
+
+local ADDON_NAME, Engine = ...
+local LunarUI = Engine.LunarUI
+
+local LSM = LibStub("LibSharedMedia-3.0", true)
+if not LSM then return end
+
+--------------------------------------------------------------------------------
+-- Media Paths
+--------------------------------------------------------------------------------
+
+local MEDIA_PATH = "Interface\\AddOns\\LunarUI\\Media\\"
+local TEXTURE_PATH = MEDIA_PATH .. "Textures\\"
+local FONT_PATH = MEDIA_PATH .. "Fonts\\"
+local SOUND_PATH = MEDIA_PATH .. "Sounds\\"
+
+--------------------------------------------------------------------------------
+-- Texture Definitions
+--------------------------------------------------------------------------------
+
+-- Core textures (using built-in WoW textures as fallbacks until custom ones are made)
+local TEXTURES = {
+    -- Status bars
+    flat = "Interface\\Buttons\\WHITE8x8",
+    gradient = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarGradient",
+    smooth = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarSmooth",
+
+    -- Borders
+    borderThin = "Interface\\Buttons\\WHITE8x8",
+    borderInk = "Interface\\AddOns\\LunarUI\\Media\\Textures\\InkBorder",
+    borderGlow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\GlowBorder",
+
+    -- Backgrounds
+    parchment = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Parchment",
+    dark = "Interface\\Buttons\\WHITE8x8",
+
+    -- Moon phases (for Phase Indicator)
+    moonNew = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Moon\\MoonNew",
+    moonWaxing = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Moon\\MoonWaxing",
+    moonFull = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Moon\\MoonFull",
+    moonWaning = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Moon\\MoonWaning",
+
+    -- Effects
+    glow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Glow",
+    spark = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Spark",
+}
+
+-- Fallback textures (use WoW built-in until custom assets are ready)
+local TEXTURE_FALLBACKS = {
+    gradient = "Interface\\TARGETINGFRAME\\UI-StatusBar",
+    smooth = "Interface\\TARGETINGFRAME\\UI-StatusBar",
+    borderInk = "Interface\\Buttons\\WHITE8x8",
+    borderGlow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
+    parchment = "Interface\\ACHIEVEMENTFRAME\\UI-Achievement-Parchment-Horizontal",
+    moonNew = "Interface\\Icons\\Spell_Shadow_Twilight",
+    moonWaxing = "Interface\\Icons\\Spell_Nature_MoonKey",
+    moonFull = "Interface\\Icons\\Spell_Nature_StarFall",
+    moonWaning = "Interface\\Icons\\Spell_Arcane_Starfire",
+    glow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
+    spark = "Interface\\Cooldown\\star4",
+}
+
+--------------------------------------------------------------------------------
+-- Color Palettes
+--------------------------------------------------------------------------------
+
+-- Lunar color palette
+LunarUI.Colors = {
+    -- Primary colors
+    moonlight = { 0.85, 0.90, 1.00, 1.0 },     -- Soft blue-white
+    moonGlow = { 0.70, 0.80, 0.95, 0.8 },      -- Subtle glow
+    nightSky = { 0.08, 0.08, 0.12, 0.95 },     -- Dark background
+    parchment = { 0.95, 0.90, 0.82, 0.9 },     -- Warm beige
+
+    -- Phase colors
+    phaseNew = { 0.30, 0.35, 0.50, 0.6 },      -- Dim, mysterious
+    phaseWaxing = { 0.50, 0.55, 0.70, 0.8 },   -- Building intensity
+    phaseFull = { 0.90, 0.95, 1.00, 1.0 },     -- Bright, clear
+    phaseWaning = { 0.60, 0.65, 0.80, 0.85 },  -- Fading glow
+
+    -- UI colors
+    border = { 0.15, 0.12, 0.08, 1.0 },        -- Dark brown/black
+    borderHighlight = { 0.40, 0.45, 0.55, 1.0 }, -- Highlighted border
+    text = { 0.90, 0.90, 0.88, 1.0 },          -- Off-white text
+    textDim = { 0.60, 0.60, 0.58, 1.0 },       -- Dimmed text
+
+    -- Health colors (muted, organic)
+    health = { 0.20, 0.65, 0.35, 1.0 },        -- Soft green
+    healthLow = { 0.75, 0.25, 0.20, 1.0 },     -- Muted red
+    mana = { 0.25, 0.40, 0.75, 1.0 },          -- Deep blue
+    energy = { 0.85, 0.75, 0.25, 1.0 },        -- Warm yellow
+    rage = { 0.70, 0.20, 0.20, 1.0 },          -- Dark red
+    focus = { 0.75, 0.45, 0.20, 1.0 },         -- Amber
+
+    -- Class colors (slightly desaturated for Lunar theme)
+    classColors = {
+        WARRIOR = { 0.78, 0.61, 0.43 },
+        PALADIN = { 0.96, 0.55, 0.73 },
+        HUNTER = { 0.67, 0.83, 0.45 },
+        ROGUE = { 1.00, 0.96, 0.41 },
+        PRIEST = { 1.00, 1.00, 1.00 },
+        DEATHKNIGHT = { 0.77, 0.12, 0.23 },
+        SHAMAN = { 0.00, 0.44, 0.87 },
+        MAGE = { 0.41, 0.80, 0.94 },
+        WARLOCK = { 0.58, 0.51, 0.79 },
+        MONK = { 0.00, 0.78, 0.59 },
+        DRUID = { 1.00, 0.49, 0.04 },
+        DEMONHUNTER = { 0.64, 0.19, 0.79 },
+        EVOKER = { 0.20, 0.58, 0.50 },
+    },
+}
+
+--------------------------------------------------------------------------------
+-- Font Definitions
+--------------------------------------------------------------------------------
+
+-- Preferred fonts (custom or system)
+local FONTS = {
+    -- Main UI font
+    normal = "Fonts\\FRIZQT__.TTF",
+
+    -- Number font (for health, damage, etc.)
+    number = "Fonts\\FRIZQT__.TTF",
+
+    -- Header font
+    header = "Fonts\\MORPHEUS.TTF",
+
+    -- Custom fonts (if installed)
+    lunar = FONT_PATH .. "LunarFont.ttf",
+}
+
+-- Font sizes based on context
+LunarUI.FontSizes = {
+    tiny = 9,
+    small = 10,
+    normal = 12,
+    medium = 14,
+    large = 16,
+    huge = 20,
+    header = 24,
+}
+
+--------------------------------------------------------------------------------
+-- Media Registration
+--------------------------------------------------------------------------------
+
+local function RegisterMedia()
+    -- Register status bar textures
+    LSM:Register("statusbar", "Lunar Flat", TEXTURES.flat)
+    LSM:Register("statusbar", "Lunar Gradient", TEXTURE_FALLBACKS.gradient)
+    LSM:Register("statusbar", "Lunar Smooth", TEXTURE_FALLBACKS.smooth)
+
+    -- Register border textures
+    LSM:Register("border", "Lunar Thin", TEXTURES.borderThin)
+    LSM:Register("border", "Lunar Ink", TEXTURE_FALLBACKS.borderInk)
+    LSM:Register("border", "Lunar Glow", TEXTURE_FALLBACKS.borderGlow)
+
+    -- Register background textures
+    LSM:Register("background", "Lunar Dark", TEXTURES.dark)
+    LSM:Register("background", "Lunar Parchment", TEXTURE_FALLBACKS.parchment)
+
+    -- Register fonts
+    LSM:Register("font", "Lunar Normal", FONTS.normal)
+    LSM:Register("font", "Lunar Number", FONTS.number)
+    LSM:Register("font", "Lunar Header", FONTS.header)
+
+    -- Set defaults
+    LSM:SetDefault("statusbar", "Lunar Flat")
+    LSM:SetDefault("border", "Lunar Thin")
+    LSM:SetDefault("background", "Lunar Dark")
+    LSM:SetDefault("font", "Lunar Normal")
+end
+
+--------------------------------------------------------------------------------
+-- Texture Getter
+--------------------------------------------------------------------------------
+
+-- Fix #7: Improved GetTexture logic with clear fallback behavior
+-- Get texture path with fallback support
+function LunarUI:GetTexture(name)
+    local path = TEXTURES[name]
+    if not path then
+        return TEXTURES.flat
+    end
+
+    -- Check if this is a custom LunarUI texture path (contains "LunarUI")
+    -- Custom textures are not yet created, so use fallbacks
+    if path:find("LunarUI") then
+        -- Use fallback for custom textures until assets are made
+        if TEXTURE_FALLBACKS[name] then
+            return TEXTURE_FALLBACKS[name]
+        end
+    end
+
+    -- Return the texture path (built-in textures like WHITE8x8)
+    return path
+end
+
+-- Get moon phase texture
+function LunarUI:GetMoonTexture(phase)
+    local textureMap = {
+        NEW = "moonNew",
+        WAXING = "moonWaxing",
+        FULL = "moonFull",
+        WANING = "moonWaning",
+    }
+
+    local key = textureMap[phase] or "moonNew"
+    return TEXTURE_FALLBACKS[key] or TEXTURES[key]
+end
+
+-- Get font path
+function LunarUI:GetFont(name)
+    return FONTS[name] or FONTS.normal
+end
+
+-- Get color by name
+function LunarUI:GetColor(name)
+    return self.Colors[name]
+end
+
+-- Get phase color
+function LunarUI:GetPhaseColor(phase)
+    local colorMap = {
+        NEW = self.Colors.phaseNew,
+        WAXING = self.Colors.phaseWaxing,
+        FULL = self.Colors.phaseFull,
+        WANING = self.Colors.phaseWaning,
+    }
+    return colorMap[phase] or self.Colors.moonlight
+end
+
+--------------------------------------------------------------------------------
+-- Backdrop Templates
+--------------------------------------------------------------------------------
+
+-- Standard Lunar backdrop
+LunarUI.Backdrops = {
+    default = {
+        bgFile = TEXTURES.flat,
+        edgeFile = TEXTURES.borderThin,
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    },
+
+    thin = {
+        bgFile = TEXTURES.flat,
+        edgeFile = TEXTURES.borderThin,
+        edgeSize = 1,
+        insets = { left = 0, right = 0, top = 0, bottom = 0 },
+    },
+
+    panel = {
+        bgFile = TEXTURES.flat,
+        edgeFile = TEXTURES.borderThin,
+        edgeSize = 2,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    },
+
+    tooltip = {
+        bgFile = TEXTURES.flat,
+        edgeFile = TEXTURES.borderThin,
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    },
+
+    glow = {
+        bgFile = nil,
+        edgeFile = TEXTURE_FALLBACKS.glow,
+        edgeSize = 8,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    },
+}
+
+-- Get backdrop colors for phase
+function LunarUI:GetBackdropColors(phase)
+    local bg = self.Colors.nightSky
+    local border = self.Colors.border
+
+    if phase == "FULL" then
+        border = self.Colors.borderHighlight
+    end
+
+    return bg, border
+end
+
+--------------------------------------------------------------------------------
+-- Initialization
+--------------------------------------------------------------------------------
+
+-- Register media on load
+hooksecurefunc(LunarUI, "OnInitialize", function()
+    RegisterMedia()
+end)
+
+-- Export paths for direct access
+LunarUI.MediaPath = MEDIA_PATH
+LunarUI.TexturePath = TEXTURE_PATH
+LunarUI.FontPath = FONT_PATH

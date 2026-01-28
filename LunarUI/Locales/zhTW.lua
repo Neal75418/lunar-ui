@@ -45,3 +45,9 @@ L["Minimap"] = "小地圖"
 L["Bags"] = "背包"
 L["Chat"] = "聊天"
 L["Tooltip"] = "滑鼠提示"
+
+-- Fix #104: Bags module messages
+L["SoldJunkItems"] = "已販賣 %d 件垃圾物品，獲得 %s"
+
+-- Fix #104: Chat module messages
+L["PressToCopyURL"] = "按 Ctrl+C 複製網址:"

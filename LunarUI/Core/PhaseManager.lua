@@ -15,7 +15,6 @@ local LunarUI = Engine.LunarUI
 -- Current phase state
 local currentPhase = LunarUI.PHASES.NEW
 local waningTimer = nil
-local transitionTimer = nil
 
 -- Configuration
 local WANING_DURATION = 10 -- seconds before returning to NEW
@@ -32,15 +31,17 @@ function LunarUI:InitPhaseManager()
         currentPhase = self.PHASES.NEW
     end
 
-    -- Update tokens for initial phase
-    self:UpdateTokens()
+    -- Fix #98: Safely update tokens - db may not be fully initialized yet
+    if self.UpdateTokens then
+        self:UpdateTokens()
+    end
 
     -- Register combat events
     self:RegisterEvent("PLAYER_REGEN_DISABLED", "OnEnterCombat")
     self:RegisterEvent("PLAYER_REGEN_ENABLED", "OnLeaveCombat")
 
     -- Debug output
-    if self.db and self.db.profile.debug then
+    if self.db and self.db.profile and self.db.profile.debug then
         self:Print("PhaseManager initialized. Current phase: " .. currentPhase)
     end
 end
@@ -144,12 +145,11 @@ end
 
 --[[
     Cancel the transition timer
+    Fix #99: Placeholder for future smooth phase transition animations
+    Currently a no-op but kept for API consistency
 ]]
 function LunarUI:CancelTransitionTimer()
-    if transitionTimer then
-        self:CancelTimer(transitionTimer)
-        transitionTimer = nil
-    end
+    -- No-op: transitionTimer removed as it was unused dead code
 end
 
 --[[
