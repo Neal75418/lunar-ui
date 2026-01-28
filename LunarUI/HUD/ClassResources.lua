@@ -21,7 +21,7 @@ local LunarUI = Engine.LunarUI
 -- 效能：快取全域變數
 --------------------------------------------------------------------------------
 
-local math_floor = math.floor
+local _math_floor = math.floor
 local ipairs = ipairs
 local UnitClass = UnitClass
 local UnitPower = UnitPower

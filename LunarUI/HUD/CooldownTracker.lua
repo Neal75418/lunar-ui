@@ -27,7 +27,7 @@ local type = type
 local wipe = wipe
 local GetTime = GetTime
 local UnitClass = UnitClass
-local GetSpecialization = GetSpecialization
+local _GetSpecialization = GetSpecialization
 local C_Spell = C_Spell
 local IsPlayerSpell = IsPlayerSpell
 
@@ -448,6 +448,15 @@ local function UpdateCooldownIcons()
 end
 
 --------------------------------------------------------------------------------
+-- 月相感知
+--------------------------------------------------------------------------------
+
+local function UpdateForPhase()
+    -- 使用共用 ApplyPhaseAlpha
+    LunarUI:ApplyPhaseAlpha(cooldownFrame, "cooldownTracker")
+end
+
+--------------------------------------------------------------------------------
 -- 初始化
 --------------------------------------------------------------------------------
 
@@ -471,15 +480,6 @@ local function Initialize()
     UpdateForPhase()
 
     isInitialized = true
-end
-
---------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
-local function UpdateForPhase()
-    -- 使用共用 ApplyPhaseAlpha
-    LunarUI:ApplyPhaseAlpha(cooldownFrame, "cooldownTracker")
 end
 
 --------------------------------------------------------------------------------

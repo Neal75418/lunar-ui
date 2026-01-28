@@ -19,7 +19,7 @@ local LunarUI = Engine.LunarUI
 
 local math_floor = math.floor
 local string_format = string.format
-local ipairs = ipairs
+local _ipairs = ipairs
 local GetTime = GetTime
 local C_UnitAuras = C_UnitAuras
 
@@ -220,14 +220,14 @@ local function SetupFrames()
     -- 建立圖示
     for i = 1, MAX_BUFFS do
         buffIcons[i] = CreateAuraIcon(buffFrame, i)
-        local row = math.floor((i - 1) / ICONS_PER_ROW)
+        local row = math_floor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
         buffIcons[i]:SetPoint("TOPRIGHT", buffFrame, "TOPRIGHT", -col * (ICON_SIZE + ICON_SPACING), -row * (ICON_SIZE + ICON_SPACING))
     end
 
     for i = 1, MAX_DEBUFFS do
         debuffIcons[i] = CreateAuraIcon(debuffFrame, i)
-        local row = math.floor((i - 1) / ICONS_PER_ROW)
+        local row = math_floor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
         debuffIcons[i]:SetPoint("TOPRIGHT", debuffFrame, "TOPRIGHT", -col * (ICON_SIZE + ICON_SPACING), -row * (ICON_SIZE + ICON_SPACING))
     end

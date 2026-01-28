@@ -267,7 +267,7 @@ local function ShowFloatingText(amount, textType, isCrit, offsetX)
     -- 設定動畫資料
     local data = text.animData
     data.startTime = GetTime()
-    data.startX = (offsetX or 0) + (math.random(-30, 30))
+    data.startX = (offsetX or 0) + (math_random(-30, 30))
     data.startY = 0
     data.duration = ANIMATION_DURATION
     data.isCrit = isCrit
