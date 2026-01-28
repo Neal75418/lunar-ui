@@ -452,7 +452,8 @@ eventFrame:SetScript("OnEvent", function(_self, event)
         end
     elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
         if isInitialized then
-            ProcessCombatLogEvent()
+            -- WoW 12.0+: 使用 pcall 包裝以處理 "secret value" 錯誤
+            pcall(ProcessCombatLogEvent)
         end
     end
 end)

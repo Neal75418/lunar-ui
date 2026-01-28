@@ -41,28 +41,25 @@ Core\Debug.lua
 Media\Media.lua
 Effects\PhaseGlow.lua
 
-# === TAINT 診斷模式 ===
-# 逐一取消註解以找出 taint 來源
-
 # UnitFrames
 UnitFrames\Layout.lua
 
 # Nameplates
-#Nameplates\Nameplates.lua
+Nameplates\Nameplates.lua
 
 # ActionBars
-#ActionBars\ActionBars.lua
+ActionBars\ActionBars.lua
 
 # HUD
-#HUD\PhaseIndicator.lua
-#HUD\PerformanceMonitor.lua
-#HUD\ClassResources.lua
-#HUD\CooldownTracker.lua
-#HUD\FloatingCombatText.lua
-#HUD\AuraFrames.lua
+HUD\PhaseIndicator.lua
+HUD\PerformanceMonitor.lua
+HUD\ClassResources.lua
+HUD\CooldownTracker.lua
+# HUD\FloatingCombatText.lua  # 暫時停用：WoW 12.0 taint 問題待修復
+HUD\AuraFrames.lua
 
 # Modules (Non-combat UI)
-#Modules\Minimap.lua
-#Modules\Tooltip.lua
-#Modules\Chat.lua
-#Modules\Bags.lua
+Modules\Minimap.lua
+Modules\Tooltip.lua
+Modules\Chat.lua
+Modules\Bags.lua
