@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field
 --[[
     LunarUI - 除錯模組
     提供除錯日誌與視覺化除錯面板

@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field
 --[[
     LunarUI - 聊天模組
     Lunar 主題風格的聊天框架

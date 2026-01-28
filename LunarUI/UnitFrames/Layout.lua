@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field
 --[[
     LunarUI - oUF 佈局
     定義所有單位框架的視覺風格

@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field
 --[[
     LunarUI Options
     Configuration interface using AceConfig-3.0

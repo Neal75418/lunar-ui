@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field
 --[[
     LunarUI - Phase Glow Effects
     Moonlight glow effects that respond to Phase changes

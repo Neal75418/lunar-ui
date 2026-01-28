@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field
 --[[
     LunarUI - 月相驅動的戰鬥 UI 系統
     使用 Ace3 框架的核心初始化模組

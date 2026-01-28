@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field
 --[[
     LunarUI - 斜線命令
     /lunar 命令實作

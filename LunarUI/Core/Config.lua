@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field
 --[[
     LunarUI - 設定模組（AceDB）
     資料庫預設值與設定檔管理

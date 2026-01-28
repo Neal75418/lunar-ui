@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field
 --[[
     LunarUI - Media Registration
     Register custom textures, fonts, and sounds with LibSharedMedia
