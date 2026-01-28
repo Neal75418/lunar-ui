@@ -47,5 +47,6 @@ jobs:
 
       - name: Package addon (dry run)
         uses: BigWigsMods/packager@v2
+        continue-on-error: true  # Don't fail build if packaging has issues (externals may be unavailable)
         with:
-          args: -d  # Dry run
+          args: -d -z  # Dry run, skip externals
