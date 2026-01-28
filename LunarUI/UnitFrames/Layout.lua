@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, redundant-value
 --[[
     LunarUI - oUF 佈局
     定義所有單位框架的視覺風格
@@ -92,12 +92,12 @@ local function CreateHealthBar(frame, unit)
 
     -- 更新後鉤子：確保職業顏色正確套用
     health.PostUpdate = function(self, _unit, _cur, _max)
-        local unit = self.__owner and self.__owner.unit
-        if not unit then return end
+        local ownerUnit = self.__owner and self.__owner.unit
+        if not ownerUnit then return end
 
         -- 玩家使用職業顏色
-        if UnitIsPlayer(unit) then
-            local _, class = UnitClass(unit)
+        if UnitIsPlayer(ownerUnit) then
+            local _, class = UnitClass(ownerUnit)
             if class then
                 local color = RAID_CLASS_COLORS[class]
                 if color then
@@ -111,7 +111,7 @@ local function CreateHealthBar(frame, unit)
         end
 
         -- NPC 使用聲望顏色
-        local reaction = UnitReaction(unit, "player")
+        local reaction = UnitReaction(ownerUnit, "player")
         if reaction then
             local color
             if reaction >= 5 then
@@ -193,7 +193,7 @@ local function CreateHealthText(frame, unit)
 end
 
 --[[ 施法條 ]]
-local function CreateCastbar(frame, unit)
+local function CreateCastbar(frame, _unit)
     local castbar = CreateFrame("StatusBar", nil, frame)
     castbar:SetStatusBarTexture(statusBarTexture)
     castbar:SetStatusBarColor(0.4, 0.6, 0.8, 1)
@@ -270,8 +270,8 @@ local UNITFRAME_DEBUFF_COLORS = _G.DebuffTypeColor or {
     [""] = { r = 0.8, g = 0.0, b = 0.0 },
 }
 
---[[ 光環（增益/減益） ]]
-local function CreateAuras(frame, unit)
+--[[ 光環（增益/減益）- 保留供未來使用 ]]
+local function _CreateAuras(frame, unit)
     local auras = CreateFrame("Frame", nil, frame)
 
     -- 從多個來源判斷單位類型
@@ -473,7 +473,7 @@ local function CreateClassification(frame)
 end
 
 --[[ 目標：等級文字 ]]
-local function CreateLevelText(frame, unit)
+local function CreateLevelText(frame, _unit)
     local level = frame.Health:CreateFontString(nil, "OVERLAY")
     level:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
     level:SetPoint("RIGHT", frame.Name, "LEFT", -4, 0)
