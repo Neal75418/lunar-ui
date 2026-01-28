@@ -10,7 +10,7 @@
     - Configurable intensity
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
@@ -267,7 +267,7 @@ local function StartAnimation()
         animationFrame = CreateFrame("Frame")
     end
 
-    animationFrame:SetScript("OnUpdate", function(self, elapsed)
+    animationFrame:SetScript("OnUpdate", function(_self, elapsed)
         UpdateGlowAnimation(elapsed)
     end)
 end
@@ -290,7 +290,7 @@ end
 -- Phase Integration
 --------------------------------------------------------------------------------
 
-local function OnPhaseChanged(oldPhase, newPhase)
+local function OnPhaseChanged(_oldPhase, newPhase)
     if newPhase == "FULL" or newPhase == "WAXING" or newPhase == "WANING" then
         StartAnimation()
     else

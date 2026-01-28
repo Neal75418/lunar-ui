@@ -138,6 +138,19 @@ LibStub = {}
 ---@type fun(frameType: string, name?: string, parent?: Frame|string, template?: string, id?: number): Frame
 CreateFrame = nil
 
+---@class ColorMixin
+---@field r number
+---@field g number
+---@field b number
+---@field a number?
+---@field GetRGB fun(self: ColorMixin): number, number, number
+---@field GetRGBA fun(self: ColorMixin): number, number, number, number
+---@field SetRGB fun(self: ColorMixin, r: number, g: number, b: number)
+---@field SetRGBA fun(self: ColorMixin, r: number, g: number, b: number, a: number)
+
+---@type fun(r: number, g: number, b: number, a?: number): ColorMixin
+CreateColor = nil
+
 ---@type Frame
 UIParent = nil
 
