@@ -3,7 +3,7 @@
     /lunar 命令實作
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
@@ -126,7 +126,6 @@ end
     顯示目前狀態
 ]]
 function LunarUI:PrintStatus()
-    local L = Engine.L or {}
     self:Print("|cff8882ffLunarUI 狀態：|r")
     print("  版本：" .. self.version)
     print("  啟用：" .. (self.db.profile.enabled and "|cff00ff00是|r" or "|cffff0000否|r"))

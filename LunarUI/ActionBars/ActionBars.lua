@@ -1,3 +1,4 @@
+---@diagnostic disable: unbalanced-assignments, unnecessary-if
 --[[
     LunarUI - 動作條
     基於 LibActionButton 的動作條系統，具有月相感知

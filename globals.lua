@@ -129,6 +129,12 @@ Mixin = nil
 
 ---@class C_AddOns
 ---@field GetAddOnMetadata fun(name: string, field: string): string?
+---@field IsAddOnLoaded fun(name: string): boolean
+---@field LoadAddOn fun(name: string): boolean
+---@field EnableAddOn fun(name: string, character?: string)
+---@field DisableAddOn fun(name: string, character?: string)
+---@field GetNumAddOns fun(): number
+---@field GetAddOnInfo fun(index: number|string): string, string, string, boolean, string, string, string
 C_AddOns = {}
 
 ---@class C_Timer
