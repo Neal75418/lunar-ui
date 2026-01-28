@@ -133,7 +133,7 @@ local function CreateHealthBar(frame, unit)
 end
 
 --[[ 能量條 ]]
-local function CreatePowerBar(frame, unit)
+local function CreatePowerBar(frame, _unit)
     local power = CreateFrame("StatusBar", nil, frame)
     power:SetStatusBarTexture(statusBarTexture)
     power:SetPoint("TOPLEFT", frame.Health, "BOTTOMLEFT", 0, -1)
@@ -372,7 +372,7 @@ local function _CreateAuras(frame, unit)
 end
 
 --[[ 僅減益（用於隊伍/團隊） ]]
-local function CreateDebuffs(frame, unit)
+local function CreateDebuffs(frame, _unit)
     local debuffs = CreateFrame("Frame", nil, frame)
     debuffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
     debuffs:SetSize(frame:GetWidth(), 18)
@@ -634,7 +634,7 @@ local function EnsureDeathIndicatorEventFrame()
     end)
 end
 
-local function CreateDeathIndicator(frame, unit)
+local function CreateDeathIndicator(frame, _unit)
     -- 建立死亡單位的骷髏圖示
     local dead = frame:CreateTexture(nil, "OVERLAY")
     dead:SetSize(20, 20)
