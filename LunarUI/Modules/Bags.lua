@@ -1102,9 +1102,7 @@ local function HookBagFunctions()
         ToggleBags()
     end)
 
-    -- 暫時停用隱藏 Blizzard 背包以診斷 taint 問題
-    -- TODO: 若這能解決 taint，需要找到更安全的隱藏方式
-    --[[
+    -- 隱藏暴雪背包框架（只設透明度）
     for i = 1, 13 do
         local frame = _G["ContainerFrame" .. i]
         if frame then
@@ -1120,7 +1118,6 @@ local function HookBagFunctions()
     if AccountBankPanel then
         pcall(function() AccountBankPanel:SetAlpha(0) end)
     end
-    --]]
 end
 
 --------------------------------------------------------------------------------

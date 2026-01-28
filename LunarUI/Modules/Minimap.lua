@@ -385,8 +385,9 @@ local function HideBlizzardMinimapElements()
     Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8x8")
 
     -- 停用預設縮放行為
+    -- 使用 HookScript 而非 SetScript 以避免 taint
     Minimap:EnableMouseWheel(true)
-    Minimap:SetScript("OnMouseWheel", function(_self, delta)
+    Minimap:HookScript("OnMouseWheel", function(_self, delta)
         if delta > 0 then
             Minimap_ZoomIn()
         else
@@ -486,7 +487,8 @@ local function CreateMinimapFrame()
     end)
 
     -- 右鍵選單追蹤
-    Minimap:SetScript("OnMouseUp", function(_self, button)
+    -- 使用 HookScript 而非 SetScript 以避免 taint
+    Minimap:HookScript("OnMouseUp", function(_self, button)
         if button == "RightButton" then
             if MinimapCluster and MinimapCluster.Tracking and MinimapCluster.Tracking.Button then
                 MinimapCluster.Tracking.Button:Click()
