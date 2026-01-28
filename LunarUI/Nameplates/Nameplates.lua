@@ -11,7 +11,7 @@
     - Performance optimized for large pulls
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 -- Wait for oUF
@@ -43,8 +43,8 @@ local CLASSIFICATION_COLORS = {
     trivial = { r = 0.3, g = 0.3, b = 0.3 },
 }
 
--- Threat colors
-local THREAT_COLORS = {
+-- Threat colors（保留供未來使用）
+local _THREAT_COLORS = {
     [0] = { r = 0.5, g = 0.5, b = 0.5 },  -- Not tanking
     [1] = { r = 1.0, g = 1.0, b = 0.0 },  -- Threat warning
     [2] = { r = 1.0, g = 0.6, b = 0.0 },  -- High threat
@@ -133,8 +133,8 @@ local function CreateNameText(frame)
     return name
 end
 
---[[ Level Text ]]
-local function CreateLevelText(frame)
+--[[ Level Text - 保留供未來使用 ]]
+local function _CreateLevelText(frame)
     local level = frame:CreateFontString(nil, "OVERLAY")
     level:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
     level:SetPoint("LEFT", frame, "LEFT", 2, 0)
@@ -185,7 +185,7 @@ local function CreateCastbar(frame)
 
     -- Interruptible color change
     -- Fix #69: WoW 12.0 makes notInterruptible a secret value
-    castbar.PostCastStart = function(self, unit)
+    castbar.PostCastStart = function(self, _unit)
         -- Use pcall to safely check notInterruptible
         local success, isNotInterruptible = pcall(function() return self.notInterruptible == true end)
         if success and isNotInterruptible then
@@ -226,13 +226,13 @@ local function CreateDebuffs(frame)
     -- Fix #53: WoW 12.0 makes isHarmful a secret value that cannot be tested
     -- The Debuffs element already filters to harmful auras, so just check isPlayerAura
     -- Use isHarmfulAura as fallback if available (non-secret in some cases)
-    debuffs.FilterAura = function(element, unit, data)
+    debuffs.FilterAura = function(_element, _unit, data)
         -- Just check if it's the player's aura - Debuffs element handles harmful filtering
         return data.isPlayerAura == true
     end
 
     -- Post-create styling
-    debuffs.PostCreateButton = function(self, button)
+    debuffs.PostCreateButton = function(_self, button)
         button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
@@ -250,7 +250,7 @@ local function CreateDebuffs(frame)
     -- Post-update for debuff type colors
     -- Fix #50 + Fix #57: WoW 12.0 makes dispelName a secret value
     -- Use generic debuff color since we can't access dispel type
-    debuffs.PostUpdateButton = function(self, button, unit, data, position)
+    debuffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
         local color = DEBUFF_TYPE_COLORS["none"]
         button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
     end
@@ -271,7 +271,7 @@ local function CreateThreatIndicator(frame)
     threat:SetBackdropBorderColor(0, 0, 0, 0)
     threat:SetFrameLevel(frame:GetFrameLevel() + 5)
 
-    threat.PostUpdate = function(self, unit, status, r, g, b)
+    threat.PostUpdate = function(self, _unit, status, r, g, b)
         if status and status > 0 then
             self:SetBackdropBorderColor(r, g, b, 0.8)
         else
@@ -329,7 +329,7 @@ local function UpdateNameplatePhase(frame)
     if not frame then return end
 
     local tokens = LunarUI:GetTokens()
-    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    local _db = LunarUI.db and LunarUI.db.profile.nameplates  -- 保留供未來使用
 
     -- Nameplates should be more visible even in NEW phase
     -- Use a minimum alpha to keep them usable
@@ -346,7 +346,7 @@ local function RegisterNameplateForPhase(frame)
     if not LunarUI._nameplatePhaseRegistered then
         LunarUI._nameplatePhaseRegistered = true
 
-        LunarUI:RegisterPhaseCallback(function(oldPhase, newPhase)
+        LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
             for np in pairs(nameplateFrames) do
                 if np and np:IsShown() then
                     UpdateNameplatePhase(np)
@@ -364,7 +364,7 @@ end
 --------------------------------------------------------------------------------
 
 --[[ Enemy Nameplate Layout ]]
-local function EnemyNameplateLayout(frame, unit)
+local function EnemyNameplateLayout(frame, _unit)
     local db = LunarUI.db and LunarUI.db.profile.nameplates
     local width = db and db.width or 120
     local height = db and db.height or 12
@@ -399,7 +399,7 @@ local function EnemyNameplateLayout(frame, unit)
 end
 
 --[[ Friendly Nameplate Layout ]]
-local function FriendlyNameplateLayout(frame, unit)
+local function FriendlyNameplateLayout(frame, _unit)
     local db = LunarUI.db and LunarUI.db.profile.nameplates
     local width = db and db.width or 120
     local height = (db and db.height or 12) * 0.8  -- Slightly smaller
@@ -515,7 +515,7 @@ local function SpawnNameplates()
     oUF:SetActiveStyle("LunarUI_Nameplate")
 
     -- Spawn nameplates with callbacks
-    oUF:SpawnNamePlates("LunarUI_Nameplate", function(frame, event, unit)
+    oUF:SpawnNamePlates("LunarUI_Nameplate", function(frame, event, _unit)
         -- Callback for nameplate events
         if event == "NAME_PLATE_UNIT_ADDED" then
             Nameplate_OnShow(frame)

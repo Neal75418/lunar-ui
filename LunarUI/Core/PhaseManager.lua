@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
 --[[
     LunarUI - 月相管理器
     驅動整個 UI 行為的核心狀態機
@@ -10,7 +10,7 @@
     - WANING: 戰鬥結束，逐漸淡出後回到 NEW
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ end
     取得目前月相
     @return string 目前月相名稱
 ]]
-function LunarUI:GetPhase()
+function LunarUI.GetPhase()
     return currentPhase
 end
 
@@ -96,7 +96,7 @@ end
     @param newPhase string 要設定的月相
     @param skipTransition boolean 是否跳過過渡動畫
 ]]
-function LunarUI:SetPhase(newPhase, skipTransition)
+function LunarUI:SetPhase(newPhase, _skipTransition)
     if not self.PHASES[newPhase] then
         self:Print("無效的月相：" .. tostring(newPhase))
         return
@@ -200,6 +200,6 @@ end
     取消過渡計時器
     保留給未來平滑過渡動畫使用
 ]]
-function LunarUI:CancelTransitionTimer()
+function LunarUI.CancelTransitionTimer()
     -- 目前為空操作，保持 API 一致性
 end

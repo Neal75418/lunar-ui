@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, missing-parameter
 --[[
     LunarUI - 滑鼠提示模組
     Lunar 主題風格的統一滑鼠提示
@@ -12,7 +12,7 @@
     - 月相感知定位
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
@@ -71,7 +71,8 @@ local function GetUnitColor(unit)
     return 1, 1, 1
 end
 
-local function FormatNumber(num)
+-- 保留供未來使用
+local function _FormatNumber(num)
     if num >= 1e9 then
         return string.format("%.2fB", num / 1e9)
     elseif num >= 1e6 then
@@ -197,7 +198,7 @@ local function OnTooltipSetUnit(tooltip)
 
     -- 為玩家新增公會資訊
     if UnitIsPlayer(unit) then
-        local guildName, guildRank = GetGuildInfo(unit)
+        local guildName, _guildRank = GetGuildInfo(unit)
         if guildName then
             -- 公會名稱通常已顯示，但我們可以進行樣式化
         end
@@ -323,8 +324,8 @@ local function AdjustTooltipPosition(tooltip)
 
     local screenWidth = UIParent:GetWidth()
     local screenHeight = UIParent:GetHeight()
-    local tooltipWidth = tooltip:GetWidth()
-    local tooltipHeight = tooltip:GetHeight()
+    local _tooltipWidth = tooltip:GetWidth()  -- 保留供未來使用
+    local _tooltipHeight = tooltip:GetHeight()  -- 保留供未來使用
     local scale = tooltip:GetEffectiveScale() / UIParent:GetEffectiveScale()
 
     local left = tooltip:GetLeft()
@@ -407,7 +408,7 @@ local function RegisterTooltipPhaseCallback()
     if phaseCallbackRegistered then return end
     phaseCallbackRegistered = true
 
-    LunarUI:RegisterPhaseCallback(function(oldPhase, newPhase)
+    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
         UpdateTooltipForPhase()
     end)
 end
@@ -431,13 +432,13 @@ local function InitializeTooltip()
         -- 使用前檢查 Enum 和 Enum.TooltipDataType 是否存在
         if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then
             -- 正式服 10.0+
-            TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tooltip, data)
+            TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tooltip, _data)
                 OnTooltipSetUnit(tooltip)
             end)
-            TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
+            TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, _data)
                 OnTooltipSetItem(tooltip)
             end)
-            TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Spell, function(tooltip, data)
+            TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Spell, function(tooltip, _data)
                 OnTooltipSetSpell(tooltip)
             end)
         else

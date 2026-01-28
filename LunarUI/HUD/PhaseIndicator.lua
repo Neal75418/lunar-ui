@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
 --[[
     LunarUI - Phase Indicator
     Visual moon icon showing current Lunar Phase
@@ -233,7 +233,7 @@ local function CreatePhaseIndicator()
     end)
 
     -- Click interactions
-    phaseIndicator:SetScript("OnMouseUp", function(self, button)
+    phaseIndicator:SetScript("OnMouseUp", function(_self, button)
         if button == "LeftButton" then
             LunarUI:ToggleWaxing()
         elseif button == "RightButton" then
@@ -390,6 +390,6 @@ function LunarUI.CleanupPhaseIndicator()
 end
 
 -- Initialize on addon enable
-hooksecurefunc(LunarUI, "OnEnable", function()
+hooksecurefunc(LunarUI, "OnEnable", function(_self)
     LunarUI:InitPhaseIndicator()
 end)

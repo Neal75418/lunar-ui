@@ -1,10 +1,10 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
 --[[
     LunarUI - 除錯模組
     提供除錯日誌與視覺化除錯面板
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ end
 --[[
     顯示除錯面板
 ]]
-function LunarUI:ShowDebugOverlay()
+function LunarUI.ShowDebugOverlay()
     if not debugFrame then
         debugFrame = CreateDebugFrame()
     end
@@ -180,7 +180,7 @@ end
     隱藏除錯面板
     清理 OnUpdate 腳本以節省資源
 ]]
-function LunarUI:HideDebugOverlay()
+function LunarUI.HideDebugOverlay()
     if debugFrame then
         debugFrame:SetScript("OnUpdate", nil)
         debugFrame:Hide()

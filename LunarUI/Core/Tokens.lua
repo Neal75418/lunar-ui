@@ -4,7 +4,7 @@
     每個月相的視覺參數設定
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ end
     @param progress 進度（0 至 1）
     @return table 插值後的標記
 ]]
-function LunarUI:InterpolateTokens(from, to, progress)
+function LunarUI.InterpolateTokens(from, to, progress)
     local result = {}
 
     -- 處理 from 為 nil 或空值的邊界情況

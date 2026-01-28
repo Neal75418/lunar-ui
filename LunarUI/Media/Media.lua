@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
 --[[
     LunarUI - Media Registration
     Register custom textures, fonts, and sounds with LibSharedMedia
@@ -9,7 +9,7 @@
     - Functional: clarity over decoration
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local LSM = LibStub("LibSharedMedia-3.0", true)
@@ -22,7 +22,7 @@ if not LSM then return end
 local MEDIA_PATH = "Interface\\AddOns\\LunarUI\\Media\\"
 local TEXTURE_PATH = MEDIA_PATH .. "Textures\\"
 local FONT_PATH = MEDIA_PATH .. "Fonts\\"
-local SOUND_PATH = MEDIA_PATH .. "Sounds\\"
+local _SOUND_PATH = MEDIA_PATH .. "Sounds\\"  -- Reserved for future use
 
 --------------------------------------------------------------------------------
 -- Texture Definitions
@@ -187,7 +187,7 @@ end
 
 -- Fix #7: Improved GetTexture logic with clear fallback behavior
 -- Get texture path with fallback support
-function LunarUI:GetTexture(name)
+function LunarUI.GetTexture(name)
     local path = TEXTURES[name]
     if not path then
         return TEXTURES.flat
@@ -207,7 +207,7 @@ function LunarUI:GetTexture(name)
 end
 
 -- Get moon phase texture
-function LunarUI:GetMoonTexture(phase)
+function LunarUI.GetMoonTexture(phase)
     local textureMap = {
         NEW = "moonNew",
         WAXING = "moonWaxing",
@@ -220,7 +220,7 @@ function LunarUI:GetMoonTexture(phase)
 end
 
 -- Get font path
-function LunarUI:GetFont(name)
+function LunarUI.GetFont(name)
     return FONTS[name] or FONTS.normal
 end
 

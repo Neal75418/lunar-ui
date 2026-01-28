@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
 --[[
     LunarUI - Phase Glow Effects
     Moonlight glow effects that respond to Phase changes
@@ -171,7 +171,7 @@ function LunarUI:AddPhaseGlow(frame, glowType)
 end
 
 -- Remove glow from a frame
-function LunarUI:RemovePhaseGlow(frame)
+function LunarUI.RemovePhaseGlow(frame)
     for i = #glowFrames, 1, -1 do
         if glowFrames[i].frame == frame then
             local glowData = glowFrames[i]

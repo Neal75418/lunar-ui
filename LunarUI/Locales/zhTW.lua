@@ -3,7 +3,7 @@
     LunarUI - 繁體中文本地化
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local L = Engine.L or {}
 
 -- 僅在繁中客戶端覆蓋

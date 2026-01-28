@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
 --[[
     LunarUI - 小地圖模組
     Lunar 主題風格的統一小地圖
@@ -11,7 +11,7 @@
     - 月相感知透明度
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ local zoneText
 local clockText
 local buttonFrame
 local collectedButtons = {}
-local coordUpdateTimer
+local _coordUpdateTimer  -- 保留供未來使用
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -337,7 +337,7 @@ local function RegisterMinimapPhaseCallback()
     if phaseCallbackRegistered then return end
     phaseCallbackRegistered = true
 
-    LunarUI:RegisterPhaseCallback(function(oldPhase, newPhase)
+    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
         UpdateMinimapForPhase()
     end)
 end
@@ -386,7 +386,7 @@ local function HideBlizzardMinimapElements()
 
     -- 停用預設縮放行為
     Minimap:EnableMouseWheel(true)
-    Minimap:SetScript("OnMouseWheel", function(self, delta)
+    Minimap:SetScript("OnMouseWheel", function(_self, delta)
         if delta > 0 then
             Minimap_ZoomIn()
         else
@@ -413,13 +413,13 @@ local function CreateMinimapFrame()
 
     -- 拖曳支援
     minimapFrame:RegisterForDrag("LeftButton")
-    minimapFrame:SetScript("OnDragStart", function(self)
+    minimapFrame:SetScript("OnDragStart", function(_self)
         if IsShiftKeyDown() then
-            self:StartMoving()
+            minimapFrame:StartMoving()
         end
     end)
-    minimapFrame:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
+    minimapFrame:SetScript("OnDragStop", function(_self)
+        minimapFrame:StopMovingOrSizing()
     end)
 
     -- 重新設定 Minimap 父框架與大小
@@ -471,7 +471,7 @@ local function CreateMinimapFrame()
     minimapFrame:RegisterEvent("ZONE_CHANGED")
     minimapFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
     minimapFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-    minimapFrame:SetScript("OnEvent", function(self, event)
+    minimapFrame:SetScript("OnEvent", function(_self, _event)
         UpdateZoneText()
     end)
 
@@ -486,7 +486,7 @@ local function CreateMinimapFrame()
     end)
 
     -- 右鍵選單追蹤
-    Minimap:SetScript("OnMouseUp", function(self, button)
+    Minimap:SetScript("OnMouseUp", function(_self, button)
         if button == "RightButton" then
             if MinimapCluster and MinimapCluster.Tracking and MinimapCluster.Tracking.Button then
                 MinimapCluster.Tracking.Button:Click()
@@ -531,21 +531,21 @@ local function CreateMailIndicator()
     mail.glow = glow
 
     mail:RegisterEvent("UPDATE_PENDING_MAIL")
-    mail:SetScript("OnEvent", function(self)
+    mail:SetScript("OnEvent", function(_self)
         if HasNewMail() then
-            self:Show()
+            mail:Show()
         else
-            self:Hide()
+            mail:Hide()
         end
     end)
 
-    mail:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
+    mail:SetScript("OnEnter", function(_self)
+        GameTooltip:SetOwner(mail, "ANCHOR_BOTTOMLEFT")
         GameTooltip:SetText("You have mail!")
         GameTooltip:Show()
     end)
 
-    mail:SetScript("OnLeave", function(self)
+    mail:SetScript("OnLeave", function(_self)
         GameTooltip:Hide()
     end)
 
@@ -652,7 +652,7 @@ local function InitializeMinimap()
 end
 
 -- OnUpdate 清理函數
-function LunarUI:CleanupMinimap()
+function LunarUI.CleanupMinimap()
     if minimapFrame then
         minimapFrame:SetScript("OnUpdate", nil)
         minimapFrame:SetScript("OnEvent", nil)

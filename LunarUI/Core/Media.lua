@@ -4,7 +4,7 @@
     共用視覺資源與輔助函數
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ end
     @param icon 圖示材質
     @param inset 邊緣內縮（預設：1）
 ]]
-function LunarUI:StyleIcon(icon, inset)
+function LunarUI.StyleIcon(icon, inset)
     if not icon then return end
 
     inset = inset or 1
@@ -117,7 +117,7 @@ end
     @param quality 物品品質（0-8）
     @return table 顏色值 {r, g, b}
 ]]
-function LunarUI:GetQualityColor(quality)
+function LunarUI.GetQualityColor(quality)
     local colors = {
         [0] = { 0.62, 0.62, 0.62 },  -- 粗糙
         [1] = { 1.00, 1.00, 1.00 },  -- 普通

@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, missing-parameter
 --[[
     LunarUI - 背包模組
     整合式背包系統，Lunar 主題風格
@@ -13,7 +13,7 @@
     - 月相感知顯示
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local L = Engine.L or {}
 
@@ -57,7 +57,7 @@ local slots = {}
 local bankSlots = {}
 local searchBox
 local bankSearchBox
-local moneyFrame
+local _moneyFrame  -- 保留供未來使用
 local sortButton
 local closeButton
 local isOpen = false
@@ -65,9 +65,12 @@ local isBankOpen = false
 
 -- 銀行容器 ID：-1 = 主銀行（28 格），5-11 = 銀行包
 local BANK_CONTAINER = -1
-local REAGENT_BANK_CONTAINER = -3
+local _REAGENT_BANK_CONTAINER = -3  -- 保留供未來使用
 local FIRST_BANK_BAG = 5
 local LAST_BANK_BAG = 11
+
+-- 前向宣告（函數定義在下方）
+local SellJunk
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -100,8 +103,9 @@ local CACHE_MAX_SIZE = 500
 --[[
     計算字典表大小
     Lua 的 # 運算子僅適用於連續整數鍵，字典需要手動計數
+    保留供未來使用
 ]]
-local function GetTableSize(t)
+local function _GetTableSize(t)
     local count = 0
     for _ in pairs(t) do
         count = count + 1
@@ -831,7 +835,7 @@ local function ProcessBankUpdateBatch()
     end
 
     -- 處理批次
-    for i = 1, BANK_BATCH_SIZE do
+    for _i = 1, BANK_BATCH_SIZE do
         local button = table.remove(bankUpdateQueue, 1)
         if button then
             UpdateBankSlot(button)
@@ -1146,7 +1150,7 @@ eventFrame:RegisterEvent("BANKFRAME_OPENED")
 eventFrame:RegisterEvent("BANKFRAME_CLOSED")
 eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
 
-eventFrame:SetScript("OnEvent", function(self, event, ...)
+eventFrame:SetScript("OnEvent", function(_self, event, ...)
     -- 商人開啟時自動販賣垃圾
     if event == "MERCHANT_SHOW" then
         local db = LunarUI.db and LunarUI.db.profile.bags
@@ -1239,7 +1243,7 @@ local function RegisterBagsPhaseCallback()
     if phaseCallbackRegistered then return end
     phaseCallbackRegistered = true
 
-    LunarUI:RegisterPhaseCallback(function(oldPhase, newPhase)
+    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
         UpdateBagsForPhase()
     end)
 end
@@ -1251,7 +1255,7 @@ end
 --[[
     增強型自動販賣：包含安全檢查與統計資訊
 ]]
-local function SellJunk()
+SellJunk = function()
     local db = LunarUI.db and LunarUI.db.profile.bags
     if not db or not db.autoSellJunk then return end
 

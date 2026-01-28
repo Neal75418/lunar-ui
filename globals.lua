@@ -883,3 +883,175 @@ UIWidgetCenterScreenContainerFrame = nil
 
 ---@type table
 DebuffTypeColor = {}
+
+--------------------------------------------------------------------------------
+-- 滑鼠提示框架
+--------------------------------------------------------------------------------
+
+---@type StatusBar
+GameTooltipStatusBar = nil
+
+---@type GameTooltip
+ShoppingTooltip1 = nil
+
+---@type GameTooltip
+ShoppingTooltip2 = nil
+
+---@type GameTooltip
+ItemRefShoppingTooltip1 = nil
+
+---@type GameTooltip
+ItemRefShoppingTooltip2 = nil
+
+---@type GameTooltip
+WorldMapTooltip = nil
+
+---@type GameTooltip
+WorldMapCompareTooltip1 = nil
+
+---@type GameTooltip
+WorldMapCompareTooltip2 = nil
+
+---@type GameTooltip
+SmallTextTooltip = nil
+
+---@type Frame
+EmbeddedItemTooltip = nil
+
+---@type GameTooltip
+NamePlateTooltip = nil
+
+---@type Frame
+QuestScrollFrame = nil
+
+---@type Frame
+BattlePetTooltip = nil
+
+---@type Frame
+FloatingBattlePetTooltip = nil
+
+---@type Frame
+FloatingPetBattleAbilityTooltip = nil
+
+---@type Frame
+PetBattlePrimaryUnitTooltip = nil
+
+---@type Frame
+PetBattlePrimaryAbilityTooltip = nil
+
+---@type fun(unit: string): string?, string?
+GetGuildInfo = nil
+
+--------------------------------------------------------------------------------
+-- 小地圖相關框架與函數
+--------------------------------------------------------------------------------
+
+---@type fun(): string
+GetZoneText = nil
+
+---@type fun(): number, number
+GetGameTime = nil
+
+---@class C_PvP
+---@field GetZonePVPInfo fun(): string?
+C_PvP = {}
+
+---@class C_Calendar
+---@field OpenCalendar fun()
+---@field GetNumPendingInvites fun(): number
+C_Calendar = {}
+
+---@type Frame
+MinimapBorder = nil
+
+---@type Frame
+MinimapBorderTop = nil
+
+---@type Button
+MinimapZoomIn = nil
+
+---@type Button
+MinimapZoomOut = nil
+
+---@type Button
+MinimapToggleButton = nil
+
+---@type Button
+MiniMapWorldMapButton = nil
+
+---@type Frame
+MiniMapMailBorder = nil
+
+---@type fun()
+Minimap_ZoomIn = nil
+
+---@type fun()
+Minimap_ZoomOut = nil
+
+---@type fun(level: number, value: any, dropDownFrame: Frame, anchorName: string?, xOffset?: number, yOffset?: number)
+ToggleDropDownMenu = nil
+
+---@type Frame
+MiniMapTrackingDropDown = nil
+
+---@type fun(): boolean
+HasNewMail = nil
+
+---@type fun(): string, string, number, string, number, number, boolean, number, number, number
+GetInstanceInfo = nil
+
+---@type fun(difficultyID: number): string?, string?, boolean?, boolean?, boolean?, boolean?, number?
+GetDifficultyInfo = nil
+
+--------------------------------------------------------------------------------
+-- 聊天相關框架與函數
+--------------------------------------------------------------------------------
+
+---@type fun(frame: Frame): boolean
+MouseIsOver = nil
+
+---@type fun(chatType: string, r: number, g: number, b: number)
+ChangeChatColor = nil
+
+---@type fun(chatType: string, enable: boolean)
+SetChatColorNameByClass = nil
+
+---@type string
+CLOSE = nil
+
+---@type fun(event: string, filter: function)
+ChatFrame_AddMessageEventFilter = nil
+
+---@type fun(self: Frame, link: string, text: string, button: string)
+ChatFrame_OnHyperlinkShow = nil
+
+---@type Button
+ChatFrameMenuButton = nil
+
+---@type Button
+ChatFrameChannelButton = nil
+
+---@type Button
+QuickJoinToastButton = nil
+
+--------------------------------------------------------------------------------
+-- 背包相關框架與函數
+--------------------------------------------------------------------------------
+
+---@type fun()
+CloseAllBags = nil
+
+---@type fun()
+CloseBankFrame = nil
+
+---@type fun(button: Button, desaturated: boolean)
+SetItemButtonDesaturated = nil
+
+---@type Frame
+ContainerFrameCombinedBags = nil
+
+---@type Frame
+BankFrame = nil
+
+---@type Frame
+AccountBankPanel = nil

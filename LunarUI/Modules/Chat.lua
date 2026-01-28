@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, missing-parameter
 --[[
     LunarUI - 聊天模組
     Lunar 主題風格的聊天框架
@@ -12,7 +12,7 @@
     - 月相感知淡出
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local L = Engine.L or {}
 
@@ -67,7 +67,8 @@ local copyEditBox
 -- 輔助函數
 --------------------------------------------------------------------------------
 
-local function GetClassColor(class)
+-- 保留供未來使用
+local function _GetClassColor(class)
     if class and RAID_CLASS_COLORS[class] then
         return RAID_CLASS_COLORS[class]
     end
@@ -381,7 +382,7 @@ local function FormatURL(url)
 end
 
 -- 過濾函數：偵測網址並轉換為可點擊連結
-local function AddURLsToMessage(self, event, msg, ...)
+local function AddURLsToMessage(_self, _event, msg, ...)
     if not msg then return false, msg, ... end
 
     local db = LunarUI.db and LunarUI.db.profile.chat
@@ -400,7 +401,7 @@ local function AddURLsToMessage(self, event, msg, ...)
 end
 
 -- 處理網址超連結點擊
-local function HandleURLClick(self, link, text, button)
+local function HandleURLClick(_self, link, _text, _button)
     if not link then return end
 
     local linkType, url = strsplit(":", link, 2)
@@ -415,16 +416,16 @@ local function HandleURLClick(self, link, text, button)
             button1 = closeText,
             hasEditBox = true,
             editBoxWidth = 280,
-            OnShow = function(self, data)
-                self.editBox:SetText(data)
-                self.editBox:HighlightText()
-                self.editBox:SetFocus()
+            OnShow = function(popup, data)
+                popup.editBox:SetText(data)
+                popup.editBox:HighlightText()
+                popup.editBox:SetFocus()
             end,
-            EditBoxOnEnterPressed = function(self)
-                self:GetParent():Hide()
+            EditBoxOnEnterPressed = function(editBox)
+                editBox:GetParent():Hide()
             end,
-            EditBoxOnEscapePressed = function(self)
-                self:GetParent():Hide()
+            EditBoxOnEscapePressed = function(editBox)
+                editBox:GetParent():Hide()
             end,
             timeout = 0,
             whileDead = true,
@@ -459,6 +460,7 @@ local function RegisterURLFilter()
 
     -- 掛鉤所有聊天框架的超連結處理器
     local originalHandler = ChatFrame_OnHyperlinkShow
+    ---@diagnostic disable-next-line: lowercase-global
     ChatFrame_OnHyperlinkShow = function(self, link, text, button)
         if HandleURLClick(self, link, text, button) then
             return
@@ -498,7 +500,7 @@ local function RegisterChatPhaseCallback()
     if phaseCallbackRegistered then return end
     phaseCallbackRegistered = true
 
-    LunarUI:RegisterPhaseCallback(function(oldPhase, newPhase)
+    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
         UpdateChatForPhase()
     end)
 end
@@ -513,7 +515,7 @@ local function AddCopyOption()
     for i = 1, NUM_CHAT_WINDOWS do
         local tab = _G["ChatFrame" .. i .. "Tab"]
         if tab then
-            tab:HookScript("OnClick", function(self, button)
+            tab:HookScript("OnClick", function(_self, button)
                 if button == "RightButton" then
                     local chatFrame = _G["ChatFrame" .. i]
                     if chatFrame then
@@ -587,6 +589,6 @@ hooksecurefunc(LunarUI, "OnEnable", function()
 end)
 
 -- 新增複製命令
-hooksecurefunc(LunarUI, "RegisterCommands", function(self)
+hooksecurefunc(LunarUI, "RegisterCommands", function(_self)
     -- /lunar copy - 複製目前聊天
 end)

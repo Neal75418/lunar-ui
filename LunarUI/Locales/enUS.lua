@@ -3,7 +3,7 @@
     LunarUI - English (US) Localization
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local L = {}
 
 -- General
