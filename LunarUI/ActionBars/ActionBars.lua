@@ -383,29 +383,24 @@ end
 -- 隱藏暴雪動作條
 --------------------------------------------------------------------------------
 
--- 永久隱藏框架的輔助函數（防止重新顯示）
--- 注意：避免在安全框架上使用 SetScript 以防止 taint
-local function HideFramePermanently(frame)
+-- 安全隱藏框架的輔助函數
+-- 只使用 SetAlpha(0)，避免修改框架層級或腳本以防止 taint
+local function HideFrameSafely(frame)
     if not frame then return end
-    -- 使用 SetParent(nil) 將框架從 UI 層級中移除
-    -- 這比 Hide() 更安全，不會造成 taint
-    pcall(function()
-        frame:SetParent(nil)
-        frame:ClearAllPoints()
-    end)
+    -- 只設置透明度，不修改父級或腳本
     pcall(function() frame:SetAlpha(0) end)
-    pcall(function() frame:Hide() end)
-    -- 不要使用 SetScript 或 UnregisterAllEvents，這會導致 taint
+    -- 將框架移到螢幕外而非隱藏（避免 taint）
+    pcall(function()
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
+    end)
 end
 
--- 隱藏框架的所有區域（材質）
+-- 隱藏框架的所有區域（材質）- 只設置透明度
 local function HideFrameRegions(frame)
     if not frame then return end
     local regions = {frame:GetRegions()}
     for _, region in ipairs(regions) do
-        if region and region.Hide then
-            pcall(function() region:Hide() end)
-        end
         if region and region.SetAlpha then
             pcall(function() region:SetAlpha(0) end)
         end
@@ -415,7 +410,7 @@ end
 -- 遞迴隱藏框架及其所有子框架/區域
 local function HideFrameRecursive(frame)
     if not frame then return end
-    HideFramePermanently(frame)
+    HideFrameSafely(frame)
     HideFrameRegions(frame)
 
     -- 遞迴隱藏所有子框架
@@ -425,10 +420,16 @@ local function HideFrameRecursive(frame)
     end
 end
 
+-- 向後相容別名
+local HideFramePermanently = HideFrameSafely
+
 local function HideBlizzardBars()
+    -- 戰鬥中不修改框架以避免 taint
+    if InCombatLockdown() then return end
+
     -- WoW 12.0 完全重新設計動作條
     -- 獅鷲/翼手龍圖案現在在 MainMenuBarArtFrame 及其子框架中
-    -- 使用積極的遞迴隱藏
+    -- 使用安全的隱藏方式（透明度 + 移到螢幕外）
 
     -- 主要動作條框架
     local primaryFrames = {

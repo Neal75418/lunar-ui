@@ -1173,47 +1173,56 @@ end)
 -- 活力條是 UI 元件，使用自訂單位框架時可能被隱藏
 -- 僅調整 parent/strata，不呼叫 Show()（當 barInfo 為 nil 時會導致錯誤）
 local function EnsureVigorBarVisible()
+    -- 戰鬥中不修改框架以避免 taint
+    if InCombatLockdown() then return end
+
     -- PlayerPowerBarAlt 是獨立的替代能量條（飛行活力）
     -- 僅在被移至隱藏父框架時重新設定父框架
     if PlayerPowerBarAlt then
-        local parent = PlayerPowerBarAlt:GetParent()
-        if parent and parent ~= UIParent and not parent:IsShown() then
-            PlayerPowerBarAlt:SetParent(UIParent)
-        end
-        if PlayerPowerBarAlt:GetAlpha() < 1 then
-            PlayerPowerBarAlt:SetAlpha(1)
-        end
-        PlayerPowerBarAlt:SetFrameStrata("HIGH")
+        pcall(function()
+            local parent = PlayerPowerBarAlt:GetParent()
+            if parent and parent ~= UIParent and not parent:IsShown() then
+                PlayerPowerBarAlt:SetParent(UIParent)
+            end
+            if PlayerPowerBarAlt:GetAlpha() < 1 then
+                PlayerPowerBarAlt:SetAlpha(1)
+            end
+            PlayerPowerBarAlt:SetFrameStrata("HIGH")
+        end)
     end
 
     -- UIWidgetPowerBarContainerFrame 是飛行活力條容器（WoW 12.0）
     if UIWidgetPowerBarContainerFrame then
-        local parent = UIWidgetPowerBarContainerFrame:GetParent()
-        if parent and parent ~= UIParent and not parent:IsShown() then
-            UIWidgetPowerBarContainerFrame:SetParent(UIParent)
-        end
-        UIWidgetPowerBarContainerFrame:SetFrameStrata("HIGH")
-        UIWidgetPowerBarContainerFrame:SetAlpha(1)
+        pcall(function()
+            local parent = UIWidgetPowerBarContainerFrame:GetParent()
+            if parent and parent ~= UIParent and not parent:IsShown() then
+                UIWidgetPowerBarContainerFrame:SetParent(UIParent)
+            end
+            UIWidgetPowerBarContainerFrame:SetFrameStrata("HIGH")
+            UIWidgetPowerBarContainerFrame:SetAlpha(1)
+        end)
     end
 
     -- UIWidgetBelowMinimapContainerFrame 也可能包含活力條
     if UIWidgetBelowMinimapContainerFrame then
-        UIWidgetBelowMinimapContainerFrame:SetAlpha(1)
+        pcall(function() UIWidgetBelowMinimapContainerFrame:SetAlpha(1) end)
     end
 
     -- UIWidgetTopCenterContainerFrame 可能包含活力條
     if UIWidgetTopCenterContainerFrame then
-        UIWidgetTopCenterContainerFrame:SetAlpha(1)
+        pcall(function() UIWidgetTopCenterContainerFrame:SetAlpha(1) end)
     end
 
     -- UIWidgetCenterScreenContainerFrame - 中央螢幕元件
     if UIWidgetCenterScreenContainerFrame then
-        local parent = UIWidgetCenterScreenContainerFrame:GetParent()
-        if parent and parent ~= UIParent and not parent:IsShown() then
-            UIWidgetCenterScreenContainerFrame:SetParent(UIParent)
-        end
-        UIWidgetCenterScreenContainerFrame:SetFrameStrata("HIGH")
-        UIWidgetCenterScreenContainerFrame:SetAlpha(1)
+        pcall(function()
+            local parent = UIWidgetCenterScreenContainerFrame:GetParent()
+            if parent and parent ~= UIParent and not parent:IsShown() then
+                UIWidgetCenterScreenContainerFrame:SetParent(UIParent)
+            end
+            UIWidgetCenterScreenContainerFrame:SetFrameStrata("HIGH")
+            UIWidgetCenterScreenContainerFrame:SetAlpha(1)
+        end)
     end
 end
 
