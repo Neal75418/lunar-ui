@@ -14,6 +14,24 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
+-- 效能：快取全域變數
+--------------------------------------------------------------------------------
+
+local math_ceil = math.ceil
+local math_floor = math.floor
+local string_format = string.format
+local table_insert = table.insert
+local table_remove = table.remove
+local ipairs = ipairs
+local type = type
+local wipe = wipe
+local GetTime = GetTime
+local UnitClass = UnitClass
+local GetSpecialization = GetSpecialization
+local C_Spell = C_Spell
+local IsPlayerSpell = IsPlayerSpell
+
+--------------------------------------------------------------------------------
 -- 常數
 --------------------------------------------------------------------------------
 
@@ -174,6 +192,7 @@ local cooldownIcons = {}
 local trackedSpells = {}
 local updateTimer = 0
 local isInitialized = false
+local spellTextureCache = {}  -- 法術圖示快取，避免重複查詢 API
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -192,22 +211,49 @@ local function GetSpellCooldownInfo(spellID)
     return 0, 0, true
 end
 
+-- 無效法術的標記值
+local INVALID_TEXTURE = false
+
 local function GetSpellTexture(spellID)
+    -- 輸入驗證
+    if type(spellID) ~= "number" then
+        return nil
+    end
+
+    -- 檢查快取（包括負面快取）
+    local cached = spellTextureCache[spellID]
+    if cached ~= nil then
+        if cached == INVALID_TEXTURE then
+            return nil
+        end
+        return cached
+    end
+
+    -- 查詢並快取
     local info = C_Spell.GetSpellInfo(spellID)
-    return info and info.iconID or nil
+    local texture = info and info.iconID or nil
+    if texture then
+        spellTextureCache[spellID] = texture
+    else
+        -- 負面快取：避免重複查詢無效法術
+        spellTextureCache[spellID] = INVALID_TEXTURE
+    end
+    return texture
 end
 
-local function IsSpellKnown(spellID)
-    return IsSpellKnown(spellID) or IsPlayerSpell(spellID)
+local function IsSpellKnownByPlayer(spellID)
+    -- 注意：不能用 IsSpellKnown 作為函數名，會造成遞迴
+    local known = C_Spell.IsSpellUsable(spellID)
+    return known or IsPlayerSpell(spellID)
 end
 
 local function FormatCooldown(seconds)
     if seconds >= 60 then
-        return string.format("%dm", math.ceil(seconds / 60))
+        return string_format("%dm", math_ceil(seconds / 60))
     elseif seconds >= 10 then
-        return string.format("%d", math.floor(seconds))
+        return string_format("%d", math_floor(seconds))
     else
-        return string.format("%.1f", seconds)
+        return string_format("%.1f", seconds)
     end
 end
 
@@ -328,7 +374,7 @@ local function UpdateCooldownIcons()
     local currentTime = GetTime()
 
     for _, spellID in ipairs(trackedSpells) do
-        if IsSpellKnown(spellID) then
+        if IsSpellKnownByPlayer(spellID) then
             local start, duration, enabled = GetSpellCooldownInfo(spellID)
 
             if enabled and duration > 1.5 then  -- 忽略 GCD
@@ -431,32 +477,9 @@ end
 -- 月相感知
 --------------------------------------------------------------------------------
 
-local PHASE_ALPHA = {
-    NEW = 0.3,
-    WAXING = 0.7,
-    FULL = 1.0,
-    WANING = 0.8,
-}
-
-function UpdateForPhase()
-    if not cooldownFrame then return end
-
-    local phase = LunarUI:GetPhase()
-    local alpha = PHASE_ALPHA[phase] or 1
-
-    -- 檢查設定
-    local db = LunarUI.db and LunarUI.db.profile.hud
-    if db and db.cooldownTracker == false then
-        alpha = 0
-    end
-
-    cooldownFrame:SetAlpha(alpha)
-
-    if alpha > 0 then
-        cooldownFrame:Show()
-    else
-        cooldownFrame:Hide()
-    end
+local function UpdateForPhase()
+    -- 使用共用 ApplyPhaseAlpha
+    LunarUI:ApplyPhaseAlpha(cooldownFrame, "cooldownTracker")
 end
 
 --------------------------------------------------------------------------------
@@ -511,7 +534,7 @@ end
 -- 新增自訂追蹤技能
 function LunarUI.AddTrackedSpell(spellID)
     if type(spellID) == "number" then
-        table.insert(trackedSpells, spellID)
+        table_insert(trackedSpells, spellID)
     end
 end
 
@@ -519,7 +542,7 @@ end
 function LunarUI.RemoveTrackedSpell(spellID)
     for i, id in ipairs(trackedSpells) do
         if id == spellID then
-            table.remove(trackedSpells, i)
+            table_remove(trackedSpells, i)
             return
         end
     end
@@ -532,6 +555,7 @@ function LunarUI.CleanupCooldownTracker()
     end
     eventFrame:UnregisterAllEvents()
     eventFrame:SetScript("OnUpdate", nil)
+    wipe(spellTextureCache)  -- 清理圖示快取
 end
 
 -- 掛鉤至插件啟用

@@ -14,6 +14,27 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
+-- 效能：快取全域變數
+--------------------------------------------------------------------------------
+
+local math_floor = math.floor
+local math_random = math.random
+local math_sin = math.sin
+local math_pi = math.pi
+local string_format = string.format
+local string_lower = string.lower
+local tostring = tostring
+local table_insert = table.insert
+local table_remove = table.remove
+local ipairs = ipairs
+local type = type
+local wipe = wipe
+local GetTime = GetTime
+local UnitGUID = UnitGUID
+local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
+local select = select
+
+--------------------------------------------------------------------------------
 -- 常數
 --------------------------------------------------------------------------------
 
@@ -67,8 +88,7 @@ local fctFrame = nil
 local textPool = {}
 local activeTexts = {}
 local isInitialized = false
-local _throttleTimer = 0           -- 保留供未來節流使用
-local _THROTTLE_INTERVAL = 0.05    -- 節流間隔（保留供未來使用）
+local playerGUID = nil  -- 快取玩家 GUID，避免每次事件都查詢
 
 -- 月相過濾器
 local phaseFilter = {
@@ -84,18 +104,18 @@ local phaseFilter = {
 
 local function FormatNumber(number)
     if number >= 1000000 then
-        return string.format("%.1fM", number / 1000000)
+        return string_format("%.1fM", number / 1000000)
     elseif number >= 1000 then
-        return string.format("%.1fK", number / 1000)
+        return string_format("%.1fK", number / 1000)
     else
-        return tostring(math.floor(number))
+        return tostring(math_floor(number))
     end
 end
 
 local function ShouldShowNumber()
     local phase = LunarUI:GetPhase()
     local threshold = phaseFilter[phase] or 1
-    return math.random() <= threshold
+    return math_random() <= threshold
 end
 
 --------------------------------------------------------------------------------
@@ -131,7 +151,7 @@ local function GetTextFromPool()
     -- 池已滿，建立新的
     if #textPool < POOL_SIZE then
         local newText = CreateFloatingText(fctFrame)
-        table.insert(textPool, newText)
+        table_insert(textPool, newText)
         return newText
     end
 
@@ -139,7 +159,7 @@ local function GetTextFromPool()
     local oldest = activeTexts[1]
     if oldest then
         oldest:Hide()
-        table.remove(activeTexts, 1)
+        table_remove(activeTexts, 1)
         return oldest
     end
 
@@ -150,7 +170,7 @@ local function ReleaseText(text)
     text:Hide()
     for _i, t in ipairs(activeTexts) do
         if t == text then
-            table.remove(activeTexts, _i)
+            table_remove(activeTexts, _i)
             break
         end
     end
@@ -178,7 +198,7 @@ local function UpdateAnimations(_elapsed)
             local yOffset = data.startY + (ANIMATION_HEIGHT * progress)
 
             -- 加入少許左右搖擺
-            local xOffset = data.startX + (math.sin(progress * math.pi * 2) * 10)
+            local xOffset = data.startX + (math_sin(progress * math_pi * 2) * 10)
 
             text:SetPoint("CENTER", fctFrame, "CENTER", xOffset, yOffset)
 
@@ -259,13 +279,13 @@ local function ShowFloatingText(amount, textType, isCrit, offsetX)
     text:SetTextScale(1)
     text:Show()
 
-    table.insert(activeTexts, text)
+    table_insert(activeTexts, text)
 end
 
 local function ShowEvent(eventType)
     local eventText = EVENT_TEXT[eventType] or eventType
-    local _color = COLORS[string.lower(eventType)] or COLORS.miss
-    ShowFloatingText(eventText, string.lower(eventType), false, 0)
+    local lowerType = string_lower(eventType)
+    ShowFloatingText(eventText, lowerType, false, 0)
 end
 
 --------------------------------------------------------------------------------
@@ -290,7 +310,7 @@ local function CreateFCTFrame()
     -- 建立文字池
     for _i = 1, 10 do
         local text = CreateFloatingText(fctFrame)
-        table.insert(textPool, text)
+        table_insert(textPool, text)
     end
 
     -- OnUpdate 處理
@@ -306,13 +326,24 @@ end
 --------------------------------------------------------------------------------
 
 local function ProcessCombatLogEvent()
+    -- 安全檢查：確保 playerGUID 已快取
+    if not playerGUID then
+        playerGUID = UnitGUID("player")
+        if not playerGUID then return end
+    end
+
     local _timestamp, subevent, _, sourceGUID, _sourceName, _sourceFlags, _sourceRaidFlags,
           destGUID, _destName, _destFlags, _destRaidFlags = CombatLogGetCurrentEventInfo()
 
-    local playerGUID = UnitGUID("player")
+    -- 早期過濾：只處理與玩家相關的事件
+    local isPlayerSource = sourceGUID == playerGUID
+    local isPlayerDest = destGUID == playerGUID
+    if not isPlayerSource and not isPlayerDest then
+        return  -- 與玩家無關，跳過
+    end
 
     -- 玩家造成的傷害
-    if sourceGUID == playerGUID then
+    if isPlayerSource then
         if subevent == "SWING_DAMAGE" then
             local amount, _overkill, _school, _resisted, _blocked, _absorbed, critical = select(12, CombatLogGetCurrentEventInfo())
             ShowFloatingText(amount, "damage", critical, 50)
@@ -333,14 +364,14 @@ local function ProcessCombatLogEvent()
         elseif subevent == "SPELL_HEAL" or subevent == "SPELL_PERIODIC_HEAL" then
             local _spellId, _spellName, _spellSchool, amount, _overhealing, _absorbed, critical = select(12, CombatLogGetCurrentEventInfo())
             -- 只顯示對自己的治療
-            if destGUID == playerGUID then
+            if isPlayerDest then
                 ShowFloatingText(amount, "heal", critical, -50)
             end
         end
     end
 
     -- 玩家受到的傷害
-    if destGUID == playerGUID then
+    if isPlayerDest then
         if subevent == "SWING_DAMAGE" then
             local amount, _overkill, _school, _resisted, _blocked, _absorbed, _critical = select(12, CombatLogGetCurrentEventInfo())
             ShowFloatingText(amount, "damage", false, -50)
@@ -376,32 +407,9 @@ end
 -- 月相感知
 --------------------------------------------------------------------------------
 
-local PHASE_ALPHA = {
-    NEW = 0.4,
-    WAXING = 0.7,
-    FULL = 1.0,
-    WANING = 0.8,
-}
-
 local function UpdateForPhase()
-    if not fctFrame then return end
-
-    local phase = LunarUI:GetPhase()
-    local alpha = PHASE_ALPHA[phase] or 1
-
-    -- 檢查設定
-    local db = LunarUI.db and LunarUI.db.profile.hud
-    if db and db.floatingCombatText == false then
-        alpha = 0
-    end
-
-    fctFrame:SetAlpha(alpha)
-
-    if alpha > 0 then
-        fctFrame:Show()
-    else
-        fctFrame:Hide()
-    end
+    -- 使用共用 ApplyPhaseAlpha
+    LunarUI:ApplyPhaseAlpha(fctFrame, "floatingCombatText")
 end
 
 --------------------------------------------------------------------------------
@@ -410,6 +418,9 @@ end
 
 local function Initialize()
     if isInitialized then return end
+
+    -- 快取玩家 GUID
+    playerGUID = UnitGUID("player")
 
     CreateFCTFrame()
 
@@ -434,7 +445,11 @@ eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
 eventFrame:SetScript("OnEvent", function(_self, event)
     if event == "PLAYER_ENTERING_WORLD" then
-        C_Timer.After(1.0, Initialize)
+        -- 每次進入世界時重新快取 playerGUID（處理副本轉換等情況）
+        playerGUID = UnitGUID("player")
+        if not isInitialized then
+            C_Timer.After(1.0, Initialize)
+        end
     elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
         if isInitialized then
             ProcessCombatLogEvent()

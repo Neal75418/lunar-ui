@@ -14,6 +14,16 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
+-- 效能：快取全域變數
+--------------------------------------------------------------------------------
+
+local math_floor = math.floor
+local string_format = string.format
+local ipairs = ipairs
+local GetTime = GetTime
+local C_UnitAuras = C_UnitAuras
+
+--------------------------------------------------------------------------------
 -- 常數
 --------------------------------------------------------------------------------
 
@@ -66,13 +76,13 @@ local isInitialized = false
 
 local function FormatDuration(seconds)
     if seconds >= 3600 then
-        return string.format("%dh", math.floor(seconds / 3600))
+        return string_format("%dh", math_floor(seconds / 3600))
     elseif seconds >= 60 then
-        return string.format("%dm", math.floor(seconds / 60))
+        return string_format("%dm", math_floor(seconds / 60))
     elseif seconds >= 10 then
-        return string.format("%d", math.floor(seconds))
+        return string_format("%d", math_floor(seconds))
     else
-        return string.format("%.1f", seconds)
+        return string_format("%.1f", seconds)
     end
 end
 
@@ -373,35 +383,16 @@ end
 -- 月相感知
 --------------------------------------------------------------------------------
 
-local PHASE_ALPHA = {
-    NEW = 0.4,
-    WAXING = 0.7,
-    FULL = 1.0,
-    WANING = 0.8,
-}
-
 local function UpdateForPhase()
     if not buffFrame or not debuffFrame then return end
 
-    local phase = LunarUI:GetPhase()
-    local alpha = PHASE_ALPHA[phase] or 1
+    -- 使用共用函數套用至兩個框架
+    local alpha = LunarUI:ApplyPhaseAlpha(buffFrame, "auraFrames")
+    LunarUI:ApplyPhaseAlpha(debuffFrame, "auraFrames")
 
-    -- 檢查設定
-    local db = LunarUI.db and LunarUI.db.profile.hud
-    if db and db.auraFrames == false then
-        alpha = 0
-    end
-
-    buffFrame:SetAlpha(alpha)
-    debuffFrame:SetAlpha(alpha)
-
+    -- 額外邏輯：可見時更新光環
     if alpha > 0 then
-        buffFrame:Show()
-        debuffFrame:Show()
         UpdateAuras()
-    else
-        buffFrame:Hide()
-        debuffFrame:Hide()
     end
 end
 

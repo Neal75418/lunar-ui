@@ -18,6 +18,18 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
+-- 效能：快取全域變數
+--------------------------------------------------------------------------------
+
+local math_floor = math.floor
+local ipairs = ipairs
+local UnitClass = UnitClass
+local UnitPower = UnitPower
+local UnitPowerMax = UnitPowerMax
+local GetSpecialization = GetSpecialization
+local GetRuneCooldown = GetRuneCooldown
+
+--------------------------------------------------------------------------------
 -- 常數
 --------------------------------------------------------------------------------
 
@@ -396,30 +408,14 @@ end)
 -- 月相感知
 --------------------------------------------------------------------------------
 
-local PHASE_ALPHA = {
-    NEW = 0.3,
-    WAXING = 0.7,
-    FULL = 1.0,
-    WANING = 0.8,
-}
-
 local function UpdateForPhase()
     if not resourceFrame then return end
 
-    local phase = LunarUI:GetPhase()
-    local alpha = PHASE_ALPHA[phase] or 1
+    -- 使用共用 ApplyPhaseAlpha
+    local alpha = LunarUI:ApplyPhaseAlpha(resourceFrame, "classResources")
 
-    -- 檢查設定
-    local db = LunarUI.db and LunarUI.db.profile.hud
-    if db and db.classResources == false then
-        alpha = 0
-    end
-
-    resourceFrame:SetAlpha(alpha)
-
-    if alpha > 0 and resourceType then
-        resourceFrame:Show()
-    elseif alpha == 0 then
+    -- 特殊邏輯：無資源類型時隱藏
+    if alpha > 0 and not resourceType then
         resourceFrame:Hide()
     end
 end

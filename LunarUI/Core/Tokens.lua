@@ -160,3 +160,51 @@ end
 
 -- 匯出預設值供資料庫使用
 LunarUI.DEFAULT_TOKENS = DEFAULT_TOKENS
+
+--------------------------------------------------------------------------------
+-- HUD 模組共用常數與函數
+--------------------------------------------------------------------------------
+
+--[[
+    HUD 模組的月相透明度設定
+    各 HUD 模組應使用此共用常數，而非各自定義
+]]
+LunarUI.PHASE_ALPHA = {
+    NEW = 0.4,
+    WAXING = 0.7,
+    FULL = 1.0,
+    WANING = 0.8,
+}
+
+--[[
+    將月相透明度套用至 HUD 框架
+    統一所有 HUD 模組的月相感知邏輯
+
+    @param frame 要套用的框架
+    @param configKey HUD 設定鍵（如 "classResources", "cooldownTracker"）
+    @param customAlpha 自訂透明度表（可選，預設使用 PHASE_ALPHA）
+    @return number 實際套用的透明度
+]]
+function LunarUI:ApplyPhaseAlpha(frame, configKey, customAlpha)
+    if not frame then return 0 end
+
+    local phase = self:GetPhase()
+    local phaseAlpha = customAlpha or self.PHASE_ALPHA
+    local alpha = phaseAlpha[phase] or 1
+
+    -- 檢查 HUD 設定
+    local db = self.db and self.db.profile and self.db.profile.hud
+    if db and configKey and db[configKey] == false then
+        alpha = 0
+    end
+
+    frame:SetAlpha(alpha)
+
+    if alpha > 0 then
+        frame:Show()
+    else
+        frame:Hide()
+    end
+
+    return alpha
+end

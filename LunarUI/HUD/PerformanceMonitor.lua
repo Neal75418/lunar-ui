@@ -32,8 +32,8 @@ local LATENCY_THRESHOLDS = {
     bad = 400,     -- 紅色
 }
 
--- 月相對應透明度
-local PHASE_ALPHA = {
+-- 效能監控專用透明度（NEW 時完全隱藏）
+local PERF_PHASE_ALPHA = {
     NEW = 0,       -- 完全隱藏
     WAXING = 0.5,  -- 半透明
     FULL = 1.0,    -- 完全顯示
@@ -201,21 +201,13 @@ end
 local function UpdateForPhase()
     if not perfFrame then return end
 
-    local phase = LunarUI:GetPhase()
-    local alpha = PHASE_ALPHA[phase] or 0
+    -- 使用共用函數，但用自訂透明度表
+    local alpha = LunarUI:ApplyPhaseAlpha(perfFrame, "performanceMonitor", PERF_PHASE_ALPHA)
 
-    -- 檢查設定是否啟用
-    local db = LunarUI.db and LunarUI.db.profile.hud
-    if db and db.performanceMonitor == false then
-        alpha = 0
-    end
-
+    -- 根據可見性控制更新
     if alpha > 0 then
-        perfFrame:SetAlpha(alpha)
-        perfFrame:Show()
         StartUpdating()
     else
-        perfFrame:Hide()
         StopUpdating()
     end
 end
