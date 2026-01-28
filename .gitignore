@@ -39,8 +39,5 @@ LunarUI/Libs/
 node_modules/
 package-lock.json
 
-# BigWigsMods Packager output
-.release/
-
 # CurseForge/Wago release zips
 *.zip

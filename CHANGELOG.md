@@ -179,15 +179,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History Summary
 
-| Version | Milestone | Description |
-|---------|-----------|-------------|
-| 0.7.0 | M7 | Configuration System (LunarUI_Options) |
-| 0.6.0 | M6 | Visual Theme (Media, PhaseGlow) |
-| 0.5.0 | M5 | Non-combat UI (Minimap, Bags, Chat, Tooltip) |
-| 0.4.0 | M4 | ActionBars |
-| 0.3.0 | M3 | Nameplates |
-| 0.2.0 | M2 | Complete UnitFrames |
-| 0.1.0 | M1 | LunarCore + Phase System |
+| Version | Milestone | Description                                  |
+|---------|-----------|----------------------------------------------|
+| 0.7.0   | M7        | Configuration System (LunarUI_Options)       |
+| 0.6.0   | M6        | Visual Theme (Media, PhaseGlow)              |
+| 0.5.0   | M5        | Non-combat UI (Minimap, Bags, Chat, Tooltip) |
+| 0.4.0   | M4        | ActionBars                                   |
+| 0.3.0   | M3        | Nameplates                                   |
+| 0.2.0   | M2        | Complete UnitFrames                          |
+| 0.1.0   | M1        | LunarCore + Phase System                     |
 
 ---
 
