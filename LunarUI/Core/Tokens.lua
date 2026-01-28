@@ -1,71 +1,81 @@
 --[[
-    LunarUI - Design Tokens
-    Visual parameters for each Lunar Phase
+    LunarUI - 設計標記
+    每個月相的視覺參數設定
 ]]
 
 local ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
--- Default token values for each phase
+--------------------------------------------------------------------------------
+-- 預設標記值
+--------------------------------------------------------------------------------
+
 local DEFAULT_TOKENS = {
     NEW = {
-        alpha = 0.40,       -- Low presence
-        scale = 0.95,       -- Slightly smaller
-        contrast = 0.6,     -- Lower contrast
-        glowIntensity = 0,  -- No glow
+        alpha = 0.40,           -- 低可見度
+        scale = 0.95,           -- 略微縮小
+        contrast = 0.6,         -- 低對比
+        glowIntensity = 0,      -- 無光暈
     },
     WAXING = {
-        alpha = 0.65,       -- Building up
-        scale = 0.98,       -- Almost full size
-        contrast = 0.8,     -- Medium contrast
-        glowIntensity = 0.3, -- Subtle glow
+        alpha = 0.65,           -- 逐漸增強
+        scale = 0.98,           -- 接近全尺寸
+        contrast = 0.8,         -- 中等對比
+        glowIntensity = 0.3,    -- 微弱光暈
     },
     FULL = {
-        alpha = 1.00,       -- Full visibility
-        scale = 1.00,       -- Full size
-        contrast = 1.0,     -- Maximum contrast
-        glowIntensity = 0.8, -- Strong glow
+        alpha = 1.00,           -- 完全可見
+        scale = 1.00,           -- 全尺寸
+        contrast = 1.0,         -- 最大對比
+        glowIntensity = 0.8,    -- 強烈光暈
     },
     WANING = {
-        alpha = 0.75,       -- Fading
-        scale = 0.98,       -- Slightly smaller
-        contrast = 0.85,    -- Good contrast still
-        glowIntensity = 0.4, -- Dimming glow
+        alpha = 0.75,           -- 漸弱
+        scale = 0.98,           -- 略微縮小
+        contrast = 0.85,        -- 維持良好對比
+        glowIntensity = 0.4,    -- 減弱光暈
     },
 }
 
--- Color palette (Lunar theme)
+--------------------------------------------------------------------------------
+-- 色彩配置
+--------------------------------------------------------------------------------
+
 LunarUI.Colors = {
-    -- Parchment tones (hand-drawn style)
+    -- 羊皮紙風格（手繪風）
     parchment = { 0.85, 0.78, 0.65, 0.95 },
     inkDark = { 0.15, 0.12, 0.08, 1 },
     inkFaded = { 0.4, 0.35, 0.25, 1 },
 
-    -- Health/Power
-    health = { 0.6, 0.1, 0.1, 1 },      -- Blood red
-    mana = { 0.2, 0.3, 0.5, 1 },        -- Ink blue
-    energy = { 0.9, 0.8, 0.3, 1 },      -- Gold
-    rage = { 0.8, 0.2, 0.2, 1 },        -- Deep red
-    focus = { 0.7, 0.5, 0.3, 1 },       -- Brown
+    -- 生命值/能量
+    health = { 0.6, 0.1, 0.1, 1 },
+    mana = { 0.2, 0.3, 0.5, 1 },
+    energy = { 0.9, 0.8, 0.3, 1 },
+    rage = { 0.8, 0.2, 0.2, 1 },
+    focus = { 0.7, 0.5, 0.3, 1 },
 
-    -- Lunar theme
-    moonSilver = { 0.75, 0.78, 0.85, 1 },   -- Moonlight
-    nightPurple = { 0.25, 0.2, 0.4, 1 },    -- Night sky
-    starGold = { 0.9, 0.8, 0.5, 1 },        -- Starlight
-    lunarGlow = { 0.6, 0.7, 0.9, 0.5 },     -- Moon glow
+    -- 月相主題
+    moonSilver = { 0.75, 0.78, 0.85, 1 },
+    nightPurple = { 0.25, 0.2, 0.4, 1 },
+    starGold = { 0.9, 0.8, 0.5, 1 },
+    lunarGlow = { 0.6, 0.7, 0.9, 0.5 },
 
-    -- UI elements
+    -- 介面元素
     border = { 0.1, 0.1, 0.1, 1 },
     backdrop = { 0.05, 0.05, 0.05, 0.9 },
 }
 
--- Current tokens (will be updated based on phase)
+-- 目前標記（根據月相更新）
 LunarUI.tokens = {}
 
+--------------------------------------------------------------------------------
+-- 標記取得函數
+--------------------------------------------------------------------------------
+
 --[[
-    Get tokens for a specific phase
-    @param phase string - Phase name (NEW, WAXING, FULL, WANING)
-    @return table - Token values
+    取得指定月相的標記
+    @param phase 月相名稱（NEW, WAXING, FULL, WANING）
+    @return table 標記值
 ]]
 function LunarUI:GetTokensForPhase(phase)
     local db = self.db and self.db.profile and self.db.profile.tokens
@@ -76,8 +86,8 @@ function LunarUI:GetTokensForPhase(phase)
 end
 
 --[[
-    Get current tokens based on current phase
-    @return table - Current token values
+    取得目前月相的標記
+    @return table 目前標記值
 ]]
 function LunarUI:GetTokens()
     local phase = self:GetPhase()
@@ -85,17 +95,20 @@ function LunarUI:GetTokens()
 end
 
 --[[
-    Update current tokens when phase changes
-    Called by PhaseManager
+    更新目前標記（月相變化時呼叫）
 ]]
 function LunarUI:UpdateTokens()
     self.tokens = self:GetTokens()
 end
 
+--------------------------------------------------------------------------------
+-- 標記應用函數
+--------------------------------------------------------------------------------
+
 --[[
-    Apply tokens to a frame
-    @param frame Frame - The frame to apply tokens to
-    @param tokens table (optional) - Specific tokens to use
+    將標記套用至框架
+    @param frame 要套用的框架
+    @param tokens 指定的標記（可選）
 ]]
 function LunarUI:ApplyTokensToFrame(frame, tokens)
     tokens = tokens or self:GetTokens()
@@ -103,32 +116,33 @@ function LunarUI:ApplyTokensToFrame(frame, tokens)
     if not frame then return end
     if not tokens then return end
 
-    -- Apply alpha (Fix #11: type check)
+    -- 套用透明度（需型別檢查）
     if tokens.alpha and type(tokens.alpha) == "number" then
         frame:SetAlpha(tokens.alpha)
     end
 
-    -- Apply scale (Fix #11: type check)
+    -- 套用縮放（需型別檢查）
     if tokens.scale and type(tokens.scale) == "number" then
         frame:SetScale(tokens.scale)
     end
 end
 
 --[[
-    Interpolate between two token sets (for smooth transitions)
-    @param from table - Starting tokens
-    @param to table - Target tokens
-    @param progress number - 0 to 1
-    @return table - Interpolated tokens
+    在兩組標記間進行插值（用於平滑過渡）
+    @param from 起始標記
+    @param to 目標標記
+    @param progress 進度（0 至 1）
+    @return table 插值後的標記
 ]]
 function LunarUI:InterpolateTokens(from, to, progress)
     local result = {}
-    -- Fix #32: Handle edge cases when from is nil or empty
+
+    -- 處理 from 為 nil 或空值的邊界情況
     from = from or {}
     to = to or {}
 
     for key, toValue in pairs(to) do
-        -- Fix #32: Safely get from value, default to toValue if nil
+        -- 安全取得 from 值，若為 nil 則使用 toValue
         local fromValue = from[key]
         if fromValue == nil then
             fromValue = toValue
@@ -143,5 +157,5 @@ function LunarUI:InterpolateTokens(from, to, progress)
     return result
 end
 
--- Export defaults for database
+-- 匯出預設值供資料庫使用
 LunarUI.DEFAULT_TOKENS = DEFAULT_TOKENS

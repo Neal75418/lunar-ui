@@ -1,21 +1,21 @@
 --[[
-    LunarUI - Tooltip Module
-    Unified style tooltip with Lunar theme
+    LunarUI - 滑鼠提示模組
+    Lunar 主題風格的統一滑鼠提示
 
-    Features:
-    - Custom border and background (Lunar theme)
-    - Item level display
-    - Spell ID display (optional)
-    - Unit class coloring
-    - Target of target display
-    - Phase-aware anchor position
+    功能：
+    - 自訂邊框與背景（Lunar 主題）
+    - 物品等級顯示
+    - 法術 ID 顯示（可選）
+    - 單位職業著色
+    - 目標的目標顯示
+    - 月相感知定位
 ]]
 
 local ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
--- Constants
+-- 常數
 --------------------------------------------------------------------------------
 
 local backdropTemplate = {
@@ -28,13 +28,13 @@ local backdropTemplate = {
 local CLASS_COLORS = RAID_CLASS_COLORS
 
 --------------------------------------------------------------------------------
--- Module State
+-- 模組狀態
 --------------------------------------------------------------------------------
 
 local tooltipStyled = false
 
 --------------------------------------------------------------------------------
--- Helper Functions
+-- 輔助函數
 --------------------------------------------------------------------------------
 
 local function GetItemLevel(itemLink)
@@ -58,11 +58,11 @@ local function GetUnitColor(unit)
         local reaction = UnitReaction(unit, "player")
         if reaction then
             if reaction >= 5 then
-                return 0.2, 0.8, 0.2 -- Friendly
+                return 0.2, 0.8, 0.2  -- 友善
             elseif reaction == 4 then
-                return 1, 1, 0 -- Neutral
+                return 1, 1, 0        -- 中立
             else
-                return 0.8, 0.2, 0.2 -- Hostile
+                return 0.8, 0.2, 0.2  -- 敵對
             end
         end
     end
@@ -82,19 +82,19 @@ local function FormatNumber(num)
 end
 
 --------------------------------------------------------------------------------
--- Tooltip Styling
+-- 滑鼠提示樣式
 --------------------------------------------------------------------------------
 
 local function StyleTooltip(tooltip)
     if not tooltip then return end
 
-    -- Apply backdrop
+    -- 套用背景
     if tooltip.SetBackdrop then
         tooltip:SetBackdrop(backdropTemplate)
         tooltip:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
         tooltip:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
     elseif tooltip.NineSlice then
-        -- Retail tooltip uses NineSlice
+        -- 正式服滑鼠提示使用 NineSlice
         tooltip.NineSlice:SetAlpha(0)
 
         if not tooltip.LunarBackdrop then
@@ -108,7 +108,7 @@ local function StyleTooltip(tooltip)
         end
     end
 
-    -- Style status bar (health bar)
+    -- 樣式化狀態列（血量條）
     if tooltip.StatusBar or GameTooltipStatusBar then
         local statusBar = tooltip.StatusBar or GameTooltipStatusBar
         statusBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
@@ -117,7 +117,7 @@ local function StyleTooltip(tooltip)
         statusBar:SetPoint("BOTTOMLEFT", tooltip, "BOTTOMLEFT", 2, 2)
         statusBar:SetPoint("BOTTOMRIGHT", tooltip, "BOTTOMRIGHT", -2, 2)
 
-        -- Add background to status bar
+        -- 為狀態列新增背景
         if not statusBar.LunarBG then
             local bg = statusBar:CreateTexture(nil, "BACKGROUND")
             bg:SetAllPoints()
@@ -158,19 +158,19 @@ local function StyleAllTooltips()
 end
 
 --------------------------------------------------------------------------------
--- Unit Tooltip Enhancement
+-- 單位滑鼠提示增強
 --------------------------------------------------------------------------------
 
 local function OnTooltipSetUnit(tooltip)
     local db = LunarUI.db and LunarUI.db.profile.tooltip
     if not db or not db.enabled then return end
 
-    -- Fix #80: Check if GetUnit exists before calling
+    -- 呼叫前檢查 GetUnit 是否存在
     if not tooltip.GetUnit then return end
     local _, unit = tooltip:GetUnit()
     if not unit then return end
 
-    -- Color the tooltip border based on unit
+    -- 依單位著色滑鼠提示邊框
     local r, g, b = GetUnitColor(unit)
     if tooltip.SetBackdropBorderColor then
         tooltip:SetBackdropBorderColor(r, g, b, 1)
@@ -178,46 +178,46 @@ local function OnTooltipSetUnit(tooltip)
         tooltip.LunarBackdrop:SetBackdropBorderColor(r, g, b, 1)
     end
 
-    -- Color the status bar
+    -- 著色狀態列
     local statusBar = tooltip.StatusBar or GameTooltipStatusBar
     if statusBar then
         statusBar:SetStatusBarColor(r, g, b)
     end
 
-    -- Add target of target
+    -- 新增目標的目標
     if db.showTargetTarget and UnitExists(unit .. "target") then
         local targetName = UnitName(unit .. "target")
         if targetName then
             local tr, tg, tb = GetUnitColor(unit .. "target")
             tooltip:AddLine(" ")
-            tooltip:AddLine("|cffffffffTarget:|r " .. targetName, tr, tg, tb)
+            tooltip:AddLine("|cffffffff目標:|r " .. targetName, tr, tg, tb)
         end
     end
 
-    -- Add guild info for players
+    -- 為玩家新增公會資訊
     if UnitIsPlayer(unit) then
         local guildName, guildRank = GetGuildInfo(unit)
         if guildName then
-            -- Guild name is usually already shown, but we can style it
+            -- 公會名稱通常已顯示，但我們可以進行樣式化
         end
     end
 
-    -- Add role for group members
+    -- 為團隊成員新增角色資訊
     if UnitInParty(unit) or UnitInRaid(unit) then
         local role = UnitGroupRolesAssigned(unit)
         if role and role ~= "NONE" then
             local roleText = {
-                TANK = "|cff5555ffTank|r",
-                HEALER = "|cff55ff55Healer|r",
-                DAMAGER = "|cffff5555DPS|r",
+                TANK = "|cff5555ff坦克|r",
+                HEALER = "|cff55ff55治療|r",
+                DAMAGER = "|cffff5555傷害|r",
             }
             if roleText[role] then
-                tooltip:AddLine("Role: " .. roleText[role])
+                tooltip:AddLine("角色: " .. roleText[role])
             end
         end
     end
 
-    -- Fix #78: Show NPC ID for non-player units (useful for developers)
+    -- 為非玩家單位顯示 NPC ID（對開發者有用）
     if not UnitIsPlayer(unit) then
         local guid = UnitGUID(unit)
         if guid then
@@ -234,23 +234,23 @@ local function OnTooltipSetUnit(tooltip)
 end
 
 --------------------------------------------------------------------------------
--- Item Tooltip Enhancement
+-- 物品滑鼠提示增強
 --------------------------------------------------------------------------------
 
 local function OnTooltipSetItem(tooltip)
     local db = LunarUI.db and LunarUI.db.profile.tooltip
     if not db or not db.enabled then return end
 
-    -- Fix #80: Check if GetItem exists before calling (ShoppingTooltip doesn't have it)
+    -- 呼叫前檢查 GetItem 是否存在（ShoppingTooltip 沒有此方法）
     if not tooltip.GetItem then return end
     local _, itemLink = tooltip:GetItem()
     if not itemLink then return end
 
-    -- Show item level
+    -- 顯示物品等級
     if db.showItemLevel then
         local itemLevel = GetItemLevel(itemLink)
         if itemLevel and itemLevel > 1 then
-            -- Find the first line that shows item level or add it
+            -- 尋找顯示物品等級的第一行或新增
             local found = false
             for i = 2, tooltip:NumLines() do
                 local line = _G[tooltip:GetName() .. "TextLeft" .. i]
@@ -265,22 +265,22 @@ local function OnTooltipSetItem(tooltip)
 
             if not found then
                 tooltip:AddLine(" ")
-                tooltip:AddLine("|cff00ff00Item Level: " .. itemLevel .. "|r")
+                tooltip:AddLine("|cff00ff00物品等級: " .. itemLevel .. "|r")
             end
         end
     end
 
-    -- Show item ID (debug option)
+    -- 顯示物品 ID（除錯選項）
     if db.showItemID then
         local itemID = itemLink:match("item:(%d+)")
         if itemID then
-            tooltip:AddLine("|cff888888Item ID: " .. itemID .. "|r")
+            tooltip:AddLine("|cff888888物品 ID: " .. itemID .. "|r")
         end
     end
 
-    -- Fix #79: Color tooltip border by item quality
+    -- 依物品品質著色滑鼠提示邊框
     local quality = select(3, C_Item.GetItemInfo(itemLink))
-    if quality and quality > 1 then  -- Only for uncommon and above
+    if quality and quality > 1 then  -- 僅優秀及以上
         local r, g, b = C_Item.GetItemQualityColor(quality)
         if r and g and b then
             if tooltip.SetBackdropBorderColor then
@@ -295,7 +295,7 @@ local function OnTooltipSetItem(tooltip)
 end
 
 --------------------------------------------------------------------------------
--- Spell Tooltip Enhancement
+-- 法術滑鼠提示增強
 --------------------------------------------------------------------------------
 
 local function OnTooltipSetSpell(tooltip)
@@ -303,20 +303,20 @@ local function OnTooltipSetSpell(tooltip)
     if not db or not db.enabled then return end
     if not db.showSpellID then return end
 
-    -- Fix #80: Check if GetSpell exists before calling
+    -- 呼叫前檢查 GetSpell 是否存在
     if not tooltip.GetSpell then return end
     local spellID = select(2, tooltip:GetSpell())
     if spellID then
-        tooltip:AddLine("|cff888888Spell ID: " .. spellID .. "|r")
+        tooltip:AddLine("|cff888888法術 ID: " .. spellID .. "|r")
         tooltip:Show()
     end
 end
 
 --------------------------------------------------------------------------------
--- Tooltip Positioning
+-- 滑鼠提示定位
 --------------------------------------------------------------------------------
 
--- Fix #90: Adaptive tooltip positioning to avoid screen edges
+-- 自適應滑鼠提示定位避免螢幕邊緣
 local function AdjustTooltipPosition(tooltip)
     if not tooltip or not tooltip:IsShown() then return end
 
@@ -335,27 +335,27 @@ local function AdjustTooltipPosition(tooltip)
 
     local offsetX, offsetY = 0, 0
 
-    -- Check right edge
+    -- 檢查右邊緣
     if right * scale > screenWidth then
         offsetX = screenWidth - (right * scale) - 10
     end
 
-    -- Check left edge
+    -- 檢查左邊緣
     if left * scale < 0 then
         offsetX = -left * scale + 10
     end
 
-    -- Check bottom edge
+    -- 檢查下邊緣
     if bottom * scale < 0 then
         offsetY = -bottom * scale + 10
     end
 
-    -- Check top edge
+    -- 檢查上邊緣
     if top * scale > screenHeight then
         offsetY = screenHeight - (top * scale) - 10
     end
 
-    -- Apply offset if needed
+    -- 必要時套用偏移
     if offsetX ~= 0 or offsetY ~= 0 then
         local point, relativeTo, relativePoint, x, y = tooltip:GetPoint()
         if point and relativeTo then
@@ -374,14 +374,14 @@ local function SetTooltipPosition()
         if db.anchorCursor then
             tooltip:SetOwner(parent, "ANCHOR_CURSOR")
         else
-            -- Anchor to bottom right
+            -- 錨定至右下角
             tooltip:SetOwner(parent, "ANCHOR_NONE")
             tooltip:ClearAllPoints()
             tooltip:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -50, 50)
         end
     end)
 
-    -- Fix #90: Hook OnShow to adjust position after tooltip is shown
+    -- 掛鉤 OnShow 以在滑鼠提示顯示後調整位置
     if GameTooltip then
         GameTooltip:HookScript("OnShow", function(self)
             C_Timer.After(0, function()
@@ -392,14 +392,14 @@ local function SetTooltipPosition()
 end
 
 --------------------------------------------------------------------------------
--- Phase Awareness
+-- 月相感知
 --------------------------------------------------------------------------------
 
 local phaseCallbackRegistered = false
 
 local function UpdateTooltipForPhase()
-    -- Tooltips don't need phase awareness as they're transient
-    -- But we could adjust backdrop alpha if desired
+    -- 滑鼠提示為瞬態不需月相感知
+    -- 但如有需要可調整背景透明度
 end
 
 local function RegisterTooltipPhaseCallback()
@@ -412,7 +412,7 @@ local function RegisterTooltipPhaseCallback()
 end
 
 --------------------------------------------------------------------------------
--- Initialization
+-- 初始化
 --------------------------------------------------------------------------------
 
 local function InitializeTooltip()
@@ -422,15 +422,14 @@ local function InitializeTooltip()
     if tooltipStyled then return end
     tooltipStyled = true
 
-    -- Style all tooltips
+    -- 樣式化所有滑鼠提示
     StyleAllTooltips()
 
-    -- Hook GameTooltip
+    -- 掛鉤 GameTooltip
     if GameTooltip then
-        -- Unit tooltips
-        -- Fix #25: Check if Enum and Enum.TooltipDataType exist before using
+        -- 使用前檢查 Enum 和 Enum.TooltipDataType 是否存在
         if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then
-            -- Retail 10.0+
+            -- 正式服 10.0+
             TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tooltip, data)
                 OnTooltipSetUnit(tooltip)
             end)
@@ -441,18 +440,18 @@ local function InitializeTooltip()
                 OnTooltipSetSpell(tooltip)
             end)
         else
-            -- Classic / older API
+            -- 經典版 / 舊版 API
             GameTooltip:HookScript("OnTooltipSetUnit", OnTooltipSetUnit)
             GameTooltip:HookScript("OnTooltipSetItem", OnTooltipSetItem)
             GameTooltip:HookScript("OnTooltipSetSpell", OnTooltipSetSpell)
         end
 
-        -- Restyle on show
+        -- 顯示時重新樣式化
         GameTooltip:HookScript("OnShow", function(self)
             StyleTooltip(self)
         end)
 
-        -- Reset border color on clear
+        -- 清除時重設邊框顏色
         GameTooltip:HookScript("OnTooltipCleared", function(self)
             if self.SetBackdropBorderColor then
                 self:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
@@ -462,17 +461,17 @@ local function InitializeTooltip()
         end)
     end
 
-    -- Setup positioning
+    -- 設定定位
     SetTooltipPosition()
 
-    -- Register for phase updates
+    -- 註冊月相更新
     RegisterTooltipPhaseCallback()
 end
 
--- Export
+-- 匯出
 LunarUI.InitializeTooltip = InitializeTooltip
 
--- Hook into addon enable
+-- 掛鉤至插件啟用
 hooksecurefunc(LunarUI, "OnEnable", function()
     C_Timer.After(0.3, InitializeTooltip)
 end)

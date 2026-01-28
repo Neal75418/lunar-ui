@@ -9,6 +9,10 @@ local L = {}
 L["Enabled"] = "Enabled"
 L["Disabled"] = "Disabled"
 L["Debug"] = "Debug"
+L["Yes"] = "Yes"
+L["No"] = "No"
+L["On"] = "ON"
+L["Off"] = "OFF"
 
 -- Phases
 L["Phase"] = "Phase"
@@ -43,11 +47,49 @@ L["Bags"] = "Bags"
 L["Chat"] = "Chat"
 L["Tooltip"] = "Tooltip"
 
--- Fix #104: Bags module messages
-L["SoldJunkItems"] = "Sold %d junk items for %s"
+-- System Messages
+L["AddonLoaded"] = "Addon loaded"
+L["AddonEnabled"] = "Enabled. Type |cff8882ff/lunar|r for commands"
+L["DebugEnabled"] = "Debug mode: ON"
+L["DebugDisabled"] = "Debug mode: OFF"
 
--- Fix #104: Chat module messages
+-- Command Messages
+L["HelpTitle"] = "LunarUI Commands:"
+L["CmdToggle"] = "Toggle addon on/off"
+L["CmdStatus"] = "Show current status"
+L["CmdConfig"] = "Open settings"
+L["CmdDebug"] = "Toggle debug mode"
+L["CmdReset"] = "Reset to defaults"
+L["CmdTest"] = "Run combat simulation"
+
+-- Phase Messages
+L["PhaseChanged"] = "Phase: %s → %s"
+L["CurrentPhase"] = "Current phase: %s"
+L["CombatEnter"] = "Entering combat"
+L["CombatLeave"] = "Leaving combat"
+
+-- Keybind Messages
+L["KeybindEnabled"] = "Keybind mode: Hover over a button and press a key to bind"
+L["KeybindDisabled"] = "Keybind mode: Disabled"
+L["KeybindSet"] = "Bound %s to %s"
+L["KeybindCleared"] = "Cleared binding for %s"
+
+-- Bags
+L["SoldJunkItems"] = "Sold %d junk items for %s"
+L["BagSearchError"] = "Bag search error"
+L["BankSearchError"] = "Bank search error"
+
+-- Chat
 L["PressToCopyURL"] = "Press Ctrl+C to copy URL:"
+
+-- Config
+L["SettingsImported"] = "Settings imported successfully"
+L["SettingsExported"] = "Settings exported to clipboard"
+L["InvalidSettings"] = "Invalid settings format"
+
+-- Errors
+L["ErrorOUFNotFound"] = "Error: oUF framework not found"
+L["ErrorAddonInit"] = "Error: Failed to initialize addon"
 
 -- Export
 Engine.L = L

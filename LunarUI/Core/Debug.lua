@@ -1,40 +1,65 @@
 --[[
-    LunarUI - Debug Overlay
-    Visual debug information showing current phase and tokens
+    LunarUI - 除錯模組
+    提供除錯日誌與視覺化除錯面板
 ]]
 
 local ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
+--------------------------------------------------------------------------------
+-- 除錯輔助函數
+--------------------------------------------------------------------------------
+
+--[[
+    輸出除錯訊息（僅在除錯模式下）
+    @param msg 要輸出的訊息
+]]
+function LunarUI:Debug(msg)
+    if self.db and self.db.profile and self.db.profile.debug then
+        self:Print("|cff888888[除錯]|r " .. tostring(msg))
+    end
+end
+
+--[[
+    檢查是否處於除錯模式
+    @return boolean
+]]
+function LunarUI:IsDebugMode()
+    return self.db and self.db.profile and self.db.profile.debug
+end
+
+--------------------------------------------------------------------------------
+-- 除錯面板
+--------------------------------------------------------------------------------
+
 local debugFrame = nil
-local updateInterval = 0.1
+local updateInterval = 0.1  -- 更新間隔（秒）
 local elapsed = 0
 
--- Moon phase icons (ASCII representation for debug)
+-- 月相圖示（ASCII 表示）
 local PHASE_ICONS = {
-    NEW = "|cff333333\226\151\143|r",      -- Dark circle
-    WAXING = "|cff888888\226\151\144|r",   -- Half moon
-    FULL = "|cffffff00\226\151\143|r",     -- Bright circle
-    WANING = "|cff666666\226\151\145|r",   -- Half moon (other side)
+    NEW = "|cff333333●|r",      -- 新月（暗色）
+    WAXING = "|cff888888◐|r",   -- 上弦月
+    FULL = "|cffffff00●|r",     -- 滿月（亮色）
+    WANING = "|cff666666◑|r",   -- 下弦月
 }
 
 --[[
-    Create the debug overlay frame
-    Fix #31: Check for existing named frame on reload to prevent leaks
+    建立除錯面板
+    重載時會重用現有框架以防止記憶體洩漏
 ]]
 local function CreateDebugFrame()
-    -- Fix #31: Reuse existing frame if it survived a reload
     if debugFrame then return debugFrame end
 
-    -- Check if frame exists from previous session (reload scenario)
+    -- 重載時重用現有框架
     local existingFrame = _G["LunarUIDebugFrame"]
     if existingFrame then
         debugFrame = existingFrame
-        -- Clear old OnUpdate to prevent duplicates
         debugFrame:SetScript("OnUpdate", nil)
     else
         debugFrame = CreateFrame("Frame", "LunarUIDebugFrame", UIParent, "BackdropTemplate")
     end
+
     debugFrame:SetSize(200, 120)
     debugFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -20, -200)
     debugFrame:SetFrameStrata("HIGH")
@@ -44,7 +69,7 @@ local function CreateDebugFrame()
     debugFrame:SetScript("OnDragStart", function(self) self:StartMoving() end)
     debugFrame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
 
-    -- Backdrop
+    -- 背景樣式
     debugFrame:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -53,33 +78,33 @@ local function CreateDebugFrame()
     debugFrame:SetBackdropColor(0, 0, 0, 0.8)
     debugFrame:SetBackdropBorderColor(0.5, 0.4, 0.8, 1)
 
-    -- Title
+    -- 標題
     local title = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOP", 0, -5)
-    title:SetText("|cff8882ffLunarUI Debug|r")
+    title:SetText("|cff8882ffLunarUI 除錯|r")
     debugFrame.title = title
 
-    -- Phase display
+    -- 月相顯示
     local phaseText = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     phaseText:SetPoint("TOPLEFT", 10, -25)
     debugFrame.phaseText = phaseText
 
-    -- Tokens display
+    -- Token 顯示
     local tokensText = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     tokensText:SetPoint("TOPLEFT", 10, -45)
     debugFrame.tokensText = tokensText
 
-    -- Timer display
+    -- 計時器顯示
     local timerText = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     timerText:SetPoint("TOPLEFT", 10, -75)
     debugFrame.timerText = timerText
 
-    -- Combat status
+    -- 戰鬥狀態
     local combatText = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     combatText:SetPoint("TOPLEFT", 10, -95)
     debugFrame.combatText = combatText
 
-    -- Update script
+    -- 更新腳本
     debugFrame:SetScript("OnUpdate", function(self, delta)
         elapsed = elapsed + delta
         if elapsed < updateInterval then return end
@@ -94,31 +119,31 @@ local function CreateDebugFrame()
         local tokens = LunarUI:GetTokens()
         local icon = PHASE_ICONS[phase] or "?"
 
-        -- Update phase
-        self.phaseText:SetText("Phase: " .. icon .. " |cff8882ff" .. phase .. "|r")
+        -- 更新月相
+        self.phaseText:SetText("月相: " .. icon .. " |cff8882ff" .. phase .. "|r")
 
-        -- Update tokens
+        -- 更新 Token
         self.tokensText:SetText(string.format(
-            "Alpha: %.2f  Scale: %.2f",
+            "透明度: %.2f  縮放: %.2f",
             tokens.alpha or 0,
             tokens.scale or 0
         ))
 
-        -- Update timer
+        -- 更新計時器
         if phase == LunarUI.PHASES.WANING then
             local remaining = LunarUI:GetWaningTimeRemaining()
-            self.timerText:SetText(string.format("Waning: %.1fs remaining", remaining))
+            self.timerText:SetText(string.format("下弦: %.1f 秒後結束", remaining))
             self.timerText:SetTextColor(1, 0.8, 0.3)
         else
-            self.timerText:SetText("Timer: idle")
+            self.timerText:SetText("計時器: 閒置")
             self.timerText:SetTextColor(0.5, 0.5, 0.5)
         end
 
-        -- Update combat status
+        -- 更新戰鬥狀態
         if InCombatLockdown() then
-            self.combatText:SetText("Combat: |cffff0000IN COMBAT|r")
+            self.combatText:SetText("戰鬥: |cffff0000戰鬥中|r")
         else
-            self.combatText:SetText("Combat: |cff00ff00Safe|r")
+            self.combatText:SetText("戰鬥: |cff00ff00安全|r")
         end
     end)
 
@@ -126,7 +151,7 @@ local function CreateDebugFrame()
 end
 
 --[[
-    Update debug overlay visibility
+    更新除錯面板可見性
 ]]
 function LunarUI:UpdateDebugOverlay()
     if not debugFrame then
@@ -141,7 +166,7 @@ function LunarUI:UpdateDebugOverlay()
 end
 
 --[[
-    Show debug overlay
+    顯示除錯面板
 ]]
 function LunarUI:ShowDebugOverlay()
     if not debugFrame then
@@ -151,8 +176,8 @@ function LunarUI:ShowDebugOverlay()
 end
 
 --[[
-    Hide debug overlay
-    Fix #31: Clean up OnUpdate script when hiding
+    隱藏除錯面板
+    清理 OnUpdate 腳本以節省資源
 ]]
 function LunarUI:HideDebugOverlay()
     if debugFrame then

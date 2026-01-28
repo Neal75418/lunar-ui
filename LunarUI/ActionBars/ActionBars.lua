@@ -1,28 +1,29 @@
 --[[
-    LunarUI - ActionBars
-    LibActionButton-based action bar system with Phase awareness
+    LunarUI - 動作條
+    基於 LibActionButton 的動作條系統，具有月相感知
 
-    Features:
-    - Main action bars (1-6)
-    - Stance bar / Pet bar / Vehicle bar
-    - Phase-aware alpha fading
-    - Cooldown text display
-    - Keybinding hover mode
-    - Configurable button size and spacing
+    功能：
+    - 主動作條（1-6）
+    - 姿態條 / 寵物條 / 載具條
+    - 月相感知透明度
+    - 冷卻文字顯示
+    - 快捷鍵懸停模式
+    - 可設定按鈕大小與間距
 ]]
 
 local ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
 
--- Wait for LibActionButton
+-- 等待 LibActionButton
 local LAB = LibStub("LibActionButton-1.0", true)
 if not LAB then
-    -- Library not available, skip ActionBars
+    -- 函式庫不可用，跳過動作條
     return
 end
 
 --------------------------------------------------------------------------------
--- Constants
+-- 常數
 --------------------------------------------------------------------------------
 
 local BUTTON_SIZE = 36
@@ -37,23 +38,22 @@ local backdropTemplate = {
 }
 
 --------------------------------------------------------------------------------
--- Module State
+-- 模組狀態
 --------------------------------------------------------------------------------
 
 local bars = {}
 local buttons = {}
 local keybindMode = false
 
--- Fix #12 & Fix #103: Custom cooldown text disabled due to WoW 12.0 secret values
--- The built-in cooldown display and OmniCC/similar addons handle cooldown text display
--- Removed dead code: cooldownUpdateFrame, cooldownButtons, cdElapsed
+-- WoW 12.0 對 GetActionCooldown 回傳密值，即使用 pcall 保護也無法比較
+-- 停用自訂冷卻文字，使用內建顯示與 OmniCC 等插件
 
 --------------------------------------------------------------------------------
--- Helper Functions
+-- 輔助函數
 --------------------------------------------------------------------------------
 
 local function CreateBarFrame(name, numButtons, parent)
-    -- Use SecureHandlerStateTemplate for WrapScript support (required by LAB)
+    -- 使用 SecureHandlerStateTemplate 以支援 WrapScript（LAB 需要）
     local frame = CreateFrame("Frame", name, parent or UIParent, "SecureHandlerStateTemplate")
     frame:SetSize(
         numButtons * BUTTON_SIZE + (numButtons - 1) * BUTTON_SPACING,
@@ -63,7 +63,7 @@ local function CreateBarFrame(name, numButtons, parent)
     frame:SetMovable(true)
     frame:EnableMouse(false)
 
-    -- Background (optional, hidden by default)
+    -- 背景（可選，預設隱藏）
     local bg = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     bg:SetPoint("TOPLEFT", -4, 4)
     bg:SetPoint("BOTTOMRIGHT", 4, -4)
@@ -79,7 +79,7 @@ end
 local function StyleButton(button)
     if not button then return end
 
-    -- Get button elements
+    -- 取得按鈕元素
     local name = button:GetName()
     local icon = button.icon or _G[name .. "Icon"]
     local count = button.Count or _G[name .. "Count"]
@@ -90,7 +90,7 @@ local function StyleButton(button)
     local highlightTexture = button:GetHighlightTexture()
     local checkedTexture = button:GetCheckedTexture()
 
-    -- Style icon
+    -- 樣式化圖示
     if icon then
         icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         icon:SetDrawLayer("ARTWORK")
@@ -99,14 +99,14 @@ local function StyleButton(button)
         icon:SetPoint("BOTTOMRIGHT", -1, 1)
     end
 
-    -- Style count text
+    -- 樣式化數量文字
     if count then
         count:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
         count:ClearAllPoints()
         count:SetPoint("BOTTOMRIGHT", -2, 2)
     end
 
-    -- Style hotkey text
+    -- 樣式化快捷鍵文字
     if hotkey then
         hotkey:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
         hotkey:ClearAllPoints()
@@ -114,17 +114,17 @@ local function StyleButton(button)
         hotkey:SetTextColor(0.8, 0.8, 0.8)
     end
 
-    -- Hide default border
+    -- 隱藏預設邊框
     if border then
         border:SetTexture(nil)
     end
 
-    -- Style normal texture
+    -- 樣式化一般材質
     if normalTexture then
         normalTexture:SetTexture(nil)
     end
 
-    -- Create custom border
+    -- 建立自訂邊框
     if not button.LunarBorder then
         local borderFrame = CreateFrame("Frame", nil, button, "BackdropTemplate")
         borderFrame:SetAllPoints()
@@ -135,21 +135,21 @@ local function StyleButton(button)
         button.LunarBorder = borderFrame
     end
 
-    -- Style pushed texture
+    -- 樣式化按下材質
     if pushedTexture then
         pushedTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
         pushedTexture:SetVertexColor(1, 1, 1, 0.2)
         pushedTexture:SetAllPoints()
     end
 
-    -- Style highlight texture
+    -- 樣式化高亮材質
     if highlightTexture then
         highlightTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
         highlightTexture:SetVertexColor(1, 1, 1, 0.3)
         highlightTexture:SetAllPoints()
     end
 
-    -- Style checked texture
+    -- 樣式化選中材質
     if checkedTexture then
         checkedTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
         checkedTexture:SetVertexColor(0.4, 0.6, 0.8, 0.5)
@@ -157,19 +157,14 @@ local function StyleButton(button)
     end
 end
 
--- Fix #52: WoW 12.0 returns secret values from GetActionCooldown that cannot be compared
--- even with pcall protection. Disable custom cooldown text entirely and use WoW's built-in display.
+-- WoW 12.0 對 GetActionCooldown 回傳密值，無法進行比較
+-- 停用自訂冷卻文字，使用內建冷卻螺旋與 OmniCC 等插件處理
 local function UpdateCooldownText(button)
-    -- Intentionally empty - WoW 12.0 secret values prevent custom cooldown text
-    -- The built-in cooldown spiral and OmniCC/similar addons handle this
+    -- 刻意留空 - WoW 12.0 密值阻止自訂冷卻文字
 end
 
--- Fix #52: Disabled cooldown text update due to WoW 12.0 secret value restrictions
--- cooldownUpdateFrame:SetScript("OnUpdate", nil)
--- The built-in cooldown display handles this functionality
-
 --------------------------------------------------------------------------------
--- Bar Creation
+-- 動作條建立
 --------------------------------------------------------------------------------
 
 local function CreateActionBar(id, page)
@@ -180,16 +175,16 @@ local function CreateActionBar(id, page)
     local buttonSize = db.buttonSize or BUTTON_SIZE
     local name = "LunarUI_ActionBar" .. id
 
-    -- Create bar frame
+    -- 建立動作條框架
     local bar = CreateBarFrame(name, numButtons, UIParent)
     bar.id = id
     bar.page = page
 
-    -- Position
+    -- 位置
     local yOffset = -100 - (id - 1) * (buttonSize + 8)
     bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, yOffset)
 
-    -- Create buttons
+    -- 建立按鈕
     bar.buttons = {}
     for i = 1, numButtons do
         local buttonName = name .. "Button" .. i
@@ -198,13 +193,13 @@ local function CreateActionBar(id, page)
         button:SetSize(buttonSize, buttonSize)
         button:SetPoint("LEFT", bar, "LEFT", (i - 1) * (buttonSize + BUTTON_SPACING), 0)
 
-        -- Set page for this bar
+        -- 設定此動作條的頁面
         button:SetState(0, "action", (page - 1) * 12 + i)
         for state = 1, 14 do
             button:SetState(state, "action", (state - 1) * 12 + i)
         end
 
-        -- Style
+        -- 樣式化
         StyleButton(button)
 
         bar.buttons[i] = button
@@ -236,7 +231,7 @@ local function CreateStanceBar()
         bar.buttons[i] = button
     end
 
-    -- Update stance bar when forms change
+    -- 姿態變化時更新姿態條
     bar:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
     bar:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
     bar:SetScript("OnEvent", function(self)
@@ -273,7 +268,7 @@ local function CreatePetBar()
         bar.buttons[i] = button
     end
 
-    -- Show/hide based on pet
+    -- 依寵物狀態顯示/隱藏
     bar:RegisterEvent("UNIT_PET")
     bar:RegisterEvent("PET_BAR_UPDATE")
     bar:SetScript("OnEvent", function(self)
@@ -284,7 +279,7 @@ local function CreatePetBar()
         end
     end)
 
-    -- Initial state
+    -- 初始狀態
     if not UnitExists("pet") then
         bar:Hide()
     end
@@ -294,7 +289,7 @@ local function CreatePetBar()
 end
 
 --------------------------------------------------------------------------------
--- Phase Awareness
+-- 月相感知
 --------------------------------------------------------------------------------
 
 local phaseCallbackRegistered = false
@@ -302,7 +297,7 @@ local phaseCallbackRegistered = false
 local function UpdateAllBarsForPhase()
     local tokens = LunarUI:GetTokens()
 
-    -- Action bars should be more visible even in NEW phase
+    -- 動作條即使在新月階段也應保持較高可見度
     local minAlpha = 0.5
     local alpha = math.max(tokens.alpha, minAlpha)
 
@@ -323,7 +318,7 @@ local function RegisterBarPhaseCallback()
 end
 
 --------------------------------------------------------------------------------
--- Keybind Mode
+-- 快捷鍵模式
 --------------------------------------------------------------------------------
 
 local function EnterKeybindMode()
@@ -332,12 +327,12 @@ local function EnterKeybindMode()
 
     for name, button in pairs(buttons) do
         if button then
-            -- Highlight button
+            -- 高亮按鈕
             if button.LunarBorder then
                 button.LunarBorder:SetBackdropBorderColor(0.4, 0.6, 0.8, 1)
             end
 
-            -- Show current keybind
+            -- 顯示目前快捷鍵
             button:EnableKeyboard(true)
             button:SetScript("OnKeyDown", function(self, key)
                 if key == "ESCAPE" then
@@ -345,7 +340,7 @@ local function EnterKeybindMode()
                     return
                 end
 
-                -- Set keybind
+                -- 設定快捷鍵
                 local action = self._state_action
                 if action then
                     local bind = GetBindingKey("ACTIONBUTTON" .. ((action - 1) % 12 + 1))
@@ -358,7 +353,8 @@ local function EnterKeybindMode()
         end
     end
 
-    LunarUI:Print("Keybind mode enabled. Hover over a button and press a key. Press ESC to exit.")
+    local msg = L["KeybindEnabled"] or "Keybind mode enabled. Hover over a button and press a key. Press ESC to exit."
+    LunarUI:Print(msg)
 end
 
 local function ExitKeybindMode()
@@ -367,37 +363,38 @@ local function ExitKeybindMode()
 
     for name, button in pairs(buttons) do
         if button then
-            -- Reset border
+            -- 重設邊框
             if button.LunarBorder then
                 button.LunarBorder:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
             end
 
-            -- Disable keyboard
+            -- 停用鍵盤
             button:EnableKeyboard(false)
             button:SetScript("OnKeyDown", nil)
         end
     end
 
-    LunarUI:Print("Keybind mode disabled.")
+    local msg = L["KeybindDisabled"] or "Keybind mode disabled."
+    LunarUI:Print(msg)
 end
 
 --------------------------------------------------------------------------------
--- Hide Blizzard Bars
+-- 隱藏暴雪動作條
 --------------------------------------------------------------------------------
 
--- Fix #59: Helper to permanently hide a frame (prevents re-showing)
+-- 永久隱藏框架的輔助函數（防止重新顯示）
 local function HideFramePermanently(frame)
     if not frame then return end
     pcall(function() frame:UnregisterAllEvents() end)
     pcall(function() frame:SetAlpha(0) end)
     pcall(function() frame:Hide() end)
-    -- Prevent Blizzard from re-showing the frame
+    -- 防止暴雪重新顯示框架
     pcall(function()
         frame:SetScript("OnShow", function(self) self:Hide() end)
     end)
 end
 
--- Fix #63: Hide all regions (textures) of a frame
+-- 隱藏框架的所有區域（材質）
 local function HideFrameRegions(frame)
     if not frame then return end
     local regions = {frame:GetRegions()}
@@ -411,13 +408,13 @@ local function HideFrameRegions(frame)
     end
 end
 
--- Fix #63: Recursively hide a frame and all its children/regions
+-- 遞迴隱藏框架及其所有子框架/區域
 local function HideFrameRecursive(frame)
     if not frame then return end
     HideFramePermanently(frame)
     HideFrameRegions(frame)
 
-    -- Hide all children recursively
+    -- 遞迴隱藏所有子框架
     local children = {frame:GetChildren()}
     for _, child in ipairs(children) do
         HideFrameRecursive(child)
@@ -425,11 +422,11 @@ local function HideFrameRecursive(frame)
 end
 
 local function HideBlizzardBars()
-    -- Fix #63: WoW 12.0 completely redesigned action bars
-    -- The gryphon/wyvern art is now in MainMenuBarArtFrame with subframes
-    -- Use aggressive recursive hiding
+    -- WoW 12.0 完全重新設計動作條
+    -- 獅鷲/翼手龍圖案現在在 MainMenuBarArtFrame 及其子框架中
+    -- 使用積極的遞迴隱藏
 
-    -- Primary action bar frames
+    -- 主要動作條框架
     local primaryFrames = {
         "MainMenuBar",
         "MainMenuBarArtFrame",
@@ -442,7 +439,7 @@ local function HideBlizzardBars()
         end
     end
 
-    -- Fix #13 + Fix #59: Hide all multi bars with permanent hiding
+    -- 隱藏所有多重動作條並永久隱藏
     local barsToHide = {
         "MultiBarBottomLeft",
         "MultiBarBottomRight",
@@ -459,7 +456,7 @@ local function HideBlizzardBars()
         end
     end
 
-    -- Fix #59: Hide WoW 12.0 action bars (ActionBar1-8)
+    -- 隱藏 WoW 12.0 動作條（ActionBar1-8）
     for i = 1, 8 do
         local bar = _G["ActionBar" .. i]
         if bar then
@@ -467,7 +464,7 @@ local function HideBlizzardBars()
         end
     end
 
-    -- Fix #61: Hide gryphon decorations (all possible frame names across WoW versions)
+    -- 隱藏獅鷲裝飾（跨 WoW 版本的所有可能框架名稱）
     local artFrames = {
         "MainMenuBarLeftEndCap",
         "MainMenuBarRightEndCap",
@@ -480,7 +477,7 @@ local function HideBlizzardBars()
         "MainMenuBarTexture3",
         "MainMenuExpBar",
         "ReputationWatchBar",
-        -- WoW 12.0 new names
+        -- WoW 12.0 新名稱
         "MainMenuBarBackgroundArt",
         "MainMenuBarBackground",
     }
@@ -491,32 +488,32 @@ local function HideBlizzardBars()
         end
     end
 
-    -- Hide status tracking bar (XP/Rep/Honor)
+    -- 隱藏狀態追蹤條（經驗/聲望/榮譽）
     if StatusTrackingBarManager then
         HideFrameRecursive(StatusTrackingBarManager)
     end
 
-    -- Hide stance bar
+    -- 隱藏姿態條
     if StanceBar then
         HideFramePermanently(StanceBar)
     end
 
-    -- Hide pet bar
+    -- 隱藏寵物條
     if PetActionBar then
         HideFramePermanently(PetActionBar)
     end
 
-    -- Note: MicroButtonAndBagsBar and BagsBar are kept visible
-    -- LunarUI doesn't replace the micro menu, only bags
+    -- 注意：MicroButtonAndBagsBar 和 BagsBar 保持可見
+    -- LunarUI 僅替換背包，不替換微型選單
 
-    -- Fix #59: Hide WoW 12.0 specific frames
+    -- 隱藏 WoW 12.0 特定框架
     local wow12Frames = {
         "MainMenuBarManager",
         "OverrideActionBar",
         "PossessActionBar",
         "MainStatusTrackingBarContainer",
         "SecondaryStatusTrackingBarContainer",
-        -- Note: MicroMenu kept visible
+        -- 注意：MicroMenu 保持可見
     }
     for _, name in ipairs(wow12Frames) do
         local frame = _G[name]
@@ -525,7 +522,7 @@ local function HideBlizzardBars()
         end
     end
 
-    -- Fix #60: Hide Action Bar buttons directly
+    -- 直接隱藏動作按鈕
     for i = 1, 12 do
         local button = _G["ActionButton" .. i]
         if button then
@@ -533,7 +530,7 @@ local function HideBlizzardBars()
         end
     end
 
-    -- Fix #62: Hide WoW 12.0 Edit Mode frames
+    -- 隱藏 WoW 12.0 編輯模式框架
     local editModeFrames = {
         "EditModeExpandedActionBarFrame",
         "QuickKeybindFrame",
@@ -545,8 +542,8 @@ local function HideBlizzardBars()
         end
     end
 
-    -- Fix #63: Search _G for any frame containing action bar related names
-    -- This catches any frame we might have missed
+    -- 搜尋 _G 中包含動作條相關名稱的任何框架
+    -- 這可以捕捉到我們可能遺漏的框架
     local patterns = {
         "^MainMenuBar",
         "^ActionBar%d",
@@ -568,32 +565,32 @@ local function HideBlizzardBars()
         end
     end
 
-    -- Note: Micro buttons (character, spellbook, talents, etc.) are kept visible
-    -- LunarUI doesn't replace the micro menu
+    -- 注意：微型按鈕（角色、法術書、天賦等）保持可見
+    -- LunarUI 不替換微型選單
 end
 
--- Fix #63: Delayed hiding to catch frames created after initial load
+-- 延遲隱藏以捕捉初始載入後建立的框架
 local function HideBlizzardBarsDelayed()
     HideBlizzardBars()
-    -- Run again after a delay to catch late-created frames
+    -- 延遲後再次執行以捕捉延遲建立的框架
     C_Timer.After(1, HideBlizzardBars)
     C_Timer.After(3, HideBlizzardBars)
 end
 
 --------------------------------------------------------------------------------
--- Initialization
+-- 初始化
 --------------------------------------------------------------------------------
 
 local function SpawnActionBars()
     local db = LunarUI.db and LunarUI.db.profile.actionbars
     if not db then return end
 
-    -- Fix #70: Check if custom action bars are enabled
+    -- 檢查是否啟用自訂動作條
     if db.enabled == false then
-        return  -- Use Blizzard default action bars
+        return  -- 使用暴雪預設動作條
     end
 
-    -- Fix #6 + Fix #38: Use event-driven retry instead of fixed timer for combat lockdown
+    -- 使用事件驅動重試而非固定計時器處理戰鬥鎖定
     if InCombatLockdown() then
         local waitFrame = CreateFrame("Frame")
         waitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -605,48 +602,47 @@ local function SpawnActionBars()
         return
     end
 
-    -- Fix #63: Hide Blizzard bars with delayed retry
+    -- 延遲重試隱藏暴雪動作條
     HideBlizzardBarsDelayed()
 
-    -- Create main action bars (bar1 = page 1, bar2 = page 2, etc.)
+    -- 建立主動作條（bar1 = 頁面 1，bar2 = 頁面 2，以此類推）
     for i = 1, 6 do
         CreateActionBar(i, i)
     end
 
-    -- Create special bars
+    -- 建立特殊動作條
     CreateStanceBar()
     CreatePetBar()
 
-    -- Register for phase updates
+    -- 註冊月相更新
     RegisterBarPhaseCallback()
 
-    -- Apply initial phase
+    -- 套用初始月相
     UpdateAllBarsForPhase()
 end
 
--- Export
+-- 匯出
 LunarUI.SpawnActionBars = SpawnActionBars
 LunarUI.EnterKeybindMode = EnterKeybindMode
 LunarUI.ExitKeybindMode = ExitKeybindMode
 LunarUI.actionBars = bars
 
--- Hook into addon enable
+-- 掛鉤至插件啟用
 hooksecurefunc(LunarUI, "OnEnable", function()
     C_Timer.After(0.3, SpawnActionBars)
 end)
 
--- Fix #44: Implement keybind mode command
+-- 實現快捷鍵模式命令
 hooksecurefunc(LunarUI, "RegisterCommands", function(self)
-    -- Add /lunar keybind command
+    -- 新增 /lunar keybind 命令
     local origHandler = self.slashCommands and self.slashCommands["keybind"]
     if not origHandler then
-        -- Register keybind as a subcommand if the command system supports it
-        -- Otherwise, users can toggle via EnterKeybindMode/ExitKeybindMode functions
-        self:Print("Keybind mode: Use /lunar keybind to toggle")
+        -- 如果命令系統支援，將 keybind 註冊為子命令
+        -- 否則使用者可透過 EnterKeybindMode/ExitKeybindMode 函數切換
     end
 end)
 
--- Register keybind toggle function
+-- 註冊快捷鍵切換函數
 function LunarUI:ToggleKeybindMode()
     if keybindMode then
         ExitKeybindMode()

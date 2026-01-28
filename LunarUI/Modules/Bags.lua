@@ -1,23 +1,23 @@
 --[[
-    LunarUI - Bags Module
-    All-in-one bag system with Lunar theme
+    LunarUI - 背包模組
+    整合式背包系統，Lunar 主題風格
 
-    Features:
-    - All bags combined into one frame
-    - Parchment style background
-    - Item sorting and categorization
-    - Search functionality
-    - Item level display on equipment
-    - Junk selling automation
-    - Phase-aware visibility
+    功能：
+    - 整合所有背包為單一視窗
+    - 羊皮紙風格背景
+    - 物品排序與分類
+    - 搜尋功能
+    - 裝備物品等級顯示
+    - 垃圾自動販賣
+    - 月相感知顯示
 ]]
 
 local ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
-local L = Engine.L or {}  -- Fix #104: Access localization table
+local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
--- Constants
+-- 常數
 --------------------------------------------------------------------------------
 
 local SLOT_SIZE = 37
@@ -33,20 +33,21 @@ local backdropTemplate = {
     insets = { left = 1, right = 1, top = 1, bottom = 1 },
 }
 
+-- 物品品質顏色
 local ITEM_QUALITY_COLORS = {
-    [0] = { 0.62, 0.62, 0.62 }, -- Poor (gray)
-    [1] = { 1.00, 1.00, 1.00 }, -- Common (white)
-    [2] = { 0.12, 1.00, 0.00 }, -- Uncommon (green)
-    [3] = { 0.00, 0.44, 0.87 }, -- Rare (blue)
-    [4] = { 0.64, 0.21, 0.93 }, -- Epic (purple)
-    [5] = { 1.00, 0.50, 0.00 }, -- Legendary (orange)
-    [6] = { 0.90, 0.80, 0.50 }, -- Artifact (gold)
-    [7] = { 0.00, 0.80, 0.98 }, -- Heirloom (light blue)
-    [8] = { 0.00, 0.80, 1.00 }, -- WoW Token
+    [0] = { 0.62, 0.62, 0.62 },  -- 粗糙（灰）
+    [1] = { 1.00, 1.00, 1.00 },  -- 普通（白）
+    [2] = { 0.12, 1.00, 0.00 },  -- 優秀（綠）
+    [3] = { 0.00, 0.44, 0.87 },  -- 精良（藍）
+    [4] = { 0.64, 0.21, 0.93 },  -- 史詩（紫）
+    [5] = { 1.00, 0.50, 0.00 },  -- 傳說（橙）
+    [6] = { 0.90, 0.80, 0.50 },  -- 神器（金）
+    [7] = { 0.00, 0.80, 0.98 },  -- 傳家寶（淺藍）
+    [8] = { 0.00, 0.80, 1.00 },  -- WoW 代幣
 }
 
 --------------------------------------------------------------------------------
--- Module State
+-- 模組狀態
 --------------------------------------------------------------------------------
 
 local bagFrame
@@ -61,14 +62,14 @@ local closeButton
 local isOpen = false
 local isBankOpen = false
 
--- Bank bag IDs: -1 = main bank (28 slots), 5-11 = bank bags
+-- 銀行容器 ID：-1 = 主銀行（28 格），5-11 = 銀行包
 local BANK_CONTAINER = -1
 local REAGENT_BANK_CONTAINER = -3
 local FIRST_BANK_BAG = 5
 local LAST_BANK_BAG = 11
 
 --------------------------------------------------------------------------------
--- Helper Functions
+-- 輔助函數
 --------------------------------------------------------------------------------
 
 local function GetTotalSlots()
@@ -88,15 +89,17 @@ local function GetTotalFreeSlots()
     return free
 end
 
--- Fix #81: Cache for expensive item lookups
+-- 快取機制：避免重複呼叫昂貴的物品資訊 API
 local itemLevelCache = {}
 local equipmentTypeCache = {}
 local itemLevelCacheSize = 0
 local equipmentTypeCacheSize = 0
 local CACHE_MAX_SIZE = 500
 
--- Fix #95: Helper function to count dictionary table size
--- (# operator only works for sequential integer keys, not dictionaries)
+--[[
+    計算字典表大小
+    Lua 的 # 運算子僅適用於連續整數鍵，字典需要手動計數
+]]
 local function GetTableSize(t)
     local count = 0
     for _ in pairs(t) do
@@ -105,8 +108,7 @@ local function GetTableSize(t)
     return count
 end
 
--- Fix #106: Check cache size BEFORE adding to prevent race condition
--- where the newly added item gets immediately wiped
+-- 在新增項目前檢查快取大小，避免新項目立即被清除的競爭條件
 local function MaybeEvictItemLevelCache()
     if itemLevelCacheSize >= CACHE_MAX_SIZE then
         wipe(itemLevelCache)
@@ -124,14 +126,14 @@ end
 local function GetItemLevel(itemLink)
     if not itemLink then return nil end
 
-    -- Fix #81: Use cache to avoid expensive API calls
+    -- 使用快取避免重複 API 呼叫
     if itemLevelCache[itemLink] then
         return itemLevelCache[itemLink]
     end
 
     local itemLevel = select(1, C_Item.GetDetailedItemLevelInfo(itemLink))
     if itemLevel then
-        -- Fix #106: Evict cache BEFORE adding new item to prevent losing it
+        -- 新增前先清理快取
         MaybeEvictItemLevelCache()
         itemLevelCache[itemLink] = itemLevel
         itemLevelCacheSize = itemLevelCacheSize + 1
@@ -142,21 +144,21 @@ end
 local function IsEquipment(itemLink)
     if not itemLink then return false end
 
-    -- Fix #81: Use cache to avoid expensive API calls
+    -- 使用快取避免重複 API 呼叫
     if equipmentTypeCache[itemLink] ~= nil then
         return equipmentTypeCache[itemLink]
     end
 
     local _, _, _, _, _, itemType = C_Item.GetItemInfo(itemLink)
     local isEquip = (itemType == "Armor" or itemType == "Weapon")
-    -- Fix #106: Evict cache BEFORE adding new item to prevent losing it
+    -- 新增前先清理快取
     MaybeEvictEquipmentTypeCache()
     equipmentTypeCache[itemLink] = isEquip
     equipmentTypeCacheSize = equipmentTypeCacheSize + 1
     return isEquip
 end
 
--- Fix #46: Bank helper functions
+-- 銀行輔助函數
 local function GetTotalBankSlots()
     local total = C_Container.GetContainerNumSlots(BANK_CONTAINER)
     for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
@@ -174,24 +176,24 @@ local function GetTotalBankFreeSlots()
 end
 
 --------------------------------------------------------------------------------
--- Slot Creation
+-- 格子建立
 --------------------------------------------------------------------------------
 
 local function CreateItemSlot(parent, slotID, bag, slot)
     local button = CreateFrame("ItemButton", "LunarUI_BagSlot" .. slotID, parent, "ContainerFrameItemButtonTemplate")
     button:SetSize(SLOT_SIZE, SLOT_SIZE)
 
-    -- Store bag/slot info
+    -- 儲存背包/格子資訊
     button.bag = bag
     button.slot = slot
 
-    -- Remove default textures
+    -- 移除預設材質
     local normalTexture = button:GetNormalTexture()
     if normalTexture then
         normalTexture:SetTexture(nil)
     end
 
-    -- Style icon
+    -- 設定圖示樣式
     local icon = button.icon or _G[button:GetName() .. "IconTexture"]
     if icon then
         icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
@@ -200,7 +202,7 @@ local function CreateItemSlot(parent, slotID, bag, slot)
         icon:SetPoint("BOTTOMRIGHT", -1, 1)
     end
 
-    -- Create border
+    -- 建立邊框
     if not button.LunarBorder then
         local border = CreateFrame("Frame", nil, button, "BackdropTemplate")
         border:SetAllPoints()
@@ -211,7 +213,7 @@ local function CreateItemSlot(parent, slotID, bag, slot)
         button.LunarBorder = border
     end
 
-    -- Item level text
+    -- 物品等級文字
     if not button.ilvlText then
         local ilvl = button:CreateFontString(nil, "OVERLAY")
         ilvl:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
@@ -220,7 +222,7 @@ local function CreateItemSlot(parent, slotID, bag, slot)
         button.ilvlText = ilvl
     end
 
-    -- Junk indicator
+    -- 垃圾指示器
     if not button.junkIcon then
         local junk = button:CreateTexture(nil, "OVERLAY")
         junk:SetSize(12, 12)
@@ -230,7 +232,7 @@ local function CreateItemSlot(parent, slotID, bag, slot)
         button.junkIcon = junk
     end
 
-    -- Quest indicator
+    -- 任務指示器
     if not button.questIcon then
         local quest = button:CreateTexture(nil, "OVERLAY")
         quest:SetSize(12, 12)
@@ -253,14 +255,14 @@ local function UpdateSlot(button)
         local itemLink = C_Container.GetContainerItemLink(bag, slot)
         local quality = containerInfo.quality or 0
 
-        -- Fix #65: Set item icon texture
+        -- 設定物品圖示
         local icon = button.icon or _G[button:GetName() .. "IconTexture"]
         if icon and containerInfo.iconFileID then
             icon:SetTexture(containerInfo.iconFileID)
             icon:Show()
         end
 
-        -- Set item count
+        -- 設定物品數量
         local count = containerInfo.stackCount or 0
         if count > 1 then
             button.Count:SetText(count)
@@ -269,8 +271,7 @@ local function UpdateSlot(button)
             button.Count:Hide()
         end
 
-        -- Set border color by quality
-        -- Fix #88: Proper nil check for LunarBorder
+        -- 依品質設定邊框顏色
         if button.LunarBorder then
             if quality and ITEM_QUALITY_COLORS[quality] then
                 local color = ITEM_QUALITY_COLORS[quality]
@@ -280,7 +281,7 @@ local function UpdateSlot(button)
             end
         end
 
-        -- Show item level for equipment
+        -- 顯示裝備物品等級
         if button.ilvlText then
             if IsEquipment(itemLink) then
                 local ilvl = GetItemLevel(itemLink)
@@ -295,7 +296,7 @@ local function UpdateSlot(button)
             end
         end
 
-        -- Show junk indicator
+        -- 顯示垃圾指示器
         if button.junkIcon then
             if quality == 0 and containerInfo.hasNoValue ~= true then
                 button.junkIcon:Show()
@@ -304,18 +305,17 @@ local function UpdateSlot(button)
             end
         end
 
-        -- Show quest indicator
+        -- 顯示任務指示器
         if button.questIcon then
             if containerInfo.isQuestItem then
                 button.questIcon:Show()
-                button.junkIcon:Hide() -- Don't show both
+                button.junkIcon:Hide()  -- 不同時顯示兩者
             else
                 button.questIcon:Hide()
             end
         end
     else
-        -- Empty slot
-        -- Fix #65: Hide icon for empty slots
+        -- 空格子
         local icon = button.icon or _G[button:GetName() .. "IconTexture"]
         if icon then
             icon:SetTexture(nil)
@@ -339,7 +339,7 @@ local function UpdateSlot(button)
 end
 
 --------------------------------------------------------------------------------
--- Bag Frame Creation
+-- 背包框架建立
 --------------------------------------------------------------------------------
 
 local function CreateBagFrame()
@@ -348,13 +348,13 @@ local function CreateBagFrame()
 
     if bagFrame then return bagFrame end
 
-    -- Calculate frame size
+    -- 計算框架大小
     local totalSlots = GetTotalSlots()
     local numRows = math.ceil(totalSlots / SLOTS_PER_ROW)
     local width = SLOTS_PER_ROW * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
-    local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + 30 -- Extra for money/buttons
+    local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + 30
 
-    -- Create main frame
+    -- 建立主框架
     bagFrame = CreateFrame("Frame", "LunarUI_Bags", UIParent, "BackdropTemplate")
     bagFrame:SetSize(width, height)
     bagFrame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -20, 100)
@@ -367,7 +367,7 @@ local function CreateBagFrame()
     bagFrame:SetClampedToScreen(true)
     bagFrame:Hide()
 
-    -- Make draggable
+    -- 可拖曳
     bagFrame:RegisterForDrag("LeftButton")
     bagFrame:SetScript("OnDragStart", function(self)
         self:StartMoving()
@@ -376,7 +376,7 @@ local function CreateBagFrame()
         self:StopMovingOrSizing()
     end)
 
-    -- Title
+    -- 標題
     local title = bagFrame:CreateFontString(nil, "OVERLAY")
     title:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
     title:SetPoint("TOPLEFT", PADDING, -8)
@@ -384,7 +384,7 @@ local function CreateBagFrame()
     title:SetTextColor(0.9, 0.9, 0.9)
     bagFrame.title = title
 
-    -- Close button
+    -- 關閉按鈕
     closeButton = CreateFrame("Button", nil, bagFrame)
     closeButton:SetSize(20, 20)
     closeButton:SetPoint("TOPRIGHT", -4, -4)
@@ -395,33 +395,31 @@ local function CreateBagFrame()
         CloseAllBags()
     end)
 
-    -- Search box
+    -- 搜尋框
     searchBox = CreateFrame("EditBox", "LunarUI_BagSearch", bagFrame, "SearchBoxTemplate")
     searchBox:SetSize(120, 20)
     searchBox:SetPoint("TOPRIGHT", closeButton, "TOPLEFT", -8, -2)
 
-    -- Fix #40: Add debounce to search to prevent performance issues
-    -- Fix #82: Use proper timer with cancellation support
-    -- Fix #89: Add error boundary for search
-    -- Fix #97: Use C_Timer.NewTimer for proper cancellation instead of ID-based invalidation
+    -- 搜尋防抖動：使用 C_Timer.NewTimer 以支援正確的取消機制
     local searchTimer
     searchBox:SetScript("OnTextChanged", function(self)
-        -- Cancel previous timer to prevent accumulation
+        -- 取消前一個計時器避免累積
         if searchTimer then
             searchTimer:Cancel()
         end
 
-        -- Debounce: wait 0.2 seconds before searching
+        -- 延遲 0.2 秒後執行搜尋
         searchTimer = C_Timer.NewTimer(0.2, function()
             local text = self:GetText():lower()
             for _, button in pairs(slots) do
                 if button and button.bag and button.slot then
+                    -- 使用 pcall 保護搜尋邏輯
                     local success, err = pcall(function()
                         local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
                         if itemLink then
                             local itemName = C_Item.GetItemInfo(itemLink)
                             if itemName then
-                                -- Fix #89: Use plain text search to avoid regex errors
+                                -- 使用純文字搜尋避免正規表達式錯誤
                                 if text == "" or itemName:lower():find(text, 1, true) then
                                     button:SetAlpha(1)
                                 else
@@ -436,10 +434,10 @@ local function CreateBagFrame()
                     end)
 
                     if not success then
-                        button:SetAlpha(1)  -- On error, show button
-                        -- Fix #107: Log error in debug mode to prevent silent failures
-                        if LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
-                            LunarUI:Print("Bag search error: " .. tostring(err))
+                        button:SetAlpha(1)  -- 發生錯誤時顯示按鈕
+                        -- 除錯模式下記錄錯誤
+                        if LunarUI:IsDebugMode() then
+                            LunarUI:Debug(L["BagSearchError"] or "Bag search error: " .. tostring(err))
                         end
                     end
                 end
@@ -447,7 +445,7 @@ local function CreateBagFrame()
         end)
     end)
 
-    -- Sort button
+    -- 排序按鈕
     sortButton = CreateFrame("Button", nil, bagFrame, "BackdropTemplate")
     sortButton:SetSize(60, 20)
     sortButton:SetPoint("TOPLEFT", title, "TOPRIGHT", 10, 2)
@@ -473,13 +471,13 @@ local function CreateBagFrame()
         self:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
     end)
 
-    -- Slot container
+    -- 格子容器
     local slotContainer = CreateFrame("Frame", nil, bagFrame)
     slotContainer:SetPoint("TOPLEFT", PADDING, -HEADER_HEIGHT)
     slotContainer:SetPoint("BOTTOMRIGHT", -PADDING, 30)
     bagFrame.slotContainer = slotContainer
 
-    -- Create slots
+    -- 建立格子
     local slotID = 0
     for bag = 0, 4 do
         local numSlots = C_Container.GetContainerNumSlots(bag)
@@ -495,7 +493,7 @@ local function CreateBagFrame()
                 -row * (SLOT_SIZE + SLOT_SPACING)
             )
 
-            -- Set button ID for default bag behavior
+            -- 設定按鈕 ID 以支援預設背包行為
             button:SetID(slot)
             SetItemButtonDesaturated(button, false)
 
@@ -503,14 +501,14 @@ local function CreateBagFrame()
         end
     end
 
-    -- Money frame
+    -- 金錢顯示
     local money = bagFrame:CreateFontString(nil, "OVERLAY")
     money:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
     money:SetPoint("BOTTOMLEFT", PADDING, 8)
     money:SetTextColor(1, 0.82, 0)
     bagFrame.money = money
 
-    -- Free slots indicator
+    -- 空格指示器
     local freeSlots = bagFrame:CreateFontString(nil, "OVERLAY")
     freeSlots:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
     freeSlots:SetPoint("BOTTOMRIGHT", -PADDING, 8)
@@ -521,25 +519,25 @@ local function CreateBagFrame()
 end
 
 --------------------------------------------------------------------------------
--- Fix #46: Bank Frame Creation
+-- 銀行框架建立
 --------------------------------------------------------------------------------
 
 local function CreateBankSlot(parent, slotID, bag, slot)
     local button = CreateFrame("ItemButton", "LunarUI_BankSlot" .. slotID, parent, "ContainerFrameItemButtonTemplate")
     button:SetSize(SLOT_SIZE, SLOT_SIZE)
 
-    -- Store bag/slot info
+    -- 儲存背包/格子資訊
     button.bag = bag
     button.slot = slot
     button.isBank = true
 
-    -- Remove default textures
+    -- 移除預設材質
     local normalTexture = button:GetNormalTexture()
     if normalTexture then
         normalTexture:SetTexture(nil)
     end
 
-    -- Style icon
+    -- 設定圖示樣式
     local icon = button.icon or _G[button:GetName() .. "IconTexture"]
     if icon then
         icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
@@ -548,7 +546,7 @@ local function CreateBankSlot(parent, slotID, bag, slot)
         icon:SetPoint("BOTTOMRIGHT", -1, 1)
     end
 
-    -- Create border
+    -- 建立邊框
     if not button.LunarBorder then
         local border = CreateFrame("Frame", nil, button, "BackdropTemplate")
         border:SetAllPoints()
@@ -559,7 +557,7 @@ local function CreateBankSlot(parent, slotID, bag, slot)
         button.LunarBorder = border
     end
 
-    -- Item level text
+    -- 物品等級文字
     if not button.ilvlText then
         local ilvl = button:CreateFontString(nil, "OVERLAY")
         ilvl:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
@@ -581,14 +579,14 @@ local function UpdateBankSlot(button)
         local itemLink = C_Container.GetContainerItemLink(bag, slot)
         local quality = containerInfo.quality or 0
 
-        -- Fix #65: Set item icon texture
+        -- 設定物品圖示
         local icon = button.icon or _G[button:GetName() .. "IconTexture"]
         if icon and containerInfo.iconFileID then
             icon:SetTexture(containerInfo.iconFileID)
             icon:Show()
         end
 
-        -- Set item count
+        -- 設定物品數量
         local count = containerInfo.stackCount or 0
         if count > 1 then
             button.Count:SetText(count)
@@ -597,8 +595,7 @@ local function UpdateBankSlot(button)
             button.Count:Hide()
         end
 
-        -- Set border color by quality
-        -- Fix #88: Proper nil check for LunarBorder
+        -- 依品質設定邊框顏色
         if button.LunarBorder then
             if quality and ITEM_QUALITY_COLORS[quality] then
                 local color = ITEM_QUALITY_COLORS[quality]
@@ -608,7 +605,7 @@ local function UpdateBankSlot(button)
             end
         end
 
-        -- Show item level for equipment
+        -- 顯示裝備物品等級
         if button.ilvlText then
             if IsEquipment(itemLink) then
                 local ilvl = GetItemLevel(itemLink)
@@ -623,8 +620,7 @@ local function UpdateBankSlot(button)
             end
         end
     else
-        -- Empty slot
-        -- Fix #65: Hide icon for empty slots
+        -- 空格子
         local icon = button.icon or _G[button:GetName() .. "IconTexture"]
         if icon then
             icon:SetTexture(nil)
@@ -647,26 +643,26 @@ local function CreateBankFrame()
 
     if bankFrame then return bankFrame end
 
-    -- Calculate frame size
+    -- 計算框架大小
     local totalSlots = GetTotalBankSlots()
     local numRows = math.ceil(totalSlots / SLOTS_PER_ROW)
     local width = SLOTS_PER_ROW * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
     local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + 30
 
-    -- Create main frame
+    -- 建立主框架
     bankFrame = CreateFrame("Frame", "LunarUI_Bank", UIParent, "BackdropTemplate")
     bankFrame:SetSize(width, height)
     bankFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 50, -100)
     bankFrame:SetBackdrop(backdropTemplate)
     bankFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    bankFrame:SetBackdropBorderColor(0.4, 0.35, 0.2, 1) -- Gold tint for bank
+    bankFrame:SetBackdropBorderColor(0.4, 0.35, 0.2, 1)  -- 銀行用金色邊框
     bankFrame:SetFrameStrata("HIGH")
     bankFrame:SetMovable(true)
     bankFrame:EnableMouse(true)
     bankFrame:SetClampedToScreen(true)
     bankFrame:Hide()
 
-    -- Make draggable
+    -- 可拖曳
     bankFrame:RegisterForDrag("LeftButton")
     bankFrame:SetScript("OnDragStart", function(self)
         self:StartMoving()
@@ -675,15 +671,15 @@ local function CreateBankFrame()
         self:StopMovingOrSizing()
     end)
 
-    -- Title
+    -- 標題
     local title = bankFrame:CreateFontString(nil, "OVERLAY")
     title:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
     title:SetPoint("TOPLEFT", PADDING, -8)
     title:SetText("Bank")
-    title:SetTextColor(1, 0.82, 0) -- Gold color
+    title:SetTextColor(1, 0.82, 0)  -- 金色
     bankFrame.title = title
 
-    -- Close button
+    -- 關閉按鈕
     local bankCloseButton = CreateFrame("Button", nil, bankFrame)
     bankCloseButton:SetSize(20, 20)
     bankCloseButton:SetPoint("TOPRIGHT", -4, -4)
@@ -694,13 +690,12 @@ local function CreateBankFrame()
         CloseBankFrame()
     end)
 
-    -- Search box
+    -- 搜尋框
     bankSearchBox = CreateFrame("EditBox", "LunarUI_BankSearch", bankFrame, "SearchBoxTemplate")
     bankSearchBox:SetSize(120, 20)
     bankSearchBox:SetPoint("TOPRIGHT", bankCloseButton, "TOPLEFT", -8, -2)
 
-    -- Search with debounce
-    -- Fix #96: Use proper timer cancellation and plain text search to prevent pattern injection
+    -- 搜尋防抖動
     local bankSearchTimer
     bankSearchBox:SetScript("OnTextChanged", function(self)
         if bankSearchTimer then
@@ -714,7 +709,7 @@ local function CreateBankFrame()
                         local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
                         if itemLink then
                             local itemName = C_Item.GetItemInfo(itemLink)
-                            -- Fix #96: Use plain text search (1, true) to prevent Lua pattern injection
+                            -- 使用純文字搜尋避免 Lua 模式注入
                             if itemName and (text == "" or itemName:lower():find(text, 1, true)) then
                                 button:SetAlpha(1)
                             else
@@ -726,9 +721,9 @@ local function CreateBankFrame()
                     end)
                     if not success then
                         button:SetAlpha(1)
-                        -- Fix #107: Log error in debug mode to prevent silent failures
-                        if LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
-                            LunarUI:Print("Bank search error: " .. tostring(err))
+                        -- 除錯模式下記錄錯誤
+                        if LunarUI:IsDebugMode() then
+                            LunarUI:Debug(L["BankSearchError"] or "Bank search error: " .. tostring(err))
                         end
                     end
                 end
@@ -736,7 +731,7 @@ local function CreateBankFrame()
         end)
     end)
 
-    -- Sort button
+    -- 排序按鈕
     local bankSortButton = CreateFrame("Button", nil, bankFrame, "BackdropTemplate")
     bankSortButton:SetSize(60, 20)
     bankSortButton:SetPoint("TOPLEFT", title, "TOPRIGHT", 10, 2)
@@ -762,13 +757,13 @@ local function CreateBankFrame()
         self:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
     end)
 
-    -- Slot container
+    -- 格子容器
     local slotContainer = CreateFrame("Frame", nil, bankFrame)
     slotContainer:SetPoint("TOPLEFT", PADDING, -HEADER_HEIGHT)
     slotContainer:SetPoint("BOTTOMRIGHT", -PADDING, 30)
     bankFrame.slotContainer = slotContainer
 
-    -- Create slots for main bank (-1)
+    -- 建立主銀行格子（-1）
     local slotID = 0
     local numMainBankSlots = C_Container.GetContainerNumSlots(BANK_CONTAINER)
     for slot = 1, numMainBankSlots do
@@ -787,7 +782,7 @@ local function CreateBankFrame()
         bankSlots[slotID] = button
     end
 
-    -- Create slots for bank bags (5-11)
+    -- 建立銀行包格子（5-11）
     for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
         local numSlots = C_Container.GetContainerNumSlots(bag)
         for slot = 1, numSlots do
@@ -807,7 +802,7 @@ local function CreateBankFrame()
         end
     end
 
-    -- Free slots indicator
+    -- 空格指示器
     local freeSlots = bankFrame:CreateFontString(nil, "OVERLAY")
     freeSlots:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
     freeSlots:SetPoint("BOTTOMRIGHT", -PADDING, 8)
@@ -817,7 +812,7 @@ local function CreateBankFrame()
     return bankFrame
 end
 
--- Fix #84: Batched bank slot updates to prevent FPS drops
+-- 批次更新銀行格子避免 FPS 下降
 local bankUpdateQueue = {}
 local bankUpdateInProgress = false
 local BANK_BATCH_SIZE = 10
@@ -825,7 +820,7 @@ local BANK_BATCH_SIZE = 10
 local function ProcessBankUpdateBatch()
     if #bankUpdateQueue == 0 then
         bankUpdateInProgress = false
-        -- Update free slots display when done
+        -- 完成時更新空格顯示
         if bankFrame and bankFrame.freeSlots then
             local free = GetTotalBankFreeSlots()
             local total = GetTotalBankSlots()
@@ -834,7 +829,7 @@ local function ProcessBankUpdateBatch()
         return
     end
 
-    -- Process batch
+    -- 處理批次
     for i = 1, BANK_BATCH_SIZE do
         local button = table.remove(bankUpdateQueue, 1)
         if button then
@@ -842,7 +837,7 @@ local function ProcessBankUpdateBatch()
         end
         if #bankUpdateQueue == 0 then
             bankUpdateInProgress = false
-            -- Update free slots display when done
+            -- 完成時更新空格顯示
             if bankFrame and bankFrame.freeSlots then
                 local free = GetTotalBankFreeSlots()
                 local total = GetTotalBankSlots()
@@ -852,12 +847,12 @@ local function ProcessBankUpdateBatch()
         end
     end
 
-    -- Schedule next batch
+    -- 排程下一批次
     C_Timer.After(0, ProcessBankUpdateBatch)
 end
 
 local function UpdateAllBankSlots()
-    -- Fix #84: Use batched updates for large banks
+    -- 使用批次更新處理大型銀行
     wipe(bankUpdateQueue)
     for _, button in pairs(bankSlots) do
         if button then
@@ -874,7 +869,7 @@ end
 local function RefreshBankLayout()
     if not bankFrame then return end
 
-    -- Recalculate frame size
+    -- 重新計算框架大小
     local totalSlots = GetTotalBankSlots()
     local numRows = math.ceil(totalSlots / SLOTS_PER_ROW)
     local width = SLOTS_PER_ROW * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
@@ -882,10 +877,10 @@ local function RefreshBankLayout()
 
     bankFrame:SetSize(width, height)
 
-    -- Rebuild slots if needed
+    -- 必要時重建格子
     local slotID = 0
 
-    -- Main bank slots
+    -- 主銀行格子
     local numMainBankSlots = C_Container.GetContainerNumSlots(BANK_CONTAINER)
     for slot = 1, numMainBankSlots do
         slotID = slotID + 1
@@ -910,7 +905,7 @@ local function RefreshBankLayout()
         button:Show()
     end
 
-    -- Bank bag slots
+    -- 銀行包格子
     for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
         local numSlots = C_Container.GetContainerNumSlots(bag)
         for slot = 1, numSlots do
@@ -937,7 +932,7 @@ local function RefreshBankLayout()
         end
     end
 
-    -- Hide extra slots
+    -- 隱藏多餘格子
     for i = slotID + 1, #bankSlots do
         if bankSlots[i] then
             bankSlots[i]:Hide()
@@ -967,7 +962,7 @@ local function CloseBank()
 end
 
 --------------------------------------------------------------------------------
--- Update Functions
+-- 更新函數
 --------------------------------------------------------------------------------
 
 local function UpdateMoney()
@@ -1002,7 +997,7 @@ end
 local function RefreshBagLayout()
     if not bagFrame then return end
 
-    -- Recalculate frame size
+    -- 重新計算框架大小
     local totalSlots = GetTotalSlots()
     local numRows = math.ceil(totalSlots / SLOTS_PER_ROW)
     local width = SLOTS_PER_ROW * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
@@ -1010,7 +1005,7 @@ local function RefreshBagLayout()
 
     bagFrame:SetSize(width, height)
 
-    -- Rebuild slots if bag sizes changed
+    -- 背包大小改變時重建格子
     local slotID = 0
     for bag = 0, 4 do
         local numSlots = C_Container.GetContainerNumSlots(bag)
@@ -1038,7 +1033,7 @@ local function RefreshBagLayout()
         end
     end
 
-    -- Hide extra slots
+    -- 隱藏多餘格子
     for i = slotID + 1, #slots do
         if slots[i] then
             slots[i]:Hide()
@@ -1049,7 +1044,7 @@ local function RefreshBagLayout()
 end
 
 --------------------------------------------------------------------------------
--- Bag Open/Close
+-- 開啟/關閉背包
 --------------------------------------------------------------------------------
 
 local function OpenBags()
@@ -1080,29 +1075,29 @@ local function ToggleBags()
 end
 
 --------------------------------------------------------------------------------
--- Hook Blizzard Bag Functions
+-- 掛鉤暴雪背包函數
 --------------------------------------------------------------------------------
 
 local function HookBagFunctions()
     local db = LunarUI.db and LunarUI.db.profile.bags
     if not db or not db.enabled then return end
 
-    -- Hook OpenAllBags
+    -- 掛鉤 OpenAllBags
     hooksecurefunc("OpenAllBags", function()
         OpenBags()
     end)
 
-    -- Hook CloseAllBags
+    -- 掛鉤 CloseAllBags
     hooksecurefunc("CloseAllBags", function()
         CloseBags()
     end)
 
-    -- Hook ToggleAllBags (Fix #58: Actually toggle our bags when B is pressed)
+    -- 掛鉤 ToggleAllBags：按 B 時切換我們的背包
     hooksecurefunc("ToggleAllBags", function()
         ToggleBags()
     end)
 
-    -- Hide Blizzard bag frames
+    -- 隱藏暴雪背包框架
     for i = 1, 13 do
         local frame = _G["ContainerFrame" .. i]
         if frame then
@@ -1112,21 +1107,21 @@ local function HookBagFunctions()
         end
     end
 
-    -- Hide combined bag frame (Retail)
+    -- 隱藏整合背包框架（正式服）
     if ContainerFrameCombinedBags then
         ContainerFrameCombinedBags:UnregisterAllEvents()
         ContainerFrameCombinedBags:SetScript("OnShow", function(self) self:Hide() end)
         ContainerFrameCombinedBags:Hide()
     end
 
-    -- Fix #46: Hide Blizzard bank frame
+    -- 隱藏暴雪銀行框架
     if BankFrame then
         BankFrame:UnregisterAllEvents()
         BankFrame:SetScript("OnShow", function(self) self:Hide() end)
         BankFrame:Hide()
     end
 
-    -- Hide account bank frame if exists (Retail)
+    -- 隱藏帳號銀行框架（正式服）
     if AccountBankPanel then
         AccountBankPanel:UnregisterAllEvents()
         AccountBankPanel:SetScript("OnShow", function(self) self:Hide() end)
@@ -1135,7 +1130,7 @@ local function HookBagFunctions()
 end
 
 --------------------------------------------------------------------------------
--- Event Handling
+-- 事件處理
 --------------------------------------------------------------------------------
 
 local eventFrame = CreateFrame("Frame")
@@ -1145,14 +1140,13 @@ eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
 eventFrame:RegisterEvent("ITEM_LOCK_CHANGED")
 eventFrame:RegisterEvent("PLAYER_MONEY")
 eventFrame:RegisterEvent("BAG_SLOT_FLAGS_UPDATED")
-eventFrame:RegisterEvent("MERCHANT_SHOW")  -- Fix #14: Consolidated into main handler
--- Fix #46: Bank events
+eventFrame:RegisterEvent("MERCHANT_SHOW")
 eventFrame:RegisterEvent("BANKFRAME_OPENED")
 eventFrame:RegisterEvent("BANKFRAME_CLOSED")
 eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
 
 eventFrame:SetScript("OnEvent", function(self, event, ...)
-    -- Fix #14: Handle MERCHANT_SHOW here instead of separate HookScript
+    -- 商人開啟時自動販賣垃圾
     if event == "MERCHANT_SHOW" then
         local db = LunarUI.db and LunarUI.db.profile.bags
         if db and db.autoSellJunk then
@@ -1161,12 +1155,12 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         return
     end
 
-    -- Fix #46: Bank event handling
+    -- 銀行事件處理
     if event == "BANKFRAME_OPENED" then
         local db = LunarUI.db and LunarUI.db.profile.bags
         if db and db.enabled then
             OpenBank()
-            -- Also open bags when bank opens
+            -- 開啟銀行時同時開啟背包
             OpenBags()
         end
         return
@@ -1184,10 +1178,10 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
         return
     end
 
-    -- Regular bag updates
+    -- 一般背包更新
     if event == "BAG_UPDATE" or event == "BAG_UPDATE_DELAYED" then
         local bag = ...
-        -- Update bags (0-4)
+        -- 更新背包（0-4）
         if bag and bag >= 0 and bag <= 4 then
             if bagFrame and bagFrame:IsShown() then
                 for _, button in pairs(slots) do
@@ -1198,7 +1192,7 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
                 UpdateFreeSlots()
             end
         end
-        -- Update bank bags (5-11)
+        -- 更新銀行包（5-11）
         if bag and bag >= FIRST_BANK_BAG and bag <= LAST_BANK_BAG then
             if bankFrame and bankFrame:IsShown() then
                 for _, button in pairs(bankSlots) do
@@ -1231,14 +1225,13 @@ eventFrame:SetScript("OnEvent", function(self, event, ...)
 end)
 
 --------------------------------------------------------------------------------
--- Phase Awareness
+-- 月相感知
 --------------------------------------------------------------------------------
 
 local phaseCallbackRegistered = false
 
 local function UpdateBagsForPhase()
-    -- Bags typically shown when user wants them, don't auto-fade
-    -- But we could slightly adjust backdrop if needed
+    -- 背包通常在使用者需要時顯示，不自動淡出
 end
 
 local function RegisterBagsPhaseCallback()
@@ -1251,10 +1244,12 @@ local function RegisterBagsPhaseCallback()
 end
 
 --------------------------------------------------------------------------------
--- Junk Selling
+-- 垃圾販賣
 --------------------------------------------------------------------------------
 
--- Fix #72: Enhanced auto-sell with safety checks and statistics
+--[[
+    增強型自動販賣：包含安全檢查與統計資訊
+]]
 local function SellJunk()
     local db = LunarUI.db and LunarUI.db.profile.bags
     if not db or not db.autoSellJunk then return end
@@ -1267,7 +1262,7 @@ local function SellJunk()
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
             local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
             if containerInfo and containerInfo.quality == 0 and not containerInfo.hasNoValue then
-                -- Get item info for price calculation
+                -- 取得物品資訊計算價格
                 local itemLink = C_Container.GetContainerItemLink(bag, slot)
                 if itemLink then
                     local _, _, _, _, _, _, _, _, _, _, itemPrice = C_Item.GetItemInfo(itemLink)
@@ -1277,11 +1272,11 @@ local function SellJunk()
                         totalValue = totalValue + stackValue
                         itemCount = itemCount + 1
 
-                        -- Store item name for log
+                        -- 儲存物品名稱供日誌使用
                         local itemName = C_Item.GetItemNameByID(containerInfo.itemID) or "Unknown"
                         table.insert(itemsSold, { name = itemName, count = stackCount, value = stackValue })
 
-                        -- Actually sell the item
+                        -- 實際販賣物品
                         C_Container.UseContainerItem(bag, slot)
                     end
                 end
@@ -1289,9 +1284,9 @@ local function SellJunk()
         end
     end
 
-    -- Output statistics
+    -- 輸出統計
     if itemCount > 0 then
-        -- Format gold display
+        -- 格式化金額顯示
         local gold = floor(totalValue / 10000)
         local silver = floor((totalValue % 10000) / 100)
         local copper = totalValue % 100
@@ -1305,43 +1300,39 @@ local function SellJunk()
         end
         goldStr = goldStr .. format("|cffeda55f%d|rc", copper)
 
-        -- Fix #104: Use localized string instead of hardcoded Chinese
+        -- 使用本地化字串
         local msg = L["SoldJunkItems"] or "Sold %d junk items for %s"
         print(format("|cff00ccffLunarUI:|r " .. msg, itemCount, goldStr))
     end
 end
 
--- Fix #14: MERCHANT_SHOW handling moved to main event handler above
-
 --------------------------------------------------------------------------------
--- Initialization
+-- 初始化
 --------------------------------------------------------------------------------
 
 local function InitializeBags()
     local db = LunarUI.db and LunarUI.db.profile.bags
     if not db or not db.enabled then return end
 
-    -- Hook bag functions
+    -- 掛鉤背包函數
     HookBagFunctions()
 
-    -- Register for phase updates
+    -- 註冊月相更新
     RegisterBagsPhaseCallback()
 
-    -- Create keybind for opening bags (B key)
-    -- This is handled by Blizzard's default keybind system
+    -- 快捷鍵開啟背包由暴雪預設按鍵系統處理
 end
 
--- Export
+-- 匯出
 LunarUI.InitializeBags = InitializeBags
 LunarUI.ToggleBags = ToggleBags
 LunarUI.OpenBags = OpenBags
 LunarUI.CloseBags = CloseBags
 LunarUI.SellJunk = SellJunk
--- Fix #46: Bank exports
 LunarUI.OpenBank = OpenBank
 LunarUI.CloseBank = CloseBank
 
--- Hook into addon enable
+-- 掛鉤至插件啟用
 hooksecurefunc(LunarUI, "OnEnable", function()
     C_Timer.After(0.5, InitializeBags)
 end)

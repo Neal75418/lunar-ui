@@ -1,22 +1,25 @@
 --[[
-    LunarUI - Configuration (AceDB)
-    Database defaults and profile management
+    LunarUI - 設定模組（AceDB）
+    資料庫預設值與設定檔管理
 ]]
 
 local ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
--- Database defaults
+--------------------------------------------------------------------------------
+-- 資料庫預設值
+--------------------------------------------------------------------------------
+
 local defaults = {
     profile = {
-        -- General settings
+        -- 一般設定
         enabled = true,
         debug = false,
 
-        -- Phase Manager settings
-        waningDuration = 10,  -- seconds before NEW after combat
+        -- 月相管理器設定
+        waningDuration = 10,  -- 戰鬥結束後進入新月的秒數
 
-        -- Token overrides (per phase)
+        -- 標記覆蓋（每個月相）
         tokens = {
             NEW = {
                 alpha = 0.40,
@@ -36,7 +39,7 @@ local defaults = {
             },
         },
 
-        -- UnitFrames settings
+        -- 單位框架設定
         unitframes = {
             player = {
                 enabled = true,
@@ -107,12 +110,12 @@ local defaults = {
             },
         },
 
-        -- Nameplates settings
+        -- 名牌設定
         nameplates = {
-            enabled = false,  -- Use Blizzard default nameplates
+            enabled = false,  -- 使用暴雪預設名牌
             width = 120,
             height = 8,
-            -- Enemy nameplates
+            -- 敵方名牌
             enemy = {
                 enabled = true,
                 showHealth = true,
@@ -121,32 +124,32 @@ local defaults = {
                 auraSize = 18,
                 maxAuras = 5,
             },
-            -- Friendly nameplates
+            -- 友方名牌
             friendly = {
                 enabled = true,
                 showHealth = true,
                 showCastbar = false,
                 showAuras = false,
             },
-            -- Threat colors
+            -- 仇恨顏色
             threat = {
                 enabled = true,
             },
-            -- Important target highlighting
+            -- 重要目標高亮
             highlight = {
                 rare = true,
                 elite = true,
                 boss = true,
             },
-            -- Classification icons
+            -- 分類圖示
             classification = {
                 enabled = true,
             },
         },
 
-        -- ActionBars settings (future)
+        -- 動作條設定（未來擴展）
         actionbars = {
-            enabled = false,  -- Use Blizzard default action bars
+            enabled = false,  -- 使用暴雪預設動作條
             bar1 = { enabled = true, buttons = 12, buttonSize = 36 },
             bar2 = { enabled = true, buttons = 12, buttonSize = 36 },
             bar3 = { enabled = false, buttons = 12, buttonSize = 36 },
@@ -156,7 +159,7 @@ local defaults = {
             stancebar = { enabled = true },
         },
 
-        -- Minimap settings
+        -- 小地圖設定
         minimap = {
             enabled = true,
             size = 180,
@@ -165,7 +168,7 @@ local defaults = {
             organizeButtons = true,
         },
 
-        -- Bags settings
+        -- 背包設定
         bags = {
             enabled = true,
             slotsPerRow = 12,
@@ -175,7 +178,7 @@ local defaults = {
             showQuestItems = true,
         },
 
-        -- Chat settings
+        -- 聊天設定
         chat = {
             enabled = true,
             width = 400,
@@ -183,10 +186,10 @@ local defaults = {
             improvedColors = true,
             classColors = true,
             fadeTime = 120,
-            detectURLs = true,  -- Fix #76: Enable clickable URLs
+            detectURLs = true,  -- 啟用可點擊網址
         },
 
-        -- Tooltip settings
+        -- 滑鼠提示設定
         tooltip = {
             enabled = true,
             anchorCursor = false,
@@ -196,15 +199,15 @@ local defaults = {
             showTargetTarget = true,
         },
 
-        -- Visual style
+        -- 視覺風格
         style = {
             theme = "lunar",  -- lunar, parchment, minimal
             font = "Fonts\\FRIZQT__.TTF",
             fontSize = 12,
             borderStyle = "ink",  -- ink, clean, none
-            moonlightOverlay = false,  -- Subtle screen overlay during FULL phase
-            phaseGlow = true,  -- Glow effects on frames during combat
-            animations = true,  -- Enable phase transition animations
+            moonlightOverlay = false,  -- 滿月時的微妙螢幕覆蓋
+            phaseGlow = true,  -- 戰鬥中框架的光暈效果
+            animations = true,  -- 啟用月相過渡動畫
         },
     },
 
@@ -213,18 +216,22 @@ local defaults = {
     },
 
     char = {
-        -- Character-specific settings
+        -- 角色專屬設定
     },
 }
 
+--------------------------------------------------------------------------------
+-- 資料庫初始化
+--------------------------------------------------------------------------------
+
 --[[
-    Initialize database
-    Called from OnInitialize (in Init.lua)
+    初始化資料庫
+    從 Init.lua 的 OnInitialize 呼叫
 ]]
 function LunarUI:InitDB()
     self.db = LibStub("AceDB-3.0"):New("LunarUIDB", defaults, "Default")
 
-    -- Register callbacks for profile changes (Fix #1: correct Ace3 callback syntax)
+    -- 註冊設定檔變更回呼（使用正確的 Ace3 回呼語法）
     self.db:RegisterCallback("OnProfileChanged", function()
         self:OnProfileChanged()
     end)
@@ -235,33 +242,35 @@ function LunarUI:InitDB()
         self:OnProfileChanged()
     end)
 
-    -- Store version
+    -- 儲存版本
     self.db.global.version = self.version
 end
 
 --[[
-    Profile changed callback
+    設定檔變更回呼
 ]]
 function LunarUI:OnProfileChanged()
-    -- Refresh all UI elements
+    local L = Engine.L or {}
+    -- 重新整理所有 UI 元素
     self:UpdateTokens()
 
-    -- Notify modules to refresh
+    -- 通知模組重新整理
     self:NotifyPhaseChange(self:GetPhase(), self:GetPhase())
 
-    self:Print("Profile changed, UI refreshed")
+    self:Print(L["ProfileChanged"] or "設定檔已變更，UI 已重新整理")
 end
 
--- Note: InitDB is now called directly from Init.lua OnInitialize (Fix #2)
-
 --------------------------------------------------------------------------------
--- Settings Import/Export (Fix #45)
+-- 設定匯入/匯出
 --------------------------------------------------------------------------------
 
--- Simple table serialization (no external dependencies)
+--[[
+    簡易表格序列化（無外部依賴）
+    使用遞迴深度限制防止無限遞迴
+]]
 local function SerializeValue(val, depth)
     depth = depth or 0
-    if depth > 20 then return "nil" end  -- Prevent infinite recursion
+    if depth > 20 then return "nil" end  -- 防止無限遞迴
 
     local valType = type(val)
     if valType == "nil" then
@@ -271,7 +280,7 @@ local function SerializeValue(val, depth)
     elseif valType == "number" then
         return tostring(val)
     elseif valType == "string" then
-        -- Escape special characters
+        -- 跳脫特殊字元
         return string.format("%q", val)
     elseif valType == "table" then
         local parts = {}
@@ -291,28 +300,30 @@ local function SerializeValue(val, depth)
     end
 end
 
--- Fix #94: Safe table deserializer without loadstring (prevents code injection)
--- This is a simple recursive descent parser for Lua table literals
+--[[
+    安全的表格反序列化器（不使用 loadstring，防止程式碼注入）
+    這是一個簡單的遞迴下降解析器，用於解析 Lua 表格字面值
+]]
 local function DeserializeString(str)
     if not str or str == "" then
-        return nil, "Empty string"
+        return nil, "空字串"
     end
 
     local pos = 1
     local len = #str
 
-    -- Helper: skip whitespace
+    -- 輔助函數：跳過空白
     local function skipWhitespace()
         while pos <= len and str:sub(pos, pos):match("%s") do
             pos = pos + 1
         end
     end
 
-    -- Helper: parse a string literal
+    -- 輔助函數：解析字串字面值
     local function parseString()
         local quote = str:sub(pos, pos)
         if quote ~= '"' and quote ~= "'" then
-            return nil, "Expected string"
+            return nil, "預期字串"
         end
         pos = pos + 1
         local startPos = pos
@@ -321,7 +332,7 @@ local function DeserializeString(str)
         while pos <= len do
             local c = str:sub(pos, pos)
             if c == "\\" and pos < len then
-                -- Handle escape sequences
+                -- 處理跳脫序列
                 local next = str:sub(pos + 1, pos + 1)
                 if next == "n" then result = result .. "\n"
                 elseif next == "t" then result = result .. "\t"
@@ -340,10 +351,10 @@ local function DeserializeString(str)
                 pos = pos + 1
             end
         end
-        return nil, "Unterminated string"
+        return nil, "未終結的字串"
     end
 
-    -- Helper: parse a number
+    -- 輔助函數：解析數字
     local function parseNumber()
         local startPos = pos
         if str:sub(pos, pos) == "-" then
@@ -357,16 +368,16 @@ local function DeserializeString(str)
         if num then
             return num
         end
-        return nil, "Invalid number: " .. numStr
+        return nil, "無效數字：" .. numStr
     end
 
-    -- Forward declaration for mutual recursion
+    -- 前向宣告（用於相互遞迴）
     local parseValue
 
-    -- Helper: parse a table
+    -- 輔助函數：解析表格
     local function parseTable()
         if str:sub(pos, pos) ~= "{" then
-            return nil, "Expected table"
+            return nil, "預期表格"
         end
         pos = pos + 1
         skipWhitespace()
@@ -382,7 +393,7 @@ local function DeserializeString(str)
                 return result
             end
 
-            -- Parse key
+            -- 解析鍵
             local key
             if c == "[" then
                 pos = pos + 1
@@ -392,16 +403,16 @@ local function DeserializeString(str)
                 key = keyVal
                 skipWhitespace()
                 if str:sub(pos, pos) ~= "]" then
-                    return nil, "Expected ']'"
+                    return nil, "預期 ']'"
                 end
                 pos = pos + 1
                 skipWhitespace()
                 if str:sub(pos, pos) ~= "=" then
-                    return nil, "Expected '='"
+                    return nil, "預期 '='"
                 end
                 pos = pos + 1
             elseif c:match("[%a_]") then
-                -- Bare identifier key
+                -- 裸識別符鍵
                 local startPos = pos
                 while pos <= len and str:sub(pos, pos):match("[%w_]") do
                     pos = pos + 1
@@ -409,14 +420,14 @@ local function DeserializeString(str)
                 key = str:sub(startPos, pos - 1)
                 skipWhitespace()
                 if str:sub(pos, pos) ~= "=" then
-                    return nil, "Expected '='"
+                    return nil, "預期 '='"
                 end
                 pos = pos + 1
             else
-                return nil, "Invalid table key at position " .. pos
+                return nil, "無效的表格鍵，位置：" .. pos
             end
 
-            -- Parse value
+            -- 解析值
             skipWhitespace()
             local value, err = parseValue()
             if err then return nil, err end
@@ -427,38 +438,38 @@ local function DeserializeString(str)
             if c == "," then
                 pos = pos + 1
             elseif c ~= "}" then
-                return nil, "Expected ',' or '}'"
+                return nil, "預期 ',' 或 '}'"
             end
         end
 
-        return nil, "Unterminated table"
+        return nil, "未終結的表格"
     end
 
-    -- Main value parser
+    -- 主要值解析器
     parseValue = function()
         skipWhitespace()
         if pos > len then
-            return nil, "Unexpected end of input"
+            return nil, "輸入意外結束"
         end
 
         local c = str:sub(pos, pos)
 
-        -- String
+        -- 字串
         if c == '"' or c == "'" then
             return parseString()
         end
 
-        -- Table
+        -- 表格
         if c == "{" then
             return parseTable()
         end
 
-        -- Number (including negative)
+        -- 數字（包含負數）
         if c:match("[%d%-]") then
             return parseNumber()
         end
 
-        -- Boolean/nil keywords
+        -- 布林值/nil 關鍵字
         if str:sub(pos, pos + 3) == "true" then
             pos = pos + 4
             return true
@@ -472,10 +483,10 @@ local function DeserializeString(str)
             return nil
         end
 
-        return nil, "Unexpected character: " .. c
+        return nil, "未預期的字元：" .. c
     end
 
-    -- Parse the input
+    -- 解析輸入
     local result, err = parseValue()
     if err then
         return nil, err
@@ -483,38 +494,42 @@ local function DeserializeString(str)
 
     skipWhitespace()
     if pos <= len then
-        return nil, "Unexpected data after value"
+        return nil, "值之後有未預期的資料"
     end
 
     return result
 end
 
+--------------------------------------------------------------------------------
+-- 匯出/匯入函數
+--------------------------------------------------------------------------------
+
 --[[
-    Export current profile to a string
-    @return string - Serialized profile string
+    匯出目前設定檔為字串
+    @return string 序列化的設定檔字串
 ]]
 function LunarUI:ExportSettings()
     if not self.db or not self.db.profile then
-        return nil, "Database not initialized"
+        return nil, "資料庫未初始化"
     end
 
-    -- Create a copy of the profile (excluding functions and userdata)
+    -- 建立設定檔副本（排除函數和 userdata）
     local exportData = {
         version = self.version,
         profile = {}
     }
 
-    -- Copy all profile settings
+    -- 複製所有設定檔設定
     for k, v in pairs(self.db.profile) do
         if type(v) ~= "function" and type(v) ~= "userdata" then
             exportData.profile[k] = v
         end
     end
 
-    -- Serialize to string
+    -- 序列化為字串
     local serialized = SerializeValue(exportData)
 
-    -- Add header for identification
+    -- 加入識別標頭
     local header = "LUNARUI"
     local exportString = header .. serialized
 
@@ -522,41 +537,43 @@ function LunarUI:ExportSettings()
 end
 
 --[[
-    Import settings from a string
-    @param importString string - The exported settings string
-    @return boolean, string - Success status and message
+    從字串匯入設定
+    @param importString 匯出的設定字串
+    @return boolean, string 成功狀態與訊息
 ]]
 function LunarUI:ImportSettings(importString)
+    local L = Engine.L or {}
+
     if not importString or importString == "" then
-        return false, "No import string provided"
+        return false, L["InvalidSettings"] or "未提供匯入字串"
     end
 
-    -- Check header
+    -- 檢查標頭
     local header = "LUNARUI"
     if not importString:find("^" .. header) then
-        return false, "Invalid import string (missing header)"
+        return false, L["InvalidSettings"] or "無效的匯入字串（缺少標頭）"
     end
 
-    -- Remove header
+    -- 移除標頭
     local dataString = importString:sub(#header + 1)
 
-    -- Deserialize
+    -- 反序列化
     local data, err = DeserializeString(dataString)
     if not data then
-        return false, "Failed to parse: " .. (err or "unknown error")
+        return false, "解析失敗：" .. (err or "未知錯誤")
     end
 
-    -- Validate structure
+    -- 驗證結構
     if type(data) ~= "table" or not data.profile then
-        return false, "Invalid data structure"
+        return false, L["InvalidSettings"] or "無效的資料結構"
     end
 
-    -- Apply imported settings
+    -- 套用匯入的設定
     if not self.db or not self.db.profile then
-        return false, "Database not initialized"
+        return false, "資料庫未初始化"
     end
 
-    -- Merge imported profile with current profile
+    -- 合併匯入的設定檔與目前設定檔
     local function MergeTable(target, source)
         for k, v in pairs(source) do
             if type(v) == "table" and type(target[k]) == "table" then
@@ -569,23 +586,28 @@ function LunarUI:ImportSettings(importString)
 
     MergeTable(self.db.profile, data.profile)
 
-    -- Trigger profile change to refresh UI
+    -- 觸發設定檔變更以重新整理 UI
     self:OnProfileChanged()
 
-    return true, "Settings imported successfully (version: " .. (data.version or "unknown") .. ")"
+    return true, (L["SettingsImported"] or "設定匯入成功") .. "（版本：" .. (data.version or "未知") .. "）"
 end
 
+--------------------------------------------------------------------------------
+-- 匯出/匯入介面
+--------------------------------------------------------------------------------
+
 --[[
-    Copy export string to clipboard (via EditBox)
+    顯示匯出視窗（透過 EditBox 複製到剪貼簿）
 ]]
 function LunarUI:ShowExportFrame()
+    local L = Engine.L or {}
     local exportString, err = self:ExportSettings()
     if not exportString then
-        self:Print("Export failed: " .. (err or "unknown"))
+        self:Print("匯出失敗：" .. (err or "未知"))
         return
     end
 
-    -- Create or show export frame
+    -- 建立或顯示匯出視窗
     if not self.exportFrame then
         local frame = CreateFrame("Frame", "LunarUI_ExportFrame", UIParent, "BackdropTemplate")
         frame:SetSize(500, 200)
@@ -605,13 +627,13 @@ function LunarUI:ShowExportFrame()
         frame:SetScript("OnDragStart", frame.StartMoving)
         frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 
-        -- Title
+        -- 標題
         local title = frame:CreateFontString(nil, "OVERLAY")
         title:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
         title:SetPoint("TOP", 0, -10)
-        title:SetText("|cff8882ffLunarUI|r Export Settings")
+        title:SetText("|cff8882ffLunarUI|r " .. (L["SettingsExported"] and "匯出設定" or "匯出設定"))
 
-        -- Close button
+        -- 關閉按鈕
         local closeBtn = CreateFrame("Button", nil, frame)
         closeBtn:SetSize(20, 20)
         closeBtn:SetPoint("TOPRIGHT", -4, -4)
@@ -620,12 +642,12 @@ function LunarUI:ShowExportFrame()
         closeBtn:GetFontString():SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
         closeBtn:SetScript("OnClick", function() frame:Hide() end)
 
-        -- Scroll frame
+        -- 捲動框架
         local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
         scrollFrame:SetPoint("TOPLEFT", 10, -35)
         scrollFrame:SetPoint("BOTTOMRIGHT", -30, 40)
 
-        -- Edit box
+        -- 編輯框
         local editBox = CreateFrame("EditBox", nil, scrollFrame)
         editBox:SetMultiLine(true)
         editBox:SetFont(STANDARD_TEXT_FONT, 11, "")
@@ -634,11 +656,11 @@ function LunarUI:ShowExportFrame()
         scrollFrame:SetScrollChild(editBox)
         frame.editBox = editBox
 
-        -- Instructions
+        -- 說明
         local instructions = frame:CreateFontString(nil, "OVERLAY")
         instructions:SetFont(STANDARD_TEXT_FONT, 10, "")
         instructions:SetPoint("BOTTOM", 0, 10)
-        instructions:SetText("Ctrl+A to select all, Ctrl+C to copy")
+        instructions:SetText("Ctrl+A 全選，Ctrl+C 複製")
         instructions:SetTextColor(0.6, 0.6, 0.6)
 
         self.exportFrame = frame
@@ -651,10 +673,12 @@ function LunarUI:ShowExportFrame()
 end
 
 --[[
-    Show import frame
+    顯示匯入視窗
 ]]
 function LunarUI:ShowImportFrame()
-    -- Create or show import frame
+    local L = Engine.L or {}
+
+    -- 建立或顯示匯入視窗
     if not self.importFrame then
         local frame = CreateFrame("Frame", "LunarUI_ImportFrame", UIParent, "BackdropTemplate")
         frame:SetSize(500, 200)
@@ -674,13 +698,13 @@ function LunarUI:ShowImportFrame()
         frame:SetScript("OnDragStart", frame.StartMoving)
         frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 
-        -- Title
+        -- 標題
         local title = frame:CreateFontString(nil, "OVERLAY")
         title:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
         title:SetPoint("TOP", 0, -10)
-        title:SetText("|cff8882ffLunarUI|r Import Settings")
+        title:SetText("|cff8882ffLunarUI|r 匯入設定")
 
-        -- Close button
+        -- 關閉按鈕
         local closeBtn = CreateFrame("Button", nil, frame)
         closeBtn:SetSize(20, 20)
         closeBtn:SetPoint("TOPRIGHT", -4, -4)
@@ -689,12 +713,12 @@ function LunarUI:ShowImportFrame()
         closeBtn:GetFontString():SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
         closeBtn:SetScript("OnClick", function() frame:Hide() end)
 
-        -- Scroll frame
+        -- 捲動框架
         local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
         scrollFrame:SetPoint("TOPLEFT", 10, -35)
         scrollFrame:SetPoint("BOTTOMRIGHT", -30, 70)
 
-        -- Edit box
+        -- 編輯框
         local editBox = CreateFrame("EditBox", nil, scrollFrame)
         editBox:SetMultiLine(true)
         editBox:SetFont(STANDARD_TEXT_FONT, 11, "")
@@ -703,7 +727,7 @@ function LunarUI:ShowImportFrame()
         scrollFrame:SetScrollChild(editBox)
         frame.editBox = editBox
 
-        -- Import button
+        -- 匯入按鈕
         local importBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
         importBtn:SetSize(100, 25)
         importBtn:SetPoint("BOTTOM", 0, 10)
@@ -718,7 +742,7 @@ function LunarUI:ShowImportFrame()
         local btnText = importBtn:CreateFontString(nil, "OVERLAY")
         btnText:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
         btnText:SetPoint("CENTER")
-        btnText:SetText("Import")
+        btnText:SetText("匯入")
 
         importBtn:SetScript("OnClick", function()
             local importString = frame.editBox:GetText()
@@ -738,11 +762,11 @@ function LunarUI:ShowImportFrame()
             self:SetBackdropColor(0.2, 0.4, 0.2, 1)
         end)
 
-        -- Instructions
+        -- 說明
         local instructions = frame:CreateFontString(nil, "OVERLAY")
         instructions:SetFont(STANDARD_TEXT_FONT, 10, "")
         instructions:SetPoint("BOTTOM", 0, 40)
-        instructions:SetText("Paste exported string and click Import")
+        instructions:SetText("貼上匯出字串，然後點擊匯入")
         instructions:SetTextColor(0.6, 0.6, 0.6)
 
         self.importFrame = frame

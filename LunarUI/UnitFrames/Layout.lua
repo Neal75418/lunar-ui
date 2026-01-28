@@ -1,22 +1,23 @@
 --[[
-    LunarUI - oUF Layout
-    Defines the visual style for all unit frames
+    LunarUI - oUF 佈局
+    定義所有單位框架的視覺風格
 
-    Phase-aware UnitFrames that respond to Lunar Phase changes
+    月相感知單位框架：根據月相變化調整外觀
 ]]
 
 local ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
--- Wait for oUF to be available (X-oUF: LunarUF in TOC)
+-- 等待 oUF 可用（TOC 中設定 X-oUF: LunarUF）
 local oUF = Engine.oUF or _G.LunarUF or _G.oUF
 if not oUF then
-    print("|cffff0000LunarUI:|r oUF not found!")
+    local L = Engine.L or {}
+    print("|cffff0000LunarUI:|r " .. (L["ErrorOUFNotFound"] or "找不到 oUF 框架"))
     return
 end
 
 --------------------------------------------------------------------------------
--- Constants & Shared Resources
+-- 常數與共用資源
 --------------------------------------------------------------------------------
 
 local statusBarTexture = "Interface\\Buttons\\WHITE8x8"
@@ -27,7 +28,7 @@ local backdropTemplate = {
     insets = { left = 1, right = 1, top = 1, bottom = 1 },
 }
 
--- Frame sizes
+-- 框架尺寸
 local SIZES = {
     player = { width = 220, height = 50 },
     target = { width = 220, height = 50 },
@@ -40,7 +41,7 @@ local SIZES = {
 }
 
 --------------------------------------------------------------------------------
--- Helper Functions
+-- 輔助函數
 --------------------------------------------------------------------------------
 
 local function CreateBackdrop(frame)
@@ -55,41 +56,41 @@ local function CreateBackdrop(frame)
 end
 
 --------------------------------------------------------------------------------
--- Core Elements
+-- 核心元素
 --------------------------------------------------------------------------------
 
---[[ Health Bar ]]
+--[[ 生命條 ]]
 local function CreateHealthBar(frame, unit)
     local health = CreateFrame("StatusBar", nil, frame)
     health:SetStatusBarTexture(statusBarTexture)
     health:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
     health:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
 
-    -- Height varies by unit type
+    -- 高度依單位類型而異
     local heightPercent = (unit == "raid") and 0.85 or 0.65
     health:SetHeight(frame:GetHeight() * heightPercent)
 
-    -- Colors
+    -- 顏色設定
     health.colorClass = true
     health.colorReaction = true
     health.colorHealth = true
     health.colorSmooth = false
 
-    -- Background
+    -- 背景
     health.bg = health:CreateTexture(nil, "BACKGROUND")
     health.bg:SetAllPoints()
     health.bg:SetTexture(statusBarTexture)
     health.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
     health.bg.multiplier = 0.3
 
-    -- Frequent updates for smooth animation
+    -- 頻繁更新以確保動畫流暢
     health.frequentUpdates = true
 
-    -- Fix #71: PostUpdate hook to ensure class colors are applied correctly
+    -- 更新後鉤子：確保職業顏色正確套用
     health.PostUpdate = function(self, unit, cur, max)
         if not unit then return end
 
-        -- For players, use class color
+        -- 玩家使用職業顏色
         if UnitIsPlayer(unit) then
             local _, class = UnitClass(unit)
             if class then
@@ -104,19 +105,16 @@ local function CreateHealthBar(frame, unit)
             end
         end
 
-        -- For NPCs, use reaction color
+        -- NPC 使用聲望顏色
         local reaction = UnitReaction(unit, "player")
         if reaction then
             local color
             if reaction >= 5 then
-                -- Friendly (green)
-                color = { r = 0.2, g = 0.9, b = 0.3 }
+                color = { r = 0.2, g = 0.9, b = 0.3 }  -- 友善
             elseif reaction == 4 then
-                -- Neutral (yellow)
-                color = { r = 0.9, g = 0.9, b = 0.2 }
+                color = { r = 0.9, g = 0.9, b = 0.2 }  -- 中立
             else
-                -- Hostile (red)
-                color = { r = 0.9, g = 0.2, b = 0.2 }
+                color = { r = 0.9, g = 0.2, b = 0.2 }  -- 敵對
             end
             self:SetStatusBarColor(color.r, color.g, color.b)
             if self.bg then
@@ -129,7 +127,7 @@ local function CreateHealthBar(frame, unit)
     return health
 end
 
---[[ Power Bar ]]
+--[[ 能量條 ]]
 local function CreatePowerBar(frame, unit)
     local power = CreateFrame("StatusBar", nil, frame)
     power:SetStatusBarTexture(statusBarTexture)
@@ -150,14 +148,14 @@ local function CreatePowerBar(frame, unit)
     return power
 end
 
---[[ Name Text ]]
+--[[ 名稱文字 ]]
 local function CreateNameText(frame, unit)
     local name = frame.Health:CreateFontString(nil, "OVERLAY")
     name:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
     name:SetPoint("LEFT", frame.Health, "LEFT", 5, 0)
     name:SetJustifyH("LEFT")
 
-    -- Truncate long names for smaller frames
+    -- 較小框架截斷長名稱
     if unit == "raid" or unit == "party" then
         name:SetWidth(frame:GetWidth() - 10)
         frame:Tag(name, "[name:short]")
@@ -169,9 +167,9 @@ local function CreateNameText(frame, unit)
     return name
 end
 
---[[ Health Text ]]
+--[[ 生命值文字 ]]
 local function CreateHealthText(frame, unit)
-    -- Skip for raid frames (too small)
+    -- 團隊框架太小，跳過
     if unit == "raid" then return end
 
     local healthText = frame.Health:CreateFontString(nil, "OVERLAY")
@@ -189,55 +187,55 @@ local function CreateHealthText(frame, unit)
     return healthText
 end
 
---[[ Castbar ]]
+--[[ 施法條 ]]
 local function CreateCastbar(frame, unit)
     local castbar = CreateFrame("StatusBar", nil, frame)
     castbar:SetStatusBarTexture(statusBarTexture)
     castbar:SetStatusBarColor(0.4, 0.6, 0.8, 1)
 
-    -- Position below main frame
+    -- 位於主框架下方
     castbar:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 0, -4)
     castbar:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, -4)
     castbar:SetHeight(16)
 
-    -- Background
+    -- 背景
     local bg = castbar:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
     bg:SetTexture(statusBarTexture)
     bg:SetVertexColor(0.05, 0.05, 0.05, 0.9)
     castbar.bg = bg
 
-    -- Border
+    -- 邊框
     local border = CreateFrame("Frame", nil, castbar, "BackdropTemplate")
     border:SetAllPoints()
     border:SetBackdrop(backdropTemplate)
     border:SetBackdropColor(0, 0, 0, 0)
     border:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
 
-    -- Spell icon
+    -- 法術圖示
     local icon = castbar:CreateTexture(nil, "OVERLAY")
     icon:SetSize(16, 16)
     icon:SetPoint("LEFT", castbar, "LEFT", 2, 0)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     castbar.Icon = icon
 
-    -- Spell name
+    -- 法術名稱
     local text = castbar:CreateFontString(nil, "OVERLAY")
     text:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
     text:SetPoint("LEFT", icon, "RIGHT", 4, 0)
     text:SetJustifyH("LEFT")
     castbar.Text = text
 
-    -- Cast time
+    -- 施法時間
     local time = castbar:CreateFontString(nil, "OVERLAY")
     time:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
     time:SetPoint("RIGHT", castbar, "RIGHT", -4, 0)
     time:SetJustifyH("RIGHT")
     castbar.Time = time
 
-    -- Fix #48: WoW 12.0 makes notInterruptible a completely inaccessible secret value
-    -- Blizzard intentionally restricts this information from addons
-    -- Use a consistent cast bar color since we cannot determine interruptibility
+    -- WoW 12.0 將 notInterruptible 設為隱藏值
+    -- 暴雪故意限制插件存取此資訊
+    -- 使用統一的施法條顏色（無法判斷是否可打斷）
     castbar.PostCastStart = function(self, unit)
         self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
     end
@@ -246,7 +244,7 @@ local function CreateCastbar(frame, unit)
         self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
     end
 
-    -- Spark
+    -- 火花
     local spark = castbar:CreateTexture(nil, "OVERLAY")
     spark:SetSize(20, 20)
     spark:SetBlendMode("ADD")
@@ -257,7 +255,7 @@ local function CreateCastbar(frame, unit)
     return castbar
 end
 
--- Fix #51: Fallback debuff type colors for UnitFrames (DebuffTypeColor may not exist in WoW 12.0)
+-- 減益類型顏色（WoW 12.0 中 DebuffTypeColor 可能不存在）
 local UNITFRAME_DEBUFF_COLORS = _G.DebuffTypeColor or {
     none = { r = 0.8, g = 0.0, b = 0.0 },
     Magic = { r = 0.2, g = 0.6, b = 1.0 },
@@ -267,13 +265,12 @@ local UNITFRAME_DEBUFF_COLORS = _G.DebuffTypeColor or {
     [""] = { r = 0.8, g = 0.0, b = 0.0 },
 }
 
---[[ Auras (Buffs/Debuffs) ]]
+--[[ 光環（增益/減益） ]]
 local function CreateAuras(frame, unit)
     local auras = CreateFrame("Frame", nil, frame)
 
-    -- Fix #64: Determine unit type from multiple sources
+    -- 從多個來源判斷單位類型
     local unitType = unit or frame.unit
-    -- Also check frame name as fallback
     local frameName = frame:GetName() or ""
     if not unitType or unitType == "" then
         if frameName:find("Player") then
@@ -285,23 +282,23 @@ local function CreateAuras(frame, unit)
         end
     end
 
-    -- Position based on unit type - auras should NOT overlap with the frame
+    -- 根據單位類型定位（光環不應與框架重疊）
     if unitType == "target" then
-        -- Target: auras appear to the RIGHT
+        -- 目標：光環顯示在右側
         auras:SetPoint("TOPLEFT", frame, "TOPRIGHT", 4, 0)
         auras:SetSize(180, 50)
         auras.initialAnchor = "TOPLEFT"
         auras["growth-x"] = "RIGHT"
         auras["growth-y"] = "DOWN"
     elseif unitType == "player" then
-        -- Player: auras appear to the LEFT
+        -- 玩家：光環顯示在左側
         auras:SetPoint("TOPRIGHT", frame, "TOPLEFT", -4, 0)
         auras:SetSize(180, 50)
         auras.initialAnchor = "TOPRIGHT"
         auras["growth-x"] = "LEFT"
         auras["growth-y"] = "DOWN"
     else
-        -- Other units: auras appear ABOVE the frame
+        -- 其他單位：光環顯示在上方
         auras:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
         auras:SetSize(frame:GetWidth() > 0 and frame:GetWidth() or 180, 20)
         auras.initialAnchor = "BOTTOMLEFT"
@@ -315,7 +312,7 @@ local function CreateAuras(frame, unit)
     auras.numBuffs = 8
     auras.numDebuffs = 8
 
-    -- Fix #51 + Fix #55 + Fix #56: Initialize all tables required by oUF Auras element
+    -- 初始化 oUF 光環元素所需的表格
     auras.allBuffs = {}
     auras.allDebuffs = {}
     auras.activeBuffs = {}
@@ -323,7 +320,7 @@ local function CreateAuras(frame, unit)
     auras.sortedBuffs = {}
     auras.sortedDebuffs = {}
 
-    -- Filter auras for specific units
+    -- 針對特定單位過濾光環
     if unitType == "target" then
         auras.onlyShowPlayer = true
         auras.FilterAura = function(element, unit, data)
@@ -331,9 +328,9 @@ local function CreateAuras(frame, unit)
         end
     end
 
-    -- Post-create hook for styling
+    -- 建立後鉤子：風格化
     auras.PostCreateButton = function(self, button)
-        -- Fix #51: Apply BackdropTemplateMixin before calling SetBackdrop
+        -- 呼叫 SetBackdrop 前需先套用 BackdropTemplateMixin
         Mixin(button, BackdropTemplateMixin)
         button:OnBackdropLoaded()
         button:SetBackdrop(backdropTemplate)
@@ -352,12 +349,12 @@ local function CreateAuras(frame, unit)
         end
     end
 
-    -- Post-update hook for debuff colors
-    -- Fix #53 + Fix #57: WoW 12.0 makes isHarmful and dispelName secret values
-    -- Use isHarmfulAura (added by oUF) which is safe to access
+    -- 更新後鉤子：減益顏色
+    -- WoW 12.0 將 isHarmful 和 dispelName 設為隱藏值
+    -- 使用 oUF 新增的 isHarmfulAura（可安全存取）
     auras.PostUpdateButton = function(self, button, unit, data, position)
         if data.isHarmfulAura then
-            -- Debuff - use generic debuff color since dispelName is inaccessible
+            -- 減益：使用通用減益顏色（無法存取驅散類型）
             local color = UNITFRAME_DEBUFF_COLORS["none"]
             button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
         else
@@ -369,7 +366,7 @@ local function CreateAuras(frame, unit)
     return auras
 end
 
---[[ Debuffs only (for party/raid) ]]
+--[[ 僅減益（用於隊伍/團隊） ]]
 local function CreateDebuffs(frame, unit)
     local debuffs = CreateFrame("Frame", nil, frame)
     debuffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
@@ -382,14 +379,13 @@ local function CreateDebuffs(frame, unit)
     debuffs["growth-x"] = "RIGHT"
     debuffs["growth-y"] = "UP"
 
-    -- Fix #53: WoW 12.0 makes isHarmful/isBossAura secret values
-    -- Debuffs element already filters to harmful, just check source
+    -- WoW 12.0 將 isHarmful/isBossAura 設為隱藏值
+    -- 減益元素已過濾為有害效果，僅檢查來源
     debuffs.FilterAura = function(element, unit, data)
         return data.isPlayerAura == true
     end
 
     debuffs.PostCreateButton = function(self, button)
-        -- Fix #51: Apply BackdropTemplateMixin before calling SetBackdrop
         Mixin(button, BackdropTemplateMixin)
         button:OnBackdropLoaded()
         button:SetBackdrop(backdropTemplate)
@@ -399,8 +395,8 @@ local function CreateDebuffs(frame, unit)
     end
 
     debuffs.PostUpdateButton = function(self, button, unit, data, position)
-        -- Fix #51 + Fix #57: WoW 12.0 makes dispelName a secret value
-        -- Use generic debuff color since we can't access dispel type
+        -- WoW 12.0 將 dispelName 設為隱藏值
+        -- 使用通用減益顏色（無法存取驅散類型）
         local color = UNITFRAME_DEBUFF_COLORS["none"]
         button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
     end
@@ -410,10 +406,10 @@ local function CreateDebuffs(frame, unit)
 end
 
 --------------------------------------------------------------------------------
--- Unit-Specific Elements
+-- 單位專屬元素
 --------------------------------------------------------------------------------
 
---[[ Player: Resting Indicator ]]
+--[[ 玩家：休息指示器 ]]
 local function CreateRestingIndicator(frame)
     local resting = frame.Health:CreateTexture(nil, "OVERLAY")
     resting:SetSize(16, 16)
@@ -424,7 +420,7 @@ local function CreateRestingIndicator(frame)
     return resting
 end
 
---[[ Player: Combat Indicator ]]
+--[[ 玩家：戰鬥指示器 ]]
 local function CreateCombatIndicator(frame)
     local combat = frame.Health:CreateTexture(nil, "OVERLAY")
     combat:SetSize(16, 16)
@@ -435,7 +431,7 @@ local function CreateCombatIndicator(frame)
     return combat
 end
 
---[[ Player: Experience Bar ]]
+--[[ 玩家：經驗條 ]]
 local function CreateExperienceBar(frame)
     local exp = CreateFrame("StatusBar", nil, frame)
     exp:SetStatusBarTexture(statusBarTexture)
@@ -449,7 +445,7 @@ local function CreateExperienceBar(frame)
     exp.bg:SetTexture(statusBarTexture)
     exp.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
 
-    -- Rested XP overlay
+    -- 精力條覆蓋
     exp.Rested = CreateFrame("StatusBar", nil, exp)
     exp.Rested:SetStatusBarTexture(statusBarTexture)
     exp.Rested:SetStatusBarColor(0.0, 0.39, 0.88, 0.5)
@@ -459,7 +455,7 @@ local function CreateExperienceBar(frame)
     return exp
 end
 
---[[ Target: Classification (Elite/Rare) ]]
+--[[ 目標：分類（菁英/稀有） ]]
 local function CreateClassification(frame)
     local class = frame.Health:CreateFontString(nil, "OVERLAY")
     class:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
@@ -471,7 +467,7 @@ local function CreateClassification(frame)
     return class
 end
 
---[[ Target: Level Text ]]
+--[[ 目標：等級文字 ]]
 local function CreateLevelText(frame, unit)
     local level = frame.Health:CreateFontString(nil, "OVERLAY")
     level:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
@@ -482,7 +478,7 @@ local function CreateLevelText(frame, unit)
     return level
 end
 
---[[ Threat Indicator ]]
+--[[ 仇恨指示器 ]]
 local function CreateThreatIndicator(frame)
     local threat = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     threat:SetAllPoints()
@@ -505,7 +501,7 @@ local function CreateThreatIndicator(frame)
     return threat
 end
 
---[[ Range Indicator (for party/raid) ]]
+--[[ 距離指示器（用於隊伍/團隊） ]]
 local function CreateRangeIndicator(frame)
     frame.Range = {
         insideAlpha = 1,
@@ -514,7 +510,7 @@ local function CreateRangeIndicator(frame)
     return frame.Range
 end
 
---[[ Leader/Assistant Indicators ]]
+--[[ 隊長/助理指示器 ]]
 local function CreateLeaderIndicator(frame)
     local leader = frame.Health:CreateTexture(nil, "OVERLAY")
     leader:SetSize(12, 12)
@@ -531,7 +527,7 @@ local function CreateAssistantIndicator(frame)
     return assist
 end
 
---[[ Raid Role Indicator ]]
+--[[ 團隊角色指示器 ]]
 local function CreateRaidRoleIndicator(frame)
     local role = frame.Health:CreateTexture(nil, "OVERLAY")
     role:SetSize(12, 12)
@@ -540,7 +536,7 @@ local function CreateRaidRoleIndicator(frame)
     return role
 end
 
---[[ Group Role Indicator (Tank/Healer/DPS) ]]
+--[[ 職責指示器（坦克/治療/輸出） ]]
 local function CreateGroupRoleIndicator(frame)
     local role = frame.Health:CreateTexture(nil, "OVERLAY")
     role:SetSize(14, 14)
@@ -549,7 +545,7 @@ local function CreateGroupRoleIndicator(frame)
     return role
 end
 
---[[ Ready Check Indicator ]]
+--[[ 準備確認指示器 ]]
 local function CreateReadyCheckIndicator(frame)
     local ready = frame:CreateTexture(nil, "OVERLAY")
     ready:SetSize(20, 20)
@@ -558,7 +554,7 @@ local function CreateReadyCheckIndicator(frame)
     return ready
 end
 
---[[ Summon Indicator ]]
+--[[ 召喚指示器 ]]
 local function CreateSummonIndicator(frame)
     local summon = frame:CreateTexture(nil, "OVERLAY")
     summon:SetSize(24, 24)
@@ -567,7 +563,7 @@ local function CreateSummonIndicator(frame)
     return summon
 end
 
---[[ Resurrection Indicator ]]
+--[[ 復活指示器 ]]
 local function CreateResurrectIndicator(frame)
     local res = frame:CreateTexture(nil, "OVERLAY")
     res:SetSize(20, 20)
@@ -576,13 +572,13 @@ local function CreateResurrectIndicator(frame)
     return res
 end
 
--- Fix #74 + Fix #100: Death Indicator with single global event frame to prevent memory leaks
--- Use weak table to track frames needing death state updates
+-- 死亡指示器：使用單一全域事件框架防止記憶體洩漏
+-- 使用弱引用表追蹤需要死亡狀態更新的框架
 local deathIndicatorFrames = setmetatable({}, { __mode = "k" })
 local deathIndicatorEventFrame
 
 local function UpdateDeathStateForFrame(frame)
-    -- Fix #107: Wrap in pcall with debug logging to prevent silent failures
+    -- 使用 pcall 包裹並記錄除錯資訊，防止靜默失敗
     local success, err = pcall(function()
         local unit = frame.unit
         if not unit or not UnitExists(unit) then
@@ -600,8 +596,8 @@ local function UpdateDeathStateForFrame(frame)
         end
     end)
 
-    if not success and LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
-        LunarUI:Print("UpdateDeathStateForFrame error: " .. tostring(err))
+    if not success and LunarUI:IsDebugMode() then
+        LunarUI:Debug("UpdateDeathStateForFrame 錯誤：" .. tostring(err))
     end
 end
 
@@ -615,7 +611,7 @@ local function UpdateAllDeathStates(eventUnit)
     end
 end
 
--- Create single global event frame (lazy initialization)
+-- 建立單一全域事件框架（延遲初始化）
 local function EnsureDeathIndicatorEventFrame()
     if deathIndicatorEventFrame then return end
 
@@ -634,7 +630,7 @@ local function EnsureDeathIndicatorEventFrame()
 end
 
 local function CreateDeathIndicator(frame, unit)
-    -- Create skull icon for dead units
+    -- 建立死亡單位的骷髏圖示
     local dead = frame:CreateTexture(nil, "OVERLAY")
     dead:SetSize(20, 20)
     dead:SetPoint("CENTER", frame.Health, "CENTER")
@@ -642,18 +638,18 @@ local function CreateDeathIndicator(frame, unit)
     dead:Hide()
     frame.DeadIndicator = dead
 
-    -- Create gray overlay for dead units
+    -- 建立死亡單位的灰色覆蓋
     local deadOverlay = frame.Health:CreateTexture(nil, "OVERLAY")
     deadOverlay:SetAllPoints(frame.Health)
     deadOverlay:SetColorTexture(0.3, 0.3, 0.3, 0.6)
     deadOverlay:Hide()
     frame.DeadOverlay = deadOverlay
 
-    -- Register frame with global death indicator system (weak reference)
+    -- 向全域死亡指示器系統註冊框架（弱引用）
     EnsureDeathIndicatorEventFrame()
     deathIndicatorFrames[frame] = true
 
-    -- Initial update
+    -- 初始更新
     C_Timer.After(0.2, function()
         UpdateDeathStateForFrame(frame)
     end)
@@ -662,22 +658,22 @@ local function CreateDeathIndicator(frame, unit)
 end
 
 --------------------------------------------------------------------------------
--- Phase Awareness
+-- 月相感知
 --------------------------------------------------------------------------------
 
--- Global phase callback registration (only once)
+-- 全域月相回呼註冊（僅一次）
 local phaseCallbackRegistered = false
 
--- Fix #21: Optimized phase callback for large raids using batched updates
--- Fix #101: Use stored timer for proper cancellation to prevent timer accumulation
+-- 針對大型團隊優化的月相回呼：使用批次更新
+-- 使用儲存的計時器以正確取消，防止計時器累積
 local updateQueue = {}
 local isUpdating = false
 local updateBatchTimer = nil
 
 local function ProcessUpdateBatch()
-    updateBatchTimer = nil  -- Clear timer reference
+    updateBatchTimer = nil  -- 清除計時器引用
 
-    -- Fix #105: Wrap entire batch processing in pcall to ensure isUpdating is reset on error
+    -- 使用 pcall 包裹整個批次處理，確保錯誤時重設 isUpdating
     local success, err = pcall(function()
         if #updateQueue == 0 then
             isUpdating = false
@@ -691,12 +687,12 @@ local function ProcessUpdateBatch()
             return
         end
 
-        -- Process up to 10 frames per batch
+        -- 每批次處理最多 10 個框架
         local batchSize = 10
         for i = 1, batchSize do
             local frame = table.remove(updateQueue, 1)
             if frame and frame.IsShown and frame:IsShown() then
-                -- Wrap individual frame updates in pcall to prevent one bad frame from stopping all updates
+                -- 使用 pcall 包裹個別框架更新，防止單一壞框架阻止所有更新
                 pcall(function()
                     if tokens.alpha and type(tokens.alpha) == "number" then
                         frame:SetAlpha(tokens.alpha)
@@ -712,28 +708,28 @@ local function ProcessUpdateBatch()
             end
         end
 
-        -- Continue processing next frame with cancellable timer
+        -- 使用可取消的計時器繼續處理下一幀
         updateBatchTimer = C_Timer.NewTimer(0, ProcessUpdateBatch)
     end)
 
-    -- Fix #105: Ensure isUpdating is reset even if an error occurred
+    -- 確保即使發生錯誤也重設 isUpdating
     if not success then
         isUpdating = false
         wipe(updateQueue)
-        if LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
-            LunarUI:Print("ProcessUpdateBatch error: " .. tostring(err))
+        if LunarUI:IsDebugMode() then
+            LunarUI:Debug("ProcessUpdateBatch 錯誤：" .. tostring(err))
         end
     end
 end
 
 local function UpdateAllFramesForPhase()
-    -- Fix #101: Cancel any existing batch timer before starting new updates
+    -- 開始新更新前取消任何現有的批次計時器
     if updateBatchTimer then
         updateBatchTimer:Cancel()
         updateBatchTimer = nil
     end
 
-    -- Collect all frames to update
+    -- 收集所有需要更新的框架
     wipe(updateQueue)
 
     for name, frame in pairs(spawnedFrames) do
@@ -742,7 +738,7 @@ local function UpdateAllFramesForPhase()
         end
     end
 
-    -- Also collect header child frames (party/raid)
+    -- 同時收集標頭子框架（隊伍/團隊）
     for _, headerName in ipairs({"party", "raid"}) do
         local header = spawnedFrames[headerName]
         if header then
@@ -755,7 +751,7 @@ local function UpdateAllFramesForPhase()
         end
     end
 
-    -- Start batched processing if not already running
+    -- 若未在執行中則開始批次處理
     if not isUpdating and #updateQueue > 0 then
         isUpdating = true
         ProcessUpdateBatch()
@@ -772,20 +768,20 @@ local function RegisterGlobalPhaseCallback()
 end
 
 local function ApplyPhaseAwareness(frame)
-    -- Register global callback if not done
+    -- 若尚未完成則註冊全域回呼
     RegisterGlobalPhaseCallback()
 
-    -- Apply initial tokens
+    -- 套用初始標記
     local tokens = LunarUI:GetTokens()
     frame:SetAlpha(tokens.alpha)
     frame:SetScale(tokens.scale)
 end
 
 --------------------------------------------------------------------------------
--- Layout Functions
+-- 佈局函數
 --------------------------------------------------------------------------------
 
---[[ Shared layout for all units ]]
+--[[ 所有單位的共用佈局 ]]
 local function Shared(frame, unit)
     frame:RegisterForClicks("AnyUp")
     frame:SetScript("OnEnter", UnitFrame_OnEnter)
@@ -800,7 +796,7 @@ local function Shared(frame, unit)
     return frame
 end
 
---[[ Player Layout ]]
+--[[ 玩家佈局 ]]
 local function PlayerLayout(frame, unit)
     local db = LunarUI.db and LunarUI.db.profile.unitframes.player
     local size = db and { width = db.width, height = db.height } or SIZES.player
@@ -810,13 +806,13 @@ local function PlayerLayout(frame, unit)
     CreatePowerBar(frame, unit)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
-    -- Fix #66: Remove player auras (already shown in top-right corner)
-    CreateLevelText(frame, unit)  -- Fix #66: Add level display
+    -- 移除玩家光環（已顯示在右上角）
+    CreateLevelText(frame, unit)
     CreateRestingIndicator(frame)
     CreateCombatIndicator(frame)
     CreateThreatIndicator(frame)
 
-    -- Experience bar (only if not max level)
+    -- 經驗條（僅未滿級時）
     if UnitLevel("player") < GetMaxPlayerLevel() then
         CreateExperienceBar(frame)
     end
@@ -824,7 +820,7 @@ local function PlayerLayout(frame, unit)
     return frame
 end
 
---[[ Target Layout ]]
+--[[ 目標佈局 ]]
 local function TargetLayout(frame, unit)
     local db = LunarUI.db and LunarUI.db.profile.unitframes.target
     local size = db and { width = db.width, height = db.height } or SIZES.target
@@ -835,10 +831,10 @@ local function TargetLayout(frame, unit)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
 
-    -- Fix #67: Use Debuffs instead of Auras - only show player's debuffs
+    -- 使用 Debuffs 取代 Auras：僅顯示玩家的減益
     CreateDebuffs(frame, unit)
 
-    -- Position debuffs to the RIGHT of frame
+    -- 將減益定位在框架右側
     if frame.Debuffs then
         frame.Debuffs:ClearAllPoints()
         frame.Debuffs:SetPoint("TOPLEFT", frame, "TOPRIGHT", 8, 0)
@@ -853,12 +849,12 @@ local function TargetLayout(frame, unit)
     CreateClassification(frame)
     CreateLevelText(frame, unit)
     CreateThreatIndicator(frame)
-    CreateDeathIndicator(frame, unit)  -- Fix #74: Death indicator
+    CreateDeathIndicator(frame, unit)
 
     return frame
 end
 
---[[ Focus Layout ]]
+--[[ 焦點佈局 ]]
 local function FocusLayout(frame, unit)
     local db = LunarUI.db and LunarUI.db.profile.unitframes.focus
     local size = db and { width = db.width, height = db.height } or SIZES.focus
@@ -873,7 +869,7 @@ local function FocusLayout(frame, unit)
     return frame
 end
 
---[[ Pet Layout ]]
+--[[ 寵物佈局 ]]
 local function PetLayout(frame, unit)
     local db = LunarUI.db and LunarUI.db.profile.unitframes.pet
     local size = db and { width = db.width, height = db.height } or SIZES.pet
@@ -886,7 +882,7 @@ local function PetLayout(frame, unit)
     return frame
 end
 
---[[ TargetTarget Layout ]]
+--[[ 目標的目標佈局 ]]
 local function TargetTargetLayout(frame, unit)
     local db = LunarUI.db and LunarUI.db.profile.unitframes.targettarget
     local size = db and { width = db.width, height = db.height } or SIZES.targettarget
@@ -897,7 +893,7 @@ local function TargetTargetLayout(frame, unit)
     return frame
 end
 
---[[ Boss Layout ]]
+--[[ 首領佈局 ]]
 local function BossLayout(frame, unit)
     local db = LunarUI.db and LunarUI.db.profile.unitframes.boss
     local size = db and { width = db.width, height = db.height } or SIZES.boss
@@ -912,7 +908,7 @@ local function BossLayout(frame, unit)
     return frame
 end
 
---[[ Party Layout ]]
+--[[ 隊伍佈局 ]]
 local function PartyLayout(frame, unit)
     local db = LunarUI.db and LunarUI.db.profile.unitframes.party
     local size = db and { width = db.width, height = db.height } or SIZES.party
@@ -929,12 +925,12 @@ local function PartyLayout(frame, unit)
     CreateReadyCheckIndicator(frame)
     CreateSummonIndicator(frame)
     CreateResurrectIndicator(frame)
-    CreateDeathIndicator(frame, unit)  -- Fix #74: Death indicator
+    CreateDeathIndicator(frame, unit)
 
     return frame
 end
 
---[[ Raid Layout ]]
+--[[ 團隊佈局 ]]
 local function RaidLayout(frame, unit)
     local db = LunarUI.db and LunarUI.db.profile.unitframes.raid
     local size = db and { width = db.width, height = db.height } or SIZES.raid
@@ -951,7 +947,7 @@ local function RaidLayout(frame, unit)
     CreateSummonIndicator(frame)
     CreateResurrectIndicator(frame)
 
-    -- Debuffs for raid (smaller)
+    -- 團隊減益（較小）
     local debuffs = CreateFrame("Frame", nil, frame)
     debuffs:SetPoint("CENTER", frame, "CENTER", 0, 0)
     debuffs:SetSize(40, 20)
@@ -959,7 +955,7 @@ local function RaidLayout(frame, unit)
     debuffs.spacing = 2
     debuffs.num = 2
     debuffs.initialAnchor = "CENTER"
-    -- Fix #54: WoW 12.0 makes isHarmful and isBossAura secret values
+    -- WoW 12.0 將 isHarmful 和 isBossAura 設為隱藏值
     debuffs.FilterAura = function(element, unit, data)
         return data.isPlayerAura == true
     end
@@ -969,13 +965,13 @@ local function RaidLayout(frame, unit)
     end
     frame.Debuffs = debuffs
 
-    CreateDeathIndicator(frame, unit)  -- Fix #74: Death indicator
+    CreateDeathIndicator(frame, unit)
 
     return frame
 end
 
 --------------------------------------------------------------------------------
--- Register Styles
+-- 註冊風格
 --------------------------------------------------------------------------------
 
 oUF:RegisterStyle("LunarUI", Shared)
@@ -991,13 +987,13 @@ oUF:RegisterStyle("LunarUI_Raid", RaidLayout)
 oUF:SetActiveStyle("LunarUI")
 
 --------------------------------------------------------------------------------
--- Spawn Functions
+-- 生成函數
 --------------------------------------------------------------------------------
 
 local spawnedFrames = {}
 
 local function SpawnUnitFrames()
-    -- Fix #37: Use event-driven retry instead of fixed timer for combat lockdown
+    -- 使用事件驅動重試取代固定計時器（處理戰鬥鎖定）
     if InCombatLockdown() then
         local waitFrame = CreateFrame("Frame")
         waitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -1012,14 +1008,14 @@ local function SpawnUnitFrames()
     if not LunarUI.db then return end
     local uf = LunarUI.db.profile.unitframes
 
-    -- Player
+    -- 玩家
     if uf.player.enabled then
         oUF:SetActiveStyle("LunarUI_Player")
         spawnedFrames.player = oUF:Spawn("player", "LunarUI_Player")
         spawnedFrames.player:SetPoint(uf.player.point, UIParent, "CENTER", uf.player.x, uf.player.y)
 
-        -- Fix #63: Force update player frame after spawn to ensure elements are visible
-        -- Player unit exists immediately but elements may not update until PLAYER_ENTERING_WORLD
+        -- 生成後強制更新玩家框架以確保元素可見
+        -- 玩家單位立即存在，但元素可能在 PLAYER_ENTERING_WORLD 前不會更新
         C_Timer.After(0.2, function()
             if spawnedFrames.player then
                 spawnedFrames.player:Show()
@@ -1030,21 +1026,21 @@ local function SpawnUnitFrames()
         end)
     end
 
-    -- Target
+    -- 目標
     if uf.target.enabled then
         oUF:SetActiveStyle("LunarUI_Target")
         spawnedFrames.target = oUF:Spawn("target", "LunarUI_Target")
         spawnedFrames.target:SetPoint(uf.target.point, UIParent, "CENTER", uf.target.x, uf.target.y)
     end
 
-    -- Focus
+    -- 焦點
     if uf.focus and uf.focus.enabled then
         oUF:SetActiveStyle("LunarUI_Focus")
         spawnedFrames.focus = oUF:Spawn("focus", "LunarUI_Focus")
         spawnedFrames.focus:SetPoint(uf.focus.point or "CENTER", UIParent, "CENTER", uf.focus.x or -350, uf.focus.y or 200)
     end
 
-    -- Pet
+    -- 寵物
     if uf.pet and uf.pet.enabled then
         oUF:SetActiveStyle("LunarUI_Pet")
         spawnedFrames.pet = oUF:Spawn("pet", "LunarUI_Pet")
@@ -1055,8 +1051,8 @@ local function SpawnUnitFrames()
         end
     end
 
-    -- TargetTarget
-    -- Fix #68: Position below castbar to avoid overlap (castbar is 16px high at -4 offset)
+    -- 目標的目標
+    -- 定位在施法條下方避免重疊（施法條高 16px，偏移 -4）
     if uf.targettarget and uf.targettarget.enabled then
         oUF:SetActiveStyle("LunarUI_TargetTarget")
         spawnedFrames.targettarget = oUF:Spawn("targettarget", "LunarUI_TargetTarget")
@@ -1067,7 +1063,7 @@ local function SpawnUnitFrames()
         end
     end
 
-    -- Boss Frames
+    -- 首領框架
     if uf.boss and uf.boss.enabled then
         oUF:SetActiveStyle("LunarUI_Boss")
         for i = 1, 8 do
@@ -1077,7 +1073,7 @@ local function SpawnUnitFrames()
         end
     end
 
-    -- Party Header (Fix #20: Added visibility driver)
+    -- 隊伍標頭（含可見性驅動器）
     if uf.party and uf.party.enabled then
         oUF:SetActiveStyle("LunarUI_Party")
         local partyHeader = oUF:SpawnHeader(
@@ -1094,13 +1090,13 @@ local function SpawnUnitFrames()
         )
         if partyHeader then
             partyHeader:SetPoint("TOPLEFT", UIParent, "TOPLEFT", uf.party.x or 20, uf.party.y or -200)
-            -- Fix #20: Visibility driver - hide in raid, show in party
+            -- 可見性驅動器：團隊中隱藏，隊伍中顯示
             RegisterStateDriver(partyHeader, "visibility", "[@raid6,exists] hide; [group:party,nogroup:raid] show; hide")
             spawnedFrames.party = partyHeader
         end
     end
 
-    -- Raid Header (Fix #20: Added visibility driver)
+    -- 團隊標頭（含可見性驅動器）
     if uf.raid and uf.raid.enabled then
         oUF:SetActiveStyle("LunarUI_Raid")
         local raidHeader = oUF:SpawnHeader(
@@ -1126,37 +1122,37 @@ local function SpawnUnitFrames()
         )
         if raidHeader then
             raidHeader:SetPoint("TOPLEFT", UIParent, "TOPLEFT", uf.raid.x or 20, uf.raid.y or -200)
-            -- Fix #20: Visibility driver - show raid frames when in raid
+            -- 可見性驅動器：團隊中顯示團隊框架
             RegisterStateDriver(raidHeader, "visibility", "[group:raid] show; hide")
             spawnedFrames.raid = raidHeader
         end
     end
 end
 
--- Fix #85 & #87 & #100 & #101: Cleanup function for updateQueue and timers
--- Death indicator frames are now tracked via weak table and auto-cleaned by GC
+-- 清理函數：處理 updateQueue 和計時器
+-- 死亡指示器框架現在透過弱引用表追蹤，由 GC 自動清理
 local function CleanupUnitFrames()
-    -- Cancel pending batch update timer
+    -- 取消待處理的批次更新計時器
     if updateBatchTimer then
         updateBatchTimer:Cancel()
         updateBatchTimer = nil
     end
 
-    -- Clear update queue
+    -- 清除更新佇列
     wipe(updateQueue)
     isUpdating = false
 
-    -- Clear death indicator weak table entries
+    -- 清除死亡指示器弱引用表項目
     wipe(deathIndicatorFrames)
 end
 
--- Export
+-- 匯出
 LunarUI.SpawnUnitFrames = SpawnUnitFrames
 LunarUI.spawnedFrames = spawnedFrames
 LunarUI.CleanupUnitFrames = CleanupUnitFrames
 
--- Fix #63: Force update player frame on PLAYER_ENTERING_WORLD
--- This ensures player data is available before updating elements
+-- 在 PLAYER_ENTERING_WORLD 時強制更新玩家框架
+-- 確保玩家資料在更新元素前可用
 local playerUpdateFrame = CreateFrame("Frame")
 playerUpdateFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 playerUpdateFrame:SetScript("OnEvent", function(self, event)
@@ -1170,29 +1166,24 @@ playerUpdateFrame:SetScript("OnEvent", function(self, event)
     end)
 end)
 
--- Fix #91 + #92 + #93: Ensure Skyriding Vigor bar remains visible
--- The vigor bar is a UI widget that can be hidden when using custom unit frames
--- Fix #93: Don't force Show() on PlayerPowerBarAlt - let Blizzard handle it
---          Only ensure proper parenting and visibility settings
+-- 確保飛行活力條保持可見
+-- 活力條是 UI 元件，使用自訂單位框架時可能被隱藏
+-- 僅調整 parent/strata，不呼叫 Show()（當 barInfo 為 nil 時會導致錯誤）
 local function EnsureVigorBarVisible()
-    -- PlayerPowerBarAlt is the standalone alternate power bar (Skyriding Vigor)
-    -- Fix #93: Only adjust parent/strata, don't call Show() as that causes errors
-    -- when barInfo is nil (player not on mount with vigor bar)
+    -- PlayerPowerBarAlt 是獨立的替代能量條（飛行活力）
+    -- 僅在被移至隱藏父框架時重新設定父框架
     if PlayerPowerBarAlt then
-        -- Only reparent if it was moved to a hidden parent
         local parent = PlayerPowerBarAlt:GetParent()
         if parent and parent ~= UIParent and not parent:IsShown() then
             PlayerPowerBarAlt:SetParent(UIParent)
         end
-        -- Ensure alpha is visible
         if PlayerPowerBarAlt:GetAlpha() < 1 then
             PlayerPowerBarAlt:SetAlpha(1)
         end
-        -- Set proper frame strata so it appears above custom frames
         PlayerPowerBarAlt:SetFrameStrata("HIGH")
     end
 
-    -- UIWidgetPowerBarContainerFrame is the Skyriding vigor bar container (WoW 12.0)
+    -- UIWidgetPowerBarContainerFrame 是飛行活力條容器（WoW 12.0）
     if UIWidgetPowerBarContainerFrame then
         local parent = UIWidgetPowerBarContainerFrame:GetParent()
         if parent and parent ~= UIParent and not parent:IsShown() then
@@ -1202,17 +1193,17 @@ local function EnsureVigorBarVisible()
         UIWidgetPowerBarContainerFrame:SetAlpha(1)
     end
 
-    -- UIWidgetBelowMinimapContainerFrame may also contain vigor bar
+    -- UIWidgetBelowMinimapContainerFrame 也可能包含活力條
     if UIWidgetBelowMinimapContainerFrame then
         UIWidgetBelowMinimapContainerFrame:SetAlpha(1)
     end
 
-    -- UIWidgetTopCenterContainerFrame may contain the vigor bar
+    -- UIWidgetTopCenterContainerFrame 可能包含活力條
     if UIWidgetTopCenterContainerFrame then
         UIWidgetTopCenterContainerFrame:SetAlpha(1)
     end
 
-    -- UIWidgetCenterScreenContainerFrame - center screen widgets
+    -- UIWidgetCenterScreenContainerFrame - 中央螢幕元件
     if UIWidgetCenterScreenContainerFrame then
         local parent = UIWidgetCenterScreenContainerFrame:GetParent()
         if parent and parent ~= UIParent and not parent:IsShown() then
@@ -1223,7 +1214,7 @@ local function EnsureVigorBarVisible()
     end
 end
 
--- Register for events that might trigger vigor bar changes
+-- 註冊可能觸發活力條變更的事件
 local vigorFrame = CreateFrame("Frame")
 vigorFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 vigorFrame:RegisterEvent("UPDATE_UI_WIDGET")
@@ -1233,10 +1224,10 @@ vigorFrame:SetScript("OnEvent", function(self, event)
     C_Timer.After(0.5, EnsureVigorBarVisible)
 end)
 
--- Also run on initial load
+-- 初始載入時也執行
 C_Timer.After(1, EnsureVigorBarVisible)
 
--- Hook into addon enable
+-- 掛鉤至插件啟用
 hooksecurefunc(LunarUI, "OnEnable", function()
     C_Timer.After(0.1, SpawnUnitFrames)
 end)

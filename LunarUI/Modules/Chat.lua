@@ -1,22 +1,22 @@
 --[[
-    LunarUI - Chat Module
-    Styled chat frames with Lunar theme
+    LunarUI - 聊天模組
+    Lunar 主題風格的聊天框架
 
-    Features:
-    - Hand-drawn style border
-    - Improved channel colors
-    - Copy text functionality
-    - URL detection and clickable links
-    - Class colored names
-    - Phase-aware fading
+    功能：
+    - 手繪風格邊框
+    - 改良頻道顏色
+    - 文字複製功能
+    - 網址偵測與可點擊連結
+    - 職業著色名稱
+    - 月相感知淡出
 ]]
 
 local ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
-local L = Engine.L or {}  -- Fix #104: Access localization table
+local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
--- Constants
+-- 常數
 --------------------------------------------------------------------------------
 
 local CHAT_FRAMES = { "ChatFrame1", "ChatFrame2", "ChatFrame3", "ChatFrame4", "ChatFrame5", "ChatFrame6", "ChatFrame7" }
@@ -28,7 +28,7 @@ local backdropTemplate = {
     insets = { left = 1, right = 1, top = 1, bottom = 1 },
 }
 
--- Improved channel colors
+-- 改良頻道顏色
 local CHANNEL_COLORS = {
     SAY = { 1.0, 1.0, 1.0 },
     YELL = { 1.0, 0.25, 0.25 },
@@ -55,7 +55,7 @@ local CHANNEL_COLORS = {
 }
 
 --------------------------------------------------------------------------------
--- Module State
+-- 模組狀態
 --------------------------------------------------------------------------------
 
 local styledFrames = {}
@@ -63,7 +63,7 @@ local copyFrame
 local copyEditBox
 
 --------------------------------------------------------------------------------
--- Helper Functions
+-- 輔助函數
 --------------------------------------------------------------------------------
 
 local function GetClassColor(class)
@@ -74,20 +74,20 @@ local function GetClassColor(class)
 end
 
 --------------------------------------------------------------------------------
--- Chat Frame Styling
+-- 聊天框架樣式
 --------------------------------------------------------------------------------
 
 local function StyleChatTab(chatFrame)
     local tab = _G[chatFrame:GetName() .. "Tab"]
     if not tab then return end
 
-    -- Simplify tab appearance
+    -- 簡化標籤外觀
     local tabText = _G[chatFrame:GetName() .. "TabText"] or tab.Text
     if tabText then
         tabText:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
     end
 
-    -- Hide tab textures
+    -- 隱藏標籤材質
     local textures = {
         "Left", "Middle", "Right",
         "SelectedLeft", "SelectedMiddle", "SelectedRight",
@@ -103,7 +103,7 @@ local function StyleChatTab(chatFrame)
         end
     end
 
-    -- Style glow
+    -- 樣式化光暈
     if tab.glow then
         tab.glow:SetTexture(nil)
     end
@@ -113,7 +113,7 @@ local function StyleChatEditBox(chatFrame)
     local editBox = _G[chatFrame:GetName() .. "EditBox"]
     if not editBox then return end
 
-    -- Create backdrop
+    -- 建立背景
     if not editBox.LunarBackdrop then
         local backdrop = CreateFrame("Frame", nil, editBox, "BackdropTemplate")
         backdrop:SetPoint("TOPLEFT", -4, 4)
@@ -125,7 +125,7 @@ local function StyleChatEditBox(chatFrame)
         editBox.LunarBackdrop = backdrop
     end
 
-    -- Hide default textures
+    -- 隱藏預設材質
     local textures = {
         "Left", "Mid", "Right",
         "FocusLeft", "FocusMid", "FocusRight",
@@ -139,13 +139,13 @@ local function StyleChatEditBox(chatFrame)
         end
     end
 
-    -- Position edit box
+    -- 設定輸入框位置
     editBox:ClearAllPoints()
     editBox:SetPoint("BOTTOMLEFT", chatFrame, "TOPLEFT", -4, 8)
     editBox:SetPoint("BOTTOMRIGHT", chatFrame, "TOPRIGHT", 4, 8)
     editBox:SetHeight(22)
 
-    -- Style text
+    -- 設定文字樣式
     editBox:SetFont(STANDARD_TEXT_FONT, 12, "")
 end
 
@@ -155,7 +155,7 @@ local function StyleChatFrame(chatFrame)
     local name = chatFrame:GetName()
     if styledFrames[name] then return end
 
-    -- Create backdrop
+    -- 建立背景
     if not chatFrame.LunarBackdrop then
         local backdrop = CreateFrame("Frame", nil, chatFrame, "BackdropTemplate")
         backdrop:SetPoint("TOPLEFT", -4, 4)
@@ -168,7 +168,7 @@ local function StyleChatFrame(chatFrame)
         chatFrame.LunarBackdrop = backdrop
     end
 
-    -- Show backdrop on hover
+    -- 滑鼠懸停時顯示背景
     chatFrame:HookScript("OnEnter", function(self)
         if self.LunarBackdrop then
             self.LunarBackdrop:Show()
@@ -181,7 +181,7 @@ local function StyleChatFrame(chatFrame)
         end
     end)
 
-    -- Hide default textures
+    -- 隱藏預設材質
     for _, texName in ipairs({ "TopLeftTexture", "TopRightTexture", "BottomLeftTexture", "BottomRightTexture",
                                "LeftTexture", "RightTexture", "TopTexture", "BottomTexture" }) do
         local tex = _G[name .. texName]
@@ -190,23 +190,23 @@ local function StyleChatFrame(chatFrame)
         end
     end
 
-    -- Style button frame
+    -- 樣式化按鈕框架
     local buttonFrame = _G[name .. "ButtonFrame"]
     if buttonFrame then
         buttonFrame:Hide()
     end
 
-    -- Style tab
+    -- 樣式化標籤
     StyleChatTab(chatFrame)
 
-    -- Style edit box
+    -- 樣式化輸入框
     StyleChatEditBox(chatFrame)
 
-    -- Set font
+    -- 設定字型
     local font, _, flags = chatFrame:GetFont()
     chatFrame:SetFont(font or STANDARD_TEXT_FONT, 13, flags or "")
 
-    -- Enable mouse wheel scrolling (Fix #10: use HookScript instead of SetScript)
+    -- 啟用滑鼠滾輪捲動（使用 HookScript 避免覆蓋原有腳本）
     chatFrame:EnableMouseWheel(true)
     chatFrame:HookScript("OnMouseWheel", function(self, delta)
         if delta > 0 then
@@ -236,7 +236,7 @@ local function StyleChatFrame(chatFrame)
 end
 
 --------------------------------------------------------------------------------
--- Copy Frame
+-- 複製框架
 --------------------------------------------------------------------------------
 
 local function CreateCopyFrame()
@@ -254,7 +254,7 @@ local function CreateCopyFrame()
     copyFrame:SetClampedToScreen(true)
     copyFrame:Hide()
 
-    -- Title bar
+    -- 標題列
     local titleBar = CreateFrame("Frame", nil, copyFrame)
     titleBar:SetHeight(24)
     titleBar:SetPoint("TOPLEFT", 0, 0)
@@ -270,7 +270,7 @@ local function CreateCopyFrame()
     titleText:SetText("Copy Chat")
     titleText:SetTextColor(0.9, 0.9, 0.9)
 
-    -- Close button
+    -- 關閉按鈕
     local closeBtn = CreateFrame("Button", nil, copyFrame)
     closeBtn:SetSize(20, 20)
     closeBtn:SetPoint("TOPRIGHT", -4, -2)
@@ -279,12 +279,12 @@ local function CreateCopyFrame()
     closeBtn:GetFontString():SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
     closeBtn:SetScript("OnClick", function() copyFrame:Hide() end)
 
-    -- Scroll frame
+    -- 捲動框架
     local scrollFrame = CreateFrame("ScrollFrame", "LunarUI_ChatCopyScroll", copyFrame, "UIPanelScrollFrameTemplate")
     scrollFrame:SetPoint("TOPLEFT", 8, -28)
     scrollFrame:SetPoint("BOTTOMRIGHT", -28, 8)
 
-    -- Edit box
+    -- 編輯框
     copyEditBox = CreateFrame("EditBox", "LunarUI_ChatCopyEdit", scrollFrame)
     copyEditBox:SetMultiLine(true)
     copyEditBox:SetMaxLetters(99999)
@@ -294,7 +294,7 @@ local function CreateCopyFrame()
     copyEditBox:SetScript("OnEscapePressed", function() copyFrame:Hide() end)
     scrollFrame:SetScrollChild(copyEditBox)
 
-    -- Style scroll bar
+    -- 樣式化捲軸
     local scrollBar = _G["LunarUI_ChatCopyScrollScrollBar"]
     if scrollBar then
         scrollBar:SetWidth(12)
@@ -308,7 +308,7 @@ local function ShowCopyFrame(chatFrame)
 
     CreateCopyFrame()
 
-    -- Collect chat lines
+    -- 收集聊天訊息
     local lines = {}
     local numMessages = chatFrame:GetNumMessages()
 
@@ -319,7 +319,7 @@ local function ShowCopyFrame(chatFrame)
         end
     end
 
-    -- Set text
+    -- 設定文字
     copyEditBox:SetText(table.concat(lines, "\n"))
     copyEditBox:HighlightText()
     copyEditBox:SetFocus()
@@ -328,7 +328,7 @@ local function ShowCopyFrame(chatFrame)
 end
 
 --------------------------------------------------------------------------------
--- Channel Colors
+-- 頻道顏色
 --------------------------------------------------------------------------------
 
 local function ApplyChannelColors()
@@ -341,14 +341,14 @@ local function ApplyChannelColors()
 end
 
 --------------------------------------------------------------------------------
--- Class Colored Names
+-- 職業著色名稱
 --------------------------------------------------------------------------------
 
 local function EnableClassColoredNames()
     local db = LunarUI.db and LunarUI.db.profile.chat
     if not db or not db.classColors then return end
 
-    -- This is handled by Blizzard's option, we just enable it
+    -- 由暴雪選項處理，我們只需啟用它
     for _, chatType in ipairs({
         "SAY", "EMOTE", "YELL", "WHISPER", "WHISPER_INFORM",
         "PARTY", "PARTY_LEADER", "RAID", "RAID_LEADER", "RAID_WARNING",
@@ -360,26 +360,26 @@ local function EnableClassColoredNames()
 end
 
 --------------------------------------------------------------------------------
--- URL Detection
+-- 網址偵測
 --------------------------------------------------------------------------------
 
--- Fix #76: Clickable URLs in chat
+-- 可點擊網址
 local URL_PATTERNS = {
-    -- Full URLs with protocol
+    -- 完整網址（含協定）
     "(https?://[%w%.%-_~:/?#%[%]@!$&'()*+,;=%%]+)",
-    -- www URLs
+    -- www 網址
     "(www%.[%w%.%-_~:/?#%[%]@!$&'()*+,;=%%]+)",
-    -- Email addresses
+    -- 電子郵件
     "([%w%.%-_]+@[%w%.%-_]+%.%w+)",
 }
 
--- Format URL as clickable hyperlink
+-- 格式化網址為可點擊的超連結
 local function FormatURL(url)
-    -- Use LunarURL as custom hyperlink type
+    -- 使用 LunarURL 作為自訂超連結類型
     return format("|cff3399ff|HLunarURL:%s|h[%s]|h|r", url, url)
 end
 
--- Filter function to detect and convert URLs to clickable links
+-- 過濾函數：偵測網址並轉換為可點擊連結
 local function AddURLsToMessage(self, event, msg, ...)
     if not msg then return false, msg, ... end
 
@@ -398,17 +398,17 @@ local function AddURLsToMessage(self, event, msg, ...)
     return false, msg, ...
 end
 
--- Handle URL hyperlink clicks
+-- 處理網址超連結點擊
 local function HandleURLClick(self, link, text, button)
     if not link then return end
 
     local linkType, url = strsplit(":", link, 2)
     if linkType == "LunarURL" and url then
-        -- Fix #104: Use localized strings for URL copy popup
+        -- 使用本地化字串顯示網址複製彈窗
         local popupText = L["PressToCopyURL"] or "Press Ctrl+C to copy URL:"
-        local closeText = CLOSE or "Close"  -- Use Blizzard's global CLOSE string
+        local closeText = CLOSE or "Close"  -- 使用暴雪全域 CLOSE 字串
 
-        -- Create a popup to show and copy URL
+        -- 建立彈窗以顯示並複製網址
         StaticPopupDialogs["LUNARUI_URL_COPY"] = StaticPopupDialogs["LUNARUI_URL_COPY"] or {
             text = popupText,
             button1 = closeText,
@@ -436,7 +436,7 @@ local function HandleURLClick(self, link, text, button)
     end
 end
 
--- Register URL filter for all chat events
+-- 為所有聊天事件註冊網址過濾器
 local function RegisterURLFilter()
     local db = LunarUI.db and LunarUI.db.profile.chat
     if not db or not db.detectURLs then return end
@@ -456,7 +456,7 @@ local function RegisterURLFilter()
         ChatFrame_AddMessageEventFilter(event, AddURLsToMessage)
     end
 
-    -- Hook hyperlink handler for all chat frames
+    -- 掛鉤所有聊天框架的超連結處理器
     local originalHandler = ChatFrame_OnHyperlinkShow
     ChatFrame_OnHyperlinkShow = function(self, link, text, button)
         if HandleURLClick(self, link, text, button) then
@@ -469,7 +469,7 @@ local function RegisterURLFilter()
 end
 
 --------------------------------------------------------------------------------
--- Phase Awareness
+-- 月相感知
 --------------------------------------------------------------------------------
 
 local phaseCallbackRegistered = false
@@ -477,14 +477,14 @@ local phaseCallbackRegistered = false
 local function UpdateChatForPhase()
     local tokens = LunarUI:GetTokens()
 
-    -- Chat should be more visible even in NEW phase
+    -- 聊天即使在新月階段也應保持較高可見度
     local minAlpha = 0.7
     local alpha = math.max(tokens.alpha, minAlpha)
 
     for _, frameName in ipairs(CHAT_FRAMES) do
         local frame = _G[frameName]
         if frame and frame:IsShown() then
-            -- Only adjust backdrop alpha, not the chat text
+            -- 僅調整背景透明度，不影響聊天文字
             if frame.LunarBackdrop then
                 local r, g, b = frame.LunarBackdrop:GetBackdropColor()
                 frame.LunarBackdrop:SetBackdropColor(r or 0.05, g or 0.05, b or 0.05, 0.5 * alpha)
@@ -503,13 +503,12 @@ local function RegisterChatPhaseCallback()
 end
 
 --------------------------------------------------------------------------------
--- Context Menu
+-- 右鍵選單
 --------------------------------------------------------------------------------
 
--- Fix #43: Implement chat copy functionality via right-click on tab
+-- 透過右鍵標籤實現聊天複製功能
 local function AddCopyOption()
-    -- Hook chat tab right-click to show copy frame
-    -- WoW 12.0: Hook each tab's OnClick directly instead of global FCFTab_OnClick
+    -- WoW 12.0：直接掛鉤每個標籤的 OnClick，而非全域 FCFTab_OnClick
     for i = 1, NUM_CHAT_WINDOWS do
         local tab = _G["ChatFrame" .. i .. "Tab"]
         if tab then
@@ -526,14 +525,14 @@ local function AddCopyOption()
 end
 
 --------------------------------------------------------------------------------
--- Initialization
+-- 初始化
 --------------------------------------------------------------------------------
 
 local function InitializeChat()
     local db = LunarUI.db and LunarUI.db.profile.chat
     if not db or not db.enabled then return end
 
-    -- Style all chat frames
+    -- 樣式化所有聊天框架
     for _, frameName in ipairs(CHAT_FRAMES) do
         local frame = _G[frameName]
         if frame then
@@ -541,7 +540,7 @@ local function InitializeChat()
         end
     end
 
-    -- Hook temporary chat frames
+    -- 掛鉤臨時聊天框架
     hooksecurefunc("FCF_OpenTemporaryWindow", function()
         for _, frameName in ipairs(CHAT_FRAMES) do
             local frame = _G[frameName]
@@ -551,43 +550,42 @@ local function InitializeChat()
         end
     end)
 
-    -- Apply channel colors
+    -- 套用頻道顏色
     ApplyChannelColors()
 
-    -- Enable class colors
+    -- 啟用職業顏色
     EnableClassColoredNames()
 
-    -- Fix #76: Enable clickable URLs
+    -- 啟用可點擊網址
     RegisterURLFilter()
 
-    -- Add copy functionality
+    -- 新增複製功能
     AddCopyOption()
 
-    -- Register for phase updates
+    -- 註冊月相更新
     RegisterChatPhaseCallback()
 
-    -- Apply initial phase
+    -- 套用初始月相
     UpdateChatForPhase()
 
-    -- Hide chat buttons
+    -- 隱藏聊天按鈕
     if ChatFrameMenuButton then ChatFrameMenuButton:Hide() end
     if ChatFrameChannelButton then ChatFrameChannelButton:Hide() end
     if QuickJoinToastButton then QuickJoinToastButton:Hide() end
 
-    -- Fix #28: Removed hardcoded ChatFrame1 position to preserve user settings
-    -- Users can position chat frames as they prefer
+    -- 移除硬編碼的 ChatFrame1 位置，保留使用者設定
 end
 
--- Export
+-- 匯出
 LunarUI.InitializeChat = InitializeChat
 LunarUI.ShowChatCopy = ShowCopyFrame
 
--- Hook into addon enable
+-- 掛鉤至插件啟用
 hooksecurefunc(LunarUI, "OnEnable", function()
     C_Timer.After(0.8, InitializeChat)
 end)
 
--- Add slash command for copy
+-- 新增複製命令
 hooksecurefunc(LunarUI, "RegisterCommands", function(self)
-    -- /lunar copy - copy current chat
+    -- /lunar copy - 複製目前聊天
 end)
