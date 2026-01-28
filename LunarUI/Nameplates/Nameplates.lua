@@ -14,7 +14,8 @@ local ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 -- Wait for oUF
-local oUF = Engine.oUF or _G.oUF
+-- oUF is exposed as LunarUF via X-oUF TOC header
+local oUF = Engine.oUF or _G.LunarUF or _G.oUF
 if not oUF then
     return
 end
@@ -47,6 +48,16 @@ local THREAT_COLORS = {
     [1] = { r = 1.0, g = 1.0, b = 0.0 },  -- Threat warning
     [2] = { r = 1.0, g = 0.6, b = 0.0 },  -- High threat
     [3] = { r = 1.0, g = 0.0, b = 0.0 },  -- Tanking
+}
+
+-- Fix #50: Fallback debuff type colors (DebuffTypeColor may not exist in WoW 12.0)
+local DEBUFF_TYPE_COLORS = _G.DebuffTypeColor or {
+    none = { r = 0.8, g = 0.0, b = 0.0 },
+    Magic = { r = 0.2, g = 0.6, b = 1.0 },
+    Curse = { r = 0.6, g = 0.0, b = 1.0 },
+    Disease = { r = 0.6, g = 0.4, b = 0.0 },
+    Poison = { r = 0.0, g = 0.6, b = 0.0 },
+    [""] = { r = 0.8, g = 0.0, b = 0.0 },
 }
 
 --------------------------------------------------------------------------------
@@ -115,7 +126,8 @@ local function CreateNameText(frame)
     name:SetJustifyH("CENTER")
     name:SetWidth(frame:GetWidth() * 1.5)
 
-    frame:Tag(name, "[name:abbrev]")
+    -- Fix #47: Use standard oUF tag instead of undefined [name:abbrev]
+    frame:Tag(name, "[name]")
     frame.Name = name
     return name
 end
@@ -171,11 +183,14 @@ local function CreateCastbar(frame)
     castbar.Text = text
 
     -- Interruptible color change
+    -- Fix #69: WoW 12.0 makes notInterruptible a secret value
     castbar.PostCastStart = function(self, unit)
-        if self.notInterruptible then
-            self:SetStatusBarColor(0.7, 0.3, 0.3, 1)
+        -- Use pcall to safely check notInterruptible
+        local success, isNotInterruptible = pcall(function() return self.notInterruptible == true end)
+        if success and isNotInterruptible then
+            self:SetStatusBarColor(0.7, 0.3, 0.3, 1)  -- Red for uninterruptible
         else
-            self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
+            self:SetStatusBarColor(0.4, 0.6, 0.8, 1)  -- Blue for interruptible
         end
     end
     castbar.PostChannelStart = castbar.PostCastStart
@@ -207,10 +222,12 @@ local function CreateDebuffs(frame)
     -- Only show player's debuffs
     debuffs.onlyShowPlayer = true
 
-    -- Filter function
+    -- Fix #53: WoW 12.0 makes isHarmful a secret value that cannot be tested
+    -- The Debuffs element already filters to harmful auras, so just check isPlayerAura
+    -- Use isHarmfulAura as fallback if available (non-secret in some cases)
     debuffs.FilterAura = function(element, unit, data)
-        -- Only harmful auras from player
-        return data.isHarmful and data.isPlayerAura
+        -- Just check if it's the player's aura - Debuffs element handles harmful filtering
+        return data.isPlayerAura == true
     end
 
     -- Post-create styling
@@ -219,14 +236,21 @@ local function CreateDebuffs(frame)
         button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
 
+        -- Fix #49: Apply BackdropTemplateMixin before calling SetBackdrop
+        -- oUF aura buttons don't inherit from BackdropTemplate
+        Mixin(button, BackdropTemplateMixin)
+        button:OnBackdropLoaded()
+
         -- Border based on debuff type
         button:SetBackdrop(backdropTemplate)
         button:SetBackdropColor(0, 0, 0, 0.5)
     end
 
     -- Post-update for debuff type colors
+    -- Fix #50 + Fix #57: WoW 12.0 makes dispelName a secret value
+    -- Use generic debuff color since we can't access dispel type
     debuffs.PostUpdateButton = function(self, button, unit, data, position)
-        local color = DebuffTypeColor[data.dispelName] or DebuffTypeColor["none"]
+        local color = DEBUFF_TYPE_COLORS["none"]
         button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
     end
 
@@ -297,7 +321,8 @@ end
 -- Phase Awareness for Nameplates
 --------------------------------------------------------------------------------
 
-local nameplateFrames = {}
+-- Fix #4: Use weak table to prevent memory leaks from frame references
+local nameplateFrames = setmetatable({}, { __mode = "v" })
 
 local function UpdateNameplatePhase(frame)
     if not frame then return end
@@ -402,8 +427,10 @@ local function NameplateLayout(frame, unit)
     -- Determine if enemy or friendly
     local reaction = UnitReaction(unit, "player")
 
+    -- Fix #22: nil or hostile (1-4) uses enemy layout
     -- Reaction: 1-3 = hostile, 4 = neutral, 5-8 = friendly
-    if reaction and reaction <= 4 then
+    -- Default to enemy if reaction is nil (safer assumption)
+    if not reaction or reaction <= 4 then
         return EnemyNameplateLayout(frame, unit)
     else
         return FriendlyNameplateLayout(frame, unit)
@@ -458,6 +485,8 @@ local function Nameplate_OnHide(frame)
     if frame.TargetIndicator then
         frame.TargetIndicator:Hide()
     end
+    -- Fix #4: Remove frame reference when hidden
+    nameplateFrames[frame] = nil
 end
 
 --------------------------------------------------------------------------------
@@ -469,6 +498,18 @@ oUF:RegisterStyle("LunarUI_Nameplate", NameplateLayout)
 local function SpawnNameplates()
     local db = LunarUI.db and LunarUI.db.profile.nameplates
     if not db or not db.enabled then return end
+
+    -- Fix #39: Use event-driven retry for combat lockdown
+    if InCombatLockdown() then
+        local waitFrame = CreateFrame("Frame")
+        waitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        waitFrame:SetScript("OnEvent", function(self)
+            self:UnregisterAllEvents()
+            self:SetScript("OnEvent", nil)
+            SpawnNameplates()
+        end)
+        return
+    end
 
     oUF:SetActiveStyle("LunarUI_Nameplate")
 
@@ -482,20 +523,35 @@ local function SpawnNameplates()
         end
     end)
 
-    -- Register for target changed to update indicators
-    local targetFrame = CreateFrame("Frame")
-    targetFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-    targetFrame:SetScript("OnEvent", function()
-        for np in pairs(nameplateFrames) do
-            if np and np:IsShown() then
-                UpdateTargetIndicator(np)
+    -- Fix #5: Use singleton pattern to prevent duplicate event handlers
+    if not LunarUI._nameplateTargetFrame then
+        LunarUI._nameplateTargetFrame = CreateFrame("Frame")
+        LunarUI._nameplateTargetFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+        LunarUI._nameplateTargetFrame:SetScript("OnEvent", function()
+            for np in pairs(nameplateFrames) do
+                if np and np:IsShown() then
+                    UpdateTargetIndicator(np)
+                end
             end
-        end
-    end)
+        end)
+    end
 end
 
 -- Export
 LunarUI.SpawnNameplates = SpawnNameplates
+
+-- Fix #35: Cleanup function to prevent memory leaks on disable/reload
+function LunarUI:CleanupNameplates()
+    -- Unregister target change event handler
+    if self._nameplateTargetFrame then
+        self._nameplateTargetFrame:UnregisterAllEvents()
+        self._nameplateTargetFrame:SetScript("OnEvent", nil)
+    end
+    -- Clear weak table references
+    wipe(nameplateFrames)
+    -- Reset registration flag
+    self._nameplatePhaseRegistered = nil
+end
 
 -- Hook into addon enable
 hooksecurefunc(LunarUI, "OnEnable", function()

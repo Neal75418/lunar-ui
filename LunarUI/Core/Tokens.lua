@@ -101,14 +101,15 @@ function LunarUI:ApplyTokensToFrame(frame, tokens)
     tokens = tokens or self:GetTokens()
 
     if not frame then return end
+    if not tokens then return end
 
-    -- Apply alpha
-    if tokens.alpha then
+    -- Apply alpha (Fix #11: type check)
+    if tokens.alpha and type(tokens.alpha) == "number" then
         frame:SetAlpha(tokens.alpha)
     end
 
-    -- Apply scale
-    if tokens.scale then
+    -- Apply scale (Fix #11: type check)
+    if tokens.scale and type(tokens.scale) == "number" then
         frame:SetScale(tokens.scale)
     end
 end
@@ -122,9 +123,18 @@ end
 ]]
 function LunarUI:InterpolateTokens(from, to, progress)
     local result = {}
+    -- Fix #32: Handle edge cases when from is nil or empty
+    from = from or {}
+    to = to or {}
+
     for key, toValue in pairs(to) do
-        local fromValue = from[key] or toValue
-        if type(toValue) == "number" then
+        -- Fix #32: Safely get from value, default to toValue if nil
+        local fromValue = from[key]
+        if fromValue == nil then
+            fromValue = toValue
+        end
+
+        if type(toValue) == "number" and type(fromValue) == "number" then
             result[key] = fromValue + (toValue - fromValue) * progress
         else
             result[key] = toValue

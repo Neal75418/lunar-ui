@@ -20,11 +20,21 @@ local PHASE_ICONS = {
 
 --[[
     Create the debug overlay frame
+    Fix #31: Check for existing named frame on reload to prevent leaks
 ]]
 local function CreateDebugFrame()
+    -- Fix #31: Reuse existing frame if it survived a reload
     if debugFrame then return debugFrame end
 
-    debugFrame = CreateFrame("Frame", "LunarUIDebugFrame", UIParent, "BackdropTemplate")
+    -- Check if frame exists from previous session (reload scenario)
+    local existingFrame = _G["LunarUIDebugFrame"]
+    if existingFrame then
+        debugFrame = existingFrame
+        -- Clear old OnUpdate to prevent duplicates
+        debugFrame:SetScript("OnUpdate", nil)
+    else
+        debugFrame = CreateFrame("Frame", "LunarUIDebugFrame", UIParent, "BackdropTemplate")
+    end
     debugFrame:SetSize(200, 120)
     debugFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -20, -200)
     debugFrame:SetFrameStrata("HIGH")
@@ -142,9 +152,11 @@ end
 
 --[[
     Hide debug overlay
+    Fix #31: Clean up OnUpdate script when hiding
 ]]
 function LunarUI:HideDebugOverlay()
     if debugFrame then
+        debugFrame:SetScript("OnUpdate", nil)
         debugFrame:Hide()
     end
 end

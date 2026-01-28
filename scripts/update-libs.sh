@@ -37,8 +37,10 @@ if [ -d "Ace3-temp" ]; then rm -rf Ace3-temp; fi
 git clone --depth 1 https://github.com/WoWUIDev/Ace3.git Ace3-temp
 
 # Extract individual Ace3 modules
-for module in LibStub CallbackHandler-1.0 AceAddon-3.0 AceDB-3.0 AceEvent-3.0 \
-              AceTimer-3.0 AceConsole-3.0 AceHook-3.0 AceConfig-3.0 AceGUI-3.0 AceLocale-3.0; do
+for module in LibStub CallbackHandler-1.0 AceAddon-3.0 AceDB-3.0 AceDBOptions-3.0 \
+              AceEvent-3.0 AceTimer-3.0 AceConsole-3.0 AceHook-3.0 \
+              AceConfig-3.0 AceConfigCmd-3.0 AceConfigDialog-3.0 AceConfigRegistry-3.0 \
+              AceGUI-3.0 AceLocale-3.0; do
     echo "  📦 $module..."
     rm -rf "$module"
     cp -r "Ace3-temp/$module" .

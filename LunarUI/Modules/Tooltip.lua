@@ -165,6 +165,8 @@ local function OnTooltipSetUnit(tooltip)
     local db = LunarUI.db and LunarUI.db.profile.tooltip
     if not db or not db.enabled then return end
 
+    -- Fix #80: Check if GetUnit exists before calling
+    if not tooltip.GetUnit then return end
     local _, unit = tooltip:GetUnit()
     if not unit then return end
 
@@ -215,6 +217,19 @@ local function OnTooltipSetUnit(tooltip)
         end
     end
 
+    -- Fix #78: Show NPC ID for non-player units (useful for developers)
+    if not UnitIsPlayer(unit) then
+        local guid = UnitGUID(unit)
+        if guid then
+            local unitType, _, _, _, _, npcID = strsplit("-", guid)
+            if unitType == "Creature" or unitType == "Vehicle" then
+                if npcID then
+                    tooltip:AddLine("|cff888888NPC ID: " .. npcID .. "|r")
+                end
+            end
+        end
+    end
+
     tooltip:Show()
 end
 
@@ -226,6 +241,8 @@ local function OnTooltipSetItem(tooltip)
     local db = LunarUI.db and LunarUI.db.profile.tooltip
     if not db or not db.enabled then return end
 
+    -- Fix #80: Check if GetItem exists before calling (ShoppingTooltip doesn't have it)
+    if not tooltip.GetItem then return end
     local _, itemLink = tooltip:GetItem()
     if not itemLink then return end
 
@@ -261,6 +278,19 @@ local function OnTooltipSetItem(tooltip)
         end
     end
 
+    -- Fix #79: Color tooltip border by item quality
+    local quality = select(3, C_Item.GetItemInfo(itemLink))
+    if quality and quality > 1 then  -- Only for uncommon and above
+        local r, g, b = C_Item.GetItemQualityColor(quality)
+        if r and g and b then
+            if tooltip.SetBackdropBorderColor then
+                tooltip:SetBackdropBorderColor(r, g, b, 1)
+            elseif tooltip.LunarBackdrop then
+                tooltip.LunarBackdrop:SetBackdropBorderColor(r, g, b, 1)
+            end
+        end
+    end
+
     tooltip:Show()
 end
 
@@ -273,6 +303,8 @@ local function OnTooltipSetSpell(tooltip)
     if not db or not db.enabled then return end
     if not db.showSpellID then return end
 
+    -- Fix #80: Check if GetSpell exists before calling
+    if not tooltip.GetSpell then return end
     local spellID = select(2, tooltip:GetSpell())
     if spellID then
         tooltip:AddLine("|cff888888Spell ID: " .. spellID .. "|r")
@@ -283,6 +315,55 @@ end
 --------------------------------------------------------------------------------
 -- Tooltip Positioning
 --------------------------------------------------------------------------------
+
+-- Fix #90: Adaptive tooltip positioning to avoid screen edges
+local function AdjustTooltipPosition(tooltip)
+    if not tooltip or not tooltip:IsShown() then return end
+
+    local screenWidth = UIParent:GetWidth()
+    local screenHeight = UIParent:GetHeight()
+    local tooltipWidth = tooltip:GetWidth()
+    local tooltipHeight = tooltip:GetHeight()
+    local scale = tooltip:GetEffectiveScale() / UIParent:GetEffectiveScale()
+
+    local left = tooltip:GetLeft()
+    local right = tooltip:GetRight()
+    local top = tooltip:GetTop()
+    local bottom = tooltip:GetBottom()
+
+    if not left or not right or not top or not bottom then return end
+
+    local offsetX, offsetY = 0, 0
+
+    -- Check right edge
+    if right * scale > screenWidth then
+        offsetX = screenWidth - (right * scale) - 10
+    end
+
+    -- Check left edge
+    if left * scale < 0 then
+        offsetX = -left * scale + 10
+    end
+
+    -- Check bottom edge
+    if bottom * scale < 0 then
+        offsetY = -bottom * scale + 10
+    end
+
+    -- Check top edge
+    if top * scale > screenHeight then
+        offsetY = screenHeight - (top * scale) - 10
+    end
+
+    -- Apply offset if needed
+    if offsetX ~= 0 or offsetY ~= 0 then
+        local point, relativeTo, relativePoint, x, y = tooltip:GetPoint()
+        if point and relativeTo then
+            tooltip:ClearAllPoints()
+            tooltip:SetPoint(point, relativeTo, relativePoint, (x or 0) + offsetX, (y or 0) + offsetY)
+        end
+    end
+end
 
 local function SetTooltipPosition()
     local db = LunarUI.db and LunarUI.db.profile.tooltip
@@ -299,6 +380,15 @@ local function SetTooltipPosition()
             tooltip:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -50, 50)
         end
     end)
+
+    -- Fix #90: Hook OnShow to adjust position after tooltip is shown
+    if GameTooltip then
+        GameTooltip:HookScript("OnShow", function(self)
+            C_Timer.After(0, function()
+                AdjustTooltipPosition(self)
+            end)
+        end)
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -338,7 +428,8 @@ local function InitializeTooltip()
     -- Hook GameTooltip
     if GameTooltip then
         -- Unit tooltips
-        if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
+        -- Fix #25: Check if Enum and Enum.TooltipDataType exist before using
+        if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then
             -- Retail 10.0+
             TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tooltip, data)
                 OnTooltipSetUnit(tooltip)

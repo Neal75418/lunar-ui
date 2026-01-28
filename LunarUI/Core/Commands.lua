@@ -60,6 +60,30 @@ function LunarUI:SlashCommand(input)
     elseif cmd == "test" then
         self:RunTest(args[2])
 
+    elseif cmd == "keybind" then
+        -- Fix #44: Add keybind mode command
+        if self.ToggleKeybindMode then
+            self:ToggleKeybindMode()
+        else
+            self:Print("Keybind mode not available")
+        end
+
+    elseif cmd == "export" then
+        -- Fix #45: Export settings
+        if self.ShowExportFrame then
+            self:ShowExportFrame()
+        else
+            self:Print("Export not available")
+        end
+
+    elseif cmd == "import" then
+        -- Fix #45: Import settings
+        if self.ShowImportFrame then
+            self:ShowImportFrame()
+        else
+            self:Print("Import not available")
+        end
+
     else
         self:Print("Unknown command: " .. cmd)
         self:PrintHelp()
@@ -78,6 +102,9 @@ function LunarUI:PrintHelp()
     print("  |cffffd100/lunar debug|r - Toggle debug mode")
     print("  |cffffd100/lunar status|r - Show current status")
     print("  |cffffd100/lunar config|r - Open configuration panel")
+    print("  |cffffd100/lunar keybind|r - Toggle keybind edit mode")
+    print("  |cffffd100/lunar export|r - Export settings to string")
+    print("  |cffffd100/lunar import|r - Import settings from string")
     print("  |cffffd100/lunar reset|r - Reset frame positions")
     print("  |cffffd100/lunar test [combat]|r - Run test scenarios")
 end
@@ -145,8 +172,16 @@ function LunarUI:OpenOptions()
         end
     end
 
-    -- Open settings
-    Settings.OpenToCategory("LunarUI")
+    -- Open settings (Fix #17: add error handling for Settings API)
+    if not Settings or type(Settings.OpenToCategory) ~= "function" then
+        self:Print("Settings API not available")
+        return
+    end
+
+    local ok, err = pcall(Settings.OpenToCategory, "LunarUI")
+    if not ok then
+        self:Print("Failed to open settings: " .. tostring(err))
+    end
 end
 
 --[[

@@ -58,16 +58,30 @@ local function GetPlayerCoords()
     return nil, nil
 end
 
+-- Fix #83: Cache last values to avoid unnecessary updates
+local lastCoordString = nil
+local lastClockString = nil
+
 local function UpdateCoordinates()
     if not coordText then return end
 
     local x, y = GetPlayerCoords()
     if x and y then
-        coordText:SetFormattedText("%.1f, %.1f", x, y)
-        coordText:Show()
+        local coordString = string.format("%.1f, %.1f", x, y)
+        -- Fix #83: Only update if value changed
+        if coordString ~= lastCoordString then
+            coordText:SetText(coordString)
+            lastCoordString = coordString
+            if not coordText:IsShown() then
+                coordText:Show()
+            end
+        end
     else
-        coordText:SetText("")
-        coordText:Hide()
+        if lastCoordString ~= nil then
+            coordText:SetText("")
+            coordText:Hide()
+            lastCoordString = nil
+        end
     end
 end
 
@@ -102,20 +116,44 @@ local function UpdateClock()
     if not clockText then return end
 
     local hour, minute = GetGameTime()
-    clockText:SetFormattedText("%02d:%02d", hour, minute)
+    local clockString = string.format("%02d:%02d", hour, minute)
+    -- Fix #83: Only update if value changed
+    if clockString ~= lastClockString then
+        clockText:SetText(clockString)
+        lastClockString = clockString
+    end
 end
 
 --------------------------------------------------------------------------------
 -- Minimap Button Collection
 --------------------------------------------------------------------------------
 
+-- Fix #86: Use hash map for O(1) deduplication lookup
+local scannedButtonIDs = {}
+
+-- Fix #86: Clean up stale button references before scanning
+local function ClearStaleButtonReferences()
+    local validButtons = {}
+    for _, button in ipairs(collectedButtons) do
+        if button and button:IsShown() then
+            validButtons[#validButtons + 1] = button
+        end
+    end
+    collectedButtons = validButtons
+    wipe(scannedButtonIDs)
+end
+
 local function CollectMinimapButton(button)
-    if not button or not button:IsObjectType("Button") and not button:IsObjectType("Frame") then
+    if not button then return end
+    if not (button:IsObjectType("Button") or button:IsObjectType("Frame")) then
         return
     end
 
     local name = button:GetName()
     if not name then return end
+
+    -- Fix #86: Use hash map for O(1) duplicate check
+    if scannedButtonIDs[name] then return end
 
     -- Skip certain buttons
     local skipButtons = {
@@ -134,12 +172,59 @@ local function CollectMinimapButton(button)
         if name:find(skip) then return end
     end
 
-    -- Check if already collected
-    for _, btn in ipairs(collectedButtons) do
-        if btn == button then return end
+    -- Mark as scanned and add to collection
+    scannedButtonIDs[name] = true
+    table.insert(collectedButtons, button)
+end
+
+-- Fix #77: Button priority for common addons
+local BUTTON_PRIORITY = {
+    ["DBM"] = 1,
+    ["DeadlyBoss"] = 1,
+    ["BigWigs"] = 2,
+    ["Details"] = 3,
+    ["Skada"] = 4,
+    ["Recount"] = 5,
+    ["WeakAuras"] = 6,
+    ["Plater"] = 7,
+    ["Bartender"] = 8,
+    ["ElvUI"] = 9,
+    ["Bagnon"] = 10,
+    ["AdiBags"] = 11,
+    ["AtlasLoot"] = 12,
+    ["GTFO"] = 13,
+    ["Pawn"] = 14,
+    ["Simulationcraft"] = 15,
+}
+
+local function GetButtonPriority(button)
+    local name = button:GetName() or ""
+
+    -- Check against priority list
+    for addon, priority in pairs(BUTTON_PRIORITY) do
+        if name:find(addon) then
+            return priority
+        end
     end
 
-    table.insert(collectedButtons, button)
+    -- Default: sort alphabetically (priority 100+)
+    return 100
+end
+
+local function SortButtons()
+    table.sort(collectedButtons, function(a, b)
+        local priorityA = GetButtonPriority(a)
+        local priorityB = GetButtonPriority(b)
+
+        if priorityA ~= priorityB then
+            return priorityA < priorityB
+        end
+
+        -- Same priority: sort by name
+        local nameA = a:GetName() or ""
+        local nameB = b:GetName() or ""
+        return nameA < nameB
+    end)
 end
 
 local function OrganizeMinimapButtons()
@@ -147,6 +232,9 @@ local function OrganizeMinimapButtons()
 
     local db = LunarUI.db and LunarUI.db.profile.minimap
     if not db or not db.organizeButtons then return end
+
+    -- Fix #77: Sort buttons by priority before organizing
+    SortButtons()
 
     local buttonsPerRow = 6
     local buttonSize = 24
@@ -198,6 +286,9 @@ local function OrganizeMinimapButtons()
 end
 
 local function ScanForMinimapButtons()
+    -- Fix #86: Clear stale references before rescanning
+    ClearStaleButtonReferences()
+
     -- Scan Minimap children
     local children = { Minimap:GetChildren() }
     for _, child in ipairs(children) do
@@ -542,8 +633,10 @@ local function InitializeMinimap()
     CreateMailIndicator()
     CreateDifficultyIndicator()
 
-    -- Scan for buttons after a delay (let addons load)
+    -- Fix #62: Scan for buttons multiple times to catch late-loading addons (DBM, etc.)
     C_Timer.After(2, ScanForMinimapButtons)
+    C_Timer.After(5, ScanForMinimapButtons)
+    C_Timer.After(10, ScanForMinimapButtons)
 
     -- Register for phase updates
     RegisterMinimapPhaseCallback()
@@ -555,6 +648,14 @@ local function InitializeMinimap()
     UpdateZoneText()
     UpdateCoordinates()
     UpdateClock()
+end
+
+-- Fix #15: Cleanup function for OnUpdate
+function LunarUI:CleanupMinimap()
+    if minimapFrame then
+        minimapFrame:SetScript("OnUpdate", nil)
+        minimapFrame:SetScript("OnEvent", nil)
+    end
 end
 
 -- Export

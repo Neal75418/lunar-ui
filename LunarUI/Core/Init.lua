@@ -14,13 +14,20 @@ local LunarUI = LibStub("AceAddon-3.0"):NewAddon(
     "AceHook-3.0"
 )
 
+if not LunarUI then
+    print("|cffff0000[LunarUI] ERROR:|r Failed to create addon!")
+    return
+end
+
+print("|cff8882ff[LunarUI]|r Addon created successfully")
+
 -- Export to global and engine
 _G.LunarUI = LunarUI
 Engine.LunarUI = LunarUI
 
 -- Addon info
 LunarUI.name = ADDON_NAME
-LunarUI.version = GetAddOnMetadata(ADDON_NAME, "Version") or "dev"
+LunarUI.version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "dev"
 
 -- Phase constants
 LunarUI.PHASES = {
@@ -41,8 +48,10 @@ LunarUI.phaseCallbacks = {}
     Called when addon is loaded
 ]]
 function LunarUI:OnInitialize()
-    -- Initialize database (Config.lua will set this up)
-    -- Initialize tokens (Tokens.lua will set this up)
+    -- Initialize database directly (Fix #2: remove hooksecurefunc race condition)
+    if self.InitDB then
+        self:InitDB()
+    end
 
     self:Print("|cff8882ffLunar|r|cffffffffUI|r v" .. self.version .. " loaded")
 end
@@ -52,8 +61,8 @@ end
     Called when addon is enabled
 ]]
 function LunarUI:OnEnable()
-    -- Get oUF reference
-    self.oUF = Engine.oUF or _G.oUF
+    -- Get oUF reference (X-oUF: LunarUF in TOC)
+    self.oUF = Engine.oUF or _G.LunarUF or _G.oUF
 
     -- Initialize phase manager
     if self.InitPhaseManager then
@@ -73,7 +82,42 @@ end
     Called when addon is disabled
 ]]
 function LunarUI:OnDisable()
-    -- Cleanup
+    -- Unregister combat events (Fix #3: prevent memory leak)
+    self:UnregisterEvent("PLAYER_REGEN_DISABLED")
+    self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+
+    -- Cancel all timers
+    self:CancelAllTimers()
+
+    -- Clear phase callbacks
+    if self.phaseCallbacks then
+        wipe(self.phaseCallbacks)
+    end
+
+    -- Hide debug overlay
+    if self.HideDebugOverlay then
+        self:HideDebugOverlay()
+    end
+
+    -- Cleanup minimap
+    if self.CleanupMinimap then
+        self:CleanupMinimap()
+    end
+
+    -- Cleanup phase indicator
+    if self.CleanupPhaseIndicator then
+        self:CleanupPhaseIndicator()
+    end
+
+    -- Fix #35: Cleanup nameplates event handlers
+    if self.CleanupNameplates then
+        self:CleanupNameplates()
+    end
+
+    -- Fix #36: Stop phase glow animations
+    if self.StopGlowAnimation then
+        self:StopGlowAnimation()
+    end
 end
 
 --[[

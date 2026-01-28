@@ -180,10 +180,10 @@ Lunar UI 的視覺不是「畫月亮」，而是月亮帶來的感覺：
 | **v0.2** | 完整 UnitFrames（Player/Target/Focus/Pet/Party/Raid/Boss） | ✅ 完成 |
 | **v0.3** | Nameplates（名牌） | ✅ 完成 |
 | **v0.4** | ActionBars（動作條） | ✅ 完成 |
-| **v0.5** | 非戰鬥介面（Minimap / Bags / Chat / Tooltip） | ⏳ 待開發 |
-| **v0.6** | 月亮主題視覺（手繪材質、月相圖標） | ⏳ 待開發 |
-| **v0.7** | 配置系統（LunarUI_Options） | ⏳ 待開發 |
-| **v1.0** | 完整 Lunar UI 風格套件 | ⏳ 待開發 |
+| **v0.5** | 非戰鬥介面（Minimap / Bags / Chat / Tooltip） | ✅ 完成 |
+| **v0.6** | 月亮主題視覺（手繪材質、月相圖標） | ✅ 完成 |
+| **v0.7** | 配置系統（LunarUI_Options） | ✅ 完成 |
+| **v1.0** | 完整 Lunar UI 風格套件 | 🔧 基礎設施就緒 |
 
 ---
 

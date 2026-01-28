@@ -26,7 +26,8 @@ local GLOW_MAX_ALPHA = 0.6
 -- Module State
 --------------------------------------------------------------------------------
 
-local glowFrames = {}
+-- Fix #23: Use weak-valued table to prevent memory leaks
+local glowFrames = setmetatable({}, { __mode = "v" })
 local animationFrame
 local pulseTime = 0
 local isAnimating = false
@@ -101,7 +102,12 @@ local function CreateEdgeGlows(parent)
     edges.top:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, thickness)
     edges.top:SetBlendMode("ADD")
     edges.top:SetVertexColor(GLOW_COLOR[1], GLOW_COLOR[2], GLOW_COLOR[3], 0)
-    edges.top:SetGradient("VERTICAL", CreateColor(GLOW_COLOR[1], GLOW_COLOR[2], GLOW_COLOR[3], 0), CreateColor(GLOW_COLOR[1], GLOW_COLOR[2], GLOW_COLOR[3], 1))
+    -- Fix #24: Check SetGradient compatibility
+    if edges.top.SetGradient then
+        edges.top:SetGradient("VERTICAL",
+            CreateColor(GLOW_COLOR[1], GLOW_COLOR[2], GLOW_COLOR[3], 0),
+            CreateColor(GLOW_COLOR[1], GLOW_COLOR[2], GLOW_COLOR[3], 1))
+    end
 
     -- Bottom edge
     edges.bottom = parent:CreateTexture(nil, "BACKGROUND", nil, -7)

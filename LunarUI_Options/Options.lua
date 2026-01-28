@@ -118,7 +118,11 @@ local L = {
 -- Helper Functions
 --------------------------------------------------------------------------------
 
+-- Fix #26: Add nil check for database access
 local function GetDB()
+    if not LunarUI or not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
     return LunarUI.db.profile
 end
 
@@ -1077,11 +1081,14 @@ LunarUI.OpenConfig = OpenConfig
 -- Initialization
 --------------------------------------------------------------------------------
 
+-- Fix #27: Clean up frame after registration
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(self, event, addon)
     if addon == "LunarUI_Options" then
         RegisterOptions()
         self:UnregisterEvent("ADDON_LOADED")
+        self:SetScript("OnEvent", nil)
+        -- Frame can be garbage collected now
     end
 end)

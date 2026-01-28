@@ -3,6 +3,7 @@ package-as: LunarUI
 enable-nolib-creation: no
 
 externals:
+  # Core Ace3 Libraries
   LunarUI/Libs/LibStub:
     url: https://repos.curseforge.com/wow/libstub/trunk
   LunarUI/Libs/CallbackHandler-1.0:
@@ -11,6 +12,8 @@ externals:
     url: https://repos.curseforge.com/wow/ace3/trunk/AceAddon-3.0
   LunarUI/Libs/AceDB-3.0:
     url: https://repos.curseforge.com/wow/ace3/trunk/AceDB-3.0
+  LunarUI/Libs/AceDBOptions-3.0:
+    url: https://repos.curseforge.com/wow/ace3/trunk/AceDBOptions-3.0
   LunarUI/Libs/AceEvent-3.0:
     url: https://repos.curseforge.com/wow/ace3/trunk/AceEvent-3.0
   LunarUI/Libs/AceTimer-3.0:
@@ -19,6 +22,20 @@ externals:
     url: https://repos.curseforge.com/wow/ace3/trunk/AceConsole-3.0
   LunarUI/Libs/AceHook-3.0:
     url: https://repos.curseforge.com/wow/ace3/trunk/AceHook-3.0
+  LunarUI/Libs/AceLocale-3.0:
+    url: https://repos.curseforge.com/wow/ace3/trunk/AceLocale-3.0
+  # AceConfig Libraries (for Options)
+  LunarUI/Libs/AceConfig-3.0:
+    url: https://repos.curseforge.com/wow/ace3/trunk/AceConfig-3.0
+  LunarUI/Libs/AceConfigCmd-3.0:
+    url: https://repos.curseforge.com/wow/ace3/trunk/AceConfigCmd-3.0
+  LunarUI/Libs/AceConfigDialog-3.0:
+    url: https://repos.curseforge.com/wow/ace3/trunk/AceConfigDialog-3.0
+  LunarUI/Libs/AceConfigRegistry-3.0:
+    url: https://repos.curseforge.com/wow/ace3/trunk/AceConfigRegistry-3.0
+  LunarUI/Libs/AceGUI-3.0:
+    url: https://repos.curseforge.com/wow/ace3/trunk/AceGUI-3.0
+  # Other Libraries
   LunarUI/Libs/LibSharedMedia-3.0:
     url: https://repos.curseforge.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
   LunarUI/Libs/LibActionButton-1.0:
@@ -33,8 +50,13 @@ ignore:
   - .git
   - .github
   - .idea
+  - .vscode
   - "*.md"
-  - src/
+  - scripts/
+  - docs/
+
+move-folders:
+  LunarUI_Options: LunarUI_Options
 
 manual-changelog:
   filename: CHANGELOG.md
