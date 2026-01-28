@@ -113,7 +113,7 @@ local defaults = {
 
         -- 名牌設定
         nameplates = {
-            enabled = false,  -- 使用暴雪預設名牌
+            enabled = true,  -- LunarUI 名牌（設為 false 使用暴雪預設）
             width = 120,
             height = 8,
             -- 敵方名牌
@@ -150,7 +150,7 @@ local defaults = {
 
         -- 動作條設定（未來擴展）
         actionbars = {
-            enabled = false,  -- 使用暴雪預設動作條
+            enabled = true,  -- LunarUI 動作條（設為 false 使用暴雪預設）
             bar1 = { enabled = true, buttons = 12, buttonSize = 36 },
             bar2 = { enabled = true, buttons = 12, buttonSize = 36 },
             bar3 = { enabled = false, buttons = 12, buttonSize = 36 },
@@ -198,6 +198,16 @@ local defaults = {
             showItemID = false,
             showSpellID = false,
             showTargetTarget = true,
+        },
+
+        -- HUD 設定
+        hud = {
+            phaseIndicator = true,      -- 月相指示器
+            performanceMonitor = true,  -- FPS/延遲顯示
+            classResources = true,      -- 職業資源條
+            cooldownTracker = true,     -- 冷卻追蹤器
+            floatingCombatText = true,  -- 浮動戰鬥數字
+            auraFrames = true,          -- 獨立 Buff/Debuff 框架
         },
 
         -- 視覺風格

@@ -5,7 +5,7 @@
 ## Author: NealChen
 ## Version: 0.7.0
 ## SavedVariables: LunarUIDB
-## IconTexture: Interface\Icons\Spell_Nature_MoonKey
+## IconTexture: 136057
 ## X-oUF: LunarUF
 
 # Libraries (order matters!)
@@ -52,6 +52,11 @@ ActionBars\ActionBars.lua
 
 # HUD
 HUD\PhaseIndicator.lua
+HUD\PerformanceMonitor.lua
+HUD\ClassResources.lua
+HUD\CooldownTracker.lua
+HUD\FloatingCombatText.lua
+HUD\AuraFrames.lua
 
 # Modules (Non-combat UI)
 Modules\Minimap.lua

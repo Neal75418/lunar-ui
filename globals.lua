@@ -406,6 +406,9 @@ GetTime = nil
 ---@type fun(): number
 GetFramerate = nil
 
+---@type fun(): number, number, number, number
+GetNetStats = nil
+
 ---@type fun(name: string): string?
 GetCVar = nil
 
@@ -1055,3 +1058,87 @@ BankFrame = nil
 
 ---@type Frame
 AccountBankPanel = nil
+
+--------------------------------------------------------------------------------
+-- 法術相關
+--------------------------------------------------------------------------------
+
+---@class SpellCooldownInfo
+---@field startTime number
+---@field duration number
+---@field isEnabled boolean
+---@field modRate number
+
+---@class SpellInfo
+---@field name string
+---@field iconID number
+---@field originalIconID number
+---@field castTime number
+---@field minRange number
+---@field maxRange number
+---@field spellID number
+
+---@class C_Spell
+---@field GetSpellCooldown fun(spellID: number): SpellCooldownInfo?
+---@field GetSpellInfo fun(spellID: number): SpellInfo?
+---@field GetSpellTexture fun(spellID: number): number?
+---@field GetSpellName fun(spellID: number): string?
+C_Spell = {}
+
+---@type fun(spellID: number): boolean
+IsSpellKnown = nil
+
+---@type fun(spellID: number): boolean
+IsPlayerSpell = nil
+
+---@type fun(runeIndex: number): number, number, boolean
+GetRuneCooldown = nil
+
+---@type fun(): number?
+GetSpecialization = nil
+
+--------------------------------------------------------------------------------
+-- 戰鬥日誌相關
+--------------------------------------------------------------------------------
+
+---@type fun(): ...
+CombatLogGetCurrentEventInfo = nil
+
+---@type fun(destFlags: number): boolean
+CombatLog_Object_IsA = nil
+
+---@type number
+COMBATLOG_OBJECT_TYPE_PLAYER = nil
+
+---@type number
+COMBATLOG_OBJECT_AFFILIATION_MINE = nil
+
+---@type number
+COMBATLOG_OBJECT_REACTION_HOSTILE = nil
+
+---@type number
+COMBATLOG_OBJECT_REACTION_FRIENDLY = nil
+
+--------------------------------------------------------------------------------
+-- 光環（Buff/Debuff）相關
+--------------------------------------------------------------------------------
+
+---@class AuraData
+---@field name string
+---@field icon number
+---@field applications number
+---@field duration number
+---@field expirationTime number
+---@field sourceUnit string?
+---@field isStealable boolean
+---@field dispelName string?
+---@field spellId number
+---@field canApplyAura boolean
+---@field isBossAura boolean
+
+---@class C_UnitAuras
+---@field GetBuffDataByIndex fun(unit: string, index: number, filter?: string): AuraData?
+---@field GetDebuffDataByIndex fun(unit: string, index: number, filter?: string): AuraData?
+---@field GetAuraDataByIndex fun(unit: string, index: number, filter: string): AuraData?
+---@field GetAuraDataByAuraInstanceID fun(unit: string, auraInstanceID: number): AuraData?
+C_UnitAuras = {}
