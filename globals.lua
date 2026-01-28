@@ -208,6 +208,13 @@ IsModifierKeyDown = nil
 ---@field GetAddOnInfo fun(index: number|string): string, string, string, boolean, string, string, string
 C_AddOns = {}
 
+-- 舊版 API 相容（已棄用，但仍可使用）
+---@type fun(name: string): boolean
+IsAddOnLoaded = nil
+
+---@type fun(name: string): boolean
+LoadAddOn = nil
+
 ---@class C_Timer
 ---@field After fun(seconds: number, callback: function)
 ---@field NewTimer fun(seconds: number, callback: function): table

@@ -13,7 +13,7 @@
     - Profile management
 ]]
 
-local ADDON_NAME = "LunarUI_Options"
+local _ADDON_NAME = "LunarUI_Options"
 local LunarUI = LibStub("AceAddon-3.0"):GetAddon("LunarUI")
 local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
@@ -1085,7 +1085,7 @@ LunarUI.OpenConfig = OpenConfig
 -- Fix #27: Clean up frame after registration
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
-frame:SetScript("OnEvent", function(self, event, addon)
+frame:SetScript("OnEvent", function(self, _event, addon)
     if addon == "LunarUI_Options" then
         RegisterOptions()
         self:UnregisterEvent("ADDON_LOADED")
