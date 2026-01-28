@@ -6,7 +6,7 @@
     月相感知單位框架：根據月相變化調整外觀
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 -- 等待 oUF 可用（TOC 中設定 X-oUF: LunarUF）
@@ -20,6 +20,9 @@ end
 --------------------------------------------------------------------------------
 -- 常數與共用資源
 --------------------------------------------------------------------------------
+
+-- 前向宣告（供後續函數使用）
+local spawnedFrames = {}
 
 local statusBarTexture = "Interface\\Buttons\\WHITE8x8"
 local backdropTemplate = {
@@ -88,7 +91,8 @@ local function CreateHealthBar(frame, unit)
     health.frequentUpdates = true
 
     -- 更新後鉤子：確保職業顏色正確套用
-    health.PostUpdate = function(self, unit, cur, max)
+    health.PostUpdate = function(self, _unit, _cur, _max)
+        local unit = self.__owner and self.__owner.unit
         if not unit then return end
 
         -- 玩家使用職業顏色
@@ -237,11 +241,11 @@ local function CreateCastbar(frame, unit)
     -- WoW 12.0 將 notInterruptible 設為隱藏值
     -- 暴雪故意限制插件存取此資訊
     -- 使用統一的施法條顏色（無法判斷是否可打斷）
-    castbar.PostCastStart = function(self, unit)
+    castbar.PostCastStart = function(self, _unit)
         self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
     end
 
-    castbar.PostChannelStart = function(self, unit)
+    castbar.PostChannelStart = function(self, _unit)
         self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
     end
 
@@ -324,13 +328,13 @@ local function CreateAuras(frame, unit)
     -- 針對特定單位過濾光環
     if unitType == "target" then
         auras.onlyShowPlayer = true
-        auras.FilterAura = function(element, unit, data)
+        auras.FilterAura = function(_element, _unit, data)
             return data.isPlayerAura == true
         end
     end
 
     -- 建立後鉤子：風格化
-    auras.PostCreateButton = function(self, button)
+    auras.PostCreateButton = function(_self, button)
         -- 呼叫 SetBackdrop 前需先套用 BackdropTemplateMixin
         Mixin(button, BackdropTemplateMixin)
         button:OnBackdropLoaded()
@@ -353,7 +357,7 @@ local function CreateAuras(frame, unit)
     -- 更新後鉤子：減益顏色
     -- WoW 12.0 將 isHarmful 和 dispelName 設為隱藏值
     -- 使用 oUF 新增的 isHarmfulAura（可安全存取）
-    auras.PostUpdateButton = function(self, button, unit, data, position)
+    auras.PostUpdateButton = function(_self, button, _unit, data, _position)
         if data.isHarmfulAura then
             -- 減益：使用通用減益顏色（無法存取驅散類型）
             local color = UNITFRAME_DEBUFF_COLORS["none"]
@@ -382,11 +386,11 @@ local function CreateDebuffs(frame, unit)
 
     -- WoW 12.0 將 isHarmful/isBossAura 設為隱藏值
     -- 減益元素已過濾為有害效果，僅檢查來源
-    debuffs.FilterAura = function(element, unit, data)
+    debuffs.FilterAura = function(_element, _unit, data)
         return data.isPlayerAura == true
     end
 
-    debuffs.PostCreateButton = function(self, button)
+    debuffs.PostCreateButton = function(_self, button)
         Mixin(button, BackdropTemplateMixin)
         button:OnBackdropLoaded()
         button:SetBackdrop(backdropTemplate)
@@ -395,7 +399,7 @@ local function CreateDebuffs(frame, unit)
         button.Count:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
     end
 
-    debuffs.PostUpdateButton = function(self, button, unit, data, position)
+    debuffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
         -- WoW 12.0 將 dispelName 設為隱藏值
         -- 使用通用減益顏色（無法存取驅散類型）
         local color = UNITFRAME_DEBUFF_COLORS["none"]
@@ -490,7 +494,7 @@ local function CreateThreatIndicator(frame)
     threat:SetBackdropBorderColor(0, 0, 0, 0)
     threat:SetFrameLevel(frame:GetFrameLevel() + 5)
 
-    threat.PostUpdate = function(self, unit, status, r, g, b)
+    threat.PostUpdate = function(self, _unit, status, r, g, b)
         if status and status > 0 then
             self:SetBackdropBorderColor(r, g, b, 0.8)
         else
@@ -621,7 +625,7 @@ local function EnsureDeathIndicatorEventFrame()
     deathIndicatorEventFrame:RegisterEvent("UNIT_CONNECTION")
     deathIndicatorEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     deathIndicatorEventFrame:RegisterEvent("UNIT_FLAGS")
-    deathIndicatorEventFrame:SetScript("OnEvent", function(self, event, eventUnit, ...)
+    deathIndicatorEventFrame:SetScript("OnEvent", function(_self, event, eventUnit, ...)
         if event == "PLAYER_ENTERING_WORLD" then
             UpdateAllDeathStates()
         elseif eventUnit then
@@ -690,7 +694,7 @@ local function ProcessUpdateBatch()
 
         -- 每批次處理最多 10 個框架
         local batchSize = 10
-        for i = 1, batchSize do
+        for _i = 1, batchSize do
             local frame = table.remove(updateQueue, 1)
             if frame and frame.IsShown and frame:IsShown() then
                 -- 使用 pcall 包裹個別框架更新，防止單一壞框架阻止所有更新
@@ -733,7 +737,7 @@ local function UpdateAllFramesForPhase()
     -- 收集所有需要更新的框架
     wipe(updateQueue)
 
-    for name, frame in pairs(spawnedFrames) do
+    for _name, frame in pairs(spawnedFrames) do
         if frame and frame.IsShown and frame:IsShown() then
             table.insert(updateQueue, frame)
         end
@@ -763,7 +767,7 @@ local function RegisterGlobalPhaseCallback()
     if phaseCallbackRegistered then return end
     phaseCallbackRegistered = true
 
-    LunarUI:RegisterPhaseCallback(function(oldPhase, newPhase)
+    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
         UpdateAllFramesForPhase()
     end)
 end
@@ -957,10 +961,10 @@ local function RaidLayout(frame, unit)
     debuffs.num = 2
     debuffs.initialAnchor = "CENTER"
     -- WoW 12.0 將 isHarmful 和 isBossAura 設為隱藏值
-    debuffs.FilterAura = function(element, unit, data)
+    debuffs.FilterAura = function(_element, _unit, data)
         return data.isPlayerAura == true
     end
-    debuffs.PostCreateButton = function(self, button)
+    debuffs.PostCreateButton = function(_self, button)
         button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
     end
@@ -990,8 +994,6 @@ oUF:SetActiveStyle("LunarUI")
 --------------------------------------------------------------------------------
 -- 生成函數
 --------------------------------------------------------------------------------
-
-local spawnedFrames = {}
 
 local function SpawnUnitFrames()
     -- 使用事件驅動重試取代固定計時器（處理戰鬥鎖定）
@@ -1156,7 +1158,7 @@ LunarUI.CleanupUnitFrames = CleanupUnitFrames
 -- 確保玩家資料在更新元素前可用
 local playerUpdateFrame = CreateFrame("Frame")
 playerUpdateFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-playerUpdateFrame:SetScript("OnEvent", function(self, event)
+playerUpdateFrame:SetScript("OnEvent", function(_self, _event)
     C_Timer.After(0.3, function()
         if spawnedFrames.player then
             spawnedFrames.player:Show()
@@ -1221,7 +1223,7 @@ vigorFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 vigorFrame:RegisterEvent("UPDATE_UI_WIDGET")
 vigorFrame:RegisterEvent("UNIT_POWER_BAR_SHOW")
 vigorFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
-vigorFrame:SetScript("OnEvent", function(self, event)
+vigorFrame:SetScript("OnEvent", function(_self, _event)
     C_Timer.After(0.5, EnsureVigorBarVisible)
 end)
 

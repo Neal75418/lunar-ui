@@ -276,6 +276,9 @@ UnitExists = nil
 ---@type fun(unit: string): boolean
 UnitIsDead = nil
 
+---@type fun(unit: string): boolean
+UnitIsGhost = nil
+
 ---@type fun(unit1: string, unit2: string): boolean
 UnitIsUnit = nil
 
@@ -426,6 +429,18 @@ GetCoinTextureString = nil
 
 ---@type fun(): boolean
 InCombatLockdown = nil
+
+---@type fun(): number
+GetMaxPlayerLevel = nil
+
+---@type fun(frame: Frame, state: string, driver: string)
+RegisterStateDriver = nil
+
+---@type fun(frame: Frame, handler: function)
+UnitFrame_OnEnter = nil
+
+---@type fun(frame: Frame)
+UnitFrame_OnLeave = nil
 
 --------------------------------------------------------------------------------
 -- 小地圖相關
@@ -846,3 +861,25 @@ DEFAULT_CHAT_FRAME = nil
 
 ---@type table
 FACTION_BAR_COLORS = {}
+
+--------------------------------------------------------------------------------
+-- UI 元件框架
+--------------------------------------------------------------------------------
+
+---@type Frame
+PlayerPowerBarAlt = nil
+
+---@type Frame
+UIWidgetPowerBarContainerFrame = nil
+
+---@type Frame
+UIWidgetBelowMinimapContainerFrame = nil
+
+---@type Frame
+UIWidgetTopCenterContainerFrame = nil
+
+---@type Frame
+UIWidgetCenterScreenContainerFrame = nil
+
+---@type table
+DebuffTypeColor = {}
