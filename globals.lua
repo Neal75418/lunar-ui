@@ -21,7 +21,8 @@ LibStub = {}
 ---@class Frame
 ---@field CreateTexture fun(self: Frame, name?: string, layer?: string, template?: string): Texture
 ---@field CreateFontString fun(self: Frame, name?: string, layer?: string, template?: string): FontString
----@field SetPoint fun(self: Frame, point: string, relativeTo?: Frame|string, relativePoint?: string, x?: number, y?: number)
+---@field SetPoint fun(self: Frame, point: string, relativeToOrX?: Frame|string|number, relativePointOrY?: string|number, x?: number, y?: number)
+---@field SetAllPoints fun(self: Frame, frame?: Frame|string)
 ---@field SetSize fun(self: Frame, width: number, height: number)
 ---@field SetWidth fun(self: Frame, width: number)
 ---@field SetHeight fun(self: Frame, height: number)
@@ -30,12 +31,18 @@ LibStub = {}
 ---@field Show fun(self: Frame)
 ---@field Hide fun(self: Frame)
 ---@field IsShown fun(self: Frame): boolean
+---@field IsVisible fun(self: Frame): boolean
 ---@field SetScript fun(self: Frame, event: string, handler: function?)
+---@field GetScript fun(self: Frame, event: string): function?
+---@field HookScript fun(self: Frame, event: string, handler: function)
 ---@field SetParent fun(self: Frame, parent: Frame|string)
 ---@field SetFrameStrata fun(self: Frame, strata: string)
 ---@field SetFrameLevel fun(self: Frame, level: number)
+---@field GetFrameLevel fun(self: Frame): number
 ---@field SetMovable fun(self: Frame, movable: boolean)
+---@field SetClampedToScreen fun(self: Frame, clamped: boolean)
 ---@field EnableMouse fun(self: Frame, enable: boolean)
+---@field EnableKeyboard fun(self: Frame, enable: boolean)
 ---@field RegisterForDrag fun(self: Frame, ...: string)
 ---@field StartMoving fun(self: Frame)
 ---@field StopMovingOrSizing fun(self: Frame)
@@ -45,7 +52,24 @@ LibStub = {}
 ---@field GetWidth fun(self: Frame): number
 ---@field GetHeight fun(self: Frame): number
 ---@field GetParent fun(self: Frame): Frame?
+---@field GetChildren fun(self: Frame): ...
+---@field GetRegions fun(self: Frame): ...
+---@field GetName fun(self: Frame): string?
 ---@field ClearAllPoints fun(self: Frame)
+---@field RegisterEvent fun(self: Frame, event: string)
+---@field UnregisterEvent fun(self: Frame, event: string)
+---@field UnregisterAllEvents fun(self: Frame)
+---@field SetID fun(self: Frame, id: number)
+---@field GetID fun(self: Frame): number
+---@field GetNormalTexture fun(self: Frame): Texture?
+---@field GetPushedTexture fun(self: Frame): Texture?
+---@field GetHighlightTexture fun(self: Frame): Texture?
+---@field GetCheckedTexture fun(self: Frame): Texture?
+---@field buttons table?
+---@field bg Frame?
+---@field id number?
+---@field page number?
+---@field LunarBorder Frame?
 
 ---@class Texture : Frame
 ---@field SetTexture fun(self: Texture, path: string|number)

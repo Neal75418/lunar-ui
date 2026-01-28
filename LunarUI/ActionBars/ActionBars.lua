@@ -11,7 +11,7 @@
     - 可設定按鈕大小與間距
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local L = Engine.L or {}
 
@@ -28,7 +28,7 @@ end
 
 local BUTTON_SIZE = 36
 local BUTTON_SPACING = 4
-local BUTTONS_PER_ROW = 12
+local _BUTTONS_PER_ROW = 12  -- 保留供未來使用
 
 local backdropTemplate = {
     bgFile = "Interface\\Buttons\\WHITE8x8",
@@ -159,7 +159,7 @@ end
 
 -- WoW 12.0 對 GetActionCooldown 回傳密值，無法進行比較
 -- 停用自訂冷卻文字，使用內建冷卻螺旋與 OmniCC 等插件處理
-local function UpdateCooldownText(button)
+local function _UpdateCooldownText(_button)
     -- 刻意留空 - WoW 12.0 密值阻止自訂冷卻文字
 end
 
@@ -301,7 +301,7 @@ local function UpdateAllBarsForPhase()
     local minAlpha = 0.5
     local alpha = math.max(tokens.alpha, minAlpha)
 
-    for name, bar in pairs(bars) do
+    for _name, bar in pairs(bars) do
         if bar and bar:IsShown() then
             bar:SetAlpha(alpha)
         end
@@ -312,7 +312,7 @@ local function RegisterBarPhaseCallback()
     if phaseCallbackRegistered then return end
     phaseCallbackRegistered = true
 
-    LunarUI:RegisterPhaseCallback(function(oldPhase, newPhase)
+    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
         UpdateAllBarsForPhase()
     end)
 end
@@ -325,7 +325,7 @@ local function EnterKeybindMode()
     if keybindMode then return end
     keybindMode = true
 
-    for name, button in pairs(buttons) do
+    for _name, button in pairs(buttons) do
         if button then
             -- 高亮按鈕
             if button.LunarBorder then
@@ -361,7 +361,7 @@ local function ExitKeybindMode()
     if not keybindMode then return end
     keybindMode = false
 
-    for name, button in pairs(buttons) do
+    for _name, button in pairs(buttons) do
         if button then
             -- 重設邊框
             if button.LunarBorder then
@@ -643,7 +643,7 @@ hooksecurefunc(LunarUI, "RegisterCommands", function(self)
 end)
 
 -- 註冊快捷鍵切換函數
-function LunarUI:ToggleKeybindMode()
+function LunarUI.ToggleKeybindMode()
     if keybindMode then
         ExitKeybindMode()
     else
