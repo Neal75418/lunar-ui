@@ -1103,34 +1103,47 @@ local function HookBagFunctions()
     end)
 
     -- 隱藏暴雪背包框架
+    -- 注意：避免使用 SetScript 以防止 taint，改用 SetParent(nil)
     for i = 1, 13 do
         local frame = _G["ContainerFrame" .. i]
         if frame then
-            frame:UnregisterAllEvents()
-            frame:SetScript("OnShow", function(self) self:Hide() end)
-            frame:Hide()
+            pcall(function()
+                frame:SetParent(nil)
+                frame:ClearAllPoints()
+                frame:SetAlpha(0)
+                frame:Hide()
+            end)
         end
     end
 
     -- 隱藏整合背包框架（正式服）
     if ContainerFrameCombinedBags then
-        ContainerFrameCombinedBags:UnregisterAllEvents()
-        ContainerFrameCombinedBags:SetScript("OnShow", function(self) self:Hide() end)
-        ContainerFrameCombinedBags:Hide()
+        pcall(function()
+            ContainerFrameCombinedBags:SetParent(nil)
+            ContainerFrameCombinedBags:ClearAllPoints()
+            ContainerFrameCombinedBags:SetAlpha(0)
+            ContainerFrameCombinedBags:Hide()
+        end)
     end
 
     -- 隱藏暴雪銀行框架
     if BankFrame then
-        BankFrame:UnregisterAllEvents()
-        BankFrame:SetScript("OnShow", function(self) self:Hide() end)
-        BankFrame:Hide()
+        pcall(function()
+            BankFrame:SetParent(nil)
+            BankFrame:ClearAllPoints()
+            BankFrame:SetAlpha(0)
+            BankFrame:Hide()
+        end)
     end
 
     -- 隱藏帳號銀行框架（正式服）
     if AccountBankPanel then
-        AccountBankPanel:UnregisterAllEvents()
-        AccountBankPanel:SetScript("OnShow", function(self) self:Hide() end)
-        AccountBankPanel:Hide()
+        pcall(function()
+            AccountBankPanel:SetParent(nil)
+            AccountBankPanel:ClearAllPoints()
+            AccountBankPanel:SetAlpha(0)
+            AccountBankPanel:Hide()
+        end)
     end
 end
 

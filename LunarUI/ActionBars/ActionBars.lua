@@ -384,15 +384,18 @@ end
 --------------------------------------------------------------------------------
 
 -- 永久隱藏框架的輔助函數（防止重新顯示）
+-- 注意：避免在安全框架上使用 SetScript 以防止 taint
 local function HideFramePermanently(frame)
     if not frame then return end
-    pcall(function() frame:UnregisterAllEvents() end)
+    -- 使用 SetParent(nil) 將框架從 UI 層級中移除
+    -- 這比 Hide() 更安全，不會造成 taint
+    pcall(function()
+        frame:SetParent(nil)
+        frame:ClearAllPoints()
+    end)
     pcall(function() frame:SetAlpha(0) end)
     pcall(function() frame:Hide() end)
-    -- 防止暴雪重新顯示框架
-    pcall(function()
-        frame:SetScript("OnShow", function(self) self:Hide() end)
-    end)
+    -- 不要使用 SetScript 或 UnregisterAllEvents，這會導致 taint
 end
 
 -- 隱藏框架的所有區域（材質）
@@ -523,11 +526,12 @@ local function HideBlizzardBars()
         end
     end
 
-    -- 直接隱藏動作按鈕
+    -- 直接隱藏動作按鈕（僅設置透明度，不移除父級）
+    -- ActionButton 是安全框架，過度修改會導致 taint
     for i = 1, 12 do
         local button = _G["ActionButton" .. i]
         if button then
-            HideFramePermanently(button)
+            pcall(function() button:SetAlpha(0) end)
         end
     end
 
@@ -543,28 +547,8 @@ local function HideBlizzardBars()
         end
     end
 
-    -- 搜尋 _G 中包含動作條相關名稱的任何框架
-    -- 這可以捕捉到我們可能遺漏的框架
-    local patterns = {
-        "^MainMenuBar",
-        "^ActionBar%d",
-        "^MultiBar",
-        "EndCap$",
-        "Gryphon",
-        "Wyvern",
-    }
-
-    for name, obj in pairs(_G) do
-        if type(obj) == "table" and type(obj.Hide) == "function" then
-            for _, pattern in ipairs(patterns) do
-                if type(name) == "string" and name:match(pattern) then
-                    pcall(function() obj:Hide() end)
-                    pcall(function() obj:SetAlpha(0) end)
-                    break
-                end
-            end
-        end
-    end
+    -- 注意：移除了 _G 迭代，因為過度搜尋可能導致 taint
+    -- 上面已經明確列出所有需要隱藏的框架
 
     -- 注意：微型按鈕（角色、法術書、天賦等）保持可見
     -- LunarUI 不替換微型選單
