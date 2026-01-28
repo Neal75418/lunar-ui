@@ -384,16 +384,10 @@ end
 --------------------------------------------------------------------------------
 
 -- 安全隱藏框架的輔助函數
--- 只使用 SetAlpha(0)，避免修改框架層級或腳本以防止 taint
+-- 只使用 SetAlpha(0)，不移動位置以避免影響其他 UI 錨點
 local function HideFrameSafely(frame)
     if not frame then return end
-    -- 只設置透明度，不修改父級或腳本
     pcall(function() frame:SetAlpha(0) end)
-    -- 將框架移到螢幕外而非隱藏（避免 taint）
-    pcall(function()
-        frame:ClearAllPoints()
-        frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
-    end)
 end
 
 -- 隱藏框架的所有區域（材質）- 只設置透明度

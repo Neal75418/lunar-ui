@@ -1103,43 +1103,27 @@ local function HookBagFunctions()
     end)
 
     -- 隱藏暴雪背包框架
-    -- 使用透明度和移到螢幕外，避免修改框架層級以防止 taint
+    -- 只使用透明度，不移動位置以避免影響其他 UI
     for i = 1, 13 do
         local frame = _G["ContainerFrame" .. i]
         if frame then
-            pcall(function()
-                frame:SetAlpha(0)
-                frame:ClearAllPoints()
-                frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
-            end)
+            pcall(function() frame:SetAlpha(0) end)
         end
     end
 
     -- 隱藏整合背包框架（正式服）
     if ContainerFrameCombinedBags then
-        pcall(function()
-            ContainerFrameCombinedBags:SetAlpha(0)
-            ContainerFrameCombinedBags:ClearAllPoints()
-            ContainerFrameCombinedBags:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
-        end)
+        pcall(function() ContainerFrameCombinedBags:SetAlpha(0) end)
     end
 
     -- 隱藏暴雪銀行框架
     if BankFrame then
-        pcall(function()
-            BankFrame:SetAlpha(0)
-            BankFrame:ClearAllPoints()
-            BankFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
-        end)
+        pcall(function() BankFrame:SetAlpha(0) end)
     end
 
     -- 隱藏帳號銀行框架（正式服）
     if AccountBankPanel then
-        pcall(function()
-            AccountBankPanel:SetAlpha(0)
-            AccountBankPanel:ClearAllPoints()
-            AccountBankPanel:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
-        end)
+        pcall(function() AccountBankPanel:SetAlpha(0) end)
     end
 end
 
