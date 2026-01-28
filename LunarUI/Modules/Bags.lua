@@ -1102,29 +1102,25 @@ local function HookBagFunctions()
         ToggleBags()
     end)
 
-    -- 隱藏暴雪背包框架
-    -- 只使用透明度，不移動位置以避免影響其他 UI
+    -- 暫時停用隱藏 Blizzard 背包以診斷 taint 問題
+    -- TODO: 若這能解決 taint，需要找到更安全的隱藏方式
+    --[[
     for i = 1, 13 do
         local frame = _G["ContainerFrame" .. i]
         if frame then
             pcall(function() frame:SetAlpha(0) end)
         end
     end
-
-    -- 隱藏整合背包框架（正式服）
     if ContainerFrameCombinedBags then
         pcall(function() ContainerFrameCombinedBags:SetAlpha(0) end)
     end
-
-    -- 隱藏暴雪銀行框架
     if BankFrame then
         pcall(function() BankFrame:SetAlpha(0) end)
     end
-
-    -- 隱藏帳號銀行框架（正式服）
     if AccountBankPanel then
         pcall(function() AccountBankPanel:SetAlpha(0) end)
     end
+    --]]
 end
 
 --------------------------------------------------------------------------------

@@ -418,12 +418,16 @@ end
 local HideFramePermanently = HideFrameSafely
 
 local function HideBlizzardBars()
+    -- 暫時停用以診斷 taint 問題
+    -- TODO: 若這能解決 taint，需要找到更安全的隱藏方式
+    do return end
+
     -- 戰鬥中不修改框架以避免 taint
     if InCombatLockdown() then return end
 
     -- WoW 12.0 完全重新設計動作條
     -- 獅鷲/翼手龍圖案現在在 MainMenuBarArtFrame 及其子框架中
-    -- 使用安全的隱藏方式（透明度 + 移到螢幕外）
+    -- 使用安全的隱藏方式（透明度）
 
     -- 主要動作條框架
     local primaryFrames = {
