@@ -10,7 +10,7 @@
     - Click interactions (toggle WAXING, debug)
 ]]
 
-local ADDON_NAME, Engine = ...
+local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local phaseIndicator = nil
@@ -54,7 +54,7 @@ local function StartPulseAnimation()
         animationFrame = CreateFrame("Frame")
     end
 
-    animationFrame:SetScript("OnUpdate", function(self, elapsed)
+    animationFrame:SetScript("OnUpdate", function(_self, elapsed)
         if not phaseIndicator or not phaseIndicator:IsShown() then return end
 
         pulseTime = pulseTime + elapsed
@@ -76,7 +76,7 @@ local function StartPulseAnimation()
 
             -- Rotate glow slightly
             if phaseIndicator.glowOuter then
-                local rotation = pulseTime * 0.2  -- Slow rotation
+                local _rotation = pulseTime * 0.2  -- Slow rotation (reserved for future)
                 -- SetRotation would be applied if we used a rotation-capable texture
             end
         elseif phase == "WAXING" then
@@ -260,7 +260,7 @@ end
 -- Update Phase Indicator
 --------------------------------------------------------------------------------
 
-local function UpdatePhaseIndicator(oldPhase, newPhase)
+local function UpdatePhaseIndicator(_oldPhase, newPhase)
     if not phaseIndicator then return end
 
     local colors = PHASE_COLORS[newPhase] or PHASE_COLORS.NEW
@@ -358,21 +358,21 @@ function LunarUI:InitPhaseIndicator()
     end
 end
 
-function LunarUI:ShowPhaseIndicator()
+function LunarUI.ShowPhaseIndicator()
     if not phaseIndicator then
         CreatePhaseIndicator()
     end
     phaseIndicator:Show()
 end
 
-function LunarUI:HidePhaseIndicator()
+function LunarUI.HidePhaseIndicator()
     if phaseIndicator then
         phaseIndicator:Hide()
     end
 end
 
 -- Fix #8: Cleanup function to cancel all timers
-function LunarUI:CleanupPhaseIndicator()
+function LunarUI.CleanupPhaseIndicator()
     if phaseIndicator then
         -- Cancel timer
         if phaseIndicator.timerUpdate then
