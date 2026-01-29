@@ -87,8 +87,9 @@ local function FormatDuration(seconds)
 end
 
 local function ShouldShowBuff(name, duration, _expirationTime, _isStealable, _source)
-    -- 過濾瑣碎 Buff
-    if FILTERED_BUFF_NAMES[name] then
+    -- 過濾瑣碎 Buff（WoW 12.0 name 可能是密值，用 pcall 保護）
+    local ok, filtered = pcall(function() return FILTERED_BUFF_NAMES[name] end)
+    if ok and filtered then
         return false
     end
 
@@ -96,7 +97,9 @@ local function ShouldShowBuff(name, duration, _expirationTime, _isStealable, _so
     local phase = LunarUI:GetPhase()
     if phase == "NEW" then
         -- 只顯示短期 Buff（可能是戰鬥相關）
-        if duration == 0 or duration > 300 then
+        local okD, dur = pcall(tonumber, duration)
+        dur = (okD and dur) or 0
+        if dur == 0 or dur > 300 then
             return false
         end
     end
@@ -246,11 +249,11 @@ local function UpdateBuffs()
         local auraData = C_UnitAuras.GetBuffDataByIndex("player", i)
         if not auraData then break end
 
-        local name = auraData.name
+        local name = tostring(auraData.name or "")
         local icon = auraData.icon
-        local count = auraData.applications or 0
-        local duration = auraData.duration or 0
-        local expirationTime = auraData.expirationTime or 0
+        local count = tonumber(tostring(auraData.applications or 0)) or 0
+        local duration = tonumber(tostring(auraData.duration or 0)) or 0
+        local expirationTime = tonumber(tostring(auraData.expirationTime or 0)) or 0
         local source = auraData.sourceUnit
         local isStealable = auraData.isStealable
 
@@ -313,12 +316,12 @@ local function UpdateDebuffs()
         local auraData = C_UnitAuras.GetDebuffDataByIndex("player", i)
         if not auraData then break end
 
-        local name = auraData.name
+        local name = tostring(auraData.name or "")
         local icon = auraData.icon
-        local count = auraData.applications or 0
-        local duration = auraData.duration or 0
-        local expirationTime = auraData.expirationTime or 0
-        local debuffType = auraData.dispelName or ""
+        local count = tonumber(tostring(auraData.applications or 0)) or 0
+        local duration = tonumber(tostring(auraData.duration or 0)) or 0
+        local expirationTime = tonumber(tostring(auraData.expirationTime or 0)) or 0
+        local debuffType = tostring(auraData.dispelName or "")
         local source = auraData.sourceUnit
 
         if ShouldShowDebuff(name, duration, debuffType, source) then

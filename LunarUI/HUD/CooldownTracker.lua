@@ -204,11 +204,14 @@ local function GetPlayerClassID()
 end
 
 local function GetSpellCooldownInfo(spellID)
-    local spellInfo = C_Spell.GetSpellCooldown(spellID)
-    if spellInfo then
-        return spellInfo.startTime, spellInfo.duration, spellInfo.isEnabled
+    local ok, spellInfo = pcall(C_Spell.GetSpellCooldown, spellID)
+    if ok and spellInfo then
+        -- WoW 12.0 回傳密值（secret value），需用 tonumber 轉換
+        local start = tonumber(tostring(spellInfo.startTime)) or 0
+        local duration = tonumber(tostring(spellInfo.duration)) or 0
+        return start, duration
     end
-    return 0, 0, true
+    return 0, 0
 end
 
 -- 無效法術的標記值
@@ -375,9 +378,9 @@ local function UpdateCooldownIcons()
 
     for _, spellID in ipairs(trackedSpells) do
         if IsSpellKnownByPlayer(spellID) then
-            local start, duration, enabled = GetSpellCooldownInfo(spellID)
+            local start, duration = GetSpellCooldownInfo(spellID)
 
-            if enabled and duration > 1.5 then  -- 忽略 GCD
+            if duration > 1.5 then  -- 忽略 GCD
                 local remaining = start + duration - currentTime
 
                 if remaining > 0 then

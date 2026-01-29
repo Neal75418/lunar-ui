@@ -83,6 +83,16 @@ function LunarUI:OnEnable()
         self:RegisterCommands()
     end
 
+    -- 設置 ESC 選項面板
+    if self.SetupOptions then
+        self:SetupOptions()
+    end
+
+    -- 設置 ESC 主選單按鈕
+    if self.SetupGameMenuButton then
+        self:SetupGameMenuButton()
+    end
+
     local L = Engine.L or {}
     local msg = L["AddonEnabled"] or "已啟用。輸入 |cff8882ff/lunar|r 查看命令"
     self:Print(msg)
@@ -152,4 +162,57 @@ function LunarUI:NotifyPhaseChange(oldPhase, newPhase)
     for _, callback in ipairs(self.phaseCallbacks) do
         pcall(callback, oldPhase, newPhase)
     end
+end
+
+--------------------------------------------------------------------------------
+-- ESC 主選單按鈕 (WoW 11.0+)
+--------------------------------------------------------------------------------
+
+local gameMenuHooked = false
+
+function LunarUI:SetupGameMenuButton()
+    if gameMenuHooked then return end
+    gameMenuHooked = true
+
+    -- WoW 11.0+ 使用 GameMenuFrame:AddButton() API
+    -- Hook InitButtons 在按鈕初始化後新增 LunarUI 按鈕
+    hooksecurefunc(GameMenuFrame, "InitButtons", function(self)
+        -- 先新增按鈕（會在最後面）
+        self:AddButton("LunarUI", function()
+            PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
+            HideUIPanel(GameMenuFrame)
+            local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
+            if AceConfigDialog then
+                AceConfigDialog:Open("LunarUI")
+            end
+        end)
+
+        -- 把按鈕移到最上面
+        C_Timer.After(0, function()
+            if self.buttonPool then
+                -- 找到 LunarUI 按鈕和最上面的按鈕（Y 座標最大）
+                local lunarBtn, topBtn
+                local topY = -99999
+                for btn in self.buttonPool:EnumerateActive() do
+                    if btn:GetText() == "LunarUI" then
+                        lunarBtn = btn
+                    end
+                    local _, _, _, _, y = btn:GetPoint(1)
+                    if y and y > topY then
+                        topY = y
+                        topBtn = btn
+                    end
+                end
+                -- 交換位置
+                if lunarBtn and topBtn and lunarBtn ~= topBtn then
+                    local p1, r1, rp1, x1, y1 = topBtn:GetPoint(1)
+                    local p2, r2, rp2, x2, y2 = lunarBtn:GetPoint(1)
+                    lunarBtn:ClearAllPoints()
+                    lunarBtn:SetPoint(p1, r1, rp1, x1, y1)
+                    topBtn:ClearAllPoints()
+                    topBtn:SetPoint(p2, r2, rp2, x2, y2)
+                end
+            end
+        end)
+    end)
 end

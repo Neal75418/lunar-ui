@@ -191,26 +191,28 @@ end
     開啟設定介面
 ]]
 function LunarUI:OpenOptions()
-    -- 載入設定插件（若尚未載入）
-    local loaded = C_AddOns.IsAddOnLoaded("LunarUI_Options")
-    if not loaded then
-        local success = C_AddOns.LoadAddOn("LunarUI_Options")
-        if not success then
-            self:Print("設定介面尚未可用")
-            return
-        end
-    end
-
-    -- 開啟設定（加入錯誤處理）
-    if not Settings or type(Settings.OpenToCategory) ~= "function" then
-        self:Print("設定 API 不可用")
+    -- 嘗試使用 AceConfigDialog 開啟設定面板
+    local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
+    if AceConfigDialog then
+        AceConfigDialog:Open("LunarUI")
         return
     end
 
-    local ok, err = pcall(Settings.OpenToCategory, "LunarUI")
-    if not ok then
-        self:Print("開啟設定失敗：" .. tostring(err))
+    -- 備用方案：使用暴雪 Settings API（WoW 10.0+）
+    if Settings and Settings.OpenToCategory then
+        local ok, err = pcall(Settings.OpenToCategory, "LunarUI")
+        if ok then return end
+        -- 如果失敗，嘗試舊版 API
     end
+
+    -- 備用方案：舊版介面選項 API
+    if InterfaceOptionsFrame_OpenToCategory then
+        InterfaceOptionsFrame_OpenToCategory("LunarUI")
+        InterfaceOptionsFrame_OpenToCategory("LunarUI")  -- 呼叫兩次確保打開
+        return
+    end
+
+    self:Print("請在 ESC → 選項 → 插件 中找到 LunarUI")
 end
 
 --[[

@@ -158,6 +158,37 @@ function LunarUI.InterpolateTokens(from, to, progress)
     return result
 end
 
+--[[
+    緩動函數庫 (Easing Functions)
+    t: current time/progress (0-1)
+    b: beginning value (usually 0)
+    c: change in value (usually 1)
+    d: duration (usually 1)
+]]
+LunarUI.Easing = {
+    -- 線性
+    Linear = function(t, b, c, d)
+        return c * t / d + b
+    end,
+    -- 二次平滑輸入
+    InQuad = function(t, b, c, d)
+        t = t / d
+        return c * t * t + b
+    end,
+    -- 二次平滑輸出
+    OutQuad = function(t, b, c, d)
+        t = t / d
+        return -c * t * (t - 2) + b
+    end,
+    -- 二次平滑輸入輸出
+    InOutQuad = function(t, b, c, d)
+        t = t / (d / 2)
+        if t < 1 then return c / 2 * t * t + b end
+        t = t - 1
+        return -c / 2 * (t * (t - 2) - 1) + b
+    end,
+}
+
 -- 匯出預設值供資料庫使用
 LunarUI.DEFAULT_TOKENS = DEFAULT_TOKENS
 

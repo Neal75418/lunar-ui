@@ -55,7 +55,7 @@ HUD\PhaseIndicator.lua
 HUD\PerformanceMonitor.lua
 HUD\ClassResources.lua
 HUD\CooldownTracker.lua
-# HUD\FloatingCombatText.lua  # 暫時停用：WoW 12.0 taint 問題待修復
+HUD\FloatingCombatText.lua
 HUD\AuraFrames.lua
 
 # Modules (Non-combat UI)
