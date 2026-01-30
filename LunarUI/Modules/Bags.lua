@@ -96,9 +96,7 @@ end
 -- 快取機制：避免重複呼叫昂貴的物品資訊 API
 local itemLevelCache = {}
 local equipmentTypeCache = {}
-local itemLevelCacheSize = 0
-local equipmentTypeCacheSize = 0
-local CACHE_MAX_SIZE = 500
+local CACHE_MAX_SIZE = 1000
 
 --[[
     計算字典表大小
@@ -113,20 +111,17 @@ local function _GetTableSize(t)
     return count
 end
 
--- 在新增項目前檢查快取大小，避免新項目立即被清除的競爭條件
-local function MaybeEvictItemLevelCache()
-    if itemLevelCacheSize >= CACHE_MAX_SIZE then
-        wipe(itemLevelCache)
-        itemLevelCacheSize = 0
+-- 在新增項目前檢查快取大小，超過上限時整體清除
+local function MaybeEvictCache(cache, sizeRef)
+    if sizeRef.n >= CACHE_MAX_SIZE then
+        wipe(cache)
+        sizeRef.n = 0
     end
 end
 
-local function MaybeEvictEquipmentTypeCache()
-    if equipmentTypeCacheSize >= CACHE_MAX_SIZE then
-        wipe(equipmentTypeCache)
-        equipmentTypeCacheSize = 0
-    end
-end
+-- 使用表格追蹤快取大小，方便傳遞引用
+local itemLevelCacheMeta = { n = 0 }
+local equipmentTypeCacheMeta = { n = 0 }
 
 local function GetItemLevel(itemLink)
     if not itemLink then return nil end
@@ -138,10 +133,9 @@ local function GetItemLevel(itemLink)
 
     local itemLevel = select(1, C_Item.GetDetailedItemLevelInfo(itemLink))
     if itemLevel then
-        -- 新增前先清理快取
-        MaybeEvictItemLevelCache()
+        MaybeEvictCache(itemLevelCache, itemLevelCacheMeta)
         itemLevelCache[itemLink] = itemLevel
-        itemLevelCacheSize = itemLevelCacheSize + 1
+        itemLevelCacheMeta.n = itemLevelCacheMeta.n + 1
     end
     return itemLevel
 end
@@ -156,10 +150,9 @@ local function IsEquipment(itemLink)
 
     local _, _, _, _, _, itemType = C_Item.GetItemInfo(itemLink)
     local isEquip = (itemType == "Armor" or itemType == "Weapon")
-    -- 新增前先清理快取
-    MaybeEvictEquipmentTypeCache()
+    MaybeEvictCache(equipmentTypeCache, equipmentTypeCacheMeta)
     equipmentTypeCache[itemLink] = isEquip
-    equipmentTypeCacheSize = equipmentTypeCacheSize + 1
+    equipmentTypeCacheMeta.n = equipmentTypeCacheMeta.n + 1
     return isEquip
 end
 
@@ -247,6 +240,29 @@ local function CreateItemSlot(parent, slotID, bag, slot)
         button.questIcon = quest
     end
 
+    -- 品質發光（史詩以上）
+    if not button.qualityGlow then
+        local glow = button:CreateTexture(nil, "BACKGROUND")
+        glow:SetTexture("Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64")
+        glow:SetBlendMode("ADD")
+        glow:SetPoint("TOPLEFT", -6, 6)
+        glow:SetPoint("BOTTOMRIGHT", 6, -6)
+        glow:SetAlpha(0)
+        glow:Hide()
+        button.qualityGlow = glow
+    end
+
+    -- Hover 高亮
+    if not button.hoverHighlight then
+        local highlight = button:CreateTexture(nil, "HIGHLIGHT")
+        highlight:SetTexture("Interface\\Buttons\\WHITE8x8")
+        highlight:SetPoint("TOPLEFT", 1, -1)
+        highlight:SetPoint("BOTTOMRIGHT", -1, 1)
+        highlight:SetVertexColor(1, 1, 1, 0.15)
+        highlight:SetBlendMode("ADD")
+        button.hoverHighlight = highlight
+    end
+
     return button
 end
 
@@ -283,6 +299,18 @@ local function UpdateSlot(button)
                 button.LunarBorder:SetBackdropBorderColor(color[1], color[2], color[3], 1)
             else
                 button.LunarBorder:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+            end
+        end
+
+        -- 品質發光：史詩（4）以上顯示
+        if button.qualityGlow then
+            if quality and quality >= 4 and ITEM_QUALITY_COLORS[quality] then
+                local color = ITEM_QUALITY_COLORS[quality]
+                button.qualityGlow:SetVertexColor(color[1], color[2], color[3], 0.4)
+                button.qualityGlow:SetAlpha(0.4)
+                button.qualityGlow:Show()
+            else
+                button.qualityGlow:Hide()
             end
         end
 
@@ -339,6 +367,9 @@ local function UpdateSlot(button)
         end
         if button.questIcon then
             button.questIcon:Hide()
+        end
+        if button.qualityGlow then
+            button.qualityGlow:Hide()
         end
     end
 end
@@ -1219,20 +1250,8 @@ end)
 -- 月相感知
 --------------------------------------------------------------------------------
 
-local phaseCallbackRegistered = false
-
-local function UpdateBagsForPhase()
-    -- 背包通常在使用者需要時顯示，不自動淡出
-end
-
-local function RegisterBagsPhaseCallback()
-    if phaseCallbackRegistered then return end
-    phaseCallbackRegistered = true
-
-    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
-        UpdateBagsForPhase()
-    end)
-end
+-- 背包通常在使用者需要時顯示，不自動淡出
+-- 未來若需要月相感知，可在此新增 RegisterPhaseCallback
 
 --------------------------------------------------------------------------------
 -- 垃圾販賣
@@ -1307,9 +1326,6 @@ local function InitializeBags()
 
     -- 掛鉤背包函數
     HookBagFunctions()
-
-    -- 註冊月相更新
-    RegisterBagsPhaseCallback()
 
     -- 快捷鍵開啟背包由暴雪預設按鍵系統處理
 end

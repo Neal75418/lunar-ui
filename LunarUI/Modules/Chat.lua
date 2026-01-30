@@ -22,12 +22,7 @@ local L = Engine.L or {}
 
 local CHAT_FRAMES = { "ChatFrame1", "ChatFrame2", "ChatFrame3", "ChatFrame4", "ChatFrame5", "ChatFrame6", "ChatFrame7" }
 
-local backdropTemplate = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-}
+local backdropTemplate = LunarUI.backdropTemplate
 
 -- 改良頻道顏色
 local CHANNEL_COLORS = {
@@ -166,20 +161,40 @@ local function StyleChatFrame(chatFrame)
         backdrop:SetBackdropColor(0.05, 0.05, 0.05, 0.5)
         backdrop:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.6)
         backdrop:SetFrameLevel(chatFrame:GetFrameLevel() - 1)
+        backdrop:SetAlpha(0)
         backdrop:Hide()
         chatFrame.LunarBackdrop = backdrop
     end
 
-    -- 滑鼠懸停時顯示背景
+    -- 滑鼠懸停時淡入/淡出背景
     chatFrame:HookScript("OnEnter", function(self)
         if self.LunarBackdrop then
             self.LunarBackdrop:Show()
+            self.LunarBackdrop._fadeTarget = 1
+            if not self.LunarBackdrop._fadeUpdate then
+                self.LunarBackdrop._fadeUpdate = true
+                self.LunarBackdrop:SetScript("OnUpdate", function(bd, dt)
+                    local target = bd._fadeTarget or 0
+                    local current = bd:GetAlpha()
+                    local speed = 4 * dt  -- ~0.25s fade
+                    if current < target then
+                        bd:SetAlpha(math.min(current + speed, target))
+                    elseif current > target then
+                        bd:SetAlpha(math.max(current - speed, target))
+                        if bd:GetAlpha() <= 0.01 then
+                            bd:SetAlpha(0)
+                            bd:Hide()
+                        end
+                    end
+                end)
+            end
+            self.LunarBackdrop:SetAlpha(self.LunarBackdrop:GetAlpha() or 0)
         end
     end)
 
     chatFrame:HookScript("OnLeave", function(self)
         if self.LunarBackdrop and not MouseIsOver(self) then
-            self.LunarBackdrop:Hide()
+            self.LunarBackdrop._fadeTarget = 0
         end
     end)
 

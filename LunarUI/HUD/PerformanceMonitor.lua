@@ -32,12 +32,12 @@ local LATENCY_THRESHOLDS = {
     bad = 400,     -- 紅色
 }
 
--- 效能監控專用透明度（NEW 時完全隱藏）
+-- 效能監控專用透明度（停用月相：全部顯示）
 local PERF_PHASE_ALPHA = {
-    NEW = 0,       -- 完全隱藏
-    WAXING = 0.5,  -- 半透明
-    FULL = 1.0,    -- 完全顯示
-    WANING = 0.7,  -- 漸隱
+    NEW = 1.0,
+    WAXING = 1.0,
+    FULL = 1.0,
+    WANING = 1.0,
 }
 
 --------------------------------------------------------------------------------
@@ -103,11 +103,7 @@ local function CreatePerfFrame()
     end)
 
     -- 背景樣式
-    perfFrame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    perfFrame:SetBackdrop(LunarUI.iconBackdropTemplate)
     perfFrame:SetBackdropColor(0, 0, 0, 0.6)
     perfFrame:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.8)
 

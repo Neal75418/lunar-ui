@@ -113,7 +113,7 @@ local function StyleTooltip(tooltip)
     -- 樣式化狀態列（血量條）
     if tooltip.StatusBar or GameTooltipStatusBar then
         local statusBar = tooltip.StatusBar or GameTooltipStatusBar
-        statusBar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+        statusBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
         statusBar:SetHeight(4)
         statusBar:ClearAllPoints()
         statusBar:SetPoint("BOTTOMLEFT", tooltip, "BOTTOMLEFT", 2, 2)

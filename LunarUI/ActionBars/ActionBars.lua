@@ -40,12 +40,7 @@ local function GetButtonSpacing()
     return LunarUI.db and LunarUI.db.profile.actionbars.buttonSpacing or DEFAULT_BUTTON_SPACING
 end
 
-local backdropTemplate = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-}
+local backdropTemplate = LunarUI.backdropTemplate
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -165,13 +160,33 @@ local function StyleButton(button)
     -- Hook SetNormalTexture 防止拖動技能時背景重新出現
     if not button._lunarHookedNormal then
         button._lunarHookedNormal = true
-        hooksecurefunc(button, "SetNormalTexture", function(self)
+
+        local function ClearNormalTexture(self)
             local nt = self:GetNormalTexture()
             if nt then
                 nt:SetTexture(nil)
                 nt:Hide()
             end
-        end)
+        end
+
+        hooksecurefunc(button, "SetNormalTexture", ClearNormalTexture)
+
+        -- WoW 12.0：也可能使用 SetNormalAtlas
+        if button.SetNormalAtlas then
+            hooksecurefunc(button, "SetNormalAtlas", ClearNormalTexture)
+        end
+
+        -- LAB 在 OnButtonUpdate/OnReceiveDrag 後可能重設材質
+        -- Hook Update 確保重設被攔截
+        if button.Update then
+            hooksecurefunc(button, "Update", function(self)
+                C_Timer.After(0, function()
+                    if self:GetNormalTexture() then
+                        ClearNormalTexture(self)
+                    end
+                end)
+            end)
+        end
     end
 
     -- 建立自訂邊框
@@ -259,9 +274,30 @@ local function CreateActionBar(id, page)
         buttons[buttonName] = button
     end
 
-    -- 主動作條（bar1）在覆蓋條/載具啟動時自動隱藏
-    -- 讓暴雪原生覆蓋條顯示飛龍騎術等技能
+    -- 主動作條（bar1）需要頁面切換 + 覆蓋條/載具隱藏
     if id == 1 then
+        -- 頁面切換狀態驅動：bonusbar 用於德魯伊變形/龍騎術等
+        bar:SetAttribute("_onstate-page", [[
+            self:SetAttribute("state", newstate)
+            control:ChildUpdate("state", newstate)
+        ]])
+
+        local pageCondition = table.concat({
+            "[bar:2] 2",
+            "[bar:3] 3",
+            "[bar:4] 4",
+            "[bar:5] 5",
+            "[bar:6] 6",
+            "[bonusbar:1] 7",
+            "[bonusbar:2] 8",
+            "[bonusbar:3] 9",
+            "[bonusbar:4] 10",
+            "[bonusbar:5] 11",
+            "1",
+        }, "; ")
+        RegisterStateDriver(bar, "page", pageCondition)
+
+        -- 覆蓋條/載具時隱藏（讓暴雪原生覆蓋條顯示飛龍騎術等技能）
         RegisterStateDriver(bar, "visibility", "[overridebar] hide; [vehicleui] hide; [possessbar] hide; show")
     end
 

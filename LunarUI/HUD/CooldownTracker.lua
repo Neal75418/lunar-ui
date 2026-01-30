@@ -268,12 +268,8 @@ local function CreateCooldownIcon(parent, _index)
     local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     icon:SetSize(ICON_SIZE, ICON_SIZE)
 
-    -- 背景
-    icon:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    -- 背景（使用共用模板）
+    icon:SetBackdrop(LunarUI.iconBackdropTemplate)
     icon:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
     icon:SetBackdropBorderColor(0.2, 0.2, 0.2, 1)
 

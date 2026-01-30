@@ -32,7 +32,6 @@ local wipe = wipe
 local GetTime = GetTime
 local UnitGUID = UnitGUID
 -- 注意：不要快取 CombatLogGetCurrentEventInfo，WoW 12.0 可能會有保護
-local select = select
 
 --------------------------------------------------------------------------------
 -- 常數
@@ -90,12 +89,12 @@ local activeTexts = {}
 local isInitialized = false
 local playerGUID = nil  -- 快取玩家 GUID，避免每次事件都查詢
 
--- 月相過濾器
+-- 月相過濾器（停用月相：全部顯示）
 local phaseFilter = {
-    NEW = 0.3,      -- 只顯示 30% 的數字
-    WAXING = 0.7,   -- 顯示 70% 的數字
-    FULL = 1.0,     -- 顯示全部
-    WANING = 0.8,   -- 顯示 80%
+    NEW = 1.0,
+    WAXING = 1.0,
+    FULL = 1.0,
+    WANING = 1.0,
 }
 
 --------------------------------------------------------------------------------
@@ -208,12 +207,26 @@ local function UpdateAnimations(_elapsed)
                 alpha = 1 - ((progress - FADE_START) / (1 - FADE_START))
             end
 
-            -- 暴擊縮放效果
-            if data.isCrit and progress < 0.1 then
-                local scale = 1 + (0.3 * (1 - progress / 0.1))
-                text:SetTextScale(scale)
-            elseif data.isCrit then
-                text:SetTextScale(1)
+            -- 暴擊縮放 + 閃白效果
+            if data.isCrit then
+                if progress < 0.1 then
+                    -- 縮放 pop：1.3x → 1x
+                    local scale = 1 + (0.3 * (1 - progress / 0.1))
+                    text:SetTextScale(scale)
+                else
+                    text:SetTextScale(1)
+                end
+
+                -- 閃白過渡：前 15% 時間從白色過渡到目標顏色
+                if progress < 0.15 and data.critColor then
+                    local t = progress / 0.15
+                    local c = data.critColor
+                    text:SetTextColor(
+                        1 + (c[1] - 1) * t,
+                        1 + (c[2] - 1) * t,
+                        1 + (c[3] - 1) * t
+                    )
+                end
             end
 
             text:SetAlpha(alpha)
@@ -228,6 +241,13 @@ end
 local function ShowFloatingText(amount, textType, isCrit, offsetX)
     if not fctFrame or not fctFrame:IsShown() then return end
 
+    -- WoW 12.0 密值保護：確保 amount 是可用的數字或字串
+    if amount == nil then return end
+    if type(amount) ~= "number" and type(amount) ~= "string" then
+        amount = tonumber(tostring(amount))
+        if not amount then return end
+    end
+
     -- 月相過濾
     if not ShouldShowNumber() then return end
 
@@ -241,7 +261,7 @@ local function ShowFloatingText(amount, textType, isCrit, offsetX)
     if type(amount) == "number" then
         displayText = FormatNumber(amount)
     else
-        displayText = amount
+        displayText = tostring(amount)
     end
 
     -- 暴擊特殊處理
@@ -271,12 +291,19 @@ local function ShowFloatingText(amount, textType, isCrit, offsetX)
     data.startY = 0
     data.duration = ANIMATION_DURATION
     data.isCrit = isCrit
+    data.critColor = isCrit and color or nil  -- 儲存目標顏色供閃白動畫使用
 
     -- 初始位置
     text:ClearAllPoints()
     text:SetPoint("CENTER", fctFrame, "CENTER", data.startX, data.startY)
     text:SetAlpha(1)
     text:SetTextScale(1)
+
+    -- 暴擊閃白效果：開始時文字為白色，快速過渡到目標顏色
+    if isCrit then
+        text:SetTextColor(1, 1, 1)
+    end
+
     text:Show()
 
     table_insert(activeTexts, text)
@@ -325,6 +352,14 @@ end
 -- 戰鬥日誌處理
 --------------------------------------------------------------------------------
 
+-- 從 info 表中取得 miss 類型（SWING 在 index 12，其餘在 15）
+local function GetMissType(info, subevent)
+    local missType = (subevent == "SWING_MISSED") and info[12] or info[15]
+    if missType then
+        ShowEvent(tostring(missType))
+    end
+end
+
 local function ProcessCombatLogEvent()
     -- 安全檢查：確保 playerGUID 已快取
     if not playerGUID then
@@ -332,71 +367,51 @@ local function ProcessCombatLogEvent()
         if not playerGUID then return end
     end
 
-    -- 使用全域 API 而非快取的引用，避免 WoW 12.0 taint
-    local _timestamp, subevent, _, sourceGUID, _sourceName, _sourceFlags, _sourceRaidFlags,
-          destGUID, _destName, _destFlags, _destRaidFlags = _G.CombatLogGetCurrentEventInfo()
+    -- WoW 12.0：只呼叫一次 CombatLogGetCurrentEventInfo，存為局部變數
+    local info = { _G.CombatLogGetCurrentEventInfo() }
+    local subevent = info[2]
+    local sourceGUID = info[4]
+    local destGUID = info[8]
 
     -- 早期過濾：只處理與玩家相關的事件
     local isPlayerSource = sourceGUID == playerGUID
     local isPlayerDest = destGUID == playerGUID
     if not isPlayerSource and not isPlayerDest then
-        return  -- 與玩家無關，跳過
+        return
     end
+
+    local isMiss = subevent == "SWING_MISSED" or subevent == "SPELL_MISSED" or subevent == "RANGE_MISSED"
+    local isSpellDamage = subevent == "SPELL_DAMAGE" or subevent == "SPELL_PERIODIC_DAMAGE" or subevent == "RANGE_DAMAGE"
+    local isHeal = subevent == "SPELL_HEAL" or subevent == "SPELL_PERIODIC_HEAL"
 
     -- 玩家造成的傷害
     if isPlayerSource then
         if subevent == "SWING_DAMAGE" then
-            local amount, _overkill, _school, _resisted, _blocked, _absorbed, critical = select(12, _G.CombatLogGetCurrentEventInfo())
-            ShowFloatingText(amount, "damage", critical, 50)
-
-        elseif subevent == "SPELL_DAMAGE" or subevent == "SPELL_PERIODIC_DAMAGE" or subevent == "RANGE_DAMAGE" then
-            local _spellId, _spellName, _spellSchool, amount, _overkill, _school, _resisted, _blocked, _absorbed, critical = select(12, _G.CombatLogGetCurrentEventInfo())
-            ShowFloatingText(amount, "damage", critical, 50)
-
-        elseif subevent == "SWING_MISSED" or subevent == "SPELL_MISSED" or subevent == "RANGE_MISSED" then
-            local missType = select(15, _G.CombatLogGetCurrentEventInfo())
-            if subevent == "SWING_MISSED" then
-                missType = select(12, _G.CombatLogGetCurrentEventInfo())
-            end
-            if missType then
-                ShowEvent(missType)
-            end
-
-        elseif subevent == "SPELL_HEAL" or subevent == "SPELL_PERIODIC_HEAL" then
-            local _spellId, _spellName, _spellSchool, amount, _overhealing, _absorbed, critical = select(12, _G.CombatLogGetCurrentEventInfo())
-            -- 只顯示對自己的治療
-            if isPlayerDest then
-                ShowFloatingText(amount, "heal", critical, -50)
-            end
+            ShowFloatingText(info[12], "damage", info[18], 50)
+        elseif isSpellDamage then
+            ShowFloatingText(info[15], "damage", info[21], 50)
+        elseif isMiss then
+            GetMissType(info, subevent)
+        elseif isHeal and isPlayerDest then
+            ShowFloatingText(info[15], "heal", info[18], -50)
         end
     end
 
     -- 玩家受到的傷害
     if isPlayerDest then
         if subevent == "SWING_DAMAGE" then
-            local amount, _overkill, _school, _resisted, _blocked, _absorbed, _critical = select(12, _G.CombatLogGetCurrentEventInfo())
-            ShowFloatingText(amount, "damage", false, -50)
-
-        elseif subevent == "SPELL_DAMAGE" or subevent == "SPELL_PERIODIC_DAMAGE" or subevent == "RANGE_DAMAGE" then
-            local _spellId, _spellName, _spellSchool, amount, _overkill, _school, _resisted, _blocked, _absorbed, _critical = select(12, _G.CombatLogGetCurrentEventInfo())
-            ShowFloatingText(amount, "damage", false, -50)
-
-        elseif subevent == "SWING_MISSED" or subevent == "SPELL_MISSED" or subevent == "RANGE_MISSED" then
-            -- 玩家閃避/招架等
-            local missType = select(15, _G.CombatLogGetCurrentEventInfo())
-            if subevent == "SWING_MISSED" then
-                missType = select(12, _G.CombatLogGetCurrentEventInfo())
-            end
-            if missType then
-                ShowEvent(missType)
-            end
-
-        elseif subevent == "SPELL_HEAL" or subevent == "SPELL_PERIODIC_HEAL" then
-            local _spellId, _spellName, _spellSchool, amount, _overhealing, _absorbed, critical = select(12, _G.CombatLogGetCurrentEventInfo())
-            ShowFloatingText(amount, "heal", critical, -50)
-
+            ShowFloatingText(info[12], "damage", false, -50)
+        elseif isSpellDamage then
+            ShowFloatingText(info[15], "damage", false, -50)
+        elseif isMiss then
+            GetMissType(info, subevent)
+        elseif isHeal then
+            ShowFloatingText(info[15], "heal", info[18], -50)
         elseif subevent == "SPELL_ABSORBED" then
-            local amount = select(19, _G.CombatLogGetCurrentEventInfo())
+            -- SPELL_ABSORBED 有兩種格式：
+            -- 法術吸收：[12]=spellId,[13..14]=spell info → amount 在 [22]
+            -- 近戰吸收：[12]=absorbSourceGUID → amount 在 [19]
+            local amount = type(info[12]) == "number" and info[22] or info[19]
             if amount then
                 ShowFloatingText(amount, "absorb", false, -50)
             end
@@ -466,7 +481,10 @@ local function SetupEventFrame()
         elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
             if isInitialized then
                 -- WoW 12.0+: 使用 pcall 包裝以處理 "secret value" 錯誤
-                pcall(ProcessCombatLogEvent)
+                local ok, err = pcall(ProcessCombatLogEvent)
+                if not ok and LunarUI:IsDebugMode() then
+                    LunarUI:Debug("FCT error: " .. tostring(err))
+                end
             end
         end
     end)

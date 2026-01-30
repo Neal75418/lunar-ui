@@ -24,7 +24,7 @@ end
 -- 前向宣告（供後續函數使用）
 local spawnedFrames = {}
 
-local statusBarTexture = "Interface\\Buttons\\WHITE8x8"
+local statusBarTexture = "Interface\\TargetingFrame\\UI-StatusBar"
 local backdropTemplate = {
     bgFile = "Interface\\Buttons\\WHITE8x8",
     edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -674,6 +674,18 @@ local phaseCallbackRegistered = false
 local updateQueue = {}
 local isUpdating = false
 local updateBatchTimer = nil
+local batchFramePool = nil  -- 重用單一框架，避免每批次創建新框架
+
+-- 取消批次更新計時器（支援 C_Timer 和 OnUpdate 兩種機制）
+local function CancelBatchTimer()
+    if not updateBatchTimer then return end
+    if updateBatchTimer.Cancel then
+        updateBatchTimer:Cancel()
+    elseif updateBatchTimer.SetScript then
+        updateBatchTimer:SetScript("OnUpdate", nil)
+    end
+    updateBatchTimer = nil
+end
 
 local function ProcessUpdateBatch()
     updateBatchTimer = nil  -- 清除計時器引用
@@ -713,8 +725,18 @@ local function ProcessUpdateBatch()
             end
         end
 
-        -- 使用可取消的計時器繼續處理下一幀
-        updateBatchTimer = C_Timer.NewTimer(0, ProcessUpdateBatch)
+        -- 使用 OnUpdate 延遲到下一幀繼續處理（重用同一框架避免洩漏）
+        if not updateBatchTimer then
+            if not batchFramePool then
+                batchFramePool = CreateFrame("Frame")
+            end
+            batchFramePool:SetScript("OnUpdate", function(self)
+                self:SetScript("OnUpdate", nil)
+                updateBatchTimer = nil
+                ProcessUpdateBatch()
+            end)
+            updateBatchTimer = batchFramePool
+        end
     end)
 
     -- 確保即使發生錯誤也重設 isUpdating
@@ -728,11 +750,8 @@ local function ProcessUpdateBatch()
 end
 
 local function UpdateAllFramesForPhase()
-    -- 開始新更新前取消任何現有的批次計時器
-    if updateBatchTimer then
-        updateBatchTimer:Cancel()
-        updateBatchTimer = nil
-    end
+    -- 開始新更新前取消任何現有的批次框架
+    CancelBatchTimer()
 
     -- 收集所有需要更新的框架
     wipe(updateQueue)
@@ -1135,11 +1154,8 @@ end
 -- 清理函數：處理 updateQueue 和計時器
 -- 死亡指示器框架現在透過弱引用表追蹤，由 GC 自動清理
 local function CleanupUnitFrames()
-    -- 取消待處理的批次更新計時器
-    if updateBatchTimer then
-        updateBatchTimer:Cancel()
-        updateBatchTimer = nil
-    end
+    -- 取消待處理的批次更新框架
+    CancelBatchTimer()
 
     -- 清除更新佇列
     wipe(updateQueue)

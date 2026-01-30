@@ -19,6 +19,13 @@ LunarUI.backdropTemplate = {
     insets = { left = 1, right = 1, top = 1, bottom = 1 },
 }
 
+-- 圖示用背景模板（無內縮，適合小圖示/按鈕）
+LunarUI.iconBackdropTemplate = {
+    bgFile = "Interface\\Buttons\\WHITE8x8",
+    edgeFile = "Interface\\Buttons\\WHITE8x8",
+    edgeSize = 1,
+}
+
 -- 預設背景顏色
 LunarUI.backdropColors = {
     background = { 0.05, 0.05, 0.05, 0.9 },
@@ -31,7 +38,7 @@ LunarUI.backdropColors = {
 --------------------------------------------------------------------------------
 
 LunarUI.textures = {
-    statusBar = "Interface\\Buttons\\WHITE8x8",
+    statusBar = "Interface\\TargetingFrame\\UI-StatusBar",
     blank = "Interface\\Buttons\\WHITE8x8",
 }
 

@@ -70,6 +70,9 @@ local buffIcons = {}
 local debuffIcons = {}
 local isInitialized = false
 
+-- 淡入動畫
+local FADE_IN_DURATION = 0.2
+
 --------------------------------------------------------------------------------
 -- 輔助函數
 --------------------------------------------------------------------------------
@@ -87,9 +90,8 @@ local function FormatDuration(seconds)
 end
 
 local function ShouldShowBuff(name, duration, _expirationTime, _isStealable, _source)
-    -- 過濾瑣碎 Buff（WoW 12.0 name 可能是密值，用 pcall 保護）
-    local ok, filtered = pcall(function() return FILTERED_BUFF_NAMES[name] end)
-    if ok and filtered then
+    -- 過濾瑣碎 Buff（name 已在呼叫端經 tostring 處理）
+    if FILTERED_BUFF_NAMES[name] then
         return false
     end
 
@@ -97,8 +99,7 @@ local function ShouldShowBuff(name, duration, _expirationTime, _isStealable, _so
     local phase = LunarUI:GetPhase()
     if phase == "NEW" then
         -- 只顯示短期 Buff（可能是戰鬥相關）
-        local okD, dur = pcall(tonumber, duration)
-        dur = (okD and dur) or 0
+        local dur = tonumber(duration) or 0
         if dur == 0 or dur > 300 then
             return false
         end
@@ -120,12 +121,8 @@ local function CreateAuraIcon(parent, _index)
     local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     icon:SetSize(ICON_SIZE, ICON_SIZE)
 
-    -- 背景
-    icon:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    -- 背景（使用共用模板）
+    icon:SetBackdrop(LunarUI.iconBackdropTemplate)
     icon:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
     icon:SetBackdropBorderColor(0.2, 0.2, 0.2, 1)
 
@@ -157,6 +154,16 @@ local function CreateAuraIcon(parent, _index)
     count:SetPoint("TOPRIGHT", -1, -1)
     count:SetTextColor(1, 1, 1)
     icon.count = count
+
+    -- 淡入動畫
+    local fadeIn = icon:CreateAnimationGroup()
+    local fadeAnim = fadeIn:CreateAnimation("Alpha")
+    fadeAnim:SetFromAlpha(0)
+    fadeAnim:SetToAlpha(1)
+    fadeAnim:SetDuration(FADE_IN_DURATION)
+    fadeAnim:SetOrder(1)
+    icon.fadeIn = fadeIn
+    icon.currentAuraName = nil  -- 追蹤目前顯示的光環名稱
 
     -- 減益類型邊框顏色
     icon.debuffType = nil
@@ -214,11 +221,11 @@ local function CreateAuraFrame(name, anchorPoint, offsetX, offsetY)
 end
 
 local function SetupFrames()
-    -- 增益框架 - 螢幕右上
-    buffFrame = CreateAuraFrame("LunarUI_BuffFrame", "TOPRIGHT", -200, -30)
+    -- 增益框架 - 螢幕右上，小地圖左側（小地圖佔 TOPRIGHT ~210px 寬）
+    buffFrame = CreateAuraFrame("LunarUI_BuffFrame", "TOPRIGHT", -215, -15)
 
     -- 減益框架 - 增益下方
-    debuffFrame = CreateAuraFrame("LunarUI_DebuffFrame", "TOPRIGHT", -200, -100)
+    debuffFrame = CreateAuraFrame("LunarUI_DebuffFrame", "TOPRIGHT", -215, -85)
 
     -- 建立圖示
     for i = 1, MAX_BUFFS do
@@ -240,13 +247,15 @@ end
 -- 更新函數
 --------------------------------------------------------------------------------
 
-local function UpdateBuffs()
-    if not buffFrame or not buffFrame:IsShown() then return end
+local function UpdateAuraGroup(frame, icons, maxIcons, isDebuff)
+    if not frame or not frame:IsShown() then return end
 
+    local getDataFn = isDebuff and C_UnitAuras.GetDebuffDataByIndex or C_UnitAuras.GetBuffDataByIndex
+    local filter = isDebuff and "HARMFUL" or "HELPFUL"
     local visibleIndex = 0
 
     for i = 1, 40 do
-        local auraData = C_UnitAuras.GetBuffDataByIndex("player", i)
+        local auraData = getDataFn("player", i)
         if not auraData then break end
 
         local name = tostring(auraData.name or "")
@@ -255,16 +264,30 @@ local function UpdateBuffs()
         local duration = tonumber(tostring(auraData.duration or 0)) or 0
         local expirationTime = tonumber(tostring(auraData.expirationTime or 0)) or 0
         local source = auraData.sourceUnit
-        local isStealable = auraData.isStealable
 
-        if ShouldShowBuff(name, duration, expirationTime, isStealable, source) then
+        local debuffType = isDebuff and tostring(auraData.dispelName or "") or nil
+        local shouldShow
+        if isDebuff then
+            shouldShow = ShouldShowDebuff(name, duration, debuffType, source)
+        else
+            shouldShow = ShouldShowBuff(name, duration, expirationTime, auraData.isStealable, source)
+        end
+
+        if shouldShow then
             visibleIndex = visibleIndex + 1
 
-            if visibleIndex <= MAX_BUFFS then
-                local iconFrame = buffIcons[visibleIndex]
+            if visibleIndex <= maxIcons then
+                local iconFrame = icons[visibleIndex]
                 if iconFrame then
                     iconFrame.texture:SetTexture(icon)
-                    iconFrame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+
+                    -- 邊框顏色：減益依類型著色，增益用灰色
+                    if isDebuff then
+                        local color = PRIORITY_DEBUFF_TYPES[debuffType] or PRIORITY_DEBUFF_TYPES[""]
+                        iconFrame:SetBackdropBorderColor(color[1], color[2], color[3], 1)
+                    else
+                        iconFrame:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
+                    end
 
                     -- 堆疊
                     if count > 1 then
@@ -291,95 +314,35 @@ local function UpdateBuffs()
 
                     iconFrame.auraData = {
                         index = i,
-                        filter = "HELPFUL",
+                        filter = filter,
                     }
-                    iconFrame:Show()
-                end
-            end
-        end
-    end
 
-    -- 隱藏多餘的圖示
-    for i = visibleIndex + 1, MAX_BUFFS do
-        if buffIcons[i] then
-            buffIcons[i]:Hide()
-        end
-    end
-end
-
-local function UpdateDebuffs()
-    if not debuffFrame or not debuffFrame:IsShown() then return end
-
-    local visibleIndex = 0
-
-    for i = 1, 40 do
-        local auraData = C_UnitAuras.GetDebuffDataByIndex("player", i)
-        if not auraData then break end
-
-        local name = tostring(auraData.name or "")
-        local icon = auraData.icon
-        local count = tonumber(tostring(auraData.applications or 0)) or 0
-        local duration = tonumber(tostring(auraData.duration or 0)) or 0
-        local expirationTime = tonumber(tostring(auraData.expirationTime or 0)) or 0
-        local debuffType = tostring(auraData.dispelName or "")
-        local source = auraData.sourceUnit
-
-        if ShouldShowDebuff(name, duration, debuffType, source) then
-            visibleIndex = visibleIndex + 1
-
-            if visibleIndex <= MAX_DEBUFFS then
-                local iconFrame = debuffIcons[visibleIndex]
-                if iconFrame then
-                    iconFrame.texture:SetTexture(icon)
-
-                    -- 減益類型邊框顏色
-                    local color = PRIORITY_DEBUFF_TYPES[debuffType] or PRIORITY_DEBUFF_TYPES[""]
-                    iconFrame:SetBackdropBorderColor(color[1], color[2], color[3], 1)
-
-                    -- 堆疊
-                    if count > 1 then
-                        iconFrame.count:SetText(count)
-                        iconFrame.count:Show()
-                    else
-                        iconFrame.count:Hide()
-                    end
-
-                    -- 持續時間
-                    if duration > 0 and expirationTime > 0 then
-                        local remaining = expirationTime - GetTime()
-                        if remaining > 0 then
-                            iconFrame.duration:SetText(FormatDuration(remaining))
-                            iconFrame.cooldown:SetCooldown(expirationTime - duration, duration)
-                        else
-                            iconFrame.duration:SetText("")
-                            iconFrame.cooldown:Clear()
+                    -- 淡入動畫：新出現的光環觸發
+                    if iconFrame.currentAuraName ~= name then
+                        iconFrame.currentAuraName = name
+                        if iconFrame.fadeIn and not iconFrame:IsShown() then
+                            iconFrame.fadeIn:Play()
                         end
-                    else
-                        iconFrame.duration:SetText("")
-                        iconFrame.cooldown:Clear()
                     end
 
-                    iconFrame.auraData = {
-                        index = i,
-                        filter = "HARMFUL",
-                    }
                     iconFrame:Show()
                 end
             end
         end
     end
 
-    -- 隱藏多餘的圖示
-    for i = visibleIndex + 1, MAX_DEBUFFS do
-        if debuffIcons[i] then
-            debuffIcons[i]:Hide()
+    -- 隱藏多餘的圖示並清除追蹤
+    for i = visibleIndex + 1, maxIcons do
+        if icons[i] then
+            icons[i]:Hide()
+            icons[i].currentAuraName = nil
         end
     end
 end
 
 local function UpdateAuras()
-    UpdateBuffs()
-    UpdateDebuffs()
+    UpdateAuraGroup(buffFrame, buffIcons, MAX_BUFFS, false)
+    UpdateAuraGroup(debuffFrame, debuffIcons, MAX_DEBUFFS, true)
 end
 
 --------------------------------------------------------------------------------
@@ -403,8 +366,40 @@ end
 -- 初始化
 --------------------------------------------------------------------------------
 
+local function HideBlizzardBuffFrames()
+    -- 隱藏暴雪獨立的增益/減益框架（右上角）
+    -- 注意：oUF 只隱藏 PlayerFrame.BuffFrame（頭像附屬的），不隱藏全域 BuffFrame
+    local blizzardBuffFrame = _G.BuffFrame
+    if blizzardBuffFrame then
+        pcall(function() blizzardBuffFrame:UnregisterAllEvents() end)
+        pcall(function() blizzardBuffFrame:Hide() end)
+        pcall(function() blizzardBuffFrame:SetAlpha(0) end)
+        -- 防止暴雪代碼重新顯示
+        pcall(function()
+            hooksecurefunc(blizzardBuffFrame, "Show", function(self)
+                self:Hide()
+            end)
+        end)
+    end
+
+    local blizzardDebuffFrame = _G.DebuffFrame
+    if blizzardDebuffFrame then
+        pcall(function() blizzardDebuffFrame:UnregisterAllEvents() end)
+        pcall(function() blizzardDebuffFrame:Hide() end)
+        pcall(function() blizzardDebuffFrame:SetAlpha(0) end)
+        pcall(function()
+            hooksecurefunc(blizzardDebuffFrame, "Show", function(self)
+                self:Hide()
+            end)
+        end)
+    end
+end
+
 local function Initialize()
     if isInitialized then return end
+
+    -- 先隱藏暴雪原生 Buff 框架，避免重複顯示
+    HideBlizzardBuffFrames()
 
     SetupFrames()
 
@@ -423,18 +418,34 @@ end
 -- 事件處理
 --------------------------------------------------------------------------------
 
+-- 停用：不再註冊事件
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:RegisterEvent("UNIT_AURA")
+-- eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+-- eventFrame:RegisterEvent("UNIT_AURA")
+
+-- 效能優化：UNIT_AURA 節流（戰鬥中每秒可觸發數十次）
+local auraDirty = false
+local AURA_THROTTLE = 0.1  -- 最少間隔 0.1 秒
+local lastAuraUpdate = 0
 
 eventFrame:SetScript("OnEvent", function(_self, event, arg1)
     if event == "PLAYER_ENTERING_WORLD" then
         C_Timer.After(1.0, Initialize)
     elseif event == "UNIT_AURA" then
         if arg1 == "player" and isInitialized then
-            UpdateAuras()
+            auraDirty = true
         end
     end
+end)
+
+-- 使用 OnUpdate 做節流更新
+eventFrame:SetScript("OnUpdate", function(_self, _elapsed)
+    if not auraDirty then return end
+    local now = GetTime()
+    if now - lastAuraUpdate < AURA_THROTTLE then return end
+    auraDirty = false
+    lastAuraUpdate = now
+    UpdateAuras()
 end)
 
 --------------------------------------------------------------------------------
@@ -462,7 +473,7 @@ function LunarUI.CleanupAuraFrames()
     eventFrame:UnregisterAllEvents()
 end
 
--- 掛鉤至插件啟用
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(1.5, Initialize)
-end)
+-- 停用自訂 Buff/Debuff 框架，使用暴雪內建 BuffFrame
+-- hooksecurefunc(LunarUI, "OnEnable", function()
+--     C_Timer.After(1.5, Initialize)
+-- end)

@@ -13,28 +13,28 @@ local LunarUI = Engine.LunarUI
 
 local DEFAULT_TOKENS = {
     NEW = {
-        alpha = 0.40,           -- 低可見度
-        scale = 0.95,           -- 略微縮小
-        contrast = 0.6,         -- 低對比
-        glowIntensity = 0,      -- 無光暈
+        alpha = 1.00,           -- 停用月相：全部顯示
+        scale = 1.00,
+        contrast = 1.0,
+        glowIntensity = 0,
     },
     WAXING = {
-        alpha = 0.65,           -- 逐漸增強
-        scale = 0.98,           -- 接近全尺寸
-        contrast = 0.8,         -- 中等對比
-        glowIntensity = 0.3,    -- 微弱光暈
+        alpha = 1.00,
+        scale = 1.00,
+        contrast = 1.0,
+        glowIntensity = 0,
     },
     FULL = {
-        alpha = 1.00,           -- 完全可見
-        scale = 1.00,           -- 全尺寸
-        contrast = 1.0,         -- 最大對比
-        glowIntensity = 0.8,    -- 強烈光暈
+        alpha = 1.00,
+        scale = 1.00,
+        contrast = 1.0,
+        glowIntensity = 0,
     },
     WANING = {
-        alpha = 0.75,           -- 漸弱
-        scale = 0.98,           -- 略微縮小
-        contrast = 0.85,        -- 維持良好對比
-        glowIntensity = 0.4,    -- 減弱光暈
+        alpha = 1.00,
+        scale = 1.00,
+        contrast = 1.0,
+        glowIntensity = 0,
     },
 }
 
@@ -201,10 +201,10 @@ LunarUI.DEFAULT_TOKENS = DEFAULT_TOKENS
     各 HUD 模組應使用此共用常數，而非各自定義
 ]]
 LunarUI.PHASE_ALPHA = {
-    NEW = 0.4,
-    WAXING = 0.7,
+    NEW = 1.0,      -- 停用月相：全部顯示
+    WAXING = 1.0,
     FULL = 1.0,
-    WANING = 0.8,
+    WANING = 1.0,
 }
 
 --[[
@@ -219,9 +219,21 @@ LunarUI.PHASE_ALPHA = {
 function LunarUI:ApplyPhaseAlpha(frame, configKey, customAlpha)
     if not frame then return 0 end
 
-    local phase = self:GetPhase()
-    local phaseAlpha = customAlpha or self.PHASE_ALPHA
-    local alpha = phaseAlpha[phase] or 1
+    local alpha
+    if customAlpha then
+        -- 自訂透明度表（如 PerformanceMonitor）：依月相查表
+        local phase = self:GetPhase()
+        alpha = customAlpha[phase] or 1
+    else
+        -- 優先使用插值中的 tokens（平滑過渡），否則回退到固定表
+        local tokens = self.tokens
+        if tokens and tokens.alpha and type(tokens.alpha) == "number" then
+            alpha = tokens.alpha
+        else
+            local phase = self:GetPhase()
+            alpha = self.PHASE_ALPHA[phase] or 1
+        end
+    end
 
     -- 檢查 HUD 設定
     local db = self.db and self.db.profile and self.db.profile.hud

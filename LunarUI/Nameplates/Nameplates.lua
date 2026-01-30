@@ -25,13 +25,8 @@ end
 -- Constants
 --------------------------------------------------------------------------------
 
-local statusBarTexture = "Interface\\Buttons\\WHITE8x8"
-local backdropTemplate = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-}
+local statusBarTexture = "Interface\\TargetingFrame\\UI-StatusBar"
+local backdropTemplate = LunarUI.backdropTemplate
 
 -- Classification colors
 local CLASSIFICATION_COLORS = {
@@ -292,6 +287,19 @@ local function CreateClassificationIndicator(frame)
     return class
 end
 
+--[[ Classification Glow (elite/rare/boss subtle outer glow) ]]
+local function CreateClassificationGlow(frame)
+    local glow = frame:CreateTexture(nil, "BACKGROUND", nil, -2)
+    glow:SetTexture("Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64")
+    glow:SetBlendMode("ADD")
+    glow:SetPoint("TOPLEFT", -8, 8)
+    glow:SetPoint("BOTTOMRIGHT", 8, -8)
+    glow:SetAlpha(0)
+    glow:Hide()
+    frame.ClassificationGlow = glow
+    return glow
+end
+
 --[[ Raid Target Icon ]]
 local function CreateRaidTargetIndicator(frame)
     local icon = frame:CreateTexture(nil, "OVERLAY")
@@ -389,6 +397,7 @@ local function EnemyNameplateLayout(frame, _unit)
 
     CreateThreatIndicator(frame)
     CreateClassificationIndicator(frame)
+    CreateClassificationGlow(frame)
     CreateRaidTargetIndicator(frame)
     CreateTargetIndicator(frame)
 
@@ -464,17 +473,31 @@ local function Nameplate_OnShow(frame)
     -- Update target indicator
     UpdateTargetIndicator(frame)
 
-    -- Update classification highlight
+    -- Update classification highlight + glow
     if frame.unit then
         local classification = GetUnitClassification(frame.unit)
         local db = LunarUI.db and LunarUI.db.profile.nameplates
+        local isImportant = IsImportantTarget(frame.unit)
 
         if db and db.highlight then
             local color = CLASSIFICATION_COLORS[classification]
-            if color and IsImportantTarget(frame.unit) then
+            if color and isImportant then
                 if frame.Backdrop then
                     frame.Backdrop:SetBackdropBorderColor(color.r, color.g, color.b, 1)
                 end
+            end
+        end
+
+        -- Show classification glow for important targets
+        if frame.ClassificationGlow then
+            if isImportant then
+                local color = CLASSIFICATION_COLORS[classification]
+                if color then
+                    frame.ClassificationGlow:SetVertexColor(color.r, color.g, color.b, 0.4)
+                    frame.ClassificationGlow:Show()
+                end
+            else
+                frame.ClassificationGlow:Hide()
             end
         end
     end
@@ -485,6 +508,9 @@ local function Nameplate_OnHide(frame)
     -- Clean up
     if frame.TargetIndicator then
         frame.TargetIndicator:Hide()
+    end
+    if frame.ClassificationGlow then
+        frame.ClassificationGlow:Hide()
     end
     -- Fix #4: Remove frame reference when hidden
     nameplateFrames[frame] = nil

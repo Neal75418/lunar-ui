@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, undefined-global, unused-local
 --[[
     LunarUI - 月相管理器
     驅動整個 UI 行為的核心狀態機
@@ -36,29 +36,19 @@ local WANING_DURATION = 10  -- 下弦月持續秒數
     由 OnEnable 呼叫
 ]]
 function LunarUI:InitPhaseManager()
-    -- 根據戰鬥狀態決定初始月相
-    if InCombatLockdown() then
-        currentPhase = self.PHASES.FULL
-    else
-        currentPhase = self.PHASES.NEW
-    end
+    -- 停用月相系統：固定為 FULL，不註冊任何事件
+    currentPhase = self.PHASES.FULL
 
     -- 安全地更新 Token（資料庫可能尚未完全初始化）
     if self.UpdateTokens then
         self:UpdateTokens()
     end
 
-    -- 註冊戰鬥事件
-    self:RegisterEvent("PLAYER_REGEN_DISABLED", "OnEnterCombat")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED", "OnLeaveCombat")
-
-    -- 註冊 WAXING 感知事件
-    self:RegisterEvent("PLAYER_TARGET_CHANGED", "CheckWaxingCondition")
-    self:RegisterEvent("PLAYER_FOCUS_CHANGED", "CheckWaxingCondition")
-    self:RegisterEvent("UNIT_SPELLCAST_START", "OnSpellCast")
+    -- 通知所有模組使用 FULL 狀態
+    self:NotifyPhaseChange(nil, self.PHASES.FULL)
 
     -- 除錯輸出
-    self:Debug("月相管理器初始化完成，目前月相：" .. currentPhase)
+    self:Debug("月相管理器初始化完成（已停用），固定月相：FULL")
 end
 
 --------------------------------------------------------------------------------

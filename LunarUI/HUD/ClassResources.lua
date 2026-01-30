@@ -71,9 +71,9 @@ local RESOURCE_COLORS = {
 }
 
 -- 框架大小
-local ICON_SIZE = 20
-local ICON_SPACING = 3
-local BAR_HEIGHT = 8
+local ICON_SIZE = 26
+local ICON_SPACING = 4
+local BAR_HEIGHT = 10
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -142,12 +142,8 @@ local function CreateResourceIcon(parent, _index)
     local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     icon:SetSize(ICON_SIZE, ICON_SIZE)
 
-    -- 背景
-    icon:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
+    -- 背景（使用共用模板）
+    icon:SetBackdrop(LunarUI.iconBackdropTemplate)
     icon:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
     icon:SetBackdropBorderColor(0.2, 0.2, 0.2, 1)
 
@@ -164,8 +160,8 @@ local function CreateResourceIcon(parent, _index)
     local glow = icon:CreateTexture(nil, "OVERLAY")
     glow:SetTexture("Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64")
     glow:SetBlendMode("ADD")
-    glow:SetPoint("TOPLEFT", -4, 4)
-    glow:SetPoint("BOTTOMRIGHT", 4, -4)
+    glow:SetPoint("TOPLEFT", -8, 8)
+    glow:SetPoint("BOTTOMRIGHT", 8, -8)
     glow:SetVertexColor(1, 1, 1, 0)
     glow:Hide()
     icon.glow = glow
@@ -176,7 +172,7 @@ end
 local function CreateResourceBar(parent)
     local bar = CreateFrame("StatusBar", nil, parent)
     bar:SetSize(ICON_SIZE * 5 + ICON_SPACING * 4, BAR_HEIGHT)
-    bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+    bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
     bar:SetMinMaxValues(0, 100)
     bar:SetValue(0)
 
@@ -251,7 +247,7 @@ local function UpdateResourceIcons(current, max, color)
             if i <= current then
                 icon.fill:SetVertexColor(color[1], color[2], color[3])
                 icon.fill:Show()
-                icon.glow:SetVertexColor(color[1], color[2], color[3], 0.5)
+                icon.glow:SetVertexColor(color[1], color[2], color[3], 0.7)
                 icon.glow:Show()
             else
                 icon.fill:Hide()
@@ -286,10 +282,11 @@ local function UpdateResources()
 
     if resourceType == POWER_TYPE_RUNES then
         -- 符文需要特殊處理
+        -- WoW 12.0：GetRuneCooldown 可能返回密值，用 pcall 保護
         local ready = 0
         for i = 1, 6 do
-            local _start, _duration, runeReady = GetRuneCooldown(i)
-            if runeReady then
+            local ok, _start, _duration, runeReady = pcall(GetRuneCooldown, i)
+            if ok and runeReady then
                 ready = ready + 1
             end
         end

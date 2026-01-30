@@ -58,6 +58,23 @@ local function StartPulseAnimation()
         if not phaseIndicator or not phaseIndicator:IsShown() then return end
 
         pulseTime = pulseTime + elapsed
+
+        -- Crossfade moon icon transition
+        if phaseIndicator.crossfadeStart and phaseIndicator.crossfadeStart > 0 then
+            local cfElapsed = GetTime() - phaseIndicator.crossfadeStart
+            local cfProgress = cfElapsed / phaseIndicator.crossfadeDuration
+            if cfProgress >= 1 then
+                -- Crossfade complete
+                phaseIndicator.moon:SetAlpha(1)
+                phaseIndicator.moonOld:SetAlpha(0)
+                phaseIndicator.crossfadeStart = 0
+            else
+                -- Smooth crossfade
+                phaseIndicator.moon:SetAlpha(cfProgress)
+                phaseIndicator.moonOld:SetAlpha(1 - cfProgress)
+            end
+        end
+
         local phase = LunarUI:GetPhase()
 
         if phase == "FULL" then
@@ -153,16 +170,26 @@ local function CreatePhaseIndicator()
     glow:SetVertexColor(0.7, 0.8, 1.0, 0)
     phaseIndicator.glow = glow
 
-    -- Moon icon
-    local moon = phaseIndicator:CreateTexture(nil, "ARTWORK")
+    -- Moon icon (old, for crossfade out)
+    local moonOld = phaseIndicator:CreateTexture(nil, "ARTWORK", nil, 0)
+    moonOld:SetSize(32, 32)
+    moonOld:SetPoint("CENTER")
+    moonOld:SetTexture(MOON_ICONS.NEW)
+    moonOld:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    moonOld:SetAlpha(0)
+    phaseIndicator.moonOld = moonOld
+
+    -- Moon icon (current, for crossfade in)
+    local moon = phaseIndicator:CreateTexture(nil, "ARTWORK", nil, 1)
     moon:SetSize(32, 32)
     moon:SetPoint("CENTER")
     moon:SetTexture(MOON_ICONS.NEW)
-    moon:SetTexCoord(0.08, 0.92, 0.08, 0.92)  -- Trim icon edges
+    moon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     phaseIndicator.moon = moon
 
-    -- Mask to make circular (if supported)
-    -- moon:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+    -- Crossfade state
+    phaseIndicator.crossfadeStart = 0
+    phaseIndicator.crossfadeDuration = 0.4
 
     -- Inner highlight (top-left light source)
     local highlight = phaseIndicator:CreateTexture(nil, "OVERLAY")
@@ -267,7 +294,20 @@ local function UpdatePhaseIndicator(_oldPhase, newPhase)
     local glowIntensity = PHASE_GLOW[newPhase] or 0
     local moonIcon = MOON_ICONS[newPhase] or MOON_ICONS.NEW
 
-    -- Update moon icon and color
+    -- Crossfade moon icon: old icon fades out, new icon fades in
+    local currentIcon = phaseIndicator.moon:GetTexture()
+    if currentIcon and currentIcon ~= moonIcon then
+        -- Copy current state to moonOld for fade-out
+        phaseIndicator.moonOld:SetTexture(currentIcon)
+        local cr, cg, cb, ca = phaseIndicator.moon:GetVertexColor()
+        phaseIndicator.moonOld:SetVertexColor(cr, cg, cb, ca)
+        phaseIndicator.moonOld:SetAlpha(1)
+        -- Start crossfade
+        phaseIndicator.crossfadeStart = GetTime()
+        phaseIndicator.moon:SetAlpha(0)
+    end
+
+    -- Update new moon icon and color
     phaseIndicator.moon:SetTexture(moonIcon)
     phaseIndicator.moon:SetVertexColor(colors.r, colors.g, colors.b, colors.a)
 
@@ -389,7 +429,7 @@ function LunarUI.CleanupPhaseIndicator()
     pulseTime = 0
 end
 
--- Initialize on addon enable
-hooksecurefunc(LunarUI, "OnEnable", function(_self)
-    LunarUI:InitPhaseIndicator()
-end)
+-- 停用月相系統時不初始化 PhaseIndicator
+-- hooksecurefunc(LunarUI, "OnEnable", function(_self)
+--     LunarUI:InitPhaseIndicator()
+-- end)
