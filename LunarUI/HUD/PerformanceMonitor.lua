@@ -219,6 +219,9 @@ end
 local function Initialize()
     CreatePerfFrame()
 
+    -- 註冊至框架移動器
+    LunarUI:RegisterMovableFrame("PerformanceMonitor", perfFrame, "效能監控")
+
     -- 註冊月相變化回呼
     LunarUI:RegisterPhaseCallback(OnPhaseChanged)
 

@@ -59,6 +59,7 @@ HUD\FloatingCombatText.lua
 HUD\AuraFrames.lua
 
 # Modules (Non-combat UI)
+Modules\FrameMover.lua
 Modules\Minimap.lua
 Modules\Tooltip.lua
 Modules\Chat.lua

@@ -196,7 +196,20 @@
       "BANK_CONTAINER",
       "REAGENTBANK_CONTAINER",
       "DEFAULT_CHAT_FRAME",
-      "FACTION_BAR_COLORS"
+      "FACTION_BAR_COLORS",
+      "GetScreenWidth",
+      "GetScreenHeight",
+      "unpack",
+      "MiniMapTrackingBackground",
+      "HybridMinimap",
+      "GetMinimapShape",
+      "GetInventoryItemLink",
+      "bit",
+      "Ambiguate",
+      "PlaySoundFile",
+      "UIFrameFlash",
+      "GetNumSpecializations",
+      "GetSpecializationInfo"
     ],
     "disable": [
       "lowercase-global"

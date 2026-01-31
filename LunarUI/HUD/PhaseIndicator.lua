@@ -59,6 +59,9 @@ local function StartPulseAnimation()
 
         pulseTime = pulseTime + elapsed
 
+        -- 全域 HUD 縮放（與動畫縮放組合）
+        local hudScale = LunarUI.db and LunarUI.db.profile.hud.scale or 1.0
+
         -- Crossfade moon icon transition
         if phaseIndicator.crossfadeStart and phaseIndicator.crossfadeStart > 0 then
             local cfElapsed = GetTime() - phaseIndicator.crossfadeStart
@@ -87,9 +90,9 @@ local function StartPulseAnimation()
                 phaseIndicator.glow:SetAlpha(glowAlpha)
             end
 
-            -- Subtle scale pulse
+            -- Subtle scale pulse (composed with HUD scale)
             local scale = 1 + 0.03 * pulse
-            phaseIndicator:SetScale(scale)
+            phaseIndicator:SetScale(hudScale * scale)
 
             -- Rotate glow slightly
             if phaseIndicator.glowOuter then
@@ -104,7 +107,7 @@ local function StartPulseAnimation()
             if phaseIndicator.glow then
                 phaseIndicator.glow:SetAlpha(glowAlpha)
             end
-            phaseIndicator:SetScale(1)
+            phaseIndicator:SetScale(hudScale)
         elseif phase == "WANING" then
             -- Slow fade feeling
             local fade = (math.sin(pulseTime * 0.8) + 1) / 2
@@ -113,13 +116,13 @@ local function StartPulseAnimation()
             if phaseIndicator.glow then
                 phaseIndicator.glow:SetAlpha(glowAlpha)
             end
-            phaseIndicator:SetScale(1)
+            phaseIndicator:SetScale(hudScale)
         else
             -- NEW phase - no animation
             if phaseIndicator.glow then
                 phaseIndicator.glow:SetAlpha(0)
             end
-            phaseIndicator:SetScale(1)
+            phaseIndicator:SetScale(hudScale)
         end
     end)
 end
@@ -385,6 +388,11 @@ end
 function LunarUI:InitPhaseIndicator()
     CreatePhaseIndicator()
 
+    -- 註冊至框架移動器
+    if phaseIndicator then
+        self:RegisterMovableFrame("PhaseIndicator", phaseIndicator, "月相指示器")
+    end
+
     -- Register for phase changes
     self:RegisterPhaseCallback(UpdatePhaseIndicator)
 
@@ -429,7 +437,7 @@ function LunarUI.CleanupPhaseIndicator()
     pulseTime = 0
 end
 
--- 停用月相系統時不初始化 PhaseIndicator
--- hooksecurefunc(LunarUI, "OnEnable", function(_self)
---     LunarUI:InitPhaseIndicator()
--- end)
+-- 掛鉤至插件啟用
+hooksecurefunc(LunarUI, "OnEnable", function(_self)
+    LunarUI:InitPhaseIndicator()
+end)

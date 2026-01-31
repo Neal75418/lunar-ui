@@ -82,6 +82,8 @@ L["BankSearchError"] = "Bank search error"
 
 -- Chat
 L["PressToCopyURL"] = "Press Ctrl+C to copy URL:"
+L["KeywordAlert"] = "Keyword Alert"
+L["SpamFiltered"] = "Spam message filtered"
 
 -- Config
 L["SettingsImported"] = "Settings imported successfully"

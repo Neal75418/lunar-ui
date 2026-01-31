@@ -57,16 +57,18 @@ local keybindMode = false
 -- 輔助函數
 --------------------------------------------------------------------------------
 
-local function CreateBarFrame(name, numButtons, parent)
+local function CreateBarFrame(name, numButtons, parent, orientation)
     local buttonSize = GetButtonSize()
     local buttonSpacing = GetButtonSpacing()
+    orientation = orientation or "horizontal"
 
     -- 使用 SecureHandlerStateTemplate 以支援 WrapScript（LAB 需要）
     local frame = CreateFrame("Frame", name, parent or UIParent, "SecureHandlerStateTemplate")
-    frame:SetSize(
-        numButtons * buttonSize + (numButtons - 1) * buttonSpacing,
-        buttonSize
-    )
+    if orientation == "vertical" then
+        frame:SetSize(buttonSize, numButtons * buttonSize + (numButtons - 1) * buttonSpacing)
+    else
+        frame:SetSize(numButtons * buttonSize + (numButtons - 1) * buttonSpacing, buttonSize)
+    end
     frame:SetClampedToScreen(true)
     frame:SetMovable(true)
     frame:EnableMouse(false)
@@ -79,13 +81,39 @@ local function CreateBarFrame(name, numButtons, parent)
     local alpha = LunarUI.db and LunarUI.db.profile.actionbars.alpha or 1.0
     frame:SetAlpha(alpha)
 
-    -- 背景（可選，預設隱藏）
-    local bg = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    bg:SetPoint("TOPLEFT", -4, 4)
-    bg:SetPoint("BOTTOMRIGHT", 4, -4)
-    bg:SetBackdrop(backdropTemplate)
-    bg:SetBackdropColor(0.05, 0.05, 0.05, 0.5)
-    bg:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.8)
+    -- 背景 / 解鎖 mover（掛在 UIParent 下，避免繼承 bar 的 alpha 和 secure 框架限制）
+    -- 使用純 Texture 而非 BackdropTemplate，確保在所有 WoW 版本下可見
+    local bg = CreateFrame("Frame", nil, UIParent)
+    bg:SetPoint("TOPLEFT", frame, "TOPLEFT", -4, 4)
+    bg:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 4, -4)
+    bg:SetFrameStrata("TOOLTIP")  -- 最高層級，確保可見
+    bg:SetFrameLevel(0)
+    -- 背景材質
+    local bgTex = bg:CreateTexture(nil, "BACKGROUND")
+    bgTex:SetAllPoints()
+    bgTex:SetColorTexture(0.1, 0.2, 0.5, 0.6)
+    bg._bgTex = bgTex
+    -- 邊框材質（四邊各 1px）
+    local borderTop = bg:CreateTexture(nil, "BORDER")
+    borderTop:SetHeight(1)
+    borderTop:SetPoint("TOPLEFT")
+    borderTop:SetPoint("TOPRIGHT")
+    borderTop:SetColorTexture(0.4, 0.6, 1.0, 1)
+    local borderBottom = bg:CreateTexture(nil, "BORDER")
+    borderBottom:SetHeight(1)
+    borderBottom:SetPoint("BOTTOMLEFT")
+    borderBottom:SetPoint("BOTTOMRIGHT")
+    borderBottom:SetColorTexture(0.4, 0.6, 1.0, 1)
+    local borderLeft = bg:CreateTexture(nil, "BORDER")
+    borderLeft:SetWidth(1)
+    borderLeft:SetPoint("TOPLEFT")
+    borderLeft:SetPoint("BOTTOMLEFT")
+    borderLeft:SetColorTexture(0.4, 0.6, 1.0, 1)
+    local borderRight = bg:CreateTexture(nil, "BORDER")
+    borderRight:SetWidth(1)
+    borderRight:SetPoint("TOPRIGHT")
+    borderRight:SetPoint("BOTTOMRIGHT")
+    borderRight:SetColorTexture(0.4, 0.6, 1.0, 1)
     bg:Hide()
     frame.bg = bg
 
@@ -239,10 +267,11 @@ local function CreateActionBar(id, page)
     local numButtons = db.buttons or 12
     local buttonSize = GetButtonSize()
     local buttonSpacing = GetButtonSpacing()
+    local orientation = db.orientation or "horizontal"
     local name = "LunarUI_ActionBar" .. id
 
     -- 建立動作條框架
-    local bar = CreateBarFrame(name, numButtons, UIParent)
+    local bar = CreateBarFrame(name, numButtons, UIParent, orientation)
     bar.id = id
     bar.page = page
     bar.dbKey = "bar" .. id
@@ -259,7 +288,11 @@ local function CreateActionBar(id, page)
         local button = LAB:CreateButton(i, buttonName, bar, nil)
 
         button:SetSize(buttonSize, buttonSize)
-        button:SetPoint("LEFT", bar, "LEFT", (i - 1) * (buttonSize + buttonSpacing), 0)
+        if orientation == "vertical" then
+            button:SetPoint("TOP", bar, "TOP", 0, -((i - 1) * (buttonSize + buttonSpacing)))
+        else
+            button:SetPoint("LEFT", bar, "LEFT", (i - 1) * (buttonSize + buttonSpacing), 0)
+        end
 
         -- 設定此動作條的頁面
         button:SetState(0, "action", (page - 1) * 12 + i)
@@ -466,6 +499,237 @@ local function RegisterBarPhaseCallback()
     LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
         UpdateAllBarsForPhase()
     end)
+end
+
+--------------------------------------------------------------------------------
+-- 非戰鬥淡入淡出
+--------------------------------------------------------------------------------
+
+local isInCombat = false
+local isBarsUnlocked = false  -- 解鎖時完全停用淡出
+local fadeState = {}  -- { [barKey] = { alpha, targetAlpha, hovered, timer } }
+
+local function GetFadeSettings()
+    local db = LunarUI.db and LunarUI.db.profile.actionbars
+    if not db then return false, 0.3, 2.0, 0.4 end
+    return db.fadeEnabled ~= false,
+           db.fadeAlpha or 0.3,
+           db.fadeDelay or 2.0,
+           db.fadeDuration or 0.4
+end
+
+local function IsBarFadeEnabled(barKey)
+    if isBarsUnlocked then return false end
+    local globalEnabled = GetFadeSettings()
+    if not globalEnabled then return false end
+
+    -- 每條 bar 可獨立覆蓋
+    local db = LunarUI.db and LunarUI.db.profile.actionbars
+    if db and db[barKey] and db[barKey].fadeEnabled ~= nil then
+        return db[barKey].fadeEnabled
+    end
+    return true  -- 預設跟隨全域設定
+end
+
+local function SetBarAlpha(bar, alpha)
+    if not bar then return end
+    -- 不在戰鬥中才修改透明度（安全考量）
+    local baseAlpha = LunarUI.db and LunarUI.db.profile.actionbars.alpha or 1.0
+    bar:SetAlpha(alpha * baseAlpha)
+end
+
+-- 平滑動畫框架
+local fadeAnimFrame = CreateFrame("Frame")
+local fadeAnimActive = false
+
+local function UpdateFadeAnimations(_self, elapsed)
+    local anyActive = false
+    local _, _, _, fadeDuration = GetFadeSettings()
+
+    for barKey, state in pairs(fadeState) do
+        if state.alpha ~= state.targetAlpha then
+            anyActive = true
+            local bar = bars[barKey]
+            if bar then
+                local speed = (1.0 / math.max(fadeDuration, 0.05)) * elapsed
+                if state.alpha < state.targetAlpha then
+                    state.alpha = math.min(state.alpha + speed, state.targetAlpha)
+                else
+                    state.alpha = math.max(state.alpha - speed, state.targetAlpha)
+                end
+                SetBarAlpha(bar, state.alpha)
+            end
+        end
+    end
+
+    if not anyActive then
+        fadeAnimActive = false
+        fadeAnimFrame:SetScript("OnUpdate", nil)
+    end
+end
+
+local function StartFadeAnimation()
+    if fadeAnimActive then return end
+    fadeAnimActive = true
+    fadeAnimFrame:SetScript("OnUpdate", UpdateFadeAnimations)
+end
+
+local function FadeBarTo(barKey, targetAlpha)
+    if not fadeState[barKey] then
+        fadeState[barKey] = { alpha = 1.0, targetAlpha = 1.0, hovered = false, timer = nil }
+    end
+    fadeState[barKey].targetAlpha = targetAlpha
+    StartFadeAnimation()
+end
+
+local function FadeAllBarsOut()
+    local enabled, targetAlpha = GetFadeSettings()
+    if not enabled then return end
+
+    for barKey, bar in pairs(bars) do
+        if bar and IsBarFadeEnabled(barKey) then
+            if not fadeState[barKey] or not fadeState[barKey].hovered then
+                FadeBarTo(barKey, targetAlpha)
+            end
+        end
+    end
+end
+
+local function FadeAllBarsIn()
+    for barKey, bar in pairs(bars) do
+        if bar then
+            FadeBarTo(barKey, 1.0)
+        end
+    end
+end
+
+-- 懸停偵測：使用透明遮罩框架覆蓋整條 bar
+local function SetupBarHoverDetection(bar, barKey)
+    if not bar or bar._lunarFadeHooked then return end
+    bar._lunarFadeHooked = true
+
+    -- 建立懸停偵測框架（覆蓋整條 bar + 邊距）
+    local hoverFrame = CreateFrame("Frame", nil, bar)
+    hoverFrame:SetPoint("TOPLEFT", -8, 8)
+    hoverFrame:SetPoint("BOTTOMRIGHT", 8, -8)
+    hoverFrame:SetFrameStrata(bar:GetFrameStrata())
+    hoverFrame:SetFrameLevel(bar:GetFrameLevel() + 50)
+    hoverFrame:EnableMouse(false)  -- 不攔截點擊
+
+    -- 使用 OnUpdate 檢查滑鼠是否在區域內（不攔截點擊的方式）
+    local hoverCheckElapsed = 0
+    local wasHovering = false
+
+    hoverFrame:SetScript("OnUpdate", function(_self, elapsed)
+        local enabled = GetFadeSettings()
+        if not enabled or isInCombat then return end
+        if not IsBarFadeEnabled(barKey) then return end
+
+        hoverCheckElapsed = hoverCheckElapsed + elapsed
+        if hoverCheckElapsed < 0.05 then return end
+        hoverCheckElapsed = 0
+
+        -- 使用 MouseIsOver 檢查滑鼠位置
+        local isHovering = bar:IsMouseOver(8, -8, -8, 8)
+
+        if isHovering and not wasHovering then
+            -- 滑鼠進入
+            wasHovering = true
+            if not fadeState[barKey] then
+                fadeState[barKey] = { alpha = 1.0, targetAlpha = 1.0, hovered = false, timer = nil }
+            end
+            fadeState[barKey].hovered = true
+            -- 取消延遲淡出計時器
+            if fadeState[barKey].timer then
+                fadeState[barKey].timer:Cancel()
+                fadeState[barKey].timer = nil
+            end
+            FadeBarTo(barKey, 1.0)
+        elseif not isHovering and wasHovering then
+            -- 滑鼠離開
+            wasHovering = false
+            if fadeState[barKey] then
+                fadeState[barKey].hovered = false
+            end
+            -- 延遲淡出
+            local _, fadeAlpha, fadeDelay = GetFadeSettings()
+            if fadeState[barKey] and fadeState[barKey].timer then
+                fadeState[barKey].timer:Cancel()
+            end
+            if not fadeState[barKey] then
+                fadeState[barKey] = { alpha = 1.0, targetAlpha = 1.0, hovered = false, timer = nil }
+            end
+            fadeState[barKey].timer = C_Timer.NewTimer(fadeDelay, function()
+                if not isInCombat and not fadeState[barKey].hovered then
+                    FadeBarTo(barKey, fadeAlpha)
+                end
+                fadeState[barKey].timer = nil
+            end)
+        end
+    end)
+
+    bar._lunarHoverFrame = hoverFrame
+end
+
+-- 戰鬥事件
+local combatFrame = CreateFrame("Frame")
+combatFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+combatFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+combatFrame:SetScript("OnEvent", function(_self, event)
+    local enabled = GetFadeSettings()
+    if not enabled then return end
+
+    if event == "PLAYER_REGEN_DISABLED" then
+        -- 進入戰鬥：全部淡入
+        isInCombat = true
+        FadeAllBarsIn()
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        -- 離開戰鬥：延遲淡出
+        isInCombat = false
+        local _, _, fadeDelay = GetFadeSettings()
+        C_Timer.After(fadeDelay, function()
+            if not isInCombat then
+                FadeAllBarsOut()
+            end
+        end)
+    end
+end)
+
+-- 初始化淡出狀態（非戰鬥時啟動淡出）
+local function InitializeFade()
+    local enabled = GetFadeSettings()
+    if not enabled then return end
+
+    -- 為每條 bar 設定懸停偵測
+    for barKey, bar in pairs(bars) do
+        SetupBarHoverDetection(bar, barKey)
+    end
+
+    -- 非戰鬥中立即啟動淡出
+    if not InCombatLockdown() then
+        isInCombat = false
+        local _, _, fadeDelay = GetFadeSettings()
+        C_Timer.After(fadeDelay, function()
+            if not isInCombat then
+                FadeAllBarsOut()
+            end
+        end)
+    else
+        isInCombat = true
+    end
+end
+
+-- 匯出更新函數（供 Config 面板即時更新）
+function LunarUI:UpdateActionBarFade()
+    local enabled = GetFadeSettings()
+    if enabled then
+        if not isInCombat then
+            FadeAllBarsOut()
+        end
+    else
+        -- 停用時恢復全部透明度
+        FadeAllBarsIn()
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -725,6 +989,17 @@ local function HideBlizzardBars()
         local bar = _G[barName]
         if bar then
             HideFramePermanently(bar)
+            -- 防止 EditMode 設定負數 scale 導致報錯
+            -- （開專業書等操作會觸發 UpdateRightActionBarPositions）
+            if not hookedFrames[bar] then
+                local origSetScale = bar.SetScale
+                bar.SetScale = function(self, scale, ...)
+                    if not scale or scale <= 0 then
+                        scale = 0.001
+                    end
+                    return origSetScale(self, scale, ...)
+                end
+            end
         end
     end
 
@@ -977,6 +1252,9 @@ local function SpawnActionBars()
 
     -- 套用初始月相
     UpdateAllBarsForPhase()
+
+    -- 初始化淡入淡出系統
+    C_Timer.After(1.0, InitializeFade)
 end
 
 -- 匯出
@@ -1026,42 +1304,64 @@ local barNames = {
 }
 
 local function EnableBarDragging(bar)
-    if not bar then return end
+    if not bar or not bar.bg then return end
 
-    -- 顯示背景並讓它可拖曳（因為按鈕會攔截主框架的點擊）
-    if bar.bg then
-        bar.bg:Show()
-        bar.bg:SetBackdropColor(0.1, 0.1, 0.3, 0.8)
-        bar.bg:SetBackdropBorderColor(0.5, 0.5, 1, 1)
-        bar.bg:EnableMouse(true)
-        bar.bg:RegisterForDrag("LeftButton")
-        -- 確保在所有隱藏的 Blizzard 框架之上
-        bar.bg:SetFrameStrata("HIGH")
-        bar.bg:SetFrameLevel(200)
+    local bg = bar.bg
 
-        bar.bg:SetScript("OnDragStart", function()
-            if InCombatLockdown() then return end
-            bar:StartMoving()
-        end)
+    -- 顯示 mover
+    bg:Show()
+    bg:EnableMouse(true)
+    bg:SetMovable(true)
+    bg:SetClampedToScreen(true)
+    bg:RegisterForDrag("LeftButton")
 
-        bar.bg:SetScript("OnDragStop", function()
-            bar:StopMovingOrSizing()
-            -- 保存位置
-            local _, _, _, x, y = bar:GetPoint(1)
+    -- 拖曳邏輯：移動 bg 本身（而非 secure bar），避免 SecureHandlerStateTemplate 限制
+    bg:SetScript("OnDragStart", function(self)
+        if InCombatLockdown() then return end
+        -- 解除 bg 對 bar 的錨定，改為固定位置，然後開始移動 bg
+        local left, bottom = bar:GetLeft(), bar:GetBottom()
+        if not left or not bottom then return end
+        self:ClearAllPoints()
+        self:SetSize(bar:GetWidth() + 8, bar:GetHeight() + 8)
+        self:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left - 4, bottom - 4)
+        self:StartMoving()
+    end)
+
+    bg:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        -- 從 bg 的位置反推 bar 的 BOTTOM 座標
+        local bgLeft = self:GetLeft()
+        local bgBottom = self:GetBottom()
+        if bgLeft and bgBottom then
+            local barLeft = bgLeft + 4
+            local barBottom = bgBottom + 4
+            local screenCenterX = UIParent:GetWidth() / 2
+            local barCenterX = barLeft + bar:GetWidth() / 2
+            local x = barCenterX - screenCenterX
+            local y = barBottom
+            -- 重新定位 bar
+            bar:ClearAllPoints()
+            bar:SetPoint("BOTTOM", UIParent, "BOTTOM", x, y)
+            -- 保存到 DB
             if bar.dbKey and LunarUI.db then
                 local db = LunarUI.db.profile.actionbars[bar.dbKey]
                 if db then
                     db.x = math.floor(x + 0.5)
                     db.y = math.floor(y + 0.5)
+                    LunarUI:Debug("位置已保存: " .. bar.dbKey .. " x=" .. db.x .. " y=" .. db.y)
                 end
             end
-        end)
-    end
+        end
+        -- 重新錨定 bg 到 bar
+        self:ClearAllPoints()
+        self:SetPoint("TOPLEFT", bar, "TOPLEFT", -4, 4)
+        self:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 4, -4)
+    end)
 
     -- 建立或顯示標籤
     if not bar.label then
-        local label = bar.bg:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        label:SetPoint("CENTER", bar, "CENTER", 0, 0)
+        local label = bg:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        label:SetPoint("CENTER")
         label:SetTextColor(1, 1, 1, 1)
         bar.label = label
     end
@@ -1083,13 +1383,10 @@ local function DisableBarDragging(bar)
         bar.bg:EnableMouse(false)
         bar.bg:SetScript("OnDragStart", nil)
         bar.bg:SetScript("OnDragStop", nil)
-        bar.bg:Hide()
-    end
-    bar:SetScript("OnDragStart", nil)
-    bar:SetScript("OnDragStop", nil)
-
-    -- 隱藏背景
-    if bar.bg then
+        -- 重新錨定 bg 到 bar（確保位置正確）
+        bar.bg:ClearAllPoints()
+        bar.bg:SetPoint("TOPLEFT", bar, "TOPLEFT", -4, 4)
+        bar.bg:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 4, -4)
         bar.bg:Hide()
     end
 end
@@ -1105,14 +1402,29 @@ function LunarUI:ToggleActionBarLock(locked)
             if locked then
                 DisableBarDragging(bar)
             else
+                -- 解鎖時先恢復完整透明度（否則 bg 繼承父 alpha 幾乎不可見）
+                bar:SetAlpha(1.0)
                 EnableBarDragging(bar)
             end
         end
     end
 
     if locked then
+        isBarsUnlocked = false
+        -- 重啟淡出系統
+        if LunarUI.UpdateActionBarFade then
+            LunarUI:UpdateActionBarFade()
+        end
         self:Print("動作條已鎖定")
     else
+        isBarsUnlocked = true
+        -- 完全停用淡出動畫，確保 mover 可見
+        fadeAnimActive = false
+        fadeAnimFrame:SetScript("OnUpdate", nil)
+        for barKey in pairs(fadeState) do
+            fadeState[barKey].alpha = 1.0
+            fadeState[barKey].targetAlpha = 1.0
+        end
         self:Print("動作條已解鎖，可拖曳移動")
     end
 end

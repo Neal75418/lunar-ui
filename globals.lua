@@ -309,7 +309,13 @@ UnitLevel = nil
 ---@type fun(unit: string): number
 UnitEffectiveLevel = nil
 
----@type fun(unit: string): boolean
+---@type fun(unit: string): number?
+GetNumSpecializations = nil
+
+---@type fun(specIndex: number): number, string, string, string, string, string, number
+GetSpecializationInfo = nil
+
+---@type fun(unitToken: string): boolean
 UnitIsPlayer = nil
 
 ---@type fun(unit1: string, unit2: string): boolean
@@ -406,6 +412,12 @@ GetTime = nil
 ---@type fun(): number
 GetFramerate = nil
 
+---@type fun(): number
+GetScreenWidth = nil
+
+---@type fun(): number
+GetScreenHeight = nil
+
 ---@type fun(): number, number, number, number
 GetNetStats = nil
 
@@ -420,6 +432,9 @@ GetSpellInfo = nil
 
 ---@type fun(itemID: number|string): string?, string?, number?, number?, number?, string?, string?, number?, string?, number?, number?
 GetItemInfo = nil
+
+---@type fun(unit: string, slot: number): string?
+GetInventoryItemLink = nil
 
 ---@type fun(quality: number): number, number, number, string
 GetItemQualityColor = nil
@@ -685,6 +700,9 @@ tContains = nil
 ---@type fun(table: table): table
 CopyTable = nil
 
+---@type fun(list: table, i?: number, j?: number): ...
+unpack = nil
+
 --------------------------------------------------------------------------------
 -- 字串函數
 --------------------------------------------------------------------------------
@@ -731,6 +749,19 @@ max = nil
 
 ---@type fun(m?: number, n?: number): number
 random = nil
+
+--------------------------------------------------------------------------------
+-- Bitwise Library (LuaJIT / Classic)
+--------------------------------------------------------------------------------
+
+---@class bit
+---@field band fun(a: number, b: number, ...): number
+---@field bor fun(a: number, b: number, ...): number
+---@field bxor fun(a: number, b: number, ...): number
+---@field bnot fun(a: number): number
+---@field lshift fun(a: number, b: number): number
+---@field rshift fun(a: number, b: number): number
+bit = {}
 
 --------------------------------------------------------------------------------
 -- 除錯與輸出
@@ -1005,6 +1036,26 @@ GetInstanceInfo = nil
 
 ---@type fun(difficultyID: number): string?, string?, boolean?, boolean?, boolean?, boolean?, number?
 GetDifficultyInfo = nil
+
+---@type Frame
+MiniMapTrackingBackground = nil
+
+---@class HybridMinimap : Frame
+---@field MapCanvas table
+---@field CircleMask Texture
+HybridMinimap = {}
+
+---@type fun(): string
+GetMinimapShape = nil
+
+---@type fun(frame: Frame, mode: string)
+UIFrameFlash = nil
+
+---@type fun(file: string, channel?: string): boolean
+PlaySoundFile = nil
+
+---@type fun(name: string, context: string): string
+Ambiguate = nil
 
 --------------------------------------------------------------------------------
 -- 聊天相關框架與函數

@@ -432,6 +432,11 @@ local function Initialize()
 
     SetupResourceDisplay()
 
+    -- 註冊至框架移動器
+    if resourceFrame then
+        LunarUI:RegisterMovableFrame("ClassResources", resourceFrame, "職業資源")
+    end
+
     -- 註冊月相變化回呼
     LunarUI:RegisterPhaseCallback(OnPhaseChanged)
 

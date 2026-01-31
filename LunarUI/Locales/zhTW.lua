@@ -85,6 +85,8 @@ L["BankSearchError"] = "銀行搜尋錯誤"
 
 -- 聊天
 L["PressToCopyURL"] = "按 Ctrl+C 複製網址："
+L["KeywordAlert"] = "關鍵字警報"
+L["SpamFiltered"] = "垃圾訊息已過濾"
 
 -- 設定
 L["SettingsImported"] = "設定匯入成功"

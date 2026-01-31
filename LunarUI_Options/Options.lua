@@ -695,6 +695,111 @@ local options = {
             },
         },
 
+        -- HUD
+        hud = {
+            order = 5.5,
+            type = "group",
+            name = "HUD",
+            desc = "Head-Up Display settings",
+            args = {
+                desc = {
+                    order = 0,
+                    type = "description",
+                    name = "Configure HUD overlay elements.\n\n",
+                },
+                scale = {
+                    order = 1,
+                    type = "range",
+                    name = "HUD Scale",
+                    desc = "Scale all HUD elements",
+                    min = 0.5, max = 2.0, step = 0.05,
+                    get = function() return GetDB().hud.scale or 1.0 end,
+                    set = function(_, v)
+                        GetDB().hud.scale = v
+                        LunarUI:ApplyHUDScale()
+                    end,
+                    width = "full",
+                },
+                modulesHeader = {
+                    order = 5,
+                    type = "header",
+                    name = "Module Toggles",
+                },
+                phaseIndicator = {
+                    order = 10,
+                    type = "toggle",
+                    name = "Phase Indicator",
+                    desc = "Moon icon showing current lunar phase",
+                    get = function() return GetDB().hud.phaseIndicator end,
+                    set = function(_, v)
+                        GetDB().hud.phaseIndicator = v
+                        LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                    end,
+                    width = "full",
+                },
+                performanceMonitor = {
+                    order = 11,
+                    type = "toggle",
+                    name = "Performance Monitor",
+                    desc = "Show FPS and latency",
+                    get = function() return GetDB().hud.performanceMonitor end,
+                    set = function(_, v)
+                        GetDB().hud.performanceMonitor = v
+                        LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                    end,
+                    width = "full",
+                },
+                classResources = {
+                    order = 12,
+                    type = "toggle",
+                    name = "Class Resources",
+                    desc = "Class-specific resource display (combo points, runes, etc.)",
+                    get = function() return GetDB().hud.classResources end,
+                    set = function(_, v)
+                        GetDB().hud.classResources = v
+                        LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                    end,
+                    width = "full",
+                },
+                cooldownTracker = {
+                    order = 13,
+                    type = "toggle",
+                    name = "Cooldown Tracker",
+                    desc = "Track important ability cooldowns",
+                    get = function() return GetDB().hud.cooldownTracker end,
+                    set = function(_, v)
+                        GetDB().hud.cooldownTracker = v
+                        LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                    end,
+                    width = "full",
+                },
+                floatingCombatText = {
+                    order = 14,
+                    type = "toggle",
+                    name = "Floating Combat Text",
+                    desc = "Show damage and healing numbers",
+                    get = function() return GetDB().hud.floatingCombatText end,
+                    set = function(_, v)
+                        GetDB().hud.floatingCombatText = v
+                        LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                    end,
+                    width = "full",
+                },
+                auraFrames = {
+                    order = 15,
+                    type = "toggle",
+                    name = "Aura Frames",
+                    desc = "Separate buff and debuff display",
+                    get = function() return GetDB().hud.auraFrames end,
+                    set = function(_, v)
+                        GetDB().hud.auraFrames = v
+                        LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                    end,
+                    width = "full",
+                },
+            },
+        },
+
         -- Minimap
         minimap = {
             order = 6,
@@ -1053,9 +1158,48 @@ local function RegisterOptions()
     -- Add to Blizzard options
     AceConfigDialog:AddToBlizOptions("LunarUI", "LunarUI")
 
-    -- Register profile options
+    -- Register profile options with spec auto-switch
     local profileOptions = GetProfileOptions()
     if profileOptions then
+        -- 注入專精自動切換選項
+        profileOptions.args.specHeader = {
+            order = 100,
+            type = "header",
+            name = "Specialization Auto-Switch",
+        }
+        profileOptions.args.specDesc = {
+            order = 101,
+            type = "description",
+            name = "Automatically switch profiles when changing specialization.\n\n",
+        }
+        local numSpecs = GetNumSpecializations and GetNumSpecializations() or 0
+        for i = 1, numSpecs do
+            local _, specName = GetSpecializationInfo(i)
+            profileOptions.args["spec" .. i] = {
+                order = 101 + i,
+                type = "select",
+                name = (specName or ("Spec " .. i)),
+                desc = "Profile to use for this specialization",
+                values = function()
+                    local t = { [""] = "(None)" }
+                    for _, p in ipairs(LunarUI.db:GetProfiles()) do
+                        t[p] = p
+                    end
+                    return t
+                end,
+                get = function()
+                    return LunarUI.db.char.specProfiles and LunarUI.db.char.specProfiles[i] or ""
+                end,
+                set = function(_, v)
+                    if not LunarUI.db.char.specProfiles then
+                        LunarUI.db.char.specProfiles = {}
+                    end
+                    LunarUI.db.char.specProfiles[i] = (v ~= "") and v or nil
+                end,
+                width = "full",
+            }
+        end
+
         AceConfig:RegisterOptionsTable("LunarUI_Profiles", profileOptions)
         AceConfigDialog:AddToBlizOptions("LunarUI_Profiles", L.profiles, "LunarUI")
     end

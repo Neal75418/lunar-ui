@@ -157,14 +157,18 @@ local defaults = {
             showHotkeys = true,  -- 顯示快捷鍵
             showMacroNames = false,  -- 顯示巨集名稱
             alpha = 1.0,  -- 透明度
-            bar1 = { enabled = true, buttons = 12, x = 0, y = 100 },
-            bar2 = { enabled = true, buttons = 12, x = 0, y = 144 },
-            bar3 = { enabled = true, buttons = 12, x = 0, y = 188 },
-            bar4 = { enabled = true, buttons = 12, x = 0, y = 232 },
-            bar5 = { enabled = true, buttons = 12, x = 0, y = 276 },
-            bar6 = { enabled = true, buttons = 12, x = 0, y = 320 },
-            petbar = { enabled = true, x = 0, y = 60 },
-            stancebar = { enabled = true, x = -400, y = 200 },
+            fadeEnabled = true,   -- 非戰鬥淡出
+            fadeAlpha = 0.3,      -- 淡出後透明度
+            fadeDelay = 2.0,      -- 離開戰鬥後淡出延遲（秒）
+            fadeDuration = 0.4,   -- 淡入淡出動畫時間（秒）
+            bar1 = { enabled = true, buttons = 12, x = 0, y = 100, orientation = "horizontal", fadeEnabled = nil },
+            bar2 = { enabled = true, buttons = 12, x = 0, y = 144, orientation = "horizontal", fadeEnabled = nil },
+            bar3 = { enabled = true, buttons = 12, x = 250, y = 300, orientation = "vertical", fadeEnabled = nil },
+            bar4 = { enabled = true, buttons = 12, x = -250, y = 300, orientation = "vertical", fadeEnabled = nil },
+            bar5 = { enabled = true, buttons = 12, x = 0, y = 276, orientation = "horizontal", fadeEnabled = nil },
+            bar6 = { enabled = true, buttons = 12, x = 0, y = 320, orientation = "horizontal", fadeEnabled = nil },
+            petbar = { enabled = true, x = 0, y = 60, fadeEnabled = nil },
+            stancebar = { enabled = true, x = -400, y = 200, fadeEnabled = nil },
         },
 
         -- 小地圖設定
@@ -184,6 +188,8 @@ local defaults = {
             autoSellJunk = true,
             showItemLevel = true,
             showQuestItems = true,
+            showProfessionColors = true,  -- 專業容器背景著色
+            showUpgradeArrow = true,      -- 裝等升級綠色箭頭
         },
 
         -- 聊天設定
@@ -194,7 +200,14 @@ local defaults = {
             improvedColors = true,
             classColors = true,
             fadeTime = 120,
-            detectURLs = true,  -- 啟用可點擊網址
+            detectURLs = true,          -- 啟用可點擊網址
+            shortChannelNames = true,   -- 短頻道名稱
+            enableEmojis = true,        -- 表情符號替換
+            showRoleIcons = true,       -- 角色圖示（坦/治/傷）
+            keywordAlerts = true,       -- 關鍵字警報
+            keywords = {},              -- 自訂關鍵字列表
+            spamFilter = true,          -- 垃圾訊息過濾
+            linkTooltipPreview = true,  -- 連結懸停 Tooltip 預覽
         },
 
         -- 滑鼠提示設定
@@ -209,6 +222,7 @@ local defaults = {
 
         -- HUD 設定
         hud = {
+            scale = 1.0,                -- 全域 HUD 縮放（0.5-2.0，參考 GW2 UI）
             phaseIndicator = true,      -- 月相指示器
             performanceMonitor = true,  -- FPS/延遲顯示
             classResources = true,      -- 職業資源條
@@ -235,6 +249,7 @@ local defaults = {
 
     char = {
         -- 角色專屬設定
+        specProfiles = {},  -- 專精自動切換設定檔 [specIndex] = "profileName"
     },
 }
 
@@ -262,6 +277,24 @@ function LunarUI:InitDB()
 
     -- 儲存版本
     self.db.global.version = self.version
+
+    -- 延遲套用 HUD 縮放（等待所有 HUD 模組完成初始化）
+    C_Timer.After(2, function()
+        if self.ApplyHUDScale then
+            self:ApplyHUDScale()
+        end
+    end)
+
+    -- 專精切換自動設定檔
+    self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED", function()
+        local specIndex = GetSpecialization and GetSpecialization()
+        if specIndex and self.db and self.db.char and self.db.char.specProfiles then
+            local target = self.db.char.specProfiles[specIndex]
+            if target and target ~= self.db:GetCurrentProfile() then
+                self.db:SetProfile(target)
+            end
+        end
+    end)
 end
 
 --[[
@@ -272,7 +305,12 @@ function LunarUI:OnProfileChanged()
     -- 重新整理所有 UI 元素
     self:UpdateTokens()
 
-    -- 通知模組重新整理
+    -- 先套用 HUD 縮放（避免框架顯示時短暫出現舊縮放值）
+    if self.ApplyHUDScale then
+        self:ApplyHUDScale()
+    end
+
+    -- 通知模組重新整理（依新設定檔顯示/隱藏）
     self:NotifyPhaseChange(self:GetPhase(), self:GetPhase())
 
     self:Print(L["ProfileChanged"] or "設定檔已變更，UI 已重新整理")
@@ -794,6 +832,33 @@ function LunarUI:ShowImportFrame()
 end
 
 --------------------------------------------------------------------------------
+-- HUD 全域縮放
+--------------------------------------------------------------------------------
+
+local HUD_FRAME_NAMES = {
+    "LunarUIPhaseIndicator",
+    "LunarUI_PerformanceMonitor",
+    "LunarUI_ClassResources",
+    "LunarUI_CooldownTracker",
+    "LunarUI_FloatingCombatText",
+    "LunarUI_BuffFrame",
+    "LunarUI_DebuffFrame",
+}
+
+--[[
+    套用 HUD 全域縮放至所有 HUD 框架
+]]
+function LunarUI:ApplyHUDScale()
+    local scale = self.db and self.db.profile.hud.scale or 1.0
+    for _, name in ipairs(HUD_FRAME_NAMES) do
+        local frame = _G[name]
+        if frame then
+            frame:SetScale(scale)
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
 -- AceConfig 選項面板（ESC 介面設定）
 --------------------------------------------------------------------------------
 
@@ -972,48 +1037,159 @@ local function GetOptionsTable()
                         set = function(_, val) LunarUI.db.profile.actionbars.enabled = val end,
                         width = "full",
                     },
-                    bar1Enabled = {
+                    -- 每條動作條的個別設定（bar1-bar6）
+                    bar1Group = {
                         order = 22,
-                        type = "toggle",
-                        name = "動作條 1",
-                        desc = "主動作條（需重載）",
-                        get = function() return LunarUI.db.profile.actionbars.bar1.enabled end,
-                        set = function(_, val) LunarUI.db.profile.actionbars.bar1.enabled = val end,
+                        type = "group",
+                        name = "動作條 1（主動作條）",
+                        inline = true,
+                        args = {
+                            enabled = {
+                                order = 1, type = "toggle", name = "啟用", desc = "需重載",
+                                get = function() return LunarUI.db.profile.actionbars.bar1.enabled end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar1.enabled = val end,
+                            },
+                            orientation = {
+                                order = 2, type = "select", name = "排列方向", desc = "需重載",
+                                values = { horizontal = "水平", vertical = "垂直" },
+                                get = function() return LunarUI.db.profile.actionbars.bar1.orientation or "horizontal" end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar1.orientation = val end,
+                            },
+                            buttons = {
+                                order = 3, type = "range", name = "按鈕數量", desc = "需重載",
+                                min = 1, max = 12, step = 1,
+                                get = function() return LunarUI.db.profile.actionbars.bar1.buttons or 12 end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar1.buttons = val end,
+                            },
+                        },
                     },
-                    bar2Enabled = {
+                    bar2Group = {
                         order = 23,
-                        type = "toggle",
+                        type = "group",
                         name = "動作條 2",
-                        desc = "第二動作條（需重載）",
-                        get = function() return LunarUI.db.profile.actionbars.bar2.enabled end,
-                        set = function(_, val) LunarUI.db.profile.actionbars.bar2.enabled = val end,
+                        inline = true,
+                        args = {
+                            enabled = {
+                                order = 1, type = "toggle", name = "啟用", desc = "需重載",
+                                get = function() return LunarUI.db.profile.actionbars.bar2.enabled end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar2.enabled = val end,
+                            },
+                            orientation = {
+                                order = 2, type = "select", name = "排列方向", desc = "需重載",
+                                values = { horizontal = "水平", vertical = "垂直" },
+                                get = function() return LunarUI.db.profile.actionbars.bar2.orientation or "horizontal" end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar2.orientation = val end,
+                            },
+                            buttons = {
+                                order = 3, type = "range", name = "按鈕數量", desc = "需重載",
+                                min = 1, max = 12, step = 1,
+                                get = function() return LunarUI.db.profile.actionbars.bar2.buttons or 12 end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar2.buttons = val end,
+                            },
+                        },
                     },
-                    bar3Enabled = {
+                    bar3Group = {
                         order = 24,
-                        type = "toggle",
+                        type = "group",
                         name = "動作條 3",
-                        desc = "第三動作條（需重載）",
-                        get = function() return LunarUI.db.profile.actionbars.bar3.enabled end,
-                        set = function(_, val) LunarUI.db.profile.actionbars.bar3.enabled = val end,
+                        inline = true,
+                        args = {
+                            enabled = {
+                                order = 1, type = "toggle", name = "啟用", desc = "需重載",
+                                get = function() return LunarUI.db.profile.actionbars.bar3.enabled end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar3.enabled = val end,
+                            },
+                            orientation = {
+                                order = 2, type = "select", name = "排列方向", desc = "需重載",
+                                values = { horizontal = "水平", vertical = "垂直" },
+                                get = function() return LunarUI.db.profile.actionbars.bar3.orientation or "vertical" end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar3.orientation = val end,
+                            },
+                            buttons = {
+                                order = 3, type = "range", name = "按鈕數量", desc = "需重載",
+                                min = 1, max = 12, step = 1,
+                                get = function() return LunarUI.db.profile.actionbars.bar3.buttons or 12 end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar3.buttons = val end,
+                            },
+                        },
                     },
-                    bar4Enabled = {
+                    bar4Group = {
                         order = 25,
-                        type = "toggle",
+                        type = "group",
                         name = "動作條 4",
-                        desc = "第四動作條（需重載）",
-                        get = function() return LunarUI.db.profile.actionbars.bar4.enabled end,
-                        set = function(_, val) LunarUI.db.profile.actionbars.bar4.enabled = val end,
+                        inline = true,
+                        args = {
+                            enabled = {
+                                order = 1, type = "toggle", name = "啟用", desc = "需重載",
+                                get = function() return LunarUI.db.profile.actionbars.bar4.enabled end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar4.enabled = val end,
+                            },
+                            orientation = {
+                                order = 2, type = "select", name = "排列方向", desc = "需重載",
+                                values = { horizontal = "水平", vertical = "垂直" },
+                                get = function() return LunarUI.db.profile.actionbars.bar4.orientation or "vertical" end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar4.orientation = val end,
+                            },
+                            buttons = {
+                                order = 3, type = "range", name = "按鈕數量", desc = "需重載",
+                                min = 1, max = 12, step = 1,
+                                get = function() return LunarUI.db.profile.actionbars.bar4.buttons or 12 end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar4.buttons = val end,
+                            },
+                        },
                     },
-                    bar5Enabled = {
+                    bar5Group = {
                         order = 26,
-                        type = "toggle",
+                        type = "group",
                         name = "動作條 5",
-                        desc = "第五動作條（需重載）",
-                        get = function() return LunarUI.db.profile.actionbars.bar5.enabled end,
-                        set = function(_, val) LunarUI.db.profile.actionbars.bar5.enabled = val end,
+                        inline = true,
+                        args = {
+                            enabled = {
+                                order = 1, type = "toggle", name = "啟用", desc = "需重載",
+                                get = function() return LunarUI.db.profile.actionbars.bar5.enabled end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar5.enabled = val end,
+                            },
+                            orientation = {
+                                order = 2, type = "select", name = "排列方向", desc = "需重載",
+                                values = { horizontal = "水平", vertical = "垂直" },
+                                get = function() return LunarUI.db.profile.actionbars.bar5.orientation or "horizontal" end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar5.orientation = val end,
+                            },
+                            buttons = {
+                                order = 3, type = "range", name = "按鈕數量", desc = "需重載",
+                                min = 1, max = 12, step = 1,
+                                get = function() return LunarUI.db.profile.actionbars.bar5.buttons or 12 end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar5.buttons = val end,
+                            },
+                        },
+                    },
+                    bar6Group = {
+                        order = 27,
+                        type = "group",
+                        name = "動作條 6",
+                        inline = true,
+                        args = {
+                            enabled = {
+                                order = 1, type = "toggle", name = "啟用", desc = "需重載",
+                                get = function() return LunarUI.db.profile.actionbars.bar6.enabled end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar6.enabled = val end,
+                            },
+                            orientation = {
+                                order = 2, type = "select", name = "排列方向", desc = "需重載",
+                                values = { horizontal = "水平", vertical = "垂直" },
+                                get = function() return LunarUI.db.profile.actionbars.bar6.orientation or "horizontal" end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar6.orientation = val end,
+                            },
+                            buttons = {
+                                order = 3, type = "range", name = "按鈕數量", desc = "需重載",
+                                min = 1, max = 12, step = 1,
+                                get = function() return LunarUI.db.profile.actionbars.bar6.buttons or 12 end,
+                                set = function(_, val) LunarUI.db.profile.actionbars.bar6.buttons = val end,
+                            },
+                        },
                     },
                     petbarEnabled = {
-                        order = 27,
+                        order = 28,
                         type = "toggle",
                         name = "寵物條",
                         desc = "寵物動作條（需重載）",
@@ -1021,7 +1197,7 @@ local function GetOptionsTable()
                         set = function(_, val) LunarUI.db.profile.actionbars.petbar.enabled = val end,
                     },
                     stancebarEnabled = {
-                        order = 28,
+                        order = 29,
                         type = "toggle",
                         name = "姿態條",
                         desc = "姿態/形態動作條（需重載）",
@@ -1092,6 +1268,48 @@ local function GetOptionsTable()
                         get = function() return LunarUI.db.profile.actionbars.showMacroNames end,
                         set = function(_, val) LunarUI.db.profile.actionbars.showMacroNames = val end,
                     },
+                    actionbarsFadeHeader = {
+                        order = 35,
+                        type = "header",
+                        name = "淡入淡出",
+                    },
+                    actionbarsFadeEnabled = {
+                        order = 36,
+                        type = "toggle",
+                        name = "啟用非戰鬥淡出",
+                        desc = "非戰鬥時自動淡出動作條，滑鼠懸停時淡入",
+                        get = function() return LunarUI.db.profile.actionbars.fadeEnabled end,
+                        set = function(_, val)
+                            LunarUI.db.profile.actionbars.fadeEnabled = val
+                            if LunarUI.UpdateActionBarFade then
+                                LunarUI:UpdateActionBarFade()
+                            end
+                        end,
+                        width = "full",
+                    },
+                    actionbarsFadeAlpha = {
+                        order = 37,
+                        type = "range",
+                        name = "淡出透明度",
+                        desc = "非戰鬥淡出後的最低透明度",
+                        min = 0, max = 0.8, step = 0.05,
+                        get = function() return LunarUI.db.profile.actionbars.fadeAlpha end,
+                        set = function(_, val)
+                            LunarUI.db.profile.actionbars.fadeAlpha = val
+                            if LunarUI.UpdateActionBarFade then
+                                LunarUI:UpdateActionBarFade()
+                            end
+                        end,
+                    },
+                    actionbarsFadeDelay = {
+                        order = 38,
+                        type = "range",
+                        name = "淡出延遲",
+                        desc = "離開戰鬥 / 滑鼠離開後的淡出等待時間（秒）",
+                        min = 0, max = 10, step = 0.5,
+                        get = function() return LunarUI.db.profile.actionbars.fadeDelay end,
+                        set = function(_, val) LunarUI.db.profile.actionbars.fadeDelay = val end,
+                    },
                     minimapHeader = {
                         order = 30,
                         type = "header",
@@ -1131,6 +1349,22 @@ local function GetOptionsTable()
                         get = function() return LunarUI.db.profile.bags.autoSellJunk end,
                         set = function(_, val) LunarUI.db.profile.bags.autoSellJunk = val end,
                     },
+                    bagsProfessionColors = {
+                        order = 43,
+                        type = "toggle",
+                        name = "專業容器著色",
+                        desc = "根據背包類型（草藥/附魔/礦石等）為格子底色著色",
+                        get = function() return LunarUI.db.profile.bags.showProfessionColors end,
+                        set = function(_, val) LunarUI.db.profile.bags.showProfessionColors = val end,
+                    },
+                    bagsUpgradeArrow = {
+                        order = 44,
+                        type = "toggle",
+                        name = "升級箭頭",
+                        desc = "物品等級高於當前裝備時顯示綠色上箭頭",
+                        get = function() return LunarUI.db.profile.bags.showUpgradeArrow end,
+                        set = function(_, val) LunarUI.db.profile.bags.showUpgradeArrow = val end,
+                    },
                     chatHeader = {
                         order = 50,
                         type = "header",
@@ -1142,6 +1376,75 @@ local function GetOptionsTable()
                         name = "啟用聊天美化",
                         get = function() return LunarUI.db.profile.chat.enabled end,
                         set = function(_, val) LunarUI.db.profile.chat.enabled = val end,
+                    },
+                    chatShortNames = {
+                        order = 52,
+                        type = "toggle",
+                        name = "短頻道名稱",
+                        desc = "縮短頻道標頭（如 [公會]→[公]、[2.交易]→[2.交]）",
+                        get = function() return LunarUI.db.profile.chat.shortChannelNames end,
+                        set = function(_, val) LunarUI.db.profile.chat.shortChannelNames = val end,
+                    },
+                    chatEmojis = {
+                        order = 53,
+                        type = "toggle",
+                        name = "表情符號",
+                        desc = "將文字表情替換為圖示（如 :) → 笑臉）",
+                        get = function() return LunarUI.db.profile.chat.enableEmojis end,
+                        set = function(_, val) LunarUI.db.profile.chat.enableEmojis = val end,
+                    },
+                    chatRoleIcons = {
+                        order = 54,
+                        type = "toggle",
+                        name = "角色圖示",
+                        desc = "在隊伍/團隊訊息前顯示坦/治/傷圖示",
+                        get = function() return LunarUI.db.profile.chat.showRoleIcons end,
+                        set = function(_, val) LunarUI.db.profile.chat.showRoleIcons = val end,
+                    },
+                    chatKeywordAlerts = {
+                        order = 55,
+                        type = "toggle",
+                        name = "關鍵字警報",
+                        desc = "當聊天中出現你的名字或自訂關鍵字時，播放音效並高亮顯示",
+                        get = function() return LunarUI.db.profile.chat.keywordAlerts end,
+                        set = function(_, val) LunarUI.db.profile.chat.keywordAlerts = val end,
+                    },
+                    chatKeywords = {
+                        order = 56,
+                        type = "input",
+                        name = "自訂關鍵字",
+                        desc = "用逗號分隔的關鍵字列表（玩家名稱會自動包含）",
+                        width = "full",
+                        get = function()
+                            local kw = LunarUI.db.profile.chat.keywords or {}
+                            return table.concat(kw, ", ")
+                        end,
+                        set = function(_, val)
+                            local kw = {}
+                            for word in val:gmatch("[^,]+") do
+                                word = word:match("^%s*(.-)%s*$")  -- trim
+                                if word ~= "" then
+                                    table.insert(kw, word)
+                                end
+                            end
+                            LunarUI.db.profile.chat.keywords = kw
+                        end,
+                    },
+                    chatSpamFilter = {
+                        order = 57,
+                        type = "toggle",
+                        name = "垃圾訊息過濾",
+                        desc = "自動過濾賣金、代練等垃圾訊息",
+                        get = function() return LunarUI.db.profile.chat.spamFilter end,
+                        set = function(_, val) LunarUI.db.profile.chat.spamFilter = val end,
+                    },
+                    chatLinkPreview = {
+                        order = 58,
+                        type = "toggle",
+                        name = "連結懸停預覽",
+                        desc = "滑鼠懸停聊天中的物品/技能連結時自動顯示 Tooltip",
+                        get = function() return LunarUI.db.profile.chat.linkTooltipPreview end,
+                        set = function(_, val) LunarUI.db.profile.chat.linkTooltipPreview = val end,
                     },
                     tooltipHeader = {
                         order = 60,
@@ -1164,13 +1467,34 @@ local function GetOptionsTable()
                 type = "group",
                 name = "HUD 設定",
                 args = {
+                    scale = {
+                        order = 0,
+                        type = "range",
+                        name = "HUD 縮放",
+                        desc = "縮放所有 HUD 元素（參考 GW2 UI 的 HUD Scale）",
+                        min = 0.5, max = 2.0, step = 0.05,
+                        get = function() return LunarUI.db.profile.hud.scale or 1.0 end,
+                        set = function(_, val)
+                            LunarUI.db.profile.hud.scale = val
+                            LunarUI:ApplyHUDScale()
+                        end,
+                        width = "full",
+                    },
+                    modulesHeader = {
+                        order = 0.5,
+                        type = "header",
+                        name = "模組開關",
+                    },
                     phaseIndicator = {
                         order = 1,
                         type = "toggle",
                         name = "月相指示器",
                         desc = "顯示目前月相狀態",
                         get = function() return LunarUI.db.profile.hud.phaseIndicator end,
-                        set = function(_, val) LunarUI.db.profile.hud.phaseIndicator = val end,
+                        set = function(_, val)
+                            LunarUI.db.profile.hud.phaseIndicator = val
+                            LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                        end,
                     },
                     performanceMonitor = {
                         order = 2,
@@ -1178,7 +1502,10 @@ local function GetOptionsTable()
                         name = "效能監控",
                         desc = "顯示 FPS 與延遲",
                         get = function() return LunarUI.db.profile.hud.performanceMonitor end,
-                        set = function(_, val) LunarUI.db.profile.hud.performanceMonitor = val end,
+                        set = function(_, val)
+                            LunarUI.db.profile.hud.performanceMonitor = val
+                            LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                        end,
                     },
                     classResources = {
                         order = 3,
@@ -1186,7 +1513,10 @@ local function GetOptionsTable()
                         name = "職業資源條",
                         desc = "顯示職業專屬資源（如聖能、連擊點數等）",
                         get = function() return LunarUI.db.profile.hud.classResources end,
-                        set = function(_, val) LunarUI.db.profile.hud.classResources = val end,
+                        set = function(_, val)
+                            LunarUI.db.profile.hud.classResources = val
+                            LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                        end,
                     },
                     cooldownTracker = {
                         order = 4,
@@ -1194,7 +1524,10 @@ local function GetOptionsTable()
                         name = "冷卻追蹤器",
                         desc = "追蹤重要技能冷卻",
                         get = function() return LunarUI.db.profile.hud.cooldownTracker end,
-                        set = function(_, val) LunarUI.db.profile.hud.cooldownTracker = val end,
+                        set = function(_, val)
+                            LunarUI.db.profile.hud.cooldownTracker = val
+                            LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                        end,
                     },
                     floatingCombatText = {
                         order = 5,
@@ -1202,7 +1535,10 @@ local function GetOptionsTable()
                         name = "浮動戰鬥文字",
                         desc = "顯示傷害/治療數字",
                         get = function() return LunarUI.db.profile.hud.floatingCombatText end,
-                        set = function(_, val) LunarUI.db.profile.hud.floatingCombatText = val end,
+                        set = function(_, val)
+                            LunarUI.db.profile.hud.floatingCombatText = val
+                            LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                        end,
                     },
                     auraFrames = {
                         order = 6,
@@ -1210,7 +1546,10 @@ local function GetOptionsTable()
                         name = "增益/減益框架",
                         desc = "獨立的 Buff/Debuff 顯示",
                         get = function() return LunarUI.db.profile.hud.auraFrames end,
-                        set = function(_, val) LunarUI.db.profile.hud.auraFrames = val end,
+                        set = function(_, val)
+                            LunarUI.db.profile.hud.auraFrames = val
+                            LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+                        end,
                     },
                 },
             },

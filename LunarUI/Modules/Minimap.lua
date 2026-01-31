@@ -14,6 +14,9 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
+-- 覆寫形狀函數（必須在模組範圍定義以避免 Lint 錯誤）
+function GetMinimapShape() return "SQUARE" end
+
 --------------------------------------------------------------------------------
 -- 常數
 --------------------------------------------------------------------------------
@@ -22,12 +25,7 @@ local MINIMAP_SIZE = 180
 local BORDER_SIZE = 4
 local COORD_UPDATE_INTERVAL = 0.2
 
-local backdropTemplate = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-}
+local backdropTemplate = LunarUI.backdropTemplate
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -349,88 +347,150 @@ end
 --------------------------------------------------------------------------------
 
 local function HideBlizzardMinimapElements()
-    -- 隱藏預設邊框/裝飾框架
-    local framesToHide = {
-        MinimapBorder,
-        MinimapBorderTop,
-        MinimapZoomIn,
-        MinimapZoomOut,
-        MinimapZoneTextButton,
-        MinimapToggleButton,
-        MiniMapWorldMapButton,
-        GameTimeFrame,
-        MiniMapMailBorder,
-        _G.MinimapBackdrop,
-        _G.MinimapCompassTexture,
-        _G.MiniMapTracking,
-        _G.MiniMapTrackingButton,
-        _G.TimeManagerClockButton,
-    }
+    -- 1. 把有用的 MinimapCluster 子元素 reparent 到 Minimap 並重設位置
+    -- 原始錨點可能指向 MinimapCluster（即將移走），必須重設
+    local function ReparentButton(button, anchor, relFrame, relAnchor, x, y)
+        if not button then return end
+        pcall(function()
+            button:SetParent(Minimap)
+            button:SetFrameLevel(Minimap:GetFrameLevel() + 5)
+            button:ClearAllPoints()
+            button:SetPoint(anchor, relFrame or Minimap, relAnchor or anchor, x or 0, y or 0)
+            button:SetAlpha(1)
+            button:Show()
+        end)
+    end
 
-    for _, element in ipairs(framesToHide) do
-        if element then
+    pcall(function()
+        if MinimapCluster then
+            -- 追蹤按鈕（右鍵選單）
+            if MinimapCluster.Tracking then
+                ReparentButton(MinimapCluster.Tracking, "TOPRIGHT", Minimap, "TOPRIGHT", -2, -2)
+            end
+            -- 副本難度
+            if MinimapCluster.InstanceDifficulty then
+                ReparentButton(MinimapCluster.InstanceDifficulty, "TOPLEFT", Minimap, "TOPLEFT", 2, -2)
+            end
+            -- 郵件/製作訂單指示器
+            if MinimapCluster.IndicatorFrame then
+                ReparentButton(MinimapCluster.IndicatorFrame, "BOTTOMLEFT", Minimap, "BOTTOMLEFT", 2, 2)
+            end
+        end
+        -- 插件隔間
+        ReparentButton(AddonCompartmentFrame, "TOPRIGHT", Minimap, "TOPRIGHT", -2, -20)
+        -- 行事曆
+        ReparentButton(GameTimeFrame, "TOPRIGHT", Minimap, "TOPRIGHT", -22, -2)
+        -- 排隊狀態
+        ReparentButton(QueueStatusMinimapButton, "BOTTOMRIGHT", Minimap, "BOTTOMRIGHT", -2, 2)
+
+        -- ExpansionLandingPageMinimapButton（雙刀按鈕）
+        if ExpansionLandingPageMinimapButton then
             pcall(function()
-                element:Hide()
-                if element.UnregisterAllEvents then
-                    element:UnregisterAllEvents()
+                ExpansionLandingPageMinimapButton:SetParent(Minimap)
+                ExpansionLandingPageMinimapButton:SetFrameLevel(Minimap:GetFrameLevel() + 5)
+                ExpansionLandingPageMinimapButton:ClearAllPoints()
+                ExpansionLandingPageMinimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", -4, 4)
+                ExpansionLandingPageMinimapButton:SetSize(32, 32)
+                ExpansionLandingPageMinimapButton:SetAlpha(1)
+                ExpansionLandingPageMinimapButton:Show()
+
+                -- 暴雪的 SetTooltip 在 reparent 後會報錯（nil text）
+                -- 用 pcall 包裝原始 OnEnter 來壓制
+                local origOnEnter = ExpansionLandingPageMinimapButton:GetScript("OnEnter")
+                if origOnEnter then
+                    ExpansionLandingPageMinimapButton:SetScript("OnEnter", function(self, ...)
+                        pcall(origOnEnter, self, ...)
+                    end)
                 end
             end)
         end
-    end
+    end)
 
-    -- 隱藏 Minimap 自身的圓形邊框/背景 regions
-    local minimapRegions = { Minimap:GetRegions() }
-    for _, region in ipairs(minimapRegions) do
-        if region and region:IsObjectType("Texture") then
-            local tex = region:GetTexture()
-            if tex and type(tex) == "string" then
-                local lower = tex:lower()
-                if lower:find("border") or lower:find("background") or lower:find("compass")
-                    or lower:find("tracking") or lower:find("minimask") then
-                    region:SetTexture(nil)
-                    region:SetAlpha(0)
-                    region:Hide()
+    -- 2. 隱藏 MinimapCluster（裝飾性框架）
+    if MinimapCluster then
+        pcall(function()
+            MinimapCluster:EnableMouse(false)
+            MinimapCluster:SetAlpha(0)
+            MinimapCluster:ClearAllPoints()
+            MinimapCluster:SetPoint("TOP", UIParent, "BOTTOM", 0, -2000)
+
+            -- 隱藏剩餘的子框架（有用的已 reparent 走）
+            for _, child in ipairs({ MinimapCluster:GetChildren() }) do
+                if child and child ~= Minimap then
+                    pcall(function()
+                        child:SetAlpha(0)
+                        child:EnableMouse(false)
+                    end)
                 end
             end
-            -- WoW 12.0：atlas/fileID 型的裝飾材質（drawLayer 為 BORDER/BACKGROUND）
-            local layer = region:GetDrawLayer()
-            if layer == "BORDER" or layer == "BACKGROUND" then
-                region:SetAlpha(0)
-                region:Hide()
-            end
-        end
-    end
 
-    -- 隱藏 MinimapCluster 容器（正式服 12.0 主容器）
-    -- Minimap 已重新掛載到 minimapFrame
-    -- 使用多重手段確保 Cluster 完全不可見（Hide 可能被 EditMode/taint 覆蓋）
-    if MinimapCluster then
-        -- 方法 1：移到螢幕外 + 極小縮放
-        MinimapCluster:ClearAllPoints()
-        MinimapCluster:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -9999, -9999)
-        MinimapCluster:SetScale(0.001)
-        MinimapCluster:SetAlpha(0)
-        MinimapCluster:EnableMouse(false)
-
-        -- 方法 2：也嘗試 Hide
-        pcall(function() MinimapCluster:Hide() end)
-
-        -- 防止系統重新定位 Cluster
-        hooksecurefunc(MinimapCluster, "SetPoint", function(self)
-            -- 如果不是我們設的位置，重新移到螢幕外
-            local _, _, _, x, y = self:GetPoint(1)
-            if x ~= -9999 or y ~= -9999 then
-                self:ClearAllPoints()
-                self:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -9999, -9999)
+            -- 隱藏所有 regions（材質/字型等）
+            for _, region in ipairs({ MinimapCluster:GetRegions() }) do
+                pcall(function()
+                    region:SetAlpha(0)
+                    if region.Hide then region:Hide() end
+                end)
             end
         end)
     end
 
-    -- 使小地圖變為方形
-    Minimap:SetMaskTexture("Interface\\Buttons\\WHITE8x8")
+    -- 舊版追蹤按鈕
+    if MiniMapTracking then
+        pcall(function()
+            MiniMapTracking:SetParent(Minimap)
+            if MiniMapTrackingBackground then
+                MiniMapTrackingBackground:Hide()
+            end
+        end)
+    end
 
-    -- 停用預設縮放行為
-    -- 使用 HookScript 而非 SetScript 以避免 taint
+    -- 3. ★ 隱藏 Minimap 自身的裝飾子框架（MinimapBackdrop 就是圓形邊框）
+    pcall(function()
+        if MinimapBackdrop then
+            MinimapBackdrop:Hide()
+            MinimapBackdrop:SetAlpha(0)
+        end
+    end)
+    -- 隱藏 Minimap 的所有非必要子框架
+    for _, child in ipairs({ Minimap:GetChildren() }) do
+        local name = child:GetName()
+        if name and (name:find("Backdrop") or name:find("Border") or name:find("Background")) then
+            pcall(function()
+                child:Hide()
+                child:SetAlpha(0)
+            end)
+        end
+    end
+
+    -- 4. 方形遮罩（使用已驗證的 WHITE8X8 材質）
+    Minimap:SetMaskTexture("Interface\\BUTTONS\\WHITE8X8")
+
+
+
+    -- 6b. ★ 關鍵：覆蓋 Minimap.Layout 防止 WoW 重設遮罩/位置
+    -- BasicMinimap 同樣這麼做，這是防止系統持續重設小地圖的關鍵
+    Minimap.Layout = function() end
+
+    -- 7. 完整清除 blob 環形（Scalar + Alpha 都要）
+    pcall(function() Minimap:SetArchBlobRingScalar(0) end)
+    pcall(function() Minimap:SetArchBlobRingAlpha(0) end)
+    pcall(function() Minimap:SetQuestBlobRingScalar(0) end)
+    pcall(function() Minimap:SetQuestBlobRingAlpha(0) end)
+    pcall(function() Minimap:SetArchBlobInsideTexture("") end)
+    pcall(function() Minimap:SetArchBlobOutsideTexture("") end)
+    pcall(function() Minimap:SetQuestBlobInsideTexture("") end)
+    pcall(function() Minimap:SetQuestBlobOutsideTexture("") end)
+
+    -- 8. ★ 關鍵：處理 HybridMinimap（室內/副本地圖覆蓋層的圓形遮罩）
+    if HybridMinimap then
+        pcall(function()
+            HybridMinimap.CircleMask:SetTexture("Interface\\BUTTONS\\WHITE8X8")
+            HybridMinimap.MapCanvas:SetUseMaskTexture(false)
+            HybridMinimap.MapCanvas:SetUseMaskTexture(true)
+        end)
+    end
+
+    -- 9. 縮放
     Minimap:EnableMouseWheel(true)
     Minimap:HookScript("OnMouseWheel", function(_self, delta)
         if delta > 0 then
@@ -669,11 +729,30 @@ local function InitializeMinimap()
     local db = LunarUI.db and LunarUI.db.profile.minimap
     if not db or not db.enabled then return end
 
-    -- 先隱藏暴雪元素
-    HideBlizzardMinimapElements()
+    CreateMinimapFrame()           -- 先建立框架、reparent Minimap
+    HideBlizzardMinimapElements()  -- 再隱藏裝飾
 
-    -- 建立我們的框架
-    CreateMinimapFrame()
+    -- 監聽 Blizzard_HybridMinimap 按需載入
+    -- HybridMinimap 在進入副本/室內時才載入，需要在載入時套用方形遮罩
+    local addonLoadedFrame = CreateFrame("Frame")
+    addonLoadedFrame:RegisterEvent("ADDON_LOADED")
+    addonLoadedFrame:SetScript("OnEvent", function(self, _event, addon)
+        if addon == "Blizzard_HybridMinimap" then
+            self:UnregisterEvent("ADDON_LOADED")
+            if HybridMinimap then
+                pcall(function()
+                    HybridMinimap.MapCanvas:SetUseMaskTexture(false)
+                    HybridMinimap.CircleMask:SetTexture("Interface\\BUTTONS\\WHITE8X8")
+                    HybridMinimap.MapCanvas:SetUseMaskTexture(true)
+                end)
+            end
+        end
+    end)
+
+    -- 註冊至框架移動器
+    if minimapFrame then
+        LunarUI:RegisterMovableFrame("Minimap", minimapFrame, "小地圖")
+    end
 
     -- 建立指示器
     CreateMailIndicator()
@@ -711,7 +790,7 @@ end
 LunarUI.InitializeMinimap = InitializeMinimap
 LunarUI.minimapFrame = minimapFrame
 
--- 停用自訂小地圖模組，使用暴雪內建小地圖
--- hooksecurefunc(LunarUI, "OnEnable", function()
---     C_Timer.After(0.5, InitializeMinimap)
--- end)
+-- 掛鉤至插件啟用
+hooksecurefunc(LunarUI, "OnEnable", function()
+    C_Timer.After(0.5, InitializeMinimap)
+end)

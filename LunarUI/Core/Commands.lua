@@ -67,10 +67,17 @@ function LunarUI:SlashCommand(input)
         self:OpenOptions()
 
     elseif cmd == "reset" then
-        self:ResetPosition()
+        if args[2] == "all" then
+            LunarUI.ResetAllPositions()
+        else
+            self:ResetPosition()
+        end
 
     elseif cmd == "test" then
         self:RunTest(args[2])
+
+    elseif cmd == "move" then
+        LunarUI.ToggleMoveMode()
 
     elseif cmd == "keybind" then
         if self.ToggleKeybindMode then
@@ -119,6 +126,7 @@ function LunarUI:PrintHelp()
     print("  |cffffd100/lunar keybind|r - 切換快捷鍵編輯模式")
     print("  |cffffd100/lunar export|r - 匯出設定")
     print("  |cffffd100/lunar import|r - 匯入設定")
+    print("  |cffffd100/lunar move|r - 切換框架移動模式")
     print("  |cffffd100/lunar reset|r - 重置框架位置")
     print("  |cffffd100/lunar test [combat]|r - 執行測試")
 end

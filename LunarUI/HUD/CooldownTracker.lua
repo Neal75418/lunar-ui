@@ -470,6 +470,11 @@ local function Initialize()
     CreateCooldownFrame()
     SetupTrackedSpells()
 
+    -- 註冊至框架移動器
+    if cooldownFrame then
+        LunarUI:RegisterMovableFrame("CooldownTracker", cooldownFrame, "冷卻追蹤")
+    end
+
     -- 註冊月相變化回呼
     LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
         UpdateForPhase()

@@ -11,6 +11,8 @@
     - 裝備物品等級顯示
     - 垃圾自動販賣
     - 月相感知顯示
+    - 專業容器背景著色
+    - 裝等升級綠色上箭頭標記
 ]]
 
 local _ADDON_NAME, Engine = ...
@@ -46,6 +48,52 @@ local ITEM_QUALITY_COLORS = {
     [7] = { 0.00, 0.80, 0.98 },  -- 傳家寶（淺藍）
     [8] = { 0.00, 0.80, 1.00 },  -- WoW 代幣
 }
+
+-- 專業容器背景著色
+-- 透過 C_Container.GetContainerNumFreeSlots 的第二個返回值 bagType 判斷
+-- bagType 是位元遮罩（flag），對應 Enum.BagFamily
+local PROFESSION_BAG_COLORS = {
+    -- bagType flag → { r, g, b, a }
+    [0x0008]  = { 0.18, 0.55, 0.18, 0.25 },   -- 草藥（Herbs）綠色
+    [0x0010]  = { 0.55, 0.28, 0.55, 0.25 },   -- 附魔（Enchanting）紫色
+    [0x0020]  = { 0.45, 0.45, 0.55, 0.25 },   -- 工程（Engineering）灰藍
+    [0x0040]  = { 0.20, 0.50, 0.70, 0.25 },   -- 珠寶（Gems）藍色
+    [0x0080]  = { 0.50, 0.40, 0.25, 0.25 },   -- 礦石（Mining）褐色
+    [0x0200]  = { 0.60, 0.45, 0.30, 0.25 },   -- 製皮（Leatherworking）皮革色
+    [0x0400]  = { 0.50, 0.50, 0.50, 0.25 },   -- 銘文（Inscription）灰色
+    [0x0800]  = { 0.30, 0.55, 0.45, 0.25 },   -- 釣魚（Fishing/Tackle）青色
+    [0x1000]  = { 0.55, 0.35, 0.20, 0.25 },   -- 烹飪（Cooking）橘棕色
+}
+
+-- 裝備槽位 ID 對應（用於升級判斷）
+local EQUIP_LOC_TO_SLOT = {
+    INVTYPE_HEAD          = { 1 },
+    INVTYPE_NECK          = { 2 },
+    INVTYPE_SHOULDER      = { 3 },
+    INVTYPE_BODY          = { 4 },
+    INVTYPE_CHEST         = { 5 },
+    INVTYPE_ROBE          = { 5 },
+    INVTYPE_WAIST         = { 6 },
+    INVTYPE_LEGS          = { 7 },
+    INVTYPE_FEET          = { 8 },
+    INVTYPE_WRIST         = { 9 },
+    INVTYPE_HAND          = { 10 },
+    INVTYPE_FINGER        = { 11, 12 },
+    INVTYPE_TRINKET       = { 13, 14 },
+    INVTYPE_CLOAK         = { 15 },
+    INVTYPE_WEAPON        = { 16, 17 },
+    INVTYPE_SHIELD        = { 17 },
+    INVTYPE_2HWEAPON      = { 16 },
+    INVTYPE_WEAPONMAINHAND = { 16 },
+    INVTYPE_WEAPONOFFHAND = { 17 },
+    INVTYPE_HOLDABLE      = { 17 },
+    INVTYPE_RANGED        = { 16 },
+    INVTYPE_RANGEDRIGHT   = { 16 },
+}
+
+-- 快取裝備中的物品等級（開啟背包時刷新）
+local equippedItemLevels = {}
+local equippedIlvlDirty = true
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -156,6 +204,87 @@ local function IsEquipment(itemLink)
     return isEquip
 end
 
+-- 取得背包類型顏色（專業容器）
+local bagTypeCache = {}
+
+local function GetBagTypeColor(bag)
+    local db = LunarUI.db and LunarUI.db.profile.bags
+    if not db or not db.showProfessionColors then return false end
+
+    if bagTypeCache[bag] ~= nil then
+        return bagTypeCache[bag]
+    end
+
+    local _, bagType = C_Container.GetContainerNumFreeSlots(bag)
+    if bagType and bagType > 0 then
+        -- 檢查每個專業 flag
+        for flag, color in pairs(PROFESSION_BAG_COLORS) do
+            if bit.band(bagType, flag) > 0 then
+                bagTypeCache[bag] = color
+                return color
+            end
+        end
+    end
+
+    bagTypeCache[bag] = false
+    return false
+end
+
+-- 刷新裝備物品等級快取
+local function RefreshEquippedItemLevels()
+    if not equippedIlvlDirty then return end
+    equippedIlvlDirty = false
+    wipe(equippedItemLevels)
+
+    for slotID = 1, 17 do
+        local itemLink = GetInventoryItemLink("player", slotID)
+        if itemLink then
+            local ilvl = select(1, C_Item.GetDetailedItemLevelInfo(itemLink))
+            equippedItemLevels[slotID] = ilvl or 0
+        else
+            equippedItemLevels[slotID] = 0
+        end
+    end
+end
+
+-- 判斷物品是否為裝等升級
+local function IsItemUpgrade(itemLink)
+    if not itemLink then return false end
+
+    local db = LunarUI.db and LunarUI.db.profile.bags
+    if not db or not db.showUpgradeArrow then return false end
+
+    -- 取得物品裝備位置
+    local _, _, _, _, _, _, _, _, equipLoc = C_Item.GetItemInfo(itemLink)
+    if not equipLoc or equipLoc == "" then return false end
+
+    local slotIDs = EQUIP_LOC_TO_SLOT[equipLoc]
+    if not slotIDs then return false end
+
+    -- 取得此物品的等級
+    local itemIlvl = select(1, C_Item.GetDetailedItemLevelInfo(itemLink))
+    if not itemIlvl or itemIlvl <= 1 then return false end
+
+    -- 刷新裝備快取
+    RefreshEquippedItemLevels()
+
+    -- 與裝備中的對應槽位比較
+    local isUpgrade = false
+    for _, slotID in ipairs(slotIDs) do
+        local equippedIlvl = equippedItemLevels[slotID] or 0
+        if equippedIlvl > 0 and itemIlvl > equippedIlvl then
+            isUpgrade = true
+            break
+        elseif equippedIlvl == 0 then
+            -- 槽位為空，任何裝備都算升級
+            isUpgrade = true
+            break
+        end
+    end
+
+    return isUpgrade
+end
+
 -- 銀行輔助函數
 local function GetTotalBankSlots()
     local total = C_Container.GetContainerNumSlots(BANK_CONTAINER)
@@ -250,6 +379,27 @@ local function CreateItemSlot(parent, slotID, bag, slot)
         glow:SetAlpha(0)
         glow:Hide()
         button.qualityGlow = glow
+    end
+
+    -- 升級箭頭指示器
+    if not button.upgradeArrow then
+        local arrow = button:CreateTexture(nil, "OVERLAY", nil, 2)
+        arrow:SetSize(14, 14)
+        arrow:SetPoint("TOPRIGHT", -1, -1)
+        arrow:SetTexture("Interface\\BUTTONS\\UI-MicroStream-Green")
+        arrow:SetTexCoord(0, 1, 1, 0)  -- 翻轉為向上箭頭
+        arrow:Hide()
+        button.upgradeArrow = arrow
+    end
+
+    -- 專業容器背景著色
+    if not button.profBg then
+        local profBg = button:CreateTexture(nil, "BACKGROUND", nil, -1)
+        profBg:SetTexture("Interface\\Buttons\\WHITE8x8")
+        profBg:SetAllPoints()
+        profBg:SetVertexColor(0, 0, 0, 0)
+        profBg:Hide()
+        button.profBg = profBg
     end
 
     -- Hover 高亮
@@ -347,6 +497,26 @@ local function UpdateSlot(button)
                 button.questIcon:Hide()
             end
         end
+
+        -- 裝等升級箭頭
+        if button.upgradeArrow then
+            if IsItemUpgrade(itemLink) then
+                button.upgradeArrow:Show()
+            else
+                button.upgradeArrow:Hide()
+            end
+        end
+
+        -- 專業容器背景著色
+        if button.profBg then
+            local bagColor = GetBagTypeColor(bag)
+            if bagColor then
+                button.profBg:SetVertexColor(bagColor[1], bagColor[2], bagColor[3], bagColor[4])
+                button.profBg:Show()
+            else
+                button.profBg:Hide()
+            end
+        end
     else
         -- 空格子
         local icon = button.icon or _G[button:GetName() .. "IconTexture"]
@@ -370,6 +540,20 @@ local function UpdateSlot(button)
         end
         if button.qualityGlow then
             button.qualityGlow:Hide()
+        end
+        if button.upgradeArrow then
+            button.upgradeArrow:Hide()
+        end
+
+        -- 空格子的專業容器背景著色（仍顯示底色）
+        if button.profBg then
+            local bagColor = GetBagTypeColor(bag)
+            if bagColor then
+                button.profBg:SetVertexColor(bagColor[1], bagColor[2], bagColor[3], bagColor[4] * 0.5)
+                button.profBg:Show()
+            else
+                button.profBg:Hide()
+            end
         end
     end
 end
@@ -1089,6 +1273,11 @@ local function OpenBags()
     end
 
     if bagFrame then
+        -- 刷新裝備等級快取（用於升級箭頭判斷）
+        equippedIlvlDirty = true
+        -- 清除背包類型快取（背包可能已更換）
+        wipe(bagTypeCache)
+
         RefreshBagLayout()
         bagFrame:Show()
         isOpen = true
@@ -1166,6 +1355,7 @@ eventFrame:RegisterEvent("MERCHANT_SHOW")
 eventFrame:RegisterEvent("BANKFRAME_OPENED")
 eventFrame:RegisterEvent("BANKFRAME_CLOSED")
 eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 
 eventFrame:SetScript("OnEvent", function(_self, event, ...)
     -- 商人開啟時自動販賣垃圾
@@ -1196,6 +1386,15 @@ eventFrame:SetScript("OnEvent", function(_self, event, ...)
     if event == "PLAYERBANKSLOTS_CHANGED" then
         if bankFrame and bankFrame:IsShown() then
             UpdateAllBankSlots()
+        end
+        return
+    end
+
+    -- 裝備變更時標記快取過期（用於升級箭頭重新計算）
+    if event == "PLAYER_EQUIPMENT_CHANGED" then
+        equippedIlvlDirty = true
+        if bagFrame and bagFrame:IsShown() then
+            UpdateAllSlots()
         end
         return
     end
