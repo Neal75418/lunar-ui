@@ -364,7 +364,7 @@ end
     @param frame Frame 目標框架
     @param label string 顯示名稱（可選）
 ]]
-function LunarUI.RegisterMovableFrame(name, frame, label)
+function LunarUI:RegisterMovableFrame(name, frame, label)
     if not name or not frame then return end
 
     CreateMover(name, frame, label)
@@ -379,7 +379,7 @@ end
     取消註冊可移動框架
     @param name string 識別名稱
 ]]
-function LunarUI.UnregisterMovableFrame(name)
+function LunarUI:UnregisterMovableFrame(name)
     if movers[name] then
         movers[name].mover:Hide()
         movers[name] = nil
