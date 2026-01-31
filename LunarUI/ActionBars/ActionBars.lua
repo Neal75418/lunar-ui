@@ -50,6 +50,29 @@ local bars = {}
 local buttons = {}
 local keybindMode = false
 
+-- 清除按鈕 NormalTexture（提升到模組級供 hook 共用）
+local function ClearNormalTexture(self)
+    local nt = self:GetNormalTexture()
+    if nt then
+        nt:SetTexture(nil)
+        nt:Hide()
+    end
+end
+
+-- Fix 6: 批次處理 NormalTexture 清除，避免每個按鈕 Update 都建 closure
+local pendingNormalClear = {}
+local normalClearScheduled = false
+
+local function ProcessPendingNormalClears()
+    normalClearScheduled = false
+    for btn in pairs(pendingNormalClear) do
+        if btn:GetNormalTexture() then
+            ClearNormalTexture(btn)
+        end
+        pendingNormalClear[btn] = nil
+    end
+end
+
 -- WoW 12.0 對 GetActionCooldown 回傳密值，即使用 pcall 保護也無法比較
 -- 停用自訂冷卻文字，使用內建顯示與 OmniCC 等插件
 
@@ -123,12 +146,15 @@ end
 local function StyleButton(button)
     if not button then return end
 
+    -- 確認是真正的按鈕（有 GetNormalTexture 方法），非普通 Frame
+    if not button.GetNormalTexture then return end
+
     -- 取得按鈕元素
     local name = button:GetName()
-    local icon = button.icon or _G[name .. "Icon"]
-    local count = button.Count or _G[name .. "Count"]
-    local hotkey = button.HotKey or _G[name .. "HotKey"]
-    local border = button.Border or _G[name .. "Border"]
+    local icon = button.icon or (name and _G[name .. "Icon"])
+    local count = button.Count or (name and _G[name .. "Count"])
+    local hotkey = button.HotKey or (name and _G[name .. "HotKey"])
+    local border = button.Border or (name and _G[name .. "Border"])
     local normalTexture = button:GetNormalTexture()
     local pushedTexture = button:GetPushedTexture()
     local highlightTexture = button:GetHighlightTexture()
@@ -189,14 +215,6 @@ local function StyleButton(button)
     if not button._lunarHookedNormal then
         button._lunarHookedNormal = true
 
-        local function ClearNormalTexture(self)
-            local nt = self:GetNormalTexture()
-            if nt then
-                nt:SetTexture(nil)
-                nt:Hide()
-            end
-        end
-
         hooksecurefunc(button, "SetNormalTexture", ClearNormalTexture)
 
         -- WoW 12.0：也可能使用 SetNormalAtlas
@@ -205,33 +223,44 @@ local function StyleButton(button)
         end
 
         -- LAB 在 OnButtonUpdate/OnReceiveDrag 後可能重設材質
-        -- Hook Update 確保重設被攔截
+        -- Fix 6: 用 dirty flag 批次排程，避免每個按鈕都建 closure
         if button.Update then
             hooksecurefunc(button, "Update", function(self)
-                C_Timer.After(0, function()
-                    if self:GetNormalTexture() then
-                        ClearNormalTexture(self)
-                    end
-                end)
+                pendingNormalClear[self] = true
+                if not normalClearScheduled then
+                    normalClearScheduled = true
+                    C_Timer.After(0, ProcessPendingNormalClears)
+                end
             end)
         end
     end
 
-    -- 建立自訂邊框
+    -- 冷卻框架：確保 sweep（時鐘轉圈）正常顯示
+    local cooldown = button.cooldown
+    if cooldown then
+        cooldown:ClearAllPoints()
+        cooldown:SetAllPoints(button)
+        cooldown:SetDrawSwipe(true)
+        cooldown:SetSwipeColor(0, 0, 0, 0.8)
+        cooldown:SetDrawEdge(true)
+        cooldown:SetFrameLevel(button:GetFrameLevel() + 1)
+    end
+
+    -- 建立自訂邊框（frame level 在 cooldown 之上，但填充透明不遮蓋）
     if not button.LunarBorder then
         local borderFrame = CreateFrame("Frame", nil, button, "BackdropTemplate")
         borderFrame:SetAllPoints()
         borderFrame:SetBackdrop(backdropTemplate)
         borderFrame:SetBackdropColor(0, 0, 0, 0)
         borderFrame:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
-        borderFrame:SetFrameLevel(button:GetFrameLevel() + 2)
+        borderFrame:SetFrameLevel(button:GetFrameLevel() + 3)
         button.LunarBorder = borderFrame
     end
 
-    -- 樣式化按下材質
+    -- 樣式化按下材質（提高可見度）
     if pushedTexture then
         pushedTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
-        pushedTexture:SetVertexColor(1, 1, 1, 0.2)
+        pushedTexture:SetVertexColor(1, 1, 1, 0.4)
         pushedTexture:SetAllPoints()
     end
 
@@ -248,6 +277,47 @@ local function StyleButton(button)
         checkedTexture:SetVertexColor(0.4, 0.6, 0.8, 0.5)
         checkedTexture:SetAllPoints()
     end
+
+    -- 按下閃光反饋（Flash 材質）
+    if button.Flash then
+        button.Flash:SetTexture("Interface\\Buttons\\WHITE8x8")
+        button.Flash:SetVertexColor(1, 0.9, 0.6, 0.4)
+        button.Flash:SetAllPoints()
+        button.Flash:SetDrawLayer("OVERLAY")
+    end
+end
+
+-- 按鈕按下閃光動畫：短暫白色閃爍提供打擊回饋感
+local function PlayPressFlash(button)
+    if not button._lunarFlash then
+        local flash = button:CreateTexture(nil, "OVERLAY", nil, 7)
+        flash:SetAllPoints()
+        flash:SetTexture("Interface\\Buttons\\WHITE8x8")
+        flash:SetVertexColor(1, 1, 1, 0)
+        flash:Hide()
+        button._lunarFlash = flash
+
+        -- 建立淡出動畫群組
+        local ag = flash:CreateAnimationGroup()
+        local fadeIn = ag:CreateAnimation("Alpha")
+        fadeIn:SetFromAlpha(0)
+        fadeIn:SetToAlpha(0.5)
+        fadeIn:SetDuration(0.05)
+        fadeIn:SetOrder(1)
+        local fadeOut = ag:CreateAnimation("Alpha")
+        fadeOut:SetFromAlpha(0.5)
+        fadeOut:SetToAlpha(0)
+        fadeOut:SetDuration(0.15)
+        fadeOut:SetOrder(2)
+        ag:SetScript("OnPlay", function() flash:Show() end)
+        ag:SetScript("OnFinished", function() flash:Hide() end)
+        button._lunarFlashAG = ag
+    end
+    if button._lunarFlashAG:IsPlaying() then
+        button._lunarFlashAG:Stop()
+    end
+    button._lunarFlash:Show()
+    button._lunarFlashAG:Play()
 end
 
 -- WoW 12.0 對 GetActionCooldown 回傳密值，無法進行比較
@@ -287,6 +357,15 @@ local function CreateActionBar(id, page)
         local buttonName = name .. "Button" .. i
         local button = LAB:CreateButton(i, buttonName, bar, nil)
 
+        -- 告知 LAB 我們自行處理邊框，讓 cooldown 正確填滿按鈕
+        button.config = button.config or {}
+        button.config.hideElements = button.config.hideElements or {}
+        button.config.hideElements.border = true
+        button.config.hideElements.borderIfEmpty = true
+        if button.UpdateConfig then
+            button:UpdateConfig()
+        end
+
         button:SetSize(buttonSize, buttonSize)
         if orientation == "vertical" then
             button:SetPoint("TOP", bar, "TOP", 0, -((i - 1) * (buttonSize + buttonSpacing)))
@@ -302,6 +381,24 @@ local function CreateActionBar(id, page)
 
         -- 樣式化
         StyleButton(button)
+
+        -- 按下閃光回饋
+        if not button._lunarHookedPress then
+            button._lunarHookedPress = true
+            button:HookScript("OnMouseDown", function(self)
+                PlayPressFlash(self)
+            end)
+        end
+
+        -- 技能距離著色（超出範圍時按鈕變紅）
+        local rangeDb = LunarUI.db and LunarUI.db.profile.actionbars
+        if rangeDb and rangeDb.outOfRangeColoring ~= false and button.UpdateConfig then
+            button.config = button.config or {}
+            button.config.outOfRangeColoring = "button"
+            button.config.colors = button.config.colors or {}
+            button.config.colors.range = { 0.8, 0.1, 0.1 }
+            button:UpdateConfig()
+        end
 
         bar.buttons[i] = button
         buttons[buttonName] = button
@@ -525,7 +622,7 @@ local function IsBarFadeEnabled(barKey)
 
     -- 每條 bar 可獨立覆蓋
     local db = LunarUI.db and LunarUI.db.profile.actionbars
-    if db and db[barKey] and db[barKey].fadeEnabled ~= nil then
+    if db and type(db[barKey]) == "table" and db[barKey].fadeEnabled ~= nil then
         return db[barKey].fadeEnabled
     end
     return true  -- 預設跟隨全域設定
@@ -1211,6 +1308,185 @@ local function HideBlizzardBarsDelayed()
 end
 
 --------------------------------------------------------------------------------
+-- ExtraActionButton 樣式化（世界任務/場景等特殊按鈕）
+--------------------------------------------------------------------------------
+
+local function StyleExtraActionButton()
+    local db = LunarUI.db and LunarUI.db.profile.actionbars
+    if not db or db.extraActionButton == false then return end
+
+    local extra = ExtraActionBarFrame
+    if not extra then return end
+
+    -- 重新定位至畫面中下方
+    extra:SetParent(UIParent)
+    extra:ClearAllPoints()
+    extra:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 300)
+
+    -- 停止暴雪預設進場動畫（intro 是 AnimationGroup，無 SetAlpha）
+    if extra.intro and extra.intro.Stop then
+        extra.intro:Stop()
+    end
+
+    -- 遍歷區域，隱藏裝飾材質
+    for _, region in ipairs({ extra:GetRegions() }) do
+        if region and region:IsObjectType("Texture") then
+            local atlas = region.GetAtlas and region:GetAtlas()
+            -- 保留按鈕圖示本身，隱藏背景裝飾
+            if atlas and (atlas:find("ExtraAbility") or atlas:find("extraability")) then
+                region:SetAlpha(0)
+            end
+        end
+    end
+
+    -- 樣式化 ExtraActionButton1
+    local btn = ExtraActionButton1
+    if not btn then return end
+
+    local buttonSize = db.buttonSize or DEFAULT_BUTTON_SIZE
+    btn:SetSize(buttonSize * 1.5, buttonSize * 1.5)
+
+    -- 樣式化按鈕（複用現有 StyleButton）
+    StyleButton(btn)
+
+    -- 隱藏暴雪按鈕的額外裝飾
+    if btn.style then
+        btn.style:SetAlpha(0)
+    end
+
+    -- 註冊到月相感知（跟隨動作條透明度）
+    bars.extraActionButton = extra
+end
+
+-- Zone Ability Button（龍島飛行等區域技能）
+local function StyleZoneAbilityButton()
+    local db = LunarUI.db and LunarUI.db.profile.actionbars
+    if not db or db.extraActionButton == false then return end
+
+    local zone = ZoneAbilityFrame
+    if not zone then return end
+
+    -- 重新定位
+    zone:SetParent(UIParent)
+    zone:ClearAllPoints()
+    zone:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 350)
+
+    -- 隱藏裝飾背景
+    if zone.Style then
+        zone.Style:SetAlpha(0)
+    end
+
+    -- 樣式化按鈕
+    local btn = zone.SpellButton or zone.SpellButtonContainer
+    if btn then
+        local buttonSize = db.buttonSize or DEFAULT_BUTTON_SIZE
+        btn:SetSize(buttonSize * 1.5, buttonSize * 1.5)
+        StyleButton(btn)
+    end
+
+    bars.zoneAbilityButton = zone
+end
+
+--------------------------------------------------------------------------------
+-- 微型按鈕列（角色/法術書/天賦/任務等系統按鈕）
+--------------------------------------------------------------------------------
+
+local function CreateMicroBar()
+    local db = LunarUI.db and LunarUI.db.profile.actionbars.microBar
+    if not db or not db.enabled then return end
+    if InCombatLockdown() then return end
+
+    -- WoW 12.0 微型按鈕列表
+    local MICRO_BUTTONS = {}
+    local microButtonNames = {
+        "CharacterMicroButton",
+        "ProfessionMicroButton",
+        "PlayerSpellsMicroButton",
+        "AchievementMicroButton",
+        "QuestLogMicroButton",
+        "HousingMicroButton",
+        "GuildMicroButton",
+        "LFDMicroButton",
+        "CollectionsMicroButton",
+        "EJMicroButton",
+        "StoreMicroButton",
+        "MainMenuMicroButton",
+    }
+    for _, btnName in ipairs(microButtonNames) do
+        local btn = _G[btnName]
+        if btn then
+            table.insert(MICRO_BUTTONS, btn)
+        end
+    end
+
+    if #MICRO_BUTTONS == 0 then return end
+
+    -- 建立容器
+    local microBar = CreateFrame("Frame", "LunarUI_MicroBar", UIParent)
+    local btnWidth = db.buttonWidth or 28
+    local btnHeight = db.buttonHeight or 36
+    local spacing = 1
+    local totalWidth = #MICRO_BUTTONS * btnWidth + (#MICRO_BUTTONS - 1) * spacing
+
+    microBar:SetSize(totalWidth, btnHeight)
+    microBar:SetPoint(
+        db.point or "BOTTOM",
+        UIParent,
+        db.point or "BOTTOM",
+        db.x or 0,
+        db.y or 2
+    )
+    microBar:SetFrameStrata("MEDIUM")
+    microBar:SetClampedToScreen(true)
+
+    -- 儲存按鈕參照以供清理用
+    microBar._buttons = MICRO_BUTTONS
+
+    -- 重新排列微型按鈕
+    for i, btn in ipairs(MICRO_BUTTONS) do
+        -- 儲存原始父框架以供清理還原
+        btn._lunarOriginalParent = btn:GetParent()
+
+        btn:SetParent(microBar)
+        btn:ClearAllPoints()
+        btn:SetPoint("LEFT", microBar, "LEFT", (i - 1) * (btnWidth + spacing), 0)
+        btn:SetSize(btnWidth, btnHeight)
+        btn:Show()
+
+        -- 隱藏暴雪裝飾材質
+        for _, region in ipairs({ btn:GetRegions() }) do
+            if region and region:IsObjectType("Texture") then
+                local texName = region:GetDebugName() or ""
+                -- 保留圖示材質，隱藏背景/邊框/發光
+                if texName:find("Background") or texName:find("Flash") or texName:find("Highlight") then
+                    region:SetAlpha(0)
+                end
+            end
+        end
+    end
+
+    -- 月相感知透明度
+    microBar._lunarMinAlpha = 0.3
+
+    bars.microBar = microBar
+end
+
+-- 微型按鈕列清理
+local function CleanupMicroBar()
+    if bars.microBar then
+        -- 還原按鈕至原始父框架
+        for _, btn in ipairs(bars.microBar._buttons or {}) do
+            if btn._lunarOriginalParent then
+                btn:SetParent(btn._lunarOriginalParent)
+                btn._lunarOriginalParent = nil
+            end
+        end
+        bars.microBar:Hide()
+        bars.microBar = nil
+    end
+end
+
+--------------------------------------------------------------------------------
 -- 初始化
 --------------------------------------------------------------------------------
 
@@ -1247,6 +1523,13 @@ local function SpawnActionBars()
     CreateStanceBar()
     CreatePetBar()
 
+    -- 樣式化額外動作按鈕
+    StyleExtraActionButton()
+    StyleZoneAbilityButton()
+
+    -- 微型按鈕列
+    CreateMicroBar()
+
     -- 註冊月相更新
     RegisterBarPhaseCallback()
 
@@ -1257,10 +1540,33 @@ local function SpawnActionBars()
     C_Timer.After(1.0, InitializeFade)
 end
 
+-- 清理函數
+local function CleanupActionBars()
+    -- 還原 ExtraActionBarFrame
+    if ExtraActionBarFrame and bars.extraActionButton then
+        if ExtraActionBarFrame.intro then
+            ExtraActionBarFrame.intro:SetAlpha(1)
+        end
+        bars.extraActionButton = nil
+    end
+
+    -- 還原 ZoneAbilityFrame
+    if ZoneAbilityFrame and bars.zoneAbilityButton then
+        if ZoneAbilityFrame.Style then
+            ZoneAbilityFrame.Style:SetAlpha(1)
+        end
+        bars.zoneAbilityButton = nil
+    end
+
+    -- 清理微型按鈕列
+    CleanupMicroBar()
+end
+
 -- 匯出
 LunarUI.SpawnActionBars = SpawnActionBars
 LunarUI.EnterKeybindMode = EnterKeybindMode
 LunarUI.ExitKeybindMode = ExitKeybindMode
+LunarUI.CleanupActionBars = CleanupActionBars
 LunarUI.actionBars = bars
 
 -- 掛鉤至插件啟用

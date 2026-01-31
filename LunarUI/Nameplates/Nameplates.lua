@@ -38,23 +38,7 @@ local CLASSIFICATION_COLORS = {
     trivial = { r = 0.3, g = 0.3, b = 0.3 },
 }
 
--- Threat colors（保留供未來使用）
-local _THREAT_COLORS = {
-    [0] = { r = 0.5, g = 0.5, b = 0.5 },  -- Not tanking
-    [1] = { r = 1.0, g = 1.0, b = 0.0 },  -- Threat warning
-    [2] = { r = 1.0, g = 0.6, b = 0.0 },  -- High threat
-    [3] = { r = 1.0, g = 0.0, b = 0.0 },  -- Tanking
-}
-
--- Fix #50: Fallback debuff type colors (DebuffTypeColor may not exist in WoW 12.0)
-local DEBUFF_TYPE_COLORS = _G.DebuffTypeColor or {
-    none = { r = 0.8, g = 0.0, b = 0.0 },
-    Magic = { r = 0.2, g = 0.6, b = 1.0 },
-    Curse = { r = 0.6, g = 0.0, b = 1.0 },
-    Disease = { r = 0.6, g = 0.4, b = 0.0 },
-    Poison = { r = 0.0, g = 0.6, b = 0.0 },
-    [""] = { r = 0.8, g = 0.0, b = 0.0 },
-}
+local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS
 
 --------------------------------------------------------------------------------
 -- Helper Functions
@@ -91,6 +75,8 @@ end
 
 --[[ Health Bar ]]
 local function CreateHealthBar(frame)
+    local db = LunarUI.db and LunarUI.db.profile.nameplates
+
     local health = CreateFrame("StatusBar", nil, frame)
     health:SetStatusBarTexture(statusBarTexture)
     health:SetAllPoints()
@@ -110,6 +96,49 @@ local function CreateHealthBar(frame)
     -- Frequent updates
     health.frequentUpdates = true
 
+    -- Health text overlay
+    if db and db.showHealthText then
+        local healthText = health:CreateFontString(nil, "OVERLAY")
+        healthText:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
+        healthText:SetPoint("CENTER", health, "CENTER", 0, 0)
+        frame.HealthText = healthText
+
+        local fmt = db.healthTextFormat or "percent"
+        health.PostUpdate = function(_bar, _unit, cur, max)
+            if not healthText then return end
+            -- WoW secret value: type()=="number", tonumber() 原樣回傳, 但算術會報錯
+            -- 唯一可靠的偵測方式是嘗試算術並 pcall
+            local ok, pct = pcall(function()
+                if not cur or not max or max == 0 then return nil end
+                return math.floor(cur / max * 100)
+            end)
+            if not ok or not pct then
+                healthText:SetText("")
+                return
+            end
+            if fmt == "percent" then
+                healthText:SetText(pct .. "%")
+            elseif fmt == "current" then
+                -- cur 已通過 pcall 驗證，可安全使用
+                if cur >= 1e6 then
+                    healthText:SetText(string.format("%.1fM", cur / 1e6))
+                elseif cur >= 1e3 then
+                    healthText:SetText(string.format("%.1fK", cur / 1e3))
+                else
+                    healthText:SetText(tostring(cur))
+                end
+            elseif fmt == "both" then
+                if cur >= 1e6 then
+                    healthText:SetText(string.format("%.1fM - %d%%", cur / 1e6, pct))
+                elseif cur >= 1e3 then
+                    healthText:SetText(string.format("%.1fK - %d%%", cur / 1e3, pct))
+                else
+                    healthText:SetText(string.format("%d - %d%%", cur, pct))
+                end
+            end
+        end
+    end
+
     frame.Health = health
     return health
 end
@@ -128,12 +157,12 @@ local function CreateNameText(frame)
     return name
 end
 
---[[ Level Text - 保留供未來使用 ]]
-local function _CreateLevelText(frame)
+--[[ Level Text ]]
+local function CreateLevelText(frame)
     local level = frame:CreateFontString(nil, "OVERLAY")
     level:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
-    level:SetPoint("LEFT", frame, "LEFT", 2, 0)
-    level:SetJustifyH("LEFT")
+    level:SetPoint("RIGHT", frame.Name or frame, "LEFT", -2, 0)
+    level:SetJustifyH("RIGHT")
 
     frame:Tag(level, "[difficulty][level]")
     frame.LevelText = level
@@ -234,24 +263,78 @@ local function CreateDebuffs(frame)
 
         -- Fix #49: Apply BackdropTemplateMixin before calling SetBackdrop
         -- oUF aura buttons don't inherit from BackdropTemplate
-        Mixin(button, BackdropTemplateMixin)
-        button:OnBackdropLoaded()
-
-        -- Border based on debuff type
-        button:SetBackdrop(backdropTemplate)
-        button:SetBackdropColor(0, 0, 0, 0.5)
+        if BackdropTemplateMixin then
+            Mixin(button, BackdropTemplateMixin)
+            button:OnBackdropLoaded()
+            button:SetBackdrop(backdropTemplate)
+            button:SetBackdropColor(0, 0, 0, 0.5)
+        end
     end
 
     -- Post-update for debuff type colors
     -- Fix #50 + Fix #57: WoW 12.0 makes dispelName a secret value
     -- Use generic debuff color since we can't access dispel type
     debuffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
-        local color = DEBUFF_TYPE_COLORS["none"]
-        button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+        if button.SetBackdropBorderColor then
+            local color = DEBUFF_TYPE_COLORS["none"]
+            button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+        end
     end
 
     frame.Debuffs = debuffs
     return debuffs
+end
+
+--[[ Buffs (enemy nameplates — stealable/important buffs) ]]
+local function CreateNameplateBuffs(frame)
+    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    local buffSize = db and db.enemy and db.enemy.buffSize or 14
+    local maxBuffs = db and db.enemy and db.enemy.maxBuffs or 4
+
+    local buffs = CreateFrame("Frame", nil, frame)
+    -- Position above debuffs if they exist, otherwise above health
+    if frame.Debuffs then
+        buffs:SetPoint("BOTTOM", frame.Debuffs, "TOP", 0, 2)
+    else
+        buffs:SetPoint("BOTTOM", frame, "TOP", 0, 14)
+    end
+    buffs:SetSize(frame:GetWidth(), buffSize + 2)
+
+    buffs.size = buffSize
+    buffs.spacing = 2
+    buffs.num = maxBuffs
+    buffs.initialAnchor = "CENTER"
+    buffs["growth-x"] = "RIGHT"
+    buffs["growth-y"] = "UP"
+
+    -- Filter: only show stealable/purgeable buffs on enemies
+    buffs.FilterAura = function(_element, _unit, data)
+        return data.isStealable == true
+    end
+
+    -- Post-create styling (shared with debuffs)
+    buffs.PostCreateButton = function(_self, button)
+        button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
+        button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
+
+        if BackdropTemplateMixin then
+            Mixin(button, BackdropTemplateMixin)
+            button:OnBackdropLoaded()
+            button:SetBackdrop(backdropTemplate)
+            button:SetBackdropColor(0, 0, 0, 0.5)
+        end
+    end
+
+    -- Stealable buffs get a bright border
+    buffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
+        if button.SetBackdropBorderColor then
+            button:SetBackdropBorderColor(0.2, 0.6, 1.0, 1)  -- Blue for stealable
+        end
+    end
+
+    frame.Buffs = buffs
+    return buffs
 end
 
 --[[ Threat Indicator ]]
@@ -306,6 +389,17 @@ local function CreateRaidTargetIndicator(frame)
     icon:SetSize(16, 16)
     icon:SetPoint("RIGHT", frame, "LEFT", -4, 0)
     frame.RaidTargetIndicator = icon
+    return icon
+end
+
+--[[ Quest Icon Indicator ]]
+local function CreateQuestIndicator(frame)
+    local icon = frame:CreateTexture(nil, "OVERLAY")
+    icon:SetSize(14, 14)
+    icon:SetPoint("LEFT", frame, "RIGHT", 18, 0)
+    icon:SetTexture("Interface\\TARGETINGFRAME\\PortraitQuestBadge")
+    icon:Hide()
+    frame.QuestIndicator = icon
     return icon
 end
 
@@ -390,9 +484,16 @@ local function EnemyNameplateLayout(frame, _unit)
         if db.enemy.showAuras then
             CreateDebuffs(frame)
         end
+        if db.enemy.showBuffs then
+            CreateNameplateBuffs(frame)
+        end
+        if db.enemy.showLevel then
+            CreateLevelText(frame)
+        end
     else
         CreateCastbar(frame)
         CreateDebuffs(frame)
+        CreateLevelText(frame)
     end
 
     CreateThreatIndicator(frame)
@@ -400,6 +501,11 @@ local function EnemyNameplateLayout(frame, _unit)
     CreateClassificationGlow(frame)
     CreateRaidTargetIndicator(frame)
     CreateTargetIndicator(frame)
+
+    -- 任務目標高亮
+    if db and db.enemy and db.enemy.showQuestIcon then
+        CreateQuestIndicator(frame)
+    end
 
     -- Register for phase updates
     RegisterNameplateForPhase(frame)
@@ -421,6 +527,9 @@ local function FriendlyNameplateLayout(frame, _unit)
 
     if db and db.friendly and db.friendly.showCastbar then
         CreateCastbar(frame)
+    end
+    if db and db.friendly and db.friendly.showLevel then
+        CreateLevelText(frame)
     end
 
     CreateRaidTargetIndicator(frame)
@@ -451,6 +560,17 @@ end
 -- Nameplate Callbacks
 --------------------------------------------------------------------------------
 
+--[[ Update quest indicator ]]
+local function UpdateQuestIndicator(frame)
+    if not frame or not frame.QuestIndicator or not frame.unit then return end
+    local isQuest = C_QuestLog.UnitIsRelatedToActiveQuest and C_QuestLog.UnitIsRelatedToActiveQuest(frame.unit)
+    if isQuest then
+        frame.QuestIndicator:Show()
+    else
+        frame.QuestIndicator:Hide()
+    end
+end
+
 --[[ Update target indicator ]]
 local function UpdateTargetIndicator(frame)
     if not frame or not frame.TargetIndicator then return end
@@ -467,11 +587,17 @@ end
 local function Nameplate_OnShow(frame)
     if not frame then return end
 
+    -- Re-register frame for tracking (removed on hide)
+    nameplateFrames[frame] = true
+
     -- Update phase alpha
     UpdateNameplatePhase(frame)
 
     -- Update target indicator
     UpdateTargetIndicator(frame)
+
+    -- Update quest indicator
+    UpdateQuestIndicator(frame)
 
     -- Update classification highlight + glow
     if frame.unit then
@@ -512,8 +638,162 @@ local function Nameplate_OnHide(frame)
     if frame.ClassificationGlow then
         frame.ClassificationGlow:Hide()
     end
+    if frame.QuestIndicator then
+        frame.QuestIndicator:Hide()
+    end
     -- Fix #4: Remove frame reference when hidden
     nameplateFrames[frame] = nil
+end
+
+--------------------------------------------------------------------------------
+-- Stacking Detection (offset overlapping nameplates)
+--------------------------------------------------------------------------------
+
+local stackingFrame = nil
+local STACKING_INTERVAL = 0.1  -- 更新間隔（秒）
+local STACKING_OFFSET = 10     -- 每層偏移量（像素）
+
+-- Fix 7: 重用平行陣列，避免每 0.1s 為每個名牌建新 table
+local stackFrames = {}
+local stackYs = {}
+local stackOffsets = {}
+
+-- Fix 8: 記錄上一個目標名牌，切換時只更新前/後兩個
+local lastTargetNameplate = nil
+
+local function UpdateNameplateStacking()
+    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    if not db or not db.stackingDetection then return end
+
+    -- 名牌高度作為重疊閾值
+    local npHeight = (db.height or 8) + 4  -- 名牌高度 + 小間距
+
+    -- Fix 7: 收集可見名牌到重用的平行陣列，避免每次建新 table
+    local count = 0
+    for k = 1, #stackFrames do stackFrames[k] = nil; stackYs[k] = nil; stackOffsets[k] = nil end
+    for np in pairs(nameplateFrames) do
+        if np and np:IsShown() and np:GetParent() then
+            local _, screenY = np:GetCenter()
+            if screenY then
+                local appliedOffset = np._lunarStackOffset or 0
+                local baseY = screenY - appliedOffset
+                count = count + 1
+                stackFrames[count] = np
+                stackYs[count] = baseY
+                stackOffsets[count] = 0
+            end
+        end
+    end
+
+    -- 按 Y 座標排序（由下到上）— 簡單插入排序，名牌數量通常 < 30
+    for i = 2, count do
+        local keyFrame = stackFrames[i]
+        local keyY = stackYs[i]
+        local j = i - 1
+        while j >= 1 and stackYs[j] > keyY do
+            stackFrames[j + 1] = stackFrames[j]
+            stackYs[j + 1] = stackYs[j]
+            stackOffsets[j + 1] = stackOffsets[j]
+            j = j - 1
+        end
+        stackFrames[j + 1] = keyFrame
+        stackYs[j + 1] = keyY
+        stackOffsets[j + 1] = 0
+    end
+
+    -- 偵測重疊並計算偏移（使用固定閾值）
+    for i = 2, count do
+        local effectivePrevY = stackYs[i - 1] + stackOffsets[i - 1]
+        local dy = stackYs[i] - effectivePrevY
+        if dy < npHeight then
+            stackOffsets[i] = stackOffsets[i - 1] + STACKING_OFFSET
+        end
+    end
+
+    -- 套用偏移
+    for i = 1, count do
+        local np = stackFrames[i]
+        local offset = stackOffsets[i]
+        if np._lunarStackOffset ~= offset then
+            np._lunarStackOffset = offset
+            -- 偏移整個名牌的子元素（名稱/光環等在上方，不受影響）
+            -- 直接調整名牌的 Y 偏移
+            local parent = np:GetParent()
+            if parent and np.SetPoint then
+                -- oUF 名牌由暴雪 NamePlate 框架管理位置
+                -- 我們透過調整子內容的相對位置來模擬偏移
+                if offset > 0 then
+                    if not np._lunarStackShift then
+                        np._lunarStackShift = true
+                    end
+                    -- 使用 Health bar 的位移來表現偏移
+                    if np.Health then
+                        np.Health:ClearAllPoints()
+                        np.Health:SetPoint("TOPLEFT", np, "TOPLEFT", 0, offset)
+                        np.Health:SetPoint("BOTTOMRIGHT", np, "BOTTOMRIGHT", 0, offset)
+                    end
+                    if np.Backdrop then
+                        np.Backdrop:ClearAllPoints()
+                        np.Backdrop:SetPoint("TOPLEFT", np.Health or np, "TOPLEFT", -1, 1)
+                        np.Backdrop:SetPoint("BOTTOMRIGHT", np.Health or np, "BOTTOMRIGHT", 1, -1)
+                    end
+                else
+                    if np._lunarStackShift then
+                        np._lunarStackShift = nil
+                        if np.Health then
+                            np.Health:ClearAllPoints()
+                            np.Health:SetAllPoints(np)
+                        end
+                        if np.Backdrop then
+                            np.Backdrop:ClearAllPoints()
+                            np.Backdrop:SetPoint("TOPLEFT", np, "TOPLEFT", -1, 1)
+                            np.Backdrop:SetPoint("BOTTOMRIGHT", np, "BOTTOMRIGHT", 1, -1)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function StartStackingDetection()
+    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    if not db or not db.stackingDetection then return end
+
+    if stackingFrame then return end
+    stackingFrame = CreateFrame("Frame")
+    local elapsed = 0
+    stackingFrame:SetScript("OnUpdate", function(_self, dt)
+        elapsed = elapsed + dt
+        if elapsed >= STACKING_INTERVAL then
+            elapsed = 0
+            UpdateNameplateStacking()
+        end
+    end)
+end
+
+local function StopStackingDetection()
+    if stackingFrame then
+        stackingFrame:SetScript("OnUpdate", nil)
+        stackingFrame:Hide()
+        stackingFrame = nil
+    end
+    -- 重設所有名牌偏移
+    for np in pairs(nameplateFrames) do
+        if np and np._lunarStackShift then
+            np._lunarStackShift = nil
+            np._lunarStackOffset = nil
+            if np.Health then
+                np.Health:ClearAllPoints()
+                np.Health:SetAllPoints(np)
+            end
+            if np.Backdrop then
+                np.Backdrop:ClearAllPoints()
+                np.Backdrop:SetPoint("TOPLEFT", np, "TOPLEFT", -1, 1)
+                np.Backdrop:SetPoint("BOTTOMRIGHT", np, "BOTTOMRIGHT", 1, -1)
+            end
+        end
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -550,14 +830,44 @@ local function SpawnNameplates()
         end
     end)
 
+    -- 堆疊偵測
+    StartStackingDetection()
+
     -- Fix #5: Use singleton pattern to prevent duplicate event handlers
     if not LunarUI._nameplateTargetFrame then
         LunarUI._nameplateTargetFrame = CreateFrame("Frame")
         LunarUI._nameplateTargetFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
         LunarUI._nameplateTargetFrame:SetScript("OnEvent", function()
+            -- Fix 8: 只更新前一個和當前目標名牌，而非遍歷全部
+            -- 清除舊目標
+            if lastTargetNameplate and lastTargetNameplate:IsShown() then
+                UpdateTargetIndicator(lastTargetNameplate)
+            end
+            -- 設定新目標
+            local targetPlate = C_NamePlate.GetNamePlateForUnit("target")
+            if targetPlate then
+                -- oUF 名牌掛在 unitFrame 子框架上
+                local np = targetPlate.unitFrame or targetPlate
+                if np and nameplateFrames[np] then
+                    UpdateTargetIndicator(np)
+                    lastTargetNameplate = np
+                else
+                    lastTargetNameplate = nil
+                end
+            else
+                lastTargetNameplate = nil
+            end
+        end)
+    end
+
+    -- 任務狀態變更時更新任務圖示
+    if not LunarUI._nameplateQuestFrame then
+        LunarUI._nameplateQuestFrame = CreateFrame("Frame")
+        LunarUI._nameplateQuestFrame:RegisterEvent("QUEST_LOG_UPDATE")
+        LunarUI._nameplateQuestFrame:SetScript("OnEvent", function()
             for np in pairs(nameplateFrames) do
                 if np and np:IsShown() then
-                    UpdateTargetIndicator(np)
+                    UpdateQuestIndicator(np)
                 end
             end
         end)
@@ -574,6 +884,13 @@ function LunarUI:CleanupNameplates()
         self._nameplateTargetFrame:UnregisterAllEvents()
         self._nameplateTargetFrame:SetScript("OnEvent", nil)
     end
+    -- Unregister quest update event handler
+    if self._nameplateQuestFrame then
+        self._nameplateQuestFrame:UnregisterAllEvents()
+        self._nameplateQuestFrame:SetScript("OnEvent", nil)
+    end
+    -- 停止堆疊偵測
+    StopStackingDetection()
     -- Clear weak table references
     wipe(nameplateFrames)
     -- Reset registration flag

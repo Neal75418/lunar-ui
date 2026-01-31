@@ -25,12 +25,7 @@ end
 local spawnedFrames = {}
 
 local statusBarTexture = "Interface\\TargetingFrame\\UI-StatusBar"
-local backdropTemplate = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-}
+local backdropTemplate = LunarUI.backdropTemplate
 
 -- 框架尺寸
 local SIZES = {
@@ -260,151 +255,145 @@ local function CreateCastbar(frame, _unit)
     return castbar
 end
 
--- 減益類型顏色（WoW 12.0 中 DebuffTypeColor 可能不存在）
-local UNITFRAME_DEBUFF_COLORS = _G.DebuffTypeColor or {
-    none = { r = 0.8, g = 0.0, b = 0.0 },
-    Magic = { r = 0.2, g = 0.6, b = 1.0 },
-    Curse = { r = 0.6, g = 0.0, b = 1.0 },
-    Disease = { r = 0.6, g = 0.4, b = 0.0 },
-    Poison = { r = 0.0, g = 0.6, b = 0.0 },
-    [""] = { r = 0.8, g = 0.0, b = 0.0 },
-}
+local UNITFRAME_DEBUFF_COLORS = LunarUI.DEBUFF_TYPE_COLORS
 
---[[ 光環（增益/減益）- 保留供未來使用 ]]
-local function _CreateAuras(frame, unit)
-    local auras = CreateFrame("Frame", nil, frame)
+--[[ 光環過濾器：根據 DB 設定過濾 ]]
+local function AuraFilter(_element, unit, data)
+    local unitKey = unit
+    -- 標準化單位 key（boss1 → boss, party1 → party）
+    if unitKey then
+        unitKey = unitKey:gsub("%d+$", "")
+    end
+    local ufDB = LunarUI.db and LunarUI.db.profile.unitframes[unitKey]
+    if not ufDB then return true end
 
-    -- 從多個來源判斷單位類型
-    local unitType = unit or frame.unit
-    local frameName = frame:GetName() or ""
-    if not unitType or unitType == "" then
-        if frameName:find("Player") then
-            unitType = "player"
-        elseif frameName:find("Target") then
-            unitType = "target"
-        else
-            unitType = "unknown"
+    -- Fix 9: 合併多次 pcall 為一次，減少每個 aura 的開銷
+    -- data 的欄位可能是 WoW secret value，用單一 pcall 保護所有存取
+    local ok, shouldFilter = pcall(function()
+        -- 僅顯示玩家施放的 debuff
+        if ufDB.onlyPlayerDebuffs and data.isHarmfulAura and not data.isPlayerAura then
+            return true
         end
-    end
-
-    -- 根據單位類型定位（光環不應與框架重疊）
-    if unitType == "target" then
-        -- 目標：光環顯示在右側
-        auras:SetPoint("TOPLEFT", frame, "TOPRIGHT", 4, 0)
-        auras:SetSize(180, 50)
-        auras.initialAnchor = "TOPLEFT"
-        auras["growth-x"] = "RIGHT"
-        auras["growth-y"] = "DOWN"
-    elseif unitType == "player" then
-        -- 玩家：光環顯示在左側
-        auras:SetPoint("TOPRIGHT", frame, "TOPLEFT", -4, 0)
-        auras:SetSize(180, 50)
-        auras.initialAnchor = "TOPRIGHT"
-        auras["growth-x"] = "LEFT"
-        auras["growth-y"] = "DOWN"
-    else
-        -- 其他單位：光環顯示在上方
-        auras:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
-        auras:SetSize(frame:GetWidth() > 0 and frame:GetWidth() or 180, 20)
-        auras.initialAnchor = "BOTTOMLEFT"
-        auras["growth-x"] = "RIGHT"
-        auras["growth-y"] = "UP"
-    end
-
-    auras.size = 22
-    auras.spacing = 2
-    auras.num = 16
-    auras.numBuffs = 8
-    auras.numDebuffs = 8
-
-    -- 初始化 oUF 光環元素所需的表格
-    auras.allBuffs = {}
-    auras.allDebuffs = {}
-    auras.activeBuffs = {}
-    auras.activeDebuffs = {}
-    auras.sortedBuffs = {}
-    auras.sortedDebuffs = {}
-
-    -- 針對特定單位過濾光環
-    if unitType == "target" then
-        auras.onlyShowPlayer = true
-        auras.FilterAura = function(_element, _unit, data)
-            return data.isPlayerAura == true
+        -- 隱藏持續超過 5 分鐘的 buff（減少雜訊），0 表示永久
+        if not data.isHarmfulAura and data.duration and data.duration > 300 then
+            return true
         end
+        return false
+    end)
+
+    -- pcall 失敗（secret value 異常）則預設顯示
+    if ok and shouldFilter then
+        return false
     end
 
-    -- 建立後鉤子：風格化
-    auras.PostCreateButton = function(_self, button)
-        -- 呼叫 SetBackdrop 前需先套用 BackdropTemplateMixin
+    return true
+end
+
+--[[ 光環圖示樣式化鉤子 ]]
+local function PostCreateAuraIcon(_self, button)
+    if BackdropTemplateMixin then
         Mixin(button, BackdropTemplateMixin)
         button:OnBackdropLoaded()
         button:SetBackdrop(backdropTemplate)
         button:SetBackdropColor(0, 0, 0, 0.5)
         button:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
-
-        button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        button.Icon:SetDrawLayer("ARTWORK")
-
-        button.Count:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
-        button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
-
-        if button.Cooldown then
-            button.Cooldown:SetDrawEdge(false)
-            button.Cooldown:SetHideCountdownNumbers(true)
-        end
     end
 
-    -- 更新後鉤子：減益顏色
-    -- WoW 12.0 將 isHarmful 和 dispelName 設為隱藏值
-    -- 使用 oUF 新增的 isHarmfulAura（可安全存取）
-    auras.PostUpdateButton = function(_self, button, _unit, data, _position)
-        if data.isHarmfulAura then
-            -- 減益：使用通用減益顏色（無法存取驅散類型）
-            local color = UNITFRAME_DEBUFF_COLORS["none"]
-            button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
-        else
-            button:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
-        end
-    end
+    button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    button.Icon:SetDrawLayer("ARTWORK")
 
-    frame.Auras = auras
-    return auras
+    -- 層數文字（右下角）
+    button.Count:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
+
+    -- 冷卻
+    if button.Cooldown then
+        button.Cooldown:SetDrawEdge(false)
+        button.Cooldown:SetHideCountdownNumbers(true)
+    end
 end
 
---[[ 僅減益（用於隊伍/團隊） ]]
-local function CreateDebuffs(frame, _unit)
+--[[ 減益更新鉤子：根據類型著色邊框 ]]
+local function PostUpdateDebuffIcon(_self, button, _unit, data, _position)
+    if data.isHarmfulAura then
+        -- WoW 12.0 中 dispelName 為隱藏值，使用通用減益顏色
+        local color = UNITFRAME_DEBUFF_COLORS["none"]
+        button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+    else
+        button:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+    end
+end
+
+--[[ 增益框架 ]]
+local function CreateBuffs(frame, unit)
+    local unitKey = unit and unit:gsub("%d+$", "") or "player"
+    local ufDB = LunarUI.db and LunarUI.db.profile.unitframes[unitKey]
+    if ufDB and not ufDB.showBuffs then return end
+
+    local buffSize = ufDB and ufDB.buffSize or 22
+    local maxBuffs = ufDB and ufDB.maxBuffs or 16
+
+    local buffs = CreateFrame("Frame", nil, frame)
+    buffs.size = buffSize
+    buffs.spacing = 3
+    buffs.num = maxBuffs
+    buffs.FilterAura = AuraFilter
+    buffs.PostCreateButton = PostCreateAuraIcon
+
+    -- 增益使用預設邊框色
+    buffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
+        button:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+    end
+
+    -- 定位依單位類型
+    if unitKey == "player" then
+        buffs:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", 4, 0)
+        buffs:SetSize(180, buffSize * 2 + 3)
+        buffs.initialAnchor = "BOTTOMLEFT"
+        buffs["growth-x"] = "RIGHT"
+        buffs["growth-y"] = "UP"
+    elseif unitKey == "target" or unitKey == "focus" then
+        buffs:SetPoint("TOPLEFT", frame, "TOPRIGHT", 4, 0)
+        buffs:SetSize(180, buffSize * 2 + 3)
+        buffs.initialAnchor = "TOPLEFT"
+        buffs["growth-x"] = "RIGHT"
+        buffs["growth-y"] = "DOWN"
+    else
+        buffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
+        buffs:SetSize(frame:GetWidth() > 0 and frame:GetWidth() or 160, buffSize)
+        buffs.initialAnchor = "BOTTOMLEFT"
+        buffs["growth-x"] = "RIGHT"
+        buffs["growth-y"] = "UP"
+    end
+
+    frame.Buffs = buffs
+    return buffs
+end
+
+
+--[[ 僅減益（用於隊伍/團隊/目標/焦點/首領） ]]
+local function CreateDebuffs(frame, unit)
+    local unitKey = unit and unit:gsub("%d+$", "") or "unknown"
+    local ufDB = LunarUI.db and LunarUI.db.profile.unitframes[unitKey]
+    if ufDB and not ufDB.showDebuffs then return end
+
+    local debuffSize = ufDB and ufDB.debuffSize or 18
+    local maxDebuffs = ufDB and ufDB.maxDebuffs or 4
+
     local debuffs = CreateFrame("Frame", nil, frame)
     debuffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
-    debuffs:SetSize(frame:GetWidth(), 18)
+    debuffs:SetSize(frame:GetWidth(), debuffSize)
 
-    debuffs.size = 18
+    debuffs.size = debuffSize
     debuffs.spacing = 2
-    debuffs.num = 4
+    debuffs.num = maxDebuffs
     debuffs.initialAnchor = "BOTTOMLEFT"
     debuffs["growth-x"] = "RIGHT"
     debuffs["growth-y"] = "UP"
 
-    -- WoW 12.0 將 isHarmful/isBossAura 設為隱藏值
-    -- 減益元素已過濾為有害效果，僅檢查來源
-    debuffs.FilterAura = function(_element, _unit, data)
-        return data.isPlayerAura == true
-    end
-
-    debuffs.PostCreateButton = function(_self, button)
-        Mixin(button, BackdropTemplateMixin)
-        button:OnBackdropLoaded()
-        button:SetBackdrop(backdropTemplate)
-        button:SetBackdropColor(0, 0, 0, 0.5)
-        button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        button.Count:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
-    end
-
-    debuffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
-        -- WoW 12.0 將 dispelName 設為隱藏值
-        -- 使用通用減益顏色（無法存取驅散類型）
-        local color = UNITFRAME_DEBUFF_COLORS["none"]
-        button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
-    end
+    debuffs.FilterAura = AuraFilter
+    debuffs.PostCreateButton = PostCreateAuraIcon
+    debuffs.PostUpdateButton = PostUpdateDebuffIcon
 
     frame.Debuffs = debuffs
     return debuffs
@@ -413,6 +402,110 @@ end
 --------------------------------------------------------------------------------
 -- 單位專屬元素
 --------------------------------------------------------------------------------
+
+--[[ 職業資源（連擊點/聖能/符文等） ]]
+local function CreateClassPower(frame)
+    local db = LunarUI.db and LunarUI.db.profile.unitframes.player
+    if db and db.showClassPower == false then return end
+
+    local MAX_POINTS = 10  -- 最多 10（盜賊可到 7+，術士 5 靈魂碎片等）
+    local barWidth = frame:GetWidth()
+    local barHeight = 6
+    local spacing = 2
+
+    local classPower = {}
+    for i = 1, MAX_POINTS do
+        local bar = CreateFrame("StatusBar", nil, frame)
+        bar:SetStatusBarTexture(statusBarTexture)
+        bar:SetHeight(barHeight)
+
+        -- 背景
+        bar.bg = bar:CreateTexture(nil, "BACKGROUND")
+        bar.bg:SetAllPoints()
+        bar.bg:SetTexture(statusBarTexture)
+        bar.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
+
+        classPower[i] = bar
+    end
+
+    -- 佈局更新：根據實際點數重排寬度和位置
+    classPower.PostUpdate = function(element, _cur, _max, _hasMaxChanged, powerType)
+        local maxVisible = 0
+        for idx = 1, MAX_POINTS do
+            if element[idx]:IsShown() then
+                maxVisible = idx
+            end
+        end
+        if maxVisible == 0 then return end
+
+        local singleWidth = (barWidth - (maxVisible - 1) * spacing) / maxVisible
+        for idx = 1, maxVisible do
+            element[idx]:ClearAllPoints()
+            element[idx]:SetSize(singleWidth, barHeight)
+            if idx == 1 then
+                element[idx]:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
+            else
+                element[idx]:SetPoint("LEFT", element[idx - 1], "RIGHT", spacing, 0)
+            end
+        end
+
+        -- 根據職業著色
+        local colors = oUF.colors.power
+        if powerType and colors[powerType] then
+            local c = colors[powerType]
+            for idx = 1, maxVisible do
+                element[idx]:SetStatusBarColor(c[1] or c.r, c[2] or c.g, c[3] or c.b)
+            end
+        end
+    end
+
+    frame.ClassPower = classPower
+    return classPower
+end
+
+--[[ 治療預測條 ]]
+local function CreateHealPrediction(frame, unit)
+    local unitKey = unit or "player"
+    unitKey = unitKey:gsub("%d+$", "")
+    local ufDB = LunarUI.db and LunarUI.db.profile.unitframes[unitKey]
+    if ufDB and ufDB.showHealPrediction == false then return end
+
+    local hp = frame.Health
+    if not hp then return end
+
+    -- 自身治療預測
+    local healingPlayer = CreateFrame("StatusBar", nil, hp)
+    healingPlayer:SetStatusBarTexture(statusBarTexture)
+    healingPlayer:SetStatusBarColor(0.0, 0.8, 0.0, 0.4)
+    healingPlayer:SetPoint("TOP")
+    healingPlayer:SetPoint("BOTTOM")
+    healingPlayer:SetWidth(frame:GetWidth())
+
+    -- 他人治療預測
+    local healingOther = CreateFrame("StatusBar", nil, hp)
+    healingOther:SetStatusBarTexture(statusBarTexture)
+    healingOther:SetStatusBarColor(0.0, 0.6, 0.0, 0.3)
+    healingOther:SetPoint("TOP")
+    healingOther:SetPoint("BOTTOM")
+    healingOther:SetWidth(frame:GetWidth())
+
+    -- 吸收盾
+    local damageAbsorb = CreateFrame("StatusBar", nil, hp)
+    damageAbsorb:SetStatusBarTexture(statusBarTexture)
+    damageAbsorb:SetStatusBarColor(1.0, 1.0, 1.0, 0.3)
+    damageAbsorb:SetPoint("TOP")
+    damageAbsorb:SetPoint("BOTTOM")
+    damageAbsorb:SetWidth(frame:GetWidth())
+
+    frame.HealthPrediction = {
+        healingPlayer = healingPlayer,
+        healingOther = healingOther,
+        damageAbsorb = damageAbsorb,
+        incomingHealOverflow = 1.05,
+    }
+
+    return frame.HealthPrediction
+end
 
 --[[ 玩家：休息指示器 ]]
 local function CreateRestingIndicator(frame)
@@ -830,11 +923,13 @@ local function PlayerLayout(frame, unit)
     CreatePowerBar(frame, unit)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
-    -- 移除玩家光環（已顯示在右上角）
+    CreateBuffs(frame, unit)
     CreateLevelText(frame, unit)
     CreateRestingIndicator(frame)
     CreateCombatIndicator(frame)
     CreateThreatIndicator(frame)
+    CreateClassPower(frame)
+    CreateHealPrediction(frame, unit)
 
     -- 經驗條（僅未滿級時）
     if UnitLevel("player") < GetMaxPlayerLevel() then
@@ -855,20 +950,18 @@ local function TargetLayout(frame, unit)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
 
-    -- 使用 Debuffs 取代 Auras：僅顯示玩家的減益
+    -- 減益：定位在框架上方
     CreateDebuffs(frame, unit)
-
-    -- 將減益定位在框架右側
     if frame.Debuffs then
         frame.Debuffs:ClearAllPoints()
-        frame.Debuffs:SetPoint("TOPLEFT", frame, "TOPRIGHT", 8, 0)
-        frame.Debuffs:SetSize(180, 50)
-        frame.Debuffs.size = 22
-        frame.Debuffs.num = 8
-        frame.Debuffs.initialAnchor = "TOPLEFT"
-        frame.Debuffs["growth-x"] = "RIGHT"
-        frame.Debuffs["growth-y"] = "DOWN"
+        frame.Debuffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
+        local debuffSize = db and db.debuffSize or 22
+        frame.Debuffs:SetSize(frame:GetWidth(), debuffSize * 2 + 3)
+        frame.Debuffs["growth-y"] = "UP"
     end
+
+    -- 增益：定位在框架右側
+    CreateBuffs(frame, unit)
 
     CreateClassification(frame)
     CreateLevelText(frame, unit)
@@ -944,6 +1037,7 @@ local function PartyLayout(frame, unit)
     CreateDebuffs(frame, unit)
     CreateThreatIndicator(frame)
     CreateRangeIndicator(frame)
+    CreateHealPrediction(frame, unit)
     CreateLeaderIndicator(frame)
     CreateGroupRoleIndicator(frame)
     CreateReadyCheckIndicator(frame)
@@ -963,6 +1057,7 @@ local function RaidLayout(frame, unit)
     Shared(frame, unit)
     CreateThreatIndicator(frame)
     CreateRangeIndicator(frame)
+    CreateHealPrediction(frame, unit)
     CreateLeaderIndicator(frame)
     CreateAssistantIndicator(frame)
     CreateRaidRoleIndicator(frame)
@@ -971,23 +1066,24 @@ local function RaidLayout(frame, unit)
     CreateSummonIndicator(frame)
     CreateResurrectIndicator(frame)
 
-    -- 團隊減益（較小）
-    local debuffs = CreateFrame("Frame", nil, frame)
-    debuffs:SetPoint("CENTER", frame, "CENTER", 0, 0)
-    debuffs:SetSize(40, 20)
-    debuffs.size = 16
-    debuffs.spacing = 2
-    debuffs.num = 2
-    debuffs.initialAnchor = "CENTER"
-    -- WoW 12.0 將 isHarmful 和 isBossAura 設為隱藏值
-    debuffs.FilterAura = function(_element, _unit, data)
-        return data.isPlayerAura == true
+    -- 團隊減益（較小，居中顯示）
+    local raidDB = LunarUI.db and LunarUI.db.profile.unitframes.raid
+    if not raidDB or raidDB.showDebuffs ~= false then
+        local debuffSize = raidDB and raidDB.debuffSize or 16
+        local maxDebuffs = raidDB and raidDB.maxDebuffs or 2
+
+        local debuffs = CreateFrame("Frame", nil, frame)
+        debuffs:SetPoint("CENTER", frame, "CENTER", 0, 0)
+        debuffs:SetSize(debuffSize * maxDebuffs + 2, debuffSize)
+        debuffs.size = debuffSize
+        debuffs.spacing = 2
+        debuffs.num = maxDebuffs
+        debuffs.initialAnchor = "CENTER"
+        debuffs.FilterAura = AuraFilter
+        debuffs.PostCreateButton = PostCreateAuraIcon
+        debuffs.PostUpdateButton = PostUpdateDebuffIcon
+        frame.Debuffs = debuffs
     end
-    debuffs.PostCreateButton = function(_self, button)
-        button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
-    end
-    frame.Debuffs = debuffs
 
     CreateDeathIndicator(frame, unit)
 

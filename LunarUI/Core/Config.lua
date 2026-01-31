@@ -49,6 +49,15 @@ local defaults = {
                 x = -300,
                 y = -200,
                 point = "CENTER",
+                showBuffs = true,
+                buffSize = 22,
+                maxBuffs = 16,
+                showDebuffs = false,
+                debuffSize = 22,
+                maxDebuffs = 8,
+                onlyPlayerDebuffs = false,
+                showClassPower = true,       -- 職業資源（連擊點/聖能/符文等）
+                showHealPrediction = true,   -- 治療預測條
             },
             target = {
                 enabled = true,
@@ -57,6 +66,13 @@ local defaults = {
                 x = 300,
                 y = -200,
                 point = "CENTER",
+                showBuffs = false,
+                buffSize = 22,
+                maxBuffs = 8,
+                showDebuffs = true,
+                debuffSize = 22,
+                maxDebuffs = 16,
+                onlyPlayerDebuffs = true,
             },
             focus = {
                 enabled = true,
@@ -65,6 +81,13 @@ local defaults = {
                 x = -450,
                 y = -100,
                 point = "CENTER",
+                showBuffs = false,
+                buffSize = 20,
+                maxBuffs = 8,
+                showDebuffs = true,
+                debuffSize = 20,
+                maxDebuffs = 8,
+                onlyPlayerDebuffs = false,
             },
             pet = {
                 enabled = true,
@@ -90,6 +113,14 @@ local defaults = {
                 y = 0,
                 point = "LEFT",
                 spacing = 5,
+                showBuffs = false,
+                buffSize = 18,
+                maxBuffs = 4,
+                showDebuffs = true,
+                debuffSize = 18,
+                maxDebuffs = 4,
+                onlyPlayerDebuffs = true,
+                showHealPrediction = true,   -- 治療預測條
             },
             raid = {
                 enabled = true,
@@ -99,6 +130,14 @@ local defaults = {
                 y = -20,
                 point = "TOPLEFT",
                 spacing = 3,
+                showBuffs = false,
+                buffSize = 16,
+                maxBuffs = 0,
+                showDebuffs = true,
+                debuffSize = 16,
+                maxDebuffs = 2,
+                onlyPlayerDebuffs = true,
+                showHealPrediction = true,   -- 治療預測條
             },
             boss = {
                 enabled = true,
@@ -108,6 +147,13 @@ local defaults = {
                 y = 300,
                 point = "RIGHT",
                 spacing = 50,
+                showBuffs = false,
+                buffSize = 20,
+                maxBuffs = 4,
+                showDebuffs = true,
+                debuffSize = 20,
+                maxDebuffs = 8,
+                onlyPlayerDebuffs = false,
             },
         },
 
@@ -116,6 +162,9 @@ local defaults = {
             enabled = true,  -- LunarUI 名牌（設為 false 使用暴雪預設）
             width = 120,
             height = 8,
+            showHealthText = true,             -- ★ 顯示生命值文字
+            healthTextFormat = "percent",      -- ★ "percent" / "current" / "both"
+            stackingDetection = false,         -- ★ 堆疊偵測（偏移重疊名牌）
             -- 敵方名牌
             enemy = {
                 enabled = true,
@@ -124,6 +173,11 @@ local defaults = {
                 showAuras = true,
                 auraSize = 18,
                 maxAuras = 5,
+                showBuffs = false,             -- ★ 顯示敵方可竊取 Buff
+                buffSize = 14,                 -- ★ Buff 圖示大小
+                maxBuffs = 4,                  -- ★ 最大 Buff 顯示數量
+                showLevel = true,              -- ★ 顯示等級文字
+                showQuestIcon = true,          -- ★ 任務目標高亮圖示
             },
             -- 友方名牌
             friendly = {
@@ -131,6 +185,7 @@ local defaults = {
                 showHealth = true,
                 showCastbar = false,
                 showAuras = false,
+                showLevel = false,             -- ★ 顯示等級文字（友方預設關閉）
             },
             -- 仇恨顏色
             threat = {
@@ -157,6 +212,8 @@ local defaults = {
             showHotkeys = true,  -- 顯示快捷鍵
             showMacroNames = false,  -- 顯示巨集名稱
             alpha = 1.0,  -- 透明度
+            outOfRangeColoring = true,  -- 技能超出距離時按鈕變紅
+            extraActionButton = true,  -- 樣式化 ExtraActionButton
             fadeEnabled = true,   -- 非戰鬥淡出
             fadeAlpha = 0.3,      -- 淡出後透明度
             fadeDelay = 2.0,      -- 離開戰鬥後淡出延遲（秒）
@@ -169,6 +226,14 @@ local defaults = {
             bar6 = { enabled = true, buttons = 12, x = 0, y = 320, orientation = "horizontal", fadeEnabled = nil },
             petbar = { enabled = true, x = 0, y = 60, fadeEnabled = nil },
             stancebar = { enabled = true, x = -400, y = 200, fadeEnabled = nil },
+            microBar = {
+                enabled = false,
+                buttonWidth = 28,
+                buttonHeight = 36,
+                point = "BOTTOM",
+                x = 0,
+                y = 2,
+            },
         },
 
         -- 小地圖設定
@@ -248,6 +313,8 @@ local defaults = {
             keywords = {},              -- 自訂關鍵字列表
             spamFilter = true,          -- 垃圾訊息過濾
             linkTooltipPreview = true,  -- 連結懸停 Tooltip 預覽
+            showTimestamps = false,     -- 時間戳記
+            timestampFormat = "%H:%M",  -- 時間戳記格式
         },
 
         -- 滑鼠提示設定
@@ -258,6 +325,64 @@ local defaults = {
             showItemID = false,
             showSpellID = false,
             showTargetTarget = true,
+            showItemCount = false,      -- 物品持有數量
+        },
+
+        -- 資料條設定
+        databars = {
+            enabled = true,
+            experience = {
+                enabled = true,
+                width = 400,
+                height = 8,
+                showText = true,
+                textFormat = "percent",  -- "percent" / "curmax" / "cur" / "remaining"
+                point = "BOTTOM",
+                x = 0, y = 2,
+            },
+            reputation = {
+                enabled = true,
+                width = 400,
+                height = 8,
+                showText = true,
+                textFormat = "percent",
+                point = "BOTTOM",
+                x = 0, y = 12,
+            },
+            honor = {
+                enabled = false,
+                width = 400,
+                height = 8,
+                showText = true,
+                textFormat = "percent",
+                point = "BOTTOM",
+                x = 0, y = 22,
+            },
+        },
+
+        -- 資料文字設定
+        datatexts = {
+            enabled = true,
+            panels = {
+                bottom = {
+                    enabled = true,
+                    width = 400,
+                    height = 22,
+                    numSlots = 3,
+                    point = "BOTTOM",
+                    x = 0, y = 0,
+                    slots = { "durability", "gold", "bagSlots" },
+                },
+                minimapBottom = {
+                    enabled = false,
+                    width = 180,
+                    height = 20,
+                    numSlots = 2,
+                    point = "BOTTOM",
+                    x = 0, y = 0,
+                    slots = { "fps", "latency" },
+                },
+            },
         },
 
         -- HUD 設定
@@ -300,6 +425,25 @@ local defaults = {
         frameMover = {
             gridSize = 10,
             moverAlpha = 0.6,
+        },
+
+        -- Skins 設定（暴雪框架重新造型）
+        skins = {
+            enabled = true,
+            blizzard = {
+                character = true,
+                spellbook = true,
+                talents = true,
+                quest = true,
+                merchant = true,
+                gossip = true,
+                worldmap = true,
+                achievements = true,
+                mail = true,
+                collections = true,
+                lfg = true,
+                encounterjournal = true,
+            },
         },
 
         -- 視覺風格
@@ -1080,6 +1224,94 @@ local function GetOptionsTable()
                         end,
                         width = "full",
                     },
+                    -- 單位框架光環設定
+                    unitframesAurasHeader = {
+                        order = 3,
+                        type = "header",
+                        name = L["UnitFrameAuras"] or "Unit Frame Auras",
+                    },
+                    ufPlayerShowBuffs = {
+                        order = 4,
+                        type = "toggle",
+                        name = L["PlayerBuffs"] or "Player Buffs",
+                        desc = L["PlayerBuffsDesc"] or "Show buffs beside player frame (requires reload)",
+                        get = function() return LunarUI.db.profile.unitframes.player.showBuffs end,
+                        set = function(_, val) LunarUI.db.profile.unitframes.player.showBuffs = val end,
+                    },
+                    ufTargetShowDebuffs = {
+                        order = 5,
+                        type = "toggle",
+                        name = L["TargetDebuffs"] or "Target Debuffs",
+                        desc = L["TargetDebuffsDesc"] or "Show debuffs above target frame (requires reload)",
+                        get = function() return LunarUI.db.profile.unitframes.target.showDebuffs end,
+                        set = function(_, val) LunarUI.db.profile.unitframes.target.showDebuffs = val end,
+                    },
+                    ufTargetOnlyPlayer = {
+                        order = 6,
+                        type = "toggle",
+                        name = L["OnlyPlayerDebuffs"] or "Only Player Debuffs",
+                        desc = L["OnlyPlayerDebuffsDesc"] or "Only show debuffs cast by you on target (requires reload)",
+                        get = function() return LunarUI.db.profile.unitframes.target.onlyPlayerDebuffs end,
+                        set = function(_, val) LunarUI.db.profile.unitframes.target.onlyPlayerDebuffs = val end,
+                    },
+                    ufAuraSize = {
+                        order = 7,
+                        type = "range",
+                        name = L["AuraSize"] or "Aura Icon Size",
+                        desc = L["AuraSizeDesc"] or "Buff/debuff icon size (requires reload)",
+                        min = 16, max = 32, step = 1,
+                        get = function() return LunarUI.db.profile.unitframes.target.debuffSize end,
+                        set = function(_, val)
+                            -- 僅套用至支援光環的單位
+                            local auraUnits = {"player", "target", "focus", "party", "raid", "boss"}
+                            for _, unit in ipairs(auraUnits) do
+                                if LunarUI.db.profile.unitframes[unit] then
+                                    LunarUI.db.profile.unitframes[unit].buffSize = val
+                                    LunarUI.db.profile.unitframes[unit].debuffSize = val
+                                end
+                            end
+                        end,
+                    },
+                    ufFocusShowDebuffs = {
+                        order = 8,
+                        type = "toggle",
+                        name = L["FocusDebuffs"] or "Focus Debuffs",
+                        desc = L["FocusDebuffsDesc"] or "Show debuffs above focus frame (requires reload)",
+                        get = function() return LunarUI.db.profile.unitframes.focus.showDebuffs end,
+                        set = function(_, val) LunarUI.db.profile.unitframes.focus.showDebuffs = val end,
+                    },
+                    ufPartyShowDebuffs = {
+                        order = 9,
+                        type = "toggle",
+                        name = L["PartyDebuffs"] or "Party Debuffs",
+                        desc = L["PartyDebuffsDesc"] or "Show debuffs above party frames (requires reload)",
+                        get = function() return LunarUI.db.profile.unitframes.party.showDebuffs end,
+                        set = function(_, val) LunarUI.db.profile.unitframes.party.showDebuffs = val end,
+                    },
+                    ufClassPower = {
+                        order = 9.1,
+                        type = "toggle",
+                        name = L["ClassPower"] or "Class Power",
+                        desc = L["ClassPowerDesc"] or "Show class resource bar above player frame (combo points, holy power, runes, etc.) (requires reload)",
+                        get = function() return LunarUI.db.profile.unitframes.player.showClassPower end,
+                        set = function(_, val) LunarUI.db.profile.unitframes.player.showClassPower = val end,
+                    },
+                    ufHealPrediction = {
+                        order = 9.2,
+                        type = "toggle",
+                        name = L["HealPrediction"] or "Heal Prediction",
+                        desc = L["HealPredictionDesc"] or "Show incoming heal prediction overlay on health bars (requires reload)",
+                        get = function() return LunarUI.db.profile.unitframes.player.showHealPrediction end,
+                        set = function(_, val)
+                            -- 同步套用至所有支援的單位
+                            local healUnits = {"player", "party", "raid"}
+                            for _, unit in ipairs(healUnits) do
+                                if LunarUI.db.profile.unitframes[unit] then
+                                    LunarUI.db.profile.unitframes[unit].showHealPrediction = val
+                                end
+                            end
+                        end,
+                    },
                     nameplatesHeader = {
                         order = 10,
                         type = "header",
@@ -1088,11 +1320,40 @@ local function GetOptionsTable()
                     nameplatesEnabled = {
                         order = 11,
                         type = "toggle",
-                        name = "啟用名牌",
-                        desc = "使用 LunarUI 自訂名牌（需重載）",
+                        name = L["Nameplates"] or "啟用名牌",
+                        desc = L["NameplatesDesc"] or "使用 LunarUI 自訂名牌（需重載）",
                         get = function() return LunarUI.db.profile.nameplates.enabled end,
                         set = function(_, val) LunarUI.db.profile.nameplates.enabled = val end,
                         width = "full",
+                    },
+                    npShowHealthText = {
+                        order = 12,
+                        type = "toggle",
+                        name = L["NPHealthText"] or "Health Text",
+                        desc = L["NPHealthTextDesc"] or "Show health text on nameplates (requires reload)",
+                        get = function() return LunarUI.db.profile.nameplates.showHealthText end,
+                        set = function(_, val) LunarUI.db.profile.nameplates.showHealthText = val end,
+                    },
+                    npHealthTextFormat = {
+                        order = 13,
+                        type = "select",
+                        name = L["NPHealthTextFormat"] or "Health Text Format",
+                        desc = L["NPHealthTextFormatDesc"] or "Format for health text display (requires reload)",
+                        values = {
+                            percent = L["Percent"] or "Percent",
+                            current = L["Current"] or "Current",
+                            both = L["Both"] or "Both",
+                        },
+                        get = function() return LunarUI.db.profile.nameplates.healthTextFormat end,
+                        set = function(_, val) LunarUI.db.profile.nameplates.healthTextFormat = val end,
+                    },
+                    npEnemyShowBuffs = {
+                        order = 14,
+                        type = "toggle",
+                        name = L["NPEnemyBuffs"] or "Enemy Buffs",
+                        desc = L["NPEnemyBuffsDesc"] or "Show stealable buffs on enemy nameplates (requires reload)",
+                        get = function() return LunarUI.db.profile.nameplates.enemy.showBuffs end,
+                        set = function(_, val) LunarUI.db.profile.nameplates.enemy.showBuffs = val end,
                     },
                     actionbarsHeader = {
                         order = 20,
@@ -1339,13 +1600,37 @@ local function GetOptionsTable()
                         get = function() return LunarUI.db.profile.actionbars.showMacroNames end,
                         set = function(_, val) LunarUI.db.profile.actionbars.showMacroNames = val end,
                     },
-                    actionbarsFadeHeader = {
+                    actionbarsOutOfRange = {
                         order = 35,
+                        type = "toggle",
+                        name = L["OutOfRange"] or "Out of Range Coloring",
+                        desc = L["OutOfRangeDesc"] or "Color buttons red when the target is out of range (requires reload)",
+                        get = function() return LunarUI.db.profile.actionbars.outOfRangeColoring end,
+                        set = function(_, val) LunarUI.db.profile.actionbars.outOfRangeColoring = val end,
+                    },
+                    actionbarsExtraButton = {
+                        order = 36,
+                        type = "toggle",
+                        name = L["ExtraActionButton"] or "Extra Action Button",
+                        desc = L["ExtraActionButtonDesc"] or "Style the Extra Action Button with LunarUI theme (requires reload)",
+                        get = function() return LunarUI.db.profile.actionbars.extraActionButton end,
+                        set = function(_, val) LunarUI.db.profile.actionbars.extraActionButton = val end,
+                    },
+                    actionbarsMicroBar = {
+                        order = 36.1,
+                        type = "toggle",
+                        name = L["MicroBar"] or "Micro Bar",
+                        desc = L["MicroBarDesc"] or "Rearrange system micro buttons into a compact bar (requires reload)",
+                        get = function() return LunarUI.db.profile.actionbars.microBar.enabled end,
+                        set = function(_, val) LunarUI.db.profile.actionbars.microBar.enabled = val end,
+                    },
+                    actionbarsFadeHeader = {
+                        order = 37,
                         type = "header",
                         name = "淡入淡出",
                     },
                     actionbarsFadeEnabled = {
-                        order = 36,
+                        order = 38,
                         type = "toggle",
                         name = "啟用非戰鬥淡出",
                         desc = "非戰鬥時自動淡出動作條，滑鼠懸停時淡入",
@@ -1359,7 +1644,7 @@ local function GetOptionsTable()
                         width = "full",
                     },
                     actionbarsFadeAlpha = {
-                        order = 37,
+                        order = 39,
                         type = "range",
                         name = "淡出透明度",
                         desc = "非戰鬥淡出後的最低透明度",
@@ -1373,7 +1658,7 @@ local function GetOptionsTable()
                         end,
                     },
                     actionbarsFadeDelay = {
-                        order = 38,
+                        order = 40,
                         type = "range",
                         name = "淡出延遲",
                         desc = "離開戰鬥 / 滑鼠離開後的淡出等待時間（秒）",
@@ -1517,6 +1802,27 @@ local function GetOptionsTable()
                         get = function() return LunarUI.db.profile.chat.linkTooltipPreview end,
                         set = function(_, val) LunarUI.db.profile.chat.linkTooltipPreview = val end,
                     },
+                    chatTimestamps = {
+                        order = 59,
+                        type = "toggle",
+                        name = L["Timestamps"] or "Timestamps",
+                        desc = L["TimestampsDesc"] or "Show timestamps before chat messages (requires reload)",
+                        get = function() return LunarUI.db.profile.chat.showTimestamps end,
+                        set = function(_, val) LunarUI.db.profile.chat.showTimestamps = val end,
+                    },
+                    chatTimestampFormat = {
+                        order = 59.1,
+                        type = "select",
+                        name = L["TimestampFormat"] or "Timestamp Format",
+                        values = {
+                            ["%H:%M"] = "14:30",
+                            ["%H:%M:%S"] = "14:30:00",
+                            ["%I:%M %p"] = "02:30 PM",
+                        },
+                        get = function() return LunarUI.db.profile.chat.timestampFormat end,
+                        set = function(_, val) LunarUI.db.profile.chat.timestampFormat = val end,
+                        disabled = function() return not LunarUI.db.profile.chat.showTimestamps end,
+                    },
                     tooltipHeader = {
                         order = 60,
                         type = "header",
@@ -1528,6 +1834,175 @@ local function GetOptionsTable()
                         name = "啟用滑鼠提示美化",
                         get = function() return LunarUI.db.profile.tooltip.enabled end,
                         set = function(_, val) LunarUI.db.profile.tooltip.enabled = val end,
+                    },
+                    tooltipItemCount = {
+                        order = 62,
+                        type = "toggle",
+                        name = L["ItemCount"] or "Item Count",
+                        desc = L["ItemCountDesc"] or "Show item count (bags/bank) in tooltips",
+                        get = function() return LunarUI.db.profile.tooltip.showItemCount end,
+                        set = function(_, val) LunarUI.db.profile.tooltip.showItemCount = val end,
+                    },
+                    databarsHeader = {
+                        order = 70,
+                        type = "header",
+                        name = L["DataBars"] or "Data Bars",
+                    },
+                    databarsEnabled = {
+                        order = 71,
+                        type = "toggle",
+                        name = L["DataBars"] or "Data Bars",
+                        desc = L["DataBarsDesc"] or "Experience, reputation, and honor progress bars",
+                        get = function() return LunarUI.db.profile.databars.enabled end,
+                        set = function(_, val) LunarUI.db.profile.databars.enabled = val end,
+                        width = "full",
+                    },
+                    databarsExpEnabled = {
+                        order = 72,
+                        type = "toggle",
+                        name = L["Experience"] or "Experience",
+                        desc = L["Experience"] or "Experience bar (requires reload)",
+                        get = function() return LunarUI.db.profile.databars.experience.enabled end,
+                        set = function(_, val) LunarUI.db.profile.databars.experience.enabled = val end,
+                    },
+                    databarsExpShowText = {
+                        order = 73,
+                        type = "toggle",
+                        name = L["ShowText"] or "Show Text",
+                        get = function() return LunarUI.db.profile.databars.experience.showText end,
+                        set = function(_, val) LunarUI.db.profile.databars.experience.showText = val end,
+                    },
+                    databarsRepEnabled = {
+                        order = 74,
+                        type = "toggle",
+                        name = L["Reputation"] or "Reputation",
+                        desc = L["Reputation"] or "Reputation bar (requires reload)",
+                        get = function() return LunarUI.db.profile.databars.reputation.enabled end,
+                        set = function(_, val) LunarUI.db.profile.databars.reputation.enabled = val end,
+                    },
+                    databarsRepShowText = {
+                        order = 75,
+                        type = "toggle",
+                        name = L["ShowText"] or "Show Text",
+                        get = function() return LunarUI.db.profile.databars.reputation.showText end,
+                        set = function(_, val) LunarUI.db.profile.databars.reputation.showText = val end,
+                    },
+                    databarsHonorEnabled = {
+                        order = 76,
+                        type = "toggle",
+                        name = L["Honor"] or "Honor",
+                        desc = L["Honor"] or "Honor bar (requires reload)",
+                        get = function() return LunarUI.db.profile.databars.honor.enabled end,
+                        set = function(_, val) LunarUI.db.profile.databars.honor.enabled = val end,
+                    },
+                    databarsWidth = {
+                        order = 77,
+                        type = "range",
+                        name = L["BarWidth"] or "Bar Width",
+                        min = 100, max = 800, step = 10,
+                        get = function() return LunarUI.db.profile.databars.experience.width end,
+                        set = function(_, val)
+                            LunarUI.db.profile.databars.experience.width = val
+                            LunarUI.db.profile.databars.reputation.width = val
+                            LunarUI.db.profile.databars.honor.width = val
+                        end,
+                    },
+                    databarsHeight = {
+                        order = 78,
+                        type = "range",
+                        name = L["BarHeight"] or "Bar Height",
+                        min = 4, max = 20, step = 1,
+                        get = function() return LunarUI.db.profile.databars.experience.height end,
+                        set = function(_, val)
+                            LunarUI.db.profile.databars.experience.height = val
+                            LunarUI.db.profile.databars.reputation.height = val
+                            LunarUI.db.profile.databars.honor.height = val
+                        end,
+                    },
+                    datatextsHeader = {
+                        order = 80,
+                        type = "header",
+                        name = L["DataTexts"] or "Data Texts",
+                    },
+                    datatextsEnabled = {
+                        order = 81,
+                        type = "toggle",
+                        name = L["DataTexts"] or "Data Texts",
+                        desc = L["DataTextsDesc"] or "Configurable info panels (FPS, latency, gold, durability, etc.)",
+                        get = function() return LunarUI.db.profile.datatexts.enabled end,
+                        set = function(_, val) LunarUI.db.profile.datatexts.enabled = val end,
+                        width = "full",
+                    },
+                    datatextsBottomEnabled = {
+                        order = 82,
+                        type = "toggle",
+                        name = L["DTBottomPanel"] or "Bottom Panel",
+                        desc = L["DTBottomPanelDesc"] or "Show data text panel at bottom of screen (requires reload)",
+                        get = function() return LunarUI.db.profile.datatexts.panels.bottom.enabled end,
+                        set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.enabled = val end,
+                    },
+                    datatextsBottomSlot1 = {
+                        order = 83,
+                        type = "select",
+                        name = (L["DTSlot"] or "Slot") .. " 1",
+                        values = function()
+                            return {
+                                fps = "FPS",
+                                latency = L["Latency"] or "Latency",
+                                gold = L["Gold"] or "Gold",
+                                durability = L["Durability"] or "Durability",
+                                bagSlots = L["BagSlots"] or "Bag Slots",
+                                friends = L["Friends"] or "Friends",
+                                guild = L["Guild"] or "Guild",
+                                spec = L["Spec"] or "Spec",
+                                clock = L["Clock"] or "Clock",
+                                coords = L["Coords"] or "Coords",
+                            }
+                        end,
+                        get = function() return LunarUI.db.profile.datatexts.panels.bottom.slots[1] end,
+                        set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.slots[1] = val end,
+                    },
+                    datatextsBottomSlot2 = {
+                        order = 84,
+                        type = "select",
+                        name = (L["DTSlot"] or "Slot") .. " 2",
+                        values = function()
+                            return {
+                                fps = "FPS",
+                                latency = L["Latency"] or "Latency",
+                                gold = L["Gold"] or "Gold",
+                                durability = L["Durability"] or "Durability",
+                                bagSlots = L["BagSlots"] or "Bag Slots",
+                                friends = L["Friends"] or "Friends",
+                                guild = L["Guild"] or "Guild",
+                                spec = L["Spec"] or "Spec",
+                                clock = L["Clock"] or "Clock",
+                                coords = L["Coords"] or "Coords",
+                            }
+                        end,
+                        get = function() return LunarUI.db.profile.datatexts.panels.bottom.slots[2] end,
+                        set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.slots[2] = val end,
+                    },
+                    datatextsBottomSlot3 = {
+                        order = 85,
+                        type = "select",
+                        name = (L["DTSlot"] or "Slot") .. " 3",
+                        values = function()
+                            return {
+                                fps = "FPS",
+                                latency = L["Latency"] or "Latency",
+                                gold = L["Gold"] or "Gold",
+                                durability = L["Durability"] or "Durability",
+                                bagSlots = L["BagSlots"] or "Bag Slots",
+                                friends = L["Friends"] or "Friends",
+                                guild = L["Guild"] or "Guild",
+                                spec = L["Spec"] or "Spec",
+                                clock = L["Clock"] or "Clock",
+                                coords = L["Coords"] or "Coords",
+                            }
+                        end,
+                        get = function() return LunarUI.db.profile.datatexts.panels.bottom.slots[3] end,
+                        set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.slots[3] = val end,
                     },
                 },
             },

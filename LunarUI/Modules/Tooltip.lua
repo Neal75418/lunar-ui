@@ -442,6 +442,35 @@ local function OnTooltipSetItem(tooltip)
         end
     end
 
+    -- 顯示物品持有數量
+    if db.showItemCount then
+        local itemID = itemLink:match("item:(%d+)")
+        if itemID then
+            local numID = tonumber(itemID)
+            if numID then
+                local bagCount = C_Item.GetItemCount(numID, false)
+                local totalCount = C_Item.GetItemCount(numID, true)  -- 含銀行
+                if totalCount and totalCount > 0 then
+                    local bankCount = totalCount - bagCount
+                    local L = Engine.L or {}
+                    local countText = string.format(
+                        "%s: %d",
+                        L["ItemCount"] or "Count",
+                        bagCount
+                    )
+                    if bankCount > 0 then
+                        countText = countText .. string.format(
+                            "  (%s: %d)",
+                            L["BankTitle"] or "Bank",
+                            bankCount
+                        )
+                    end
+                    tooltip:AddLine("|cff888888" .. countText .. "|r")
+                end
+            end
+        end
+    end
+
     -- 顯示物品 ID
     if db.showItemID then
         local itemID = itemLink:match("item:(%d+)")

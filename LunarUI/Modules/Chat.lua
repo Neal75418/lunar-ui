@@ -158,6 +158,8 @@ local KEYWORD_ALERT_FALLBACK_SOUND = SOUNDKIT and SOUNDKIT.TELL_MESSAGE or 3081
 local styledFrames = {}
 local copyFrame
 local copyEditBox
+local escapedEmojiMap = nil    -- Fix 3a: 預快取 emoji escaped pattern → icon
+local escapedKeywordCache = {} -- Fix 3b: 預快取 keyword escaped pattern
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -294,7 +296,14 @@ local function StyleChatFrame(chatFrame)
                         if bd:GetAlpha() <= 0.01 then
                             bd:SetAlpha(0)
                             bd:Hide()
+                            -- Fix 11: 動畫完成後卸載 OnUpdate
+                            bd:SetScript("OnUpdate", nil)
+                            bd._fadeUpdate = false
                         end
+                    else
+                        -- Fix 11: 已到達目標，不需繼續每幀執行
+                        bd:SetScript("OnUpdate", nil)
+                        bd._fadeUpdate = false
                     end
                 end)
             end
@@ -597,6 +606,32 @@ local function RegisterURLFilter()
 end
 
 --------------------------------------------------------------------------------
+-- 時間戳記
+--------------------------------------------------------------------------------
+
+local function SetupTimestamps()
+    local db = LunarUI.db and LunarUI.db.profile.chat
+    if not db or not db.showTimestamps then return end
+
+    local fmt = db.timestampFormat or "%H:%M"
+
+    for _, frameName in ipairs(CHAT_FRAMES) do
+        local frame = _G[frameName]
+        if frame and not frame._lunarTimestampHooked then
+            frame._lunarTimestampHooked = true
+            local origAddMessage = frame.AddMessage
+            frame.AddMessage = function(self, msg, ...)
+                if msg and type(msg) == "string" then
+                    local timestamp = date(fmt)
+                    msg = "|cff999999[" .. timestamp .. "]|r " .. msg
+                end
+                return origAddMessage(self, msg, ...)
+            end
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
 -- 短頻道名稱
 --------------------------------------------------------------------------------
 
@@ -689,10 +724,17 @@ local function AddEmojisToMessage(_self, _event, msg, ...)
 
     CheckEmojiTextures()
 
+    -- Fix 3a: 預建 escaped pattern map（只建一次）
+    if not escapedEmojiMap then
+        escapedEmojiMap = {}
+        for text, icon in pairs(useEmojiMap) do
+            local escaped = text:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+            escapedEmojiMap[escaped] = icon
+        end
+    end
+
     local newMsg = msg
-    for text, icon in pairs(useEmojiMap) do
-        -- 使用 plain find 避免模式匹配問題
-        local escaped = text:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+    for escaped, icon in pairs(escapedEmojiMap) do
         newMsg = newMsg:gsub(escaped, icon)
     end
 
@@ -813,9 +855,14 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
             end
 
             -- 在訊息中高亮關鍵字（加底色）
+            -- Fix 3b: 使用預快取的 escaped pattern
             for _, keyword in ipairs(checkList) do
                 if keyword and keyword ~= "" then
-                    local escaped = keyword:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+                    local escaped = escapedKeywordCache[keyword]
+                    if not escaped then
+                        escaped = keyword:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+                        escapedKeywordCache[keyword] = escaped
+                    end
                     msg = msg:gsub("(" .. escaped .. ")", "|cffff8800%1|r")
                 end
             end
@@ -1054,8 +1101,11 @@ local function InitializeChat()
     -- 新增複製功能
     AddCopyOption()
 
-    -- 短頻道名稱
+    -- 短頻道名稱（先 hook，這樣時間戳記會在最外層）
     ShortenChannelNames()
+
+    -- 時間戳記（後 hook，最後包裹所有訊息）
+    SetupTimestamps()
 
     -- 註冊聊天增強過濾器（表情、角色圖示、關鍵字、垃圾過濾）
     RegisterChatEnhancementFilters()

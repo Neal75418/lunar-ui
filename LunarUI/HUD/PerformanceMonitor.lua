@@ -44,28 +44,32 @@ local PERF_PHASE_ALPHA = {
 -- 輔助函數
 --------------------------------------------------------------------------------
 
-local function GetLatencyColor(ms)
-    if ms <= LATENCY_THRESHOLDS.good then
-        return 0.2, 0.8, 0.2  -- 綠色
-    elseif ms <= LATENCY_THRESHOLDS.medium then
-        return 0.9, 0.9, 0.2  -- 黃色
-    elseif ms <= LATENCY_THRESHOLDS.bad then
-        return 0.9, 0.5, 0.1  -- 橙色
+-- 通用門檻色彩：ascending=true 值越大越好（FPS），false 值越小越好（延遲）
+local function GetThresholdColor(value, thresholds, ascending)
+    if ascending then
+        if value >= thresholds[1] then return 0.2, 0.8, 0.2
+        elseif value >= thresholds[2] then return 0.9, 0.9, 0.2
+        elseif value >= thresholds[3] then return 0.9, 0.5, 0.1
+        else return 0.9, 0.2, 0.2 end
     else
-        return 0.9, 0.2, 0.2  -- 紅色
+        if value <= thresholds[1] then return 0.2, 0.8, 0.2
+        elseif value <= thresholds[2] then return 0.9, 0.9, 0.2
+        elseif value <= thresholds[3] then return 0.9, 0.5, 0.1
+        else return 0.9, 0.2, 0.2 end
     end
 end
 
+local FPS_THRESHOLDS = { 60, 30, 15 }
+local LATENCY_THRESHOLDS_LIST = {
+    LATENCY_THRESHOLDS.good, LATENCY_THRESHOLDS.medium, LATENCY_THRESHOLDS.bad
+}
+
 local function GetFPSColor(fps)
-    if fps >= 60 then
-        return 0.2, 0.8, 0.2  -- 綠色
-    elseif fps >= 30 then
-        return 0.9, 0.9, 0.2  -- 黃色
-    elseif fps >= 15 then
-        return 0.9, 0.5, 0.1  -- 橙色
-    else
-        return 0.9, 0.2, 0.2  -- 紅色
-    end
+    return GetThresholdColor(fps, FPS_THRESHOLDS, true)
+end
+
+local function GetLatencyColor(ms)
+    return GetThresholdColor(ms, LATENCY_THRESHOLDS_LIST, false)
 end
 
 --------------------------------------------------------------------------------
@@ -85,7 +89,8 @@ local function CreatePerfFrame()
     end
 
     perfFrame:SetSize(100, 36)
-    perfFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -20, -100)
+    perfFrame:ClearAllPoints()
+    perfFrame:SetPoint("TOPRIGHT", Minimap or UIParent, "BOTTOMRIGHT", 0, -24)
     perfFrame:SetFrameStrata("HIGH")
     perfFrame:SetMovable(true)
     perfFrame:EnableMouse(true)

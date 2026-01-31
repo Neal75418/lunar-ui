@@ -135,6 +135,26 @@ function LunarUI:OnDisable()
         self:CleanupNameplates()
     end
 
+    -- 清理資料條
+    if self.CleanupDataBars then
+        self:CleanupDataBars()
+    end
+
+    -- 清理資料文字
+    if self.CleanupDataTexts then
+        self:CleanupDataTexts()
+    end
+
+    -- 清理動作條
+    if self.CleanupActionBars then
+        self:CleanupActionBars()
+    end
+
+    -- 清理 Skins
+    if self.CleanupSkins then
+        self:CleanupSkins()
+    end
+
     -- 停止月相光暈動畫
     if self.StopGlowAnimation then
         self:StopGlowAnimation()

@@ -38,6 +38,7 @@ Core\Commands.lua
 Core\Debug.lua
 
 # Media & Visual Theme
+Core\Media.lua
 Media\Media.lua
 Effects\PhaseGlow.lua
 
@@ -64,3 +65,18 @@ Modules\Minimap.lua
 Modules\Tooltip.lua
 Modules\Chat.lua
 Modules\Bags.lua
+Modules\DataBars.lua
+Modules\DataTexts.lua
+Modules\Skins.lua
+Modules\Skins\Character.lua
+Modules\Skins\Spellbook.lua
+Modules\Skins\Talents.lua
+Modules\Skins\Quest.lua
+Modules\Skins\Merchant.lua
+Modules\Skins\Gossip.lua
+Modules\Skins\WorldMap.lua
+Modules\Skins\Achievements.lua
+Modules\Skins\Mail.lua
+Modules\Skins\Collections.lua
+Modules\Skins\LFG.lua
+Modules\Skins\EncounterJournal.lua

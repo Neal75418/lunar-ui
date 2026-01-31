@@ -63,14 +63,7 @@ local FILTERED_BUFF_NAMES = {
     ["Resurrection Sickness"] = true,
 }
 
--- 減益類型顏色
-local DEBUFF_TYPE_COLORS = {
-    Magic   = { 0.2, 0.6, 1.0 },   -- 藍色
-    Curse   = { 0.6, 0.0, 1.0 },   -- 紫色
-    Disease = { 0.6, 0.4, 0.0 },   -- 棕色
-    Poison  = { 0.0, 0.6, 0.0 },   -- 綠色
-    [""]    = { 0.8, 0.0, 0.0 },   -- 紅色（無類型）
-}
+local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS
 
 -- 計時條顏色（依剩餘時間）
 local function GetTimerBarColor(remaining, duration)
@@ -118,7 +111,9 @@ local function _FormatDuration(seconds)
 end
 
 local function ShouldShowBuff(name, duration)
-    if FILTERED_BUFF_NAMES[name] then
+    -- WoW secret value 不能當 table index，用 pcall 保護
+    local ok, isFiltered = pcall(function() return FILTERED_BUFF_NAMES[name] end)
+    if not ok or isFiltered then
         return false
     end
     -- 月相過濾：NEW 月相只顯示短期 Buff
@@ -136,17 +131,8 @@ end
 -- 圖示建立
 --------------------------------------------------------------------------------
 
-local function CreateAuraIcon(parent, _index)
-    local totalHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
-
-    local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    icon:SetSize(ICON_SIZE, totalHeight)
-
-    -- 圖示背景
-    icon:SetBackdrop(backdropTemplate)
-    icon:SetBackdropColor(0.08, 0.08, 0.08, 0.85)
-    icon:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.8)
-
+-- 建立圖示的視覺元素（紋理、冷卻、計時條、文字）
+local function CreateAuraIconVisuals(icon)
     -- 圖示紋理
     local texture = icon:CreateTexture(nil, "ARTWORK")
     texture:SetPoint("TOPLEFT", 1, -1)
@@ -198,8 +184,10 @@ local function CreateAuraIcon(parent, _index)
     count:SetPoint("TOPRIGHT", -1, -1)
     count:SetTextColor(1, 0.9, 0.5)
     icon.count = count
+end
 
-    -- 淡入動畫
+-- 設定淡入動畫
+local function SetupAuraIconAnimation(icon)
     local fadeIn = icon:CreateAnimationGroup()
     local fadeAnim = fadeIn:CreateAnimation("Alpha")
     fadeAnim:SetFromAlpha(0)
@@ -207,12 +195,10 @@ local function CreateAuraIcon(parent, _index)
     fadeAnim:SetDuration(0.25)
     fadeAnim:SetOrder(1)
     icon.fadeIn = fadeIn
-    icon.currentAuraName = nil
+end
 
-    -- 光環資料（供 Tooltip 使用）
-    icon.auraData = nil
-
-    -- Tooltip
+-- 設定 Tooltip 與點擊互動
+local function SetupAuraIconInteraction(icon)
     icon:EnableMouse(true)
     icon:SetScript("OnEnter", function(self)
         if self.auraData then
@@ -228,7 +214,6 @@ local function CreateAuraIcon(parent, _index)
     -- 右鍵取消 Buff
     icon:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" and self.auraData and self.auraData.filter == "HELPFUL" then
-            -- WoW 12.0+：使用 C_UnitAuras.CancelAuraByIndex 或回退到舊 API
             if C_UnitAuras and C_UnitAuras.CancelAuraByIndex then
                 pcall(C_UnitAuras.CancelAuraByIndex, "player", self.auraData.index)
             elseif _G.CancelUnitBuff then
@@ -236,7 +221,23 @@ local function CreateAuraIcon(parent, _index)
             end
         end
     end)
+end
 
+local function CreateAuraIcon(parent, _index)
+    local totalHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
+
+    local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    icon:SetSize(ICON_SIZE, totalHeight)
+    icon:SetBackdrop(backdropTemplate)
+    icon:SetBackdropColor(0.08, 0.08, 0.08, 0.85)
+    icon:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.8)
+
+    CreateAuraIconVisuals(icon)
+    SetupAuraIconAnimation(icon)
+    SetupAuraIconInteraction(icon)
+
+    icon.currentAuraName = nil
+    icon.auraData = nil
     icon:Hide()
     return icon
 end
@@ -334,7 +335,7 @@ local function UpdateAuraIcon(iconFrame, auraData, index, filter, isDebuff)
     if isDebuff then
         local debuffType = tostring(auraData.dispelName or "")
         local color = DEBUFF_TYPE_COLORS[debuffType] or DEBUFF_TYPE_COLORS[""]
-        iconFrame:SetBackdropBorderColor(color[1], color[2], color[3], 1)
+        iconFrame:SetBackdropBorderColor(color.r, color.g, color.b, 1)
     else
         iconFrame:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.8)
     end
@@ -405,8 +406,12 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
         local auraData = getDataFn("player", i)
         if not auraData then break end
 
-        local name = tostring(auraData.name or "")
-        local duration = tonumber(tostring(auraData.duration or 0)) or 0
+        -- Fix 10: 合併 pcall — 同時取 name 和 duration，減少每個 aura 開銷
+        local ok, nameStr, durNum = pcall(function()
+            return tostring(auraData.name or ""), tonumber(auraData.duration or 0) or 0
+        end)
+        local name = ok and nameStr or ""
+        local duration = ok and durNum or 0
 
         local shouldShow
         if isDebuff then
