@@ -26,6 +26,7 @@ local BORDER_SIZE = 4
 local COORD_UPDATE_INTERVAL = 0.2
 
 local backdropTemplate = LunarUI.backdropTemplate
+local format = string.format
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -37,7 +38,9 @@ local zoneText
 local clockText
 local buttonFrame
 local collectedButtons = {}
-local _coordUpdateTimer  -- 保留供未來使用
+local zoomResetHandle       -- 縮放自動重置計時器
+local addonLoadedFrame      -- ADDON_LOADED 事件監聽框架
+local buttonScanTimers = {} -- 按鈕掃描延遲計時器
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -66,7 +69,7 @@ local function UpdateCoordinates()
 
     local x, y = GetPlayerCoords()
     if x and y then
-        local coordString = string.format("%.1f, %.1f", x, y)
+        local coordString = format("%.1f, %.1f", x, y)
         -- 僅在值改變時更新
         if coordString ~= lastCoordString then
             coordText:SetText(coordString)
@@ -114,8 +117,19 @@ end
 local function UpdateClock()
     if not clockText then return end
 
+    local db = LunarUI.db and LunarUI.db.profile.minimap
     local hour, minute = GetGameTime()
-    local clockString = string.format("%02d:%02d", hour, minute)
+    local clockString
+
+    if db and db.clockFormat == "12h" then
+        local suffix = hour >= 12 and "PM" or "AM"
+        hour = hour % 12
+        if hour == 0 then hour = 12 end
+        clockString = format("%d:%02d %s", hour, minute, suffix)
+    else
+        clockString = format("%02d:%02d", hour, minute)
+    end
+
     -- 僅在值改變時更新
     if clockString ~= lastClockString then
         clockText:SetText(clockString)
@@ -154,7 +168,7 @@ local function CollectMinimapButton(button)
     -- 使用雜湊表進行 O(1) 重複檢查
     if scannedButtonIDs[name] then return end
 
-    -- 跳過特定按鈕
+    -- 跳過系統按鈕和由 ApplyIconSettings 管理的按鈕
     local skipButtons = {
         "MiniMapTracking",
         "MiniMapMailFrame",
@@ -165,6 +179,11 @@ local function CollectMinimapButton(button)
         "GameTimeFrame",
         "TimeManagerClockButton",
         "LunarUI_MinimapButton",
+        "LunarUI_MinimapMail",
+        "LunarUI_MinimapDifficulty",
+        "AddonCompartmentFrame",
+        "QueueStatusMinimapButton",
+        "ExpansionLandingPageMinimapButton",
     }
 
     for _, skip in ipairs(skipButtons) do
@@ -325,10 +344,17 @@ local function UpdateMinimapForPhase()
     if not minimapFrame then return end
 
     local tokens = LunarUI:GetTokens()
+    if not tokens then return end
 
     -- 小地圖即使在新月階段也應保持較高可見度
     local minAlpha = 0.6
-    local alpha = math.max(tokens.alpha, minAlpha)
+    local alpha = math.max(tokens.alpha or 1, minAlpha)
+
+    -- 與滑鼠離開淡出互動：若啟用且滑鼠不在上面，取較低的 alpha
+    local db = LunarUI.db and LunarUI.db.profile.minimap
+    if db and db.fadeOnMouseLeave and not minimapFrame:IsMouseOver() then
+        alpha = math.min(alpha, db.fadeAlpha or 0.5)
+    end
 
     minimapFrame:SetAlpha(alpha)
 end
@@ -385,22 +411,43 @@ local function HideBlizzardMinimapElements()
 
         -- ExpansionLandingPageMinimapButton（雙刀按鈕）
         if ExpansionLandingPageMinimapButton then
-            pcall(function()
-                ExpansionLandingPageMinimapButton:SetParent(Minimap)
-                ExpansionLandingPageMinimapButton:SetFrameLevel(Minimap:GetFrameLevel() + 5)
-                ExpansionLandingPageMinimapButton:ClearAllPoints()
-                ExpansionLandingPageMinimapButton:SetPoint("TOPLEFT", Minimap, "TOPLEFT", -4, 4)
-                ExpansionLandingPageMinimapButton:SetSize(32, 32)
-                ExpansionLandingPageMinimapButton:SetAlpha(1)
-                ExpansionLandingPageMinimapButton:Show()
+            local btn = ExpansionLandingPageMinimapButton
+            ReparentButton(btn, "TOPLEFT", Minimap, "TOPLEFT", -4, 4)
 
-                -- 暴雪的 SetTooltip 在 reparent 後會報錯（nil text）
-                -- 用 pcall 包裝原始 OnEnter 來壓制
-                local origOnEnter = ExpansionLandingPageMinimapButton:GetScript("OnEnter")
-                if origOnEnter then
-                    ExpansionLandingPageMinimapButton:SetScript("OnEnter", function(self, ...)
-                        pcall(origOnEnter, self, ...)
+            -- title/description fallback 防止 SetTooltip nil 錯誤
+            if not btn.title then btn.title = "" end
+            if not btn.description then btn.description = "" end
+
+            -- 縮小按鈕到合理大小，同時讓內部材質跟著縮
+            local TARGET_SIZE = 36
+            btn:SetSize(TARGET_SIZE, TARGET_SIZE)
+            btn:SetHitRectInsets(0, 0, 0, 0)
+
+            -- 讓內部材質與子框架都填滿按鈕範圍（修正點擊/高亮區域不一致）
+            for _, region in ipairs({ btn:GetRegions() }) do
+                if region:IsObjectType("Texture") then
+                    pcall(function()
+                        region:ClearAllPoints()
+                        region:SetAllPoints(btn)
                     end)
+                end
+            end
+            for _, child in ipairs({ btn:GetChildren() }) do
+                pcall(function()
+                    child:SetSize(TARGET_SIZE, TARGET_SIZE)
+                    child:ClearAllPoints()
+                    child:SetAllPoints(btn)
+                end)
+            end
+
+            -- 防止暴雪把大小改回去
+            local settingSize = false
+            hooksecurefunc(btn, "SetSize", function(self, w, h)
+                if settingSize then return end
+                if w ~= TARGET_SIZE or h ~= TARGET_SIZE then
+                    settingSize = true
+                    self:SetSize(TARGET_SIZE, TARGET_SIZE)
+                    settingSize = false
                 end
             end)
         end
@@ -462,6 +509,12 @@ local function HideBlizzardMinimapElements()
         end
     end
 
+    -- 隱藏縮放按鈕（已有滑鼠滾輪縮放，避免與時鐘文字重疊）
+    pcall(function()
+        if MinimapZoomIn then MinimapZoomIn:Hide(); MinimapZoomIn:SetAlpha(0) end
+        if MinimapZoomOut then MinimapZoomOut:Hide(); MinimapZoomOut:SetAlpha(0) end
+    end)
+
     -- 4. 方形遮罩（使用已驗證的 WHITE8X8 材質）
     Minimap:SetMaskTexture("Interface\\BUTTONS\\WHITE8X8")
 
@@ -498,6 +551,18 @@ local function HideBlizzardMinimapElements()
         else
             Minimap_ZoomOut()
         end
+        -- 縮放自動重置計時器
+        local db = LunarUI.db and LunarUI.db.profile.minimap
+        local delay = db and db.resetZoomTimer or 0
+        if delay > 0 then
+            if zoomResetHandle then
+                zoomResetHandle:Cancel()
+            end
+            zoomResetHandle = C_Timer.NewTimer(delay, function()
+                Minimap:SetZoom(0)
+                zoomResetHandle = nil
+            end)
+        end
     end)
 end
 
@@ -505,13 +570,20 @@ local function CreateMinimapFrame()
     local db = LunarUI.db and LunarUI.db.profile.minimap
     if not db or not db.enabled then return end
 
+    local size = db.size or MINIMAP_SIZE
+    local bc = db.borderColor or { r = 0.15, g = 0.12, b = 0.08, a = 1 }
+    local zoneFontSize = db.zoneFontSize or 12
+    local zoneFontOutline = db.zoneFontOutline or "OUTLINE"
+    local coordFontSize = db.coordFontSize or 10
+    local coordFontOutline = db.coordFontOutline or "OUTLINE"
+
     -- 建立主容器
     minimapFrame = CreateFrame("Frame", "LunarUI_Minimap", UIParent, "BackdropTemplate")
-    minimapFrame:SetSize(MINIMAP_SIZE + BORDER_SIZE * 2, MINIMAP_SIZE + BORDER_SIZE * 2)
+    minimapFrame:SetSize(size + BORDER_SIZE * 2, size + BORDER_SIZE * 2)
     minimapFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -20, -20)
     minimapFrame:SetBackdrop(backdropTemplate)
     minimapFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
-    minimapFrame:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+    minimapFrame:SetBackdropBorderColor(bc.r, bc.g, bc.b, bc.a)
     minimapFrame:SetFrameStrata("LOW")
     minimapFrame:SetMovable(true)
     minimapFrame:EnableMouse(true)
@@ -524,43 +596,46 @@ local function CreateMinimapFrame()
             minimapFrame:StartMoving()
         end
     end)
-    minimapFrame:SetScript("OnDragStop", function(_self)
-        minimapFrame:StopMovingOrSizing()
+    minimapFrame:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        -- 拖曳結束後重新檢查淡出狀態（OnLeave 在拖曳期間不會觸發）
+        local onLeave = self:GetScript("OnLeave")
+        if onLeave and not self:IsMouseOver() then
+            onLeave(self)
+        end
     end)
 
     -- 重新設定 Minimap 父框架與大小
     Minimap:SetParent(minimapFrame)
     Minimap:ClearAllPoints()
     Minimap:SetPoint("CENTER", minimapFrame, "CENTER", 0, 0)
-    Minimap:SetSize(MINIMAP_SIZE, MINIMAP_SIZE)
+    Minimap:SetSize(size, size)
     Minimap:SetFrameLevel(minimapFrame:GetFrameLevel() + 1)
 
     -- 建立區域文字
     zoneText = minimapFrame:CreateFontString(nil, "OVERLAY")
-    zoneText:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
+    zoneText:SetFont(STANDARD_TEXT_FONT, zoneFontSize, zoneFontOutline)
     zoneText:SetPoint("TOP", minimapFrame, "BOTTOM", 0, -4)
     zoneText:SetTextColor(0.9, 0.9, 0.9)
     zoneText:SetJustifyH("CENTER")
-    zoneText:SetWidth(MINIMAP_SIZE)
+    zoneText:SetWidth(size)
     zoneText:SetWordWrap(false)
 
-    -- 建立座標文字
-    if db.showCoords then
-        coordText = minimapFrame:CreateFontString(nil, "OVERLAY")
-        coordText:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
-        coordText:SetPoint("BOTTOM", minimapFrame, "BOTTOM", 0, 4)
-        coordText:SetTextColor(0.8, 0.8, 0.6)
-        coordText:SetJustifyH("CENTER")
-    end
+    -- 建立座標文字（掛在 Minimap 上，避免被 Minimap 的較高 frame level 遮住）
+    coordText = Minimap:CreateFontString(nil, "OVERLAY")
+    coordText:SetFont(STANDARD_TEXT_FONT, coordFontSize, coordFontOutline)
+    coordText:SetPoint("BOTTOM", Minimap, "BOTTOM", 0, 4)
+    coordText:SetTextColor(0.8, 0.8, 0.6)
+    coordText:SetJustifyH("CENTER")
+    if not db.showCoords then coordText:Hide() end
 
-    -- 建立時鐘文字
-    if db.showClock then
-        clockText = minimapFrame:CreateFontString(nil, "OVERLAY")
-        clockText:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
-        clockText:SetPoint("BOTTOMRIGHT", minimapFrame, "BOTTOMRIGHT", -4, 4)
-        clockText:SetTextColor(0.7, 0.7, 0.7)
-        clockText:SetJustifyH("RIGHT")
-    end
+    -- 建立時鐘文字（掛在 Minimap 上，避免被遮住；左下角避免與右側圖示重疊）
+    clockText = Minimap:CreateFontString(nil, "OVERLAY")
+    clockText:SetFont(STANDARD_TEXT_FONT, coordFontSize, coordFontOutline)
+    clockText:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", 4, 4)
+    clockText:SetTextColor(0.7, 0.7, 0.7)
+    clockText:SetJustifyH("LEFT")
+    if not db.showClock then clockText:Hide() end
 
     -- 建立按鈕整理框架（MinimapCluster 已隱藏，必須重新掛載按鈕）
     buttonFrame = CreateFrame("Frame", "LunarUI_MinimapButtons", minimapFrame, "BackdropTemplate")
@@ -568,7 +643,7 @@ local function CreateMinimapFrame()
     buttonFrame:SetSize(100, 50)
     buttonFrame:SetBackdrop(backdropTemplate)
     buttonFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.6)
-    buttonFrame:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.8)
+    buttonFrame:SetBackdropBorderColor(bc.r, bc.g, bc.b, bc.a * 0.8)
     buttonFrame:Hide()
 
     -- 註冊事件
@@ -593,8 +668,17 @@ local function CreateMinimapFrame()
     -- 使用 HookScript 而非 SetScript 以避免 taint
     Minimap:HookScript("OnMouseUp", function(_self, button)
         if button == "RightButton" then
+            -- 使用安全的選單 API 而非直接 Click() 安全按鈕（避免 taint）
             if MinimapCluster and MinimapCluster.Tracking and MinimapCluster.Tracking.Button then
-                MinimapCluster.Tracking.Button:Click()
+                local btn = MinimapCluster.Tracking.Button
+                if btn.OpenMenu then
+                    btn:OpenMenu()
+                elseif btn.ToggleMenu then
+                    btn:ToggleMenu()
+                else
+                    -- 最後手段：包在 pcall 中避免戰鬥中報錯
+                    pcall(function() btn:Click() end)
+                end
             elseif MiniMapTracking then
                 ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, "cursor")
             end
@@ -722,6 +806,240 @@ local function CreateDifficultyIndicator()
 end
 
 --------------------------------------------------------------------------------
+-- 區域文字顯示模式
+--------------------------------------------------------------------------------
+
+local function ApplyZoneTextDisplayMode(mode)
+    if not zoneText or not minimapFrame then return end
+
+    if mode == "HIDE" then
+        zoneText:Hide()
+    elseif mode == "MOUSEOVER" then
+        zoneText:SetAlpha(0)
+        zoneText:Show()
+    else -- "SHOW"
+        zoneText:SetAlpha(1)
+        zoneText:Show()
+    end
+end
+
+--------------------------------------------------------------------------------
+-- 每個圖示獨立設定
+--------------------------------------------------------------------------------
+
+local function GetIconFrameMap()
+    return {
+        calendar    = GameTimeFrame,
+        tracking    = MinimapCluster and MinimapCluster.Tracking,
+        mail        = _G["LunarUI_MinimapMail"],
+        difficulty  = _G["LunarUI_MinimapDifficulty"],
+        lfg         = QueueStatusMinimapButton,
+        expansion   = ExpansionLandingPageMinimapButton,
+        compartment = AddonCompartmentFrame,
+    }
+end
+
+-- mail 和 difficulty 由自身事件處理器控制顯示/隱藏（HasNewMail / GetInstanceInfo）
+-- ApplyIconSettings 不應對它們強制 Show()，只設定位置和縮放
+local SELF_MANAGED_ICONS = { mail = true, difficulty = true }
+
+local function ApplyIconSettings()
+    local db = LunarUI.db and LunarUI.db.profile.minimap
+    if not db or not db.icons then return end
+
+    local map = GetIconFrameMap()
+    for key, iconDB in pairs(db.icons) do
+        if type(iconDB) ~= "table" then break end
+        local frame = map[key]
+        if frame then
+            if iconDB.hide then
+                frame:Hide()
+                frame:SetAlpha(0)
+            else
+                frame:SetAlpha(1)
+                frame:ClearAllPoints()
+                frame:SetPoint(
+                    iconDB.position or "CENTER",
+                    Minimap,
+                    iconDB.position or "CENTER",
+                    iconDB.xOffset or 0,
+                    iconDB.yOffset or 0
+                )
+                frame:SetScale(iconDB.scale or 1.0)
+                -- mail/difficulty 由自身事件決定顯示，其餘圖示直接 Show
+                if not SELF_MANAGED_ICONS[key] then
+                    frame:Show()
+                end
+            end
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
+-- 滑鼠離開淡出
+--------------------------------------------------------------------------------
+
+-- 安全的淡入淡出輔助（使用 AnimationGroup 避免 UIFrameFade taint）
+local function FadeTo(frame, targetAlpha, duration)
+    if not frame then return end
+    -- 停止進行中的淡出動畫
+    if frame._lunarFader and frame._lunarFader:IsPlaying() then
+        frame._lunarFader:Stop()
+    end
+
+    if not duration or duration <= 0 then
+        frame:SetAlpha(targetAlpha)
+        return
+    end
+
+    -- 建立或重用 AnimationGroup
+    if not frame._lunarFader then
+        frame._lunarFader = frame:CreateAnimationGroup()
+        frame._lunarFadeAnim = frame._lunarFader:CreateAnimation("Alpha")
+        local function applyTargetAlpha()
+            frame:SetAlpha(frame._lunarFadeTarget or targetAlpha)
+        end
+        frame._lunarFader:SetScript("OnFinished", applyTargetAlpha)
+        frame._lunarFader:SetScript("OnStop", applyTargetAlpha)
+    end
+
+    local anim = frame._lunarFadeAnim
+    local currentAlpha = frame:GetAlpha()
+    frame._lunarFadeTarget = targetAlpha
+
+    anim:SetFromAlpha(currentAlpha)
+    anim:SetToAlpha(targetAlpha)
+    anim:SetDuration(duration)
+    frame._lunarFader:Play()
+end
+
+local function ApplyMouseFade()
+    local db = LunarUI.db and LunarUI.db.profile.minimap
+    if not db or not minimapFrame then return end
+
+    local fadeEnabled = db.fadeOnMouseLeave
+    local zoneMode = db.zoneTextDisplay or "SHOW"
+    local fadeAlpha = db.fadeAlpha or 0.5
+    local fadeDuration = db.fadeDuration or 0.3
+
+    -- 統一 OnEnter/OnLeave handler（同時處理 zone text mouseover + frame fade）
+    minimapFrame:SetScript("OnEnter", function(self)
+        if fadeEnabled then
+            FadeTo(self, 1.0, fadeDuration)
+        end
+        if zoneMode == "MOUSEOVER" and zoneText then
+            FadeTo(zoneText, 1.0, 0.2)
+        end
+    end)
+
+    minimapFrame:SetScript("OnLeave", function(self)
+        if fadeEnabled then
+            -- 與月相系統互動：取較低的目標 alpha
+            local targetAlpha = fadeAlpha
+            local tokens = LunarUI:GetTokens()
+            if tokens and tokens.alpha then
+                local moonAlpha = math.max(tokens.alpha, 0.6)
+                targetAlpha = math.min(fadeAlpha, moonAlpha)
+            end
+            FadeTo(self, targetAlpha, fadeDuration)
+        end
+        if zoneMode == "MOUSEOVER" and zoneText then
+            FadeTo(zoneText, 0, 0.2)
+        end
+    end)
+
+    -- 初始狀態：如果淡出啟用且滑鼠不在上面
+    if fadeEnabled and not minimapFrame:IsMouseOver() then
+        minimapFrame:SetAlpha(fadeAlpha)
+    end
+end
+
+--------------------------------------------------------------------------------
+-- 圖釘縮放
+--------------------------------------------------------------------------------
+
+local function ApplyPinScale()
+    local db = LunarUI.db and LunarUI.db.profile.minimap
+    local scale = db and db.pinScale or 1.0
+    if Minimap.SetPinScale then
+        Minimap:SetPinScale(scale)
+    end
+end
+
+--------------------------------------------------------------------------------
+-- RefreshMinimap — 原地刷新所有設定（不重建框架）
+--------------------------------------------------------------------------------
+
+function LunarUI.RefreshMinimap()
+    local db = LunarUI.db and LunarUI.db.profile.minimap
+    if not db or not minimapFrame then return end
+
+    local size = db.size or MINIMAP_SIZE
+    local bc = db.borderColor or { r = 0.15, g = 0.12, b = 0.08, a = 1 }
+
+    -- 調整大小
+    minimapFrame:SetSize(size + BORDER_SIZE * 2, size + BORDER_SIZE * 2)
+    Minimap:SetSize(size, size)
+
+    -- 邊框顏色
+    minimapFrame:SetBackdropBorderColor(bc.r, bc.g, bc.b, bc.a)
+    if buttonFrame then
+        buttonFrame:SetBackdropBorderColor(bc.r, bc.g, bc.b, bc.a * 0.8)
+    end
+
+    -- 區域文字字體 + 寬度
+    if zoneText then
+        local zoneFontSize = db.zoneFontSize or 12
+        local zoneFontOutline = db.zoneFontOutline or "OUTLINE"
+        zoneText:SetFont(STANDARD_TEXT_FONT, zoneFontSize, zoneFontOutline)
+        zoneText:SetWidth(size)
+    end
+    ApplyZoneTextDisplayMode(db.zoneTextDisplay or "SHOW")
+
+    -- 座標文字
+    if coordText then
+        local coordFontSize = db.coordFontSize or 10
+        local coordFontOutline = db.coordFontOutline or "OUTLINE"
+        coordText:SetFont(STANDARD_TEXT_FONT, coordFontSize, coordFontOutline)
+        if db.showCoords then
+            coordText:Show()
+        else
+            coordText:Hide()
+        end
+    end
+
+    -- 時鐘文字
+    if clockText then
+        local coordFontSize = db.coordFontSize or 10
+        local coordFontOutline = db.coordFontOutline or "OUTLINE"
+        clockText:SetFont(STANDARD_TEXT_FONT, coordFontSize, coordFontOutline)
+        if db.showClock then
+            clockText:Show()
+            lastClockString = nil  -- 強制重繪（格式可能改變）
+        else
+            clockText:Hide()
+        end
+    end
+
+    -- 每個圖示獨立設定
+    ApplyIconSettings()
+
+    -- 滑鼠離開淡出
+    ApplyMouseFade()
+
+    -- 圖釘縮放
+    ApplyPinScale()
+
+    -- 月相 alpha（必須最後，處理整體 alpha）
+    UpdateMinimapForPhase()
+
+    -- 重新整理按鈕
+    if db.organizeButtons then
+        ScanForMinimapButtons()
+    end
+end
+
+--------------------------------------------------------------------------------
 -- 初始化
 --------------------------------------------------------------------------------
 
@@ -734,7 +1052,7 @@ local function InitializeMinimap()
 
     -- 監聽 Blizzard_HybridMinimap 按需載入
     -- HybridMinimap 在進入副本/室內時才載入，需要在載入時套用方形遮罩
-    local addonLoadedFrame = CreateFrame("Frame")
+    addonLoadedFrame = CreateFrame("Frame")
     addonLoadedFrame:RegisterEvent("ADDON_LOADED")
     addonLoadedFrame:SetScript("OnEvent", function(self, _event, addon)
         if addon == "Blizzard_HybridMinimap" then
@@ -754,23 +1072,36 @@ local function InitializeMinimap()
         LunarUI:RegisterMovableFrame("Minimap", minimapFrame, "小地圖")
     end
 
-    -- 建立指示器
+    -- 建立指示器（必須在 ApplyIconSettings 之前，否則自訂指示器框架尚未建立）
     CreateMailIndicator()
     CreateDifficultyIndicator()
+
+    -- 套用每個圖示獨立設定（必須在指示器建立之後）
+    ApplyIconSettings()
 
     -- 早期掃描：在隱藏 Cluster 之前按鈕仍可見
     ScanForMinimapButtons()
 
     -- 多次掃描按鈕以捕捉延遲載入的插件（如 DBM）
-    C_Timer.After(2, ScanForMinimapButtons)
-    C_Timer.After(5, ScanForMinimapButtons)
-    C_Timer.After(10, ScanForMinimapButtons)
+    wipe(buttonScanTimers)
+    buttonScanTimers[1] = C_Timer.NewTimer(2, ScanForMinimapButtons)
+    buttonScanTimers[2] = C_Timer.NewTimer(5, ScanForMinimapButtons)
+    buttonScanTimers[3] = C_Timer.NewTimer(10, ScanForMinimapButtons)
 
     -- 註冊月相更新
     RegisterMinimapPhaseCallback()
 
     -- 套用初始月相
     UpdateMinimapForPhase()
+
+    -- 套用區域文字顯示模式
+    ApplyZoneTextDisplayMode(db.zoneTextDisplay or "SHOW")
+
+    -- 套用滑鼠離開淡出
+    ApplyMouseFade()
+
+    -- 套用圖釘縮放
+    ApplyPinScale()
 
     -- 初始更新
     UpdateZoneText()
@@ -780,15 +1111,34 @@ end
 
 -- OnUpdate 清理函數
 function LunarUI.CleanupMinimap()
+    -- 取消縮放重置計時器
+    if zoomResetHandle then
+        zoomResetHandle:Cancel()
+        zoomResetHandle = nil
+    end
+    -- 取消按鈕掃描計時器
+    if buttonScanTimers then
+        for _, handle in ipairs(buttonScanTimers) do
+            if handle and handle.Cancel then handle:Cancel() end
+        end
+        wipe(buttonScanTimers)
+    end
     if minimapFrame then
         minimapFrame:SetScript("OnUpdate", nil)
         minimapFrame:SetScript("OnEvent", nil)
+    end
+    -- 清理 ADDON_LOADED 框架
+    if addonLoadedFrame then
+        addonLoadedFrame:UnregisterAllEvents()
+        addonLoadedFrame:SetScript("OnEvent", nil)
+        addonLoadedFrame = nil
     end
 end
 
 -- 匯出
 LunarUI.InitializeMinimap = InitializeMinimap
 LunarUI.minimapFrame = minimapFrame
+-- RefreshMinimap 已在上方定義為 LunarUI:RefreshMinimap()
 
 -- 掛鉤至插件啟用
 hooksecurefunc(LunarUI, "OnEnable", function()

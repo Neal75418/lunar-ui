@@ -70,10 +70,19 @@ local RESOURCE_COLORS = {
     essence = { 0.2, 0.6, 0.5 },          -- 青綠
 }
 
--- 框架大小
+-- 框架大小（初始化時從 DB 讀取）
 local ICON_SIZE = 26
 local ICON_SPACING = 4
 local BAR_HEIGHT = 10
+
+local function LoadSettings()
+    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
+    if db then
+        ICON_SIZE = db.crIconSize or 26
+        ICON_SPACING = db.crIconSpacing or 4
+        BAR_HEIGHT = db.crBarHeight or 10
+    end
+end
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -426,6 +435,8 @@ end
 --------------------------------------------------------------------------------
 
 local function Initialize()
+    LoadSettings()
+
     -- 取得玩家職業
     local _, _, classID = UnitClass("player")
     playerClass = classID
@@ -458,6 +469,12 @@ function LunarUI.HideClassResources()
 end
 
 function LunarUI.RefreshClassResources()
+    SetupResourceDisplay()
+end
+
+function LunarUI:RebuildClassResources()
+    if InCombatLockdown() then return end
+    LoadSettings()
     SetupResourceDisplay()
 end
 

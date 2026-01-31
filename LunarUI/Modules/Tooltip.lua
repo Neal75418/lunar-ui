@@ -59,6 +59,7 @@ local tooltipStyled = false
 -- Inspect 快取（避免重複請求）
 local inspectCache = {}  -- { [guid] = { ilvl, spec, time } }
 local INSPECT_CACHE_TTL = 30  -- 快取有效秒數
+local INSPECT_CACHE_MAX = 50  -- 最大快取筆數
 local pendingInspect = nil    -- 目前等待中的 inspect GUID
 
 --------------------------------------------------------------------------------
@@ -115,6 +116,17 @@ local function CacheInspectData(guid, ilvl, spec)
         spec = spec,
         time = GetTime(),
     }
+    -- 過多快取時清除過期條目
+    local count = 0
+    for _ in pairs(inspectCache) do count = count + 1 end
+    if count > INSPECT_CACHE_MAX then
+        local now = GetTime()
+        for k, v in pairs(inspectCache) do
+            if (now - v.time) >= INSPECT_CACHE_TTL then
+                inspectCache[k] = nil
+            end
+        end
+    end
 end
 
 -- 計算裝備等級（從 inspect 資料）
@@ -416,7 +428,7 @@ local function OnTooltipSetItem(tooltip)
                 local line = _G[tooltip:GetName() .. "TextLeft" .. i]
                 if line then
                     local text = line:GetText()
-                    if text and text:find("Item Level") then
+                    if text and (text:find("Item Level") or text:find("物品等級")) then
                         found = true
                         break
                     end
@@ -439,7 +451,11 @@ local function OnTooltipSetItem(tooltip)
     end
 
     -- 依物品品質著色邊框
-    local quality = select(3, C_Item.GetItemInfo(itemLink))
+    local itemID = itemLink:match("item:(%d+)")
+    local quality = itemID and C_Item.GetItemQualityByID(tonumber(itemID))
+    if not quality then
+        quality = select(3, C_Item.GetItemInfo(itemLink))
+    end
     if quality and quality > 1 then
         local qr, qg, qb = C_Item.GetItemQualityColor(quality)
         if qr and qg and qb then

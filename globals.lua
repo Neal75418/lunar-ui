@@ -1193,3 +1193,18 @@ COMBATLOG_OBJECT_REACTION_FRIENDLY = nil
 ---@field GetAuraDataByIndex fun(unit: string, index: number, filter: string): AuraData?
 ---@field GetAuraDataByAuraInstanceID fun(unit: string, auraInstanceID: number): AuraData?
 C_UnitAuras = {}
+
+--------------------------------------------------------------------------------
+-- Missing Globals
+--------------------------------------------------------------------------------
+
+---@type fun(cooldown: Frame, start: number, duration: number, enable: number, forceShowDrawEdge?: boolean, modRate?: number)
+CooldownFrame_Set = nil
+
+---@class C_NewItems
+---@field IsNewItem fun(bagID: number, slotID: number): boolean
+---@field RemoveNewItem fun(bagID: number, slotID: number)
+C_NewItems = {}
+
+---@type Frame
+MerchantFrame = nil

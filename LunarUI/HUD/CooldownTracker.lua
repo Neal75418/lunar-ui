@@ -35,11 +35,21 @@ local IsPlayerSpell = IsPlayerSpell
 -- 常數
 --------------------------------------------------------------------------------
 
+-- 預設值（初始化時從 DB 讀取）
 local ICON_SIZE = 36
 local ICON_SPACING = 4
 local MAX_ICONS = 8
 local UPDATE_INTERVAL = 0.1  -- 更新頻率（秒）
 local _FLASH_DURATION = 0.5   -- 閃光持續時間（保留供未來使用）
+
+local function LoadSettings()
+    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
+    if db then
+        ICON_SIZE = db.cdIconSize or 36
+        ICON_SPACING = db.cdIconSpacing or 4
+        MAX_ICONS = db.cdMaxIcons or 8
+    end
+end
 
 -- 預設追蹤的重要技能（按職業）
 -- 這些是常見的主要冷卻技能
@@ -467,6 +477,7 @@ end
 local function Initialize()
     if isInitialized then return end
 
+    LoadSettings()
     CreateCooldownFrame()
     SetupTrackedSpells()
 
@@ -532,6 +543,50 @@ end
 
 function LunarUI.RefreshCooldownTracker()
     SetupTrackedSpells()
+    UpdateCooldownIcons()
+end
+
+function LunarUI.RebuildCooldownTracker()
+    if not isInitialized then return end
+    if InCombatLockdown() then return end
+    local oldMaxIcons = #cooldownIcons
+    LoadSettings()
+    -- 調整現有圖示大小與內部材質
+    for i = 1, math.min(oldMaxIcons, MAX_ICONS) do
+        local icon = cooldownIcons[i]
+        if icon then
+            icon:SetSize(ICON_SIZE, ICON_SIZE)
+            if icon.texture then
+                icon.texture:ClearAllPoints()
+                icon.texture:SetPoint("TOPLEFT", 1, -1)
+                icon.texture:SetPoint("BOTTOMRIGHT", -1, 1)
+            end
+            if icon.cooldown then
+                icon.cooldown:SetAllPoints(icon)
+            end
+            if icon.flash then
+                icon.flash:ClearAllPoints()
+                icon.flash:SetPoint("TOPLEFT", -8, 8)
+                icon.flash:SetPoint("BOTTOMRIGHT", 8, -8)
+            end
+            icon:ClearAllPoints()
+            icon:SetPoint("LEFT", cooldownFrame, "LEFT", (i - 1) * (ICON_SIZE + ICON_SPACING), 0)
+        end
+    end
+    -- 隱藏超出新上限的圖示
+    for i = MAX_ICONS + 1, oldMaxIcons do
+        if cooldownIcons[i] then
+            cooldownIcons[i]:Hide()
+            cooldownIcons[i].spellID = nil
+        end
+    end
+    -- 新增不足的圖示
+    for i = oldMaxIcons + 1, MAX_ICONS do
+        cooldownIcons[i] = CreateCooldownIcon(cooldownFrame, i)
+    end
+    if cooldownFrame then
+        cooldownFrame:SetSize(MAX_ICONS * (ICON_SIZE + ICON_SPACING) - ICON_SPACING, ICON_SIZE + 10)
+    end
     UpdateCooldownIcons()
 end
 

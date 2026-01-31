@@ -37,7 +37,7 @@ local UnitGUID = UnitGUID
 -- 常數
 --------------------------------------------------------------------------------
 
--- 動畫設定
+-- 動畫設定（初始化時從 DB 讀取）
 local ANIMATION_DURATION = 1.5    -- 飄字持續時間
 local ANIMATION_HEIGHT = 80       -- 向上飄動距離
 local FADE_START = 0.7            -- 開始淡出的時間點（百分比）
@@ -46,6 +46,17 @@ local FADE_START = 0.7            -- 開始淡出的時間點（百分比）
 local FONT_SIZE_NORMAL = 18
 local FONT_SIZE_CRIT = 28
 local FONT_SIZE_SMALL = 14
+
+local function LoadSettings()
+    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
+    if db then
+        FONT_SIZE_NORMAL = db.fctFontSizeNormal or 18
+        FONT_SIZE_CRIT = db.fctFontSizeCrit or 28
+        FONT_SIZE_SMALL = db.fctFontSizeSmall or 14
+        ANIMATION_DURATION = db.fctAnimationDuration or 1.5
+        ANIMATION_HEIGHT = db.fctAnimationHeight or 80
+    end
+end
 
 -- 顏色
 local COLORS = {
@@ -435,6 +446,8 @@ end
 local function Initialize()
     if isInitialized then return end
 
+    LoadSettings()
+
     -- 快取玩家 GUID
     playerGUID = UnitGUID("player")
 
@@ -521,6 +534,11 @@ end
 
 function LunarUI.ShowHealNumber(amount, isCrit)
     ShowFloatingText(amount, "heal", isCrit, -50)
+end
+
+-- 重新載入設定（供設定面板即時更新）
+function LunarUI.ReloadFCTSettings()
+    LoadSettings()
 end
 
 -- 清理函數

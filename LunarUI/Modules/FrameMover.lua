@@ -19,11 +19,20 @@ local LunarUI = Engine.LunarUI
 -- 常數
 --------------------------------------------------------------------------------
 
+-- 預設值（初始化時從 DB 讀取）
 local GRID_SIZE = 10  -- Ctrl 吸附時的網格大小
 local MOVER_ALPHA = 0.6
 local MOVER_COLOR = { 0.2, 0.4, 0.8 }  -- 藍色
 local MOVER_BORDER_COLOR = { 0.4, 0.6, 1.0 }
 local MOVER_TEXT_COLOR = { 1, 1, 1, 0.9 }
+
+local function LoadFrameMoverSettings()
+    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.frameMover
+    if db then
+        GRID_SIZE = db.gridSize or 10
+        MOVER_ALPHA = db.moverAlpha or 0.6
+    end
+end
 
 local backdropTemplate = LunarUI.backdropTemplate
 
@@ -367,6 +376,7 @@ end
 function LunarUI:RegisterMovableFrame(name, frame, label)
     if not name or not frame then return end
 
+    LoadFrameMoverSettings()
     CreateMover(name, frame, label)
 
     -- 載入已儲存的位置
@@ -393,6 +403,10 @@ end
 LunarUI.ToggleMoveMode = ToggleMoveMode
 LunarUI.EnterMoveMode = EnterMoveMode
 LunarUI.ExitMoveMode = ExitMoveMode
+
+function LunarUI:LoadFrameMoverSettings()
+    LoadFrameMoverSettings()
+end
 
 function LunarUI.ResetAllPositions()
     if not LunarUI.db or not LunarUI.db.profile then return end

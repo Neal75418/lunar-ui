@@ -30,6 +30,7 @@ local ipairs = ipairs
 -- 常數
 --------------------------------------------------------------------------------
 
+-- 預設值（初始化時從 DB 讀取）
 local ICON_SIZE = 40
 local ICON_SPACING = 4
 local ICONS_PER_ROW = 8
@@ -39,6 +40,18 @@ local MAX_DEBUFFS = 8
 -- 倒數計時條
 local BAR_HEIGHT = 4
 local BAR_OFFSET = 1  -- 圖示與計時條間距
+
+local function LoadSettings()
+    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
+    if db then
+        ICON_SIZE = db.auraIconSize or 40
+        ICON_SPACING = db.auraIconSpacing or 4
+        ICONS_PER_ROW = db.auraIconsPerRow or 8
+        MAX_BUFFS = db.maxBuffs or 16
+        MAX_DEBUFFS = db.maxDebuffs or 8
+        BAR_HEIGHT = db.auraBarHeight or 4
+    end
+end
 
 -- 過濾的 Buff 名稱（瑣碎增益）
 local FILTERED_BUFF_NAMES = {
@@ -92,7 +105,7 @@ local lastAuraUpdate = 0
 -- 輔助函數
 --------------------------------------------------------------------------------
 
-local function FormatDuration(seconds)
+local function _FormatDuration(seconds)
     if seconds >= 3600 then
         return string_format("%dh", math_floor(seconds / 3600))
     elseif seconds >= 60 then
@@ -123,7 +136,7 @@ end
 -- 圖示建立
 --------------------------------------------------------------------------------
 
-local function CreateAuraIcon(parent, index)
+local function CreateAuraIcon(parent, _index)
     local totalHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
 
     local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
@@ -513,6 +526,7 @@ end
 local function Initialize()
     if isInitialized then return end
 
+    LoadSettings()
     HideBlizzardBuffFrames()
     SetupFrames()
 
@@ -591,6 +605,103 @@ function LunarUI.HideAuraFrames()
 end
 
 function LunarUI.RefreshAuraFrames()
+    UpdateAuras()
+end
+
+-- 調整單個圖示的大小與內部元素
+local function ResizeAuraIcon(icon)
+    local totalHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
+    icon:SetSize(ICON_SIZE, totalHeight)
+    if icon.texture then
+        icon.texture:ClearAllPoints()
+        icon.texture:SetPoint("TOPLEFT", 1, -1)
+        icon.texture:SetPoint("TOPRIGHT", -1, -1)
+        icon.texture:SetHeight(ICON_SIZE - 2)
+    end
+    if icon.cooldown then
+        icon.cooldown:ClearAllPoints()
+        icon.cooldown:SetPoint("TOPLEFT", 1, -1)
+        icon.cooldown:SetPoint("TOPRIGHT", -1, -1)
+        icon.cooldown:SetHeight(ICON_SIZE - 2)
+    end
+    if icon.barBg then
+        icon.barBg:SetHeight(BAR_HEIGHT)
+    end
+    if icon.bar then
+        icon.bar:SetHeight(BAR_HEIGHT)
+        icon.bar:SetWidth(ICON_SIZE - 2)
+    end
+    if icon.duration then
+        icon.duration:ClearAllPoints()
+        icon.duration:SetPoint("BOTTOM", icon, "BOTTOM", 0, BAR_HEIGHT + BAR_OFFSET + 1)
+    end
+end
+
+-- 重新定位圖示列表
+local function RelayoutIcons(icons, parentFrame, maxCount)
+    local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
+    for i = 1, maxCount do
+        if icons[i] then
+            icons[i]:ClearAllPoints()
+            local row = math_floor((i - 1) / ICONS_PER_ROW)
+            local col = (i - 1) % ICONS_PER_ROW
+            icons[i]:SetPoint(
+                "TOPRIGHT", parentFrame, "TOPRIGHT",
+                -col * (ICON_SIZE + ICON_SPACING),
+                -(row * (totalIconHeight + ICON_SPACING)) - 16
+            )
+        end
+    end
+end
+
+function LunarUI.RebuildAuraFrames()
+    if not isInitialized then return end
+    if InCombatLockdown() then return end
+
+    local oldMaxBuffs = #buffIcons
+    local oldMaxDebuffs = #debuffIcons
+    LoadSettings()
+
+    local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
+
+    -- 重設框架大小
+    if buffFrame then
+        buffFrame:SetSize(
+            ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
+            totalIconHeight * 2 + ICON_SPACING + 16
+        )
+    end
+    if debuffFrame then
+        debuffFrame:SetSize(
+            ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
+            totalIconHeight * 2 + ICON_SPACING + 16
+        )
+    end
+
+    -- 調整 Buff 圖示：重用現有、新增不足、隱藏多餘
+    for i = 1, math.min(oldMaxBuffs, MAX_BUFFS) do
+        ResizeAuraIcon(buffIcons[i])
+    end
+    for i = MAX_BUFFS + 1, oldMaxBuffs do
+        if buffIcons[i] then buffIcons[i]:Hide() end
+    end
+    for i = oldMaxBuffs + 1, MAX_BUFFS do
+        buffIcons[i] = CreateAuraIcon(buffFrame, i)
+    end
+    RelayoutIcons(buffIcons, buffFrame, MAX_BUFFS)
+
+    -- 調整 Debuff 圖示
+    for i = 1, math.min(oldMaxDebuffs, MAX_DEBUFFS) do
+        ResizeAuraIcon(debuffIcons[i])
+    end
+    for i = MAX_DEBUFFS + 1, oldMaxDebuffs do
+        if debuffIcons[i] then debuffIcons[i]:Hide() end
+    end
+    for i = oldMaxDebuffs + 1, MAX_DEBUFFS do
+        debuffIcons[i] = CreateAuraIcon(debuffFrame, i)
+    end
+    RelayoutIcons(debuffIcons, debuffFrame, MAX_DEBUFFS)
+
     UpdateAuras()
 end
 

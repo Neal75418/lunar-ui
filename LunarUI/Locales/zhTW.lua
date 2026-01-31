@@ -79,6 +79,10 @@ L["KeybindSet"] = "已綁定 %s 至 %s"
 L["KeybindCleared"] = "已清除 %s 的綁定"
 
 -- 背包
+L["BagTitle"] = "背包"
+L["BankTitle"] = "銀行"
+L["ReagentBank"] = "材料"
+L["Sort"] = "整理"
 L["SoldJunkItems"] = "已販賣 %d 件垃圾物品，獲得 %s"
 L["BagSearchError"] = "背包搜尋錯誤"
 L["BankSearchError"] = "銀行搜尋錯誤"

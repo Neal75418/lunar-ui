@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "runtime": {
-    "version": "Lua 5.1",
+    "version": "LuaJIT",
     "special": {
       "LibStub": "require"
     }
@@ -209,7 +209,10 @@
       "PlaySoundFile",
       "UIFrameFlash",
       "GetNumSpecializations",
-      "GetSpecializationInfo"
+      "GetSpecializationInfo",
+      "CooldownFrame_Set",
+      "C_NewItems",
+      "MerchantFrame"
     ],
     "disable": [
       "lowercase-global"

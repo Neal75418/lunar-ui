@@ -177,7 +177,36 @@ local defaults = {
             size = 180,
             showCoords = true,
             showClock = true,
+            clockFormat = "24h",            -- "12h" / "24h"
             organizeButtons = true,
+
+            -- 區域文字
+            zoneTextDisplay = "SHOW",       -- "SHOW" / "MOUSEOVER" / "HIDE"
+            zoneFontSize = 12,
+            zoneFontOutline = "OUTLINE",    -- "NONE" / "OUTLINE" / "THICKOUTLINE" / "MONOCHROMEOUTLINE"
+            coordFontSize = 10,
+            coordFontOutline = "OUTLINE",
+
+            -- 外觀
+            borderColor = { r = 0.15, g = 0.12, b = 0.08, a = 1 },
+
+            -- 行為
+            resetZoomTimer = 0,             -- 0=停用, 1-15 秒
+            fadeOnMouseLeave = false,
+            fadeAlpha = 0.5,
+            fadeDuration = 0.3,
+            pinScale = 1.0,                 -- 0.5-2.0
+
+            -- 每個圖示獨立設定
+            icons = {
+                calendar    = { hide = false, position = "TOPRIGHT",    scale = 1.0, xOffset = -22, yOffset = -2 },
+                tracking    = { hide = false, position = "TOPRIGHT",    scale = 1.0, xOffset = -2,  yOffset = -2 },
+                mail        = { hide = false, position = "BOTTOMLEFT",  scale = 1.0, xOffset = 4,   yOffset = 4 },
+                difficulty  = { hide = false, position = "TOPLEFT",     scale = 1.0, xOffset = 4,   yOffset = -4 },
+                lfg         = { hide = false, position = "BOTTOMRIGHT", scale = 1.0, xOffset = -2,  yOffset = 2 },
+                expansion   = { hide = false, position = "TOPLEFT",     scale = 1.0, xOffset = -4,  yOffset = 4 },
+                compartment = { hide = false, position = "TOPRIGHT",    scale = 1.0, xOffset = -2,  yOffset = -20 },
+            },
         },
 
         -- 背包設定
@@ -185,11 +214,22 @@ local defaults = {
             enabled = true,
             slotsPerRow = 12,
             slotSize = 37,
+            slotSpacing = 4,
             autoSellJunk = true,
             showItemLevel = true,
             showQuestItems = true,
             showProfessionColors = true,  -- 專業容器背景著色
             showUpgradeArrow = true,      -- 裝等升級綠色箭頭
+            showBindType = true,          -- 顯示 BoE/BoP 綁定文字
+            showCooldown = true,          -- 顯示物品冷卻
+            showNewGlow = false,          -- 新物品發光提示（預設關閉，需手動啟用）
+            ilvlThreshold = 1,            -- 物品等級最低顯示門檻
+            reverseBagSlots = false,      -- 反轉格子順序
+            clearSearchOnClose = true,    -- 關閉時清除搜尋
+            frameAlpha = 0.95,            -- 框架背景透明度
+            splitBags = false,            -- 分離背包視圖
+            bagPosition = nil,            -- 背包框架位置 { point, x, y }
+            bankPosition = nil,           -- 銀行框架位置 { point, x, y }
         },
 
         -- 聊天設定
@@ -229,6 +269,37 @@ local defaults = {
             cooldownTracker = true,     -- 冷卻追蹤器
             floatingCombatText = true,  -- 浮動戰鬥數字
             auraFrames = true,          -- 獨立 Buff/Debuff 框架
+
+            -- AuraFrames 設定
+            auraIconSize = 40,
+            auraIconSpacing = 4,
+            auraIconsPerRow = 8,
+            maxBuffs = 16,
+            maxDebuffs = 8,
+            auraBarHeight = 4,
+
+            -- FloatingCombatText 設定
+            fctFontSizeNormal = 18,
+            fctFontSizeCrit = 28,
+            fctFontSizeSmall = 14,
+            fctAnimationDuration = 1.5,
+            fctAnimationHeight = 80,
+
+            -- CooldownTracker 設定
+            cdIconSize = 36,
+            cdIconSpacing = 4,
+            cdMaxIcons = 8,
+
+            -- ClassResources 設定
+            crIconSize = 26,
+            crIconSpacing = 4,
+            crBarHeight = 10,
+        },
+
+        -- 框架移動器
+        frameMover = {
+            gridSize = 10,
+            moverAlpha = 0.6,
         },
 
         -- 視覺風格

@@ -76,6 +76,10 @@ L["KeybindSet"] = "Bound %s to %s"
 L["KeybindCleared"] = "Cleared binding for %s"
 
 -- Bags
+L["BagTitle"] = "Bags"
+L["BankTitle"] = "Bank"
+L["ReagentBank"] = "Reagent"
+L["Sort"] = "Sort"
 L["SoldJunkItems"] = "Sold %d junk items for %s"
 L["BagSearchError"] = "Bag search error"
 L["BankSearchError"] = "Bank search error"
