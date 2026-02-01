@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, unused-local, deprecated
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local, deprecated
 --[[
     LunarUI - 框架移動器
     統一的 UI 框架位置管理系統
@@ -379,10 +379,8 @@ function LunarUI:RegisterMovableFrame(name, frame, label)
     LoadFrameMoverSettings()
     CreateMover(name, frame, label)
 
-    -- 載入已儲存的位置
-    C_Timer.After(0, function()
-        ApplySavedPosition(name)
-    end)
+    -- 同步載入已儲存的位置（SetPoint 是同步 API，無需延遲）
+    ApplySavedPosition(name)
 end
 
 --[[
@@ -428,7 +426,8 @@ function LunarUI.CleanupFrameMover()
     ExitMoveMode()
 end
 
--- 掛鉤至插件啟用（延遲以確保其他模組已註冊框架）
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(2.0, ApplyAllSavedPositions)
-end)
+LunarUI:RegisterModule("FrameMover", {
+    onEnable = ApplyAllSavedPositions,
+    onDisable = LunarUI.CleanupFrameMover,
+    delay = 2.0,
+})

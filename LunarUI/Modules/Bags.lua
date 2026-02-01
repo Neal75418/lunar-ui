@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, missing-parameter
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter
 --[[
     LunarUI - 背包模組
     整合式背包系統，Lunar 主題風格
@@ -37,12 +37,7 @@ local BORDER_COLOR_BANK = { 0.4, 0.35, 0.2 }
 local JUNK_SELL_DELAY = 0.3       -- 商人開啟後延遲販賣垃圾（秒）
 local INIT_DELAY = 0.5            -- 插件初始化延遲（秒）
 local FRAME_ALPHA = 0.95          -- 框架背景透明度
-local backdropTemplate = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-}
+local backdropTemplate = LunarUI.backdropTemplate
 
 -- 物品品質顏色
 local ITEM_QUALITY_COLORS = {
@@ -2040,9 +2035,6 @@ end)
 -- 月相感知
 --------------------------------------------------------------------------------
 
--- 背包通常在使用者需要時顯示，不自動淡出
--- 未來若需要月相感知，可在此新增 RegisterPhaseCallback
-
 --------------------------------------------------------------------------------
 -- 垃圾販賣
 --------------------------------------------------------------------------------
@@ -2142,7 +2134,8 @@ LunarUI.SellJunk = SellJunk
 LunarUI.OpenBank = OpenBank
 LunarUI.CloseBank = CloseBank
 
--- 掛鉤至插件啟用
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(INIT_DELAY, InitializeBags)
-end)
+LunarUI:RegisterModule("Bags", {
+    onEnable = InitializeBags,
+    onDisable = LunarUI.CleanupBags,
+    delay = INIT_DELAY,
+})

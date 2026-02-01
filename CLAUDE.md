@@ -7,11 +7,6 @@
 - TOC 載入順序很重要 — Core/Init.lua 最先執行，建立 `Engine.LunarUI`
 - 所有模組透過 `local _ADDON_NAME, Engine = ...` 再取 `Engine.LunarUI` 存取核心
 
-## Phase 系統
-- 四個狀態：NEW / WAXING / FULL / WANING（定義在 Core/Init.lua）
-- 目前已停用 — PhaseManager.lua 鎖定 FULL，所有 tokens 設為 1.0
-- 視覺過渡已設計但尚未啟用
-
 ## 程式碼慣例
 - 共用資源集中在 `Core/Media.lua`（backdrop 模板、DEBUFF_TYPE_COLORS、材質）
 - Skin 模組使用 `LunarUI:RegisterSkin(name, blizzAddon, callback)` 註冊

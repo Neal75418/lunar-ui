@@ -4,7 +4,7 @@
     Configuration interface using AceConfig-3.0
 
     Features:
-    - General settings (Phase, animations)
+    - General settings
     - UnitFrames configuration
     - ActionBars configuration
     - Nameplates configuration
@@ -29,20 +29,6 @@ local L = {
     generalDesc = "General LunarUI settings",
     enable = "Enable",
     enableDesc = "Enable this module",
-
-    -- Phase
-    phase = "Phase System",
-    phaseDesc = "Lunar Phase state machine settings",
-    waningDuration = "Waning Duration",
-    waningDurationDesc = "Seconds to wait before returning to NEW phase after combat",
-
-    -- Tokens
-    tokens = "Phase Tokens",
-    tokensDesc = "Visual parameters for each phase",
-    alpha = "Alpha",
-    alphaDesc = "Transparency level",
-    scale = "Scale",
-    scaleDesc = "Size multiplier",
 
     -- UnitFrames
     unitframes = "Unit Frames",
@@ -103,16 +89,17 @@ local L = {
     style = "Visual Style",
     styleDesc = "Visual appearance settings",
     theme = "Theme",
-    moonlightOverlay = "Moonlight Overlay",
-    moonlightOverlayDesc = "Subtle screen overlay during FULL phase",
-    phaseGlow = "Phase Glow",
-    phaseGlowDesc = "Glow effects on frames during combat",
-    animations = "Animations",
-    animationsDesc = "Enable phase transition animations",
-
+    font = "Font",
+    fontDesc = "Select a font for UI elements",
+    fontSize = "Font Size",
+    fontSizeDesc = "Adjust the font size for UI elements",
+    statusBarTexture = "Status Bar Texture",
+    statusBarTextureDesc = "Select a texture for status bars",
+    borderStyle = "Border Style",
+    borderStyleDesc = "Select a border style for frames",
     -- Skins
-    skins = L["Skins"] or "Skins",
-    skinsDesc = L["SkinsDesc"] or "Restyle Blizzard UI frames to match LunarUI theme",
+    skins = "Skins",
+    skinsDesc = "Restyle Blizzard UI frames to match LunarUI theme",
     skinCharacter = "Character Frame",
     skinSpellbook = "Spellbook",
     skinTalents = "Talents",
@@ -144,8 +131,8 @@ local function GetDB()
 end
 
 local function RefreshUI()
-    -- Notify all modules to refresh
-    LunarUI:NotifyPhaseChange(LunarUI:GetPhase(), LunarUI:GetPhase())
+    -- Trigger HUD scale refresh as a general UI update
+    if LunarUI.ApplyHUDScale then LunarUI:ApplyHUDScale() end
 end
 
 --------------------------------------------------------------------------------
@@ -160,7 +147,7 @@ local options = {
         header = {
             order = 0,
             type = "description",
-            name = "|cff888888Phase-driven UI system inspired by lunar cycles|r\n\n",
+            name = "|cff888888Modern combat UI replacement with Lunar theme|r\n\n",
             fontSize = "medium",
         },
 
@@ -184,7 +171,7 @@ local options = {
                     order = 2,
                     type = "toggle",
                     name = "Debug Mode",
-                    desc = "Show debug overlay with phase information",
+                    desc = "Show debug overlay with FPS and memory info",
                     get = function() return GetDB().debug end,
                     set = function(_, v)
                         GetDB().debug = v
@@ -195,182 +182,6 @@ local options = {
                         end
                     end,
                     width = "full",
-                },
-                spacer1 = { order = 10, type = "description", name = "\n" },
-
-                -- Phase settings
-                phaseHeader = {
-                    order = 11,
-                    type = "header",
-                    name = L.phase,
-                },
-                waningDuration = {
-                    order = 12,
-                    type = "range",
-                    name = L.waningDuration,
-                    desc = L.waningDurationDesc,
-                    min = 1,
-                    max = 30,
-                    step = 1,
-                    get = function() return GetDB().waningDuration end,
-                    set = function(_, v) GetDB().waningDuration = v end,
-                    width = "full",
-                },
-            },
-        },
-
-        -- Phase Tokens
-        tokens = {
-            order = 2,
-            type = "group",
-            name = L.tokens,
-            desc = L.tokensDesc,
-            args = {
-                desc = {
-                    order = 0,
-                    type = "description",
-                    name = "Configure visual parameters for each Lunar Phase.\n\n",
-                },
-                -- NEW phase
-                newHeader = {
-                    order = 1,
-                    type = "header",
-                    name = "|cff666688NEW|r (Out of Combat)",
-                },
-                newAlpha = {
-                    order = 2,
-                    type = "range",
-                    name = L.alpha,
-                    desc = L.alphaDesc,
-                    min = 0.1,
-                    max = 1.0,
-                    step = 0.05,
-                    get = function() return GetDB().tokens.NEW.alpha end,
-                    set = function(_, v)
-                        GetDB().tokens.NEW.alpha = v
-                        LunarUI:UpdateTokens()
-                    end,
-                    width = 1.5,
-                },
-                newScale = {
-                    order = 3,
-                    type = "range",
-                    name = L.scale,
-                    desc = L.scaleDesc,
-                    min = 0.8,
-                    max = 1.2,
-                    step = 0.01,
-                    get = function() return GetDB().tokens.NEW.scale end,
-                    set = function(_, v)
-                        GetDB().tokens.NEW.scale = v
-                        LunarUI:UpdateTokens()
-                    end,
-                    width = 1.5,
-                },
-
-                -- WAXING phase
-                waxingHeader = {
-                    order = 10,
-                    type = "header",
-                    name = "|cff8888aaWAXING|r (Preparing)",
-                },
-                waxingAlpha = {
-                    order = 11,
-                    type = "range",
-                    name = L.alpha,
-                    min = 0.1,
-                    max = 1.0,
-                    step = 0.05,
-                    get = function() return GetDB().tokens.WAXING.alpha end,
-                    set = function(_, v)
-                        GetDB().tokens.WAXING.alpha = v
-                        LunarUI:UpdateTokens()
-                    end,
-                    width = 1.5,
-                },
-                waxingScale = {
-                    order = 12,
-                    type = "range",
-                    name = L.scale,
-                    min = 0.8,
-                    max = 1.2,
-                    step = 0.01,
-                    get = function() return GetDB().tokens.WAXING.scale end,
-                    set = function(_, v)
-                        GetDB().tokens.WAXING.scale = v
-                        LunarUI:UpdateTokens()
-                    end,
-                    width = 1.5,
-                },
-
-                -- FULL phase
-                fullHeader = {
-                    order = 20,
-                    type = "header",
-                    name = "|cffffffffFULL|r (Combat)",
-                },
-                fullAlpha = {
-                    order = 21,
-                    type = "range",
-                    name = L.alpha,
-                    min = 0.1,
-                    max = 1.0,
-                    step = 0.05,
-                    get = function() return GetDB().tokens.FULL.alpha end,
-                    set = function(_, v)
-                        GetDB().tokens.FULL.alpha = v
-                        LunarUI:UpdateTokens()
-                    end,
-                    width = 1.5,
-                },
-                fullScale = {
-                    order = 22,
-                    type = "range",
-                    name = L.scale,
-                    min = 0.8,
-                    max = 1.2,
-                    step = 0.01,
-                    get = function() return GetDB().tokens.FULL.scale end,
-                    set = function(_, v)
-                        GetDB().tokens.FULL.scale = v
-                        LunarUI:UpdateTokens()
-                    end,
-                    width = 1.5,
-                },
-
-                -- WANING phase
-                waningHeader = {
-                    order = 30,
-                    type = "header",
-                    name = "|cffaaaacc WANING|r (Post-Combat)",
-                },
-                waningAlpha = {
-                    order = 31,
-                    type = "range",
-                    name = L.alpha,
-                    min = 0.1,
-                    max = 1.0,
-                    step = 0.05,
-                    get = function() return GetDB().tokens.WANING.alpha end,
-                    set = function(_, v)
-                        GetDB().tokens.WANING.alpha = v
-                        LunarUI:UpdateTokens()
-                    end,
-                    width = 1.5,
-                },
-                waningScale = {
-                    order = 32,
-                    type = "range",
-                    name = L.scale,
-                    min = 0.8,
-                    max = 1.2,
-                    step = 0.01,
-                    get = function() return GetDB().tokens.WANING.scale end,
-                    set = function(_, v)
-                        GetDB().tokens.WANING.scale = v
-                        LunarUI:UpdateTokens()
-                    end,
-                    width = 1.5,
                 },
             },
         },
@@ -424,7 +235,45 @@ local options = {
                     { "boss",   6, L.boss,   { wMin=100, wMax=300, hMin=20, hMax=80 } },
                 }
 
-                local result = {}
+                local result = {
+                    rolePresets = {
+                        order = 0,
+                        type = "group",
+                        name = "Role Presets",
+                        inline = true,
+                        args = {
+                            desc = {
+                                order = 0,
+                                type = "description",
+                                name = "Quickly adjust raid/party frame layout for your role.\n",
+                            },
+                            dps = {
+                                order = 1,
+                                type = "execute",
+                                name = "DPS Layout",
+                                desc = "Compact raid frames, optimized for damage dealers",
+                                func = function() LunarUI:ApplyRolePreset("DAMAGER"); RefreshUI() end,
+                                width = 0.8,
+                            },
+                            tank = {
+                                order = 2,
+                                type = "execute",
+                                name = "Tank Layout",
+                                desc = "Wider frames with larger nameplates for threat awareness",
+                                func = function() LunarUI:ApplyRolePreset("TANK"); RefreshUI() end,
+                                width = 0.8,
+                            },
+                            healer = {
+                                order = 3,
+                                type = "execute",
+                                name = "Healer Layout",
+                                desc = "Large raid frames centered for heal targeting",
+                                func = function() LunarUI:ApplyRolePreset("HEALER"); RefreshUI() end,
+                                width = 0.8,
+                            },
+                        },
+                    },
+                }
                 for _, def in ipairs(UNIT_FRAME_DEFS) do
                     result[def[1]] = MakeUnitFrameGroup(def[1], def[2], def[3], def[4])
                 end
@@ -596,20 +445,8 @@ local options = {
                             type = "header",
                             name = "模組開關",
                         },
-                        phaseIndicator = {
-                            order = 10,
-                            type = "toggle",
-                            name = "月相指示器",
-                            desc = "顯示目前月相的月亮圖示",
-                            get = function() return GetDB().hud.phaseIndicator end,
-                            set = function(_, v)
-                                GetDB().hud.phaseIndicator = v
-                                RefreshUI()
-                            end,
-                            width = "full",
-                        },
                         performanceMonitor = {
-                            order = 11,
+                            order = 10,
                             type = "toggle",
                             name = "效能監控器",
                             desc = "顯示 FPS 與延遲",
@@ -644,20 +481,8 @@ local options = {
                             end,
                             width = "full",
                         },
-                        floatingCombatText = {
-                            order = 14,
-                            type = "toggle",
-                            name = "浮動戰鬥文字",
-                            desc = "顯示傷害與治療數字",
-                            get = function() return GetDB().hud.floatingCombatText end,
-                            set = function(_, v)
-                                GetDB().hud.floatingCombatText = v
-                                RefreshUI()
-                            end,
-                            width = "full",
-                        },
                         auraFrames = {
-                            order = 15,
+                            order = 14,
                             type = "toggle",
                             name = "增減益框架",
                             desc = "獨立的 Buff/Debuff 顯示",
@@ -763,84 +588,49 @@ local options = {
                     },
                 },
 
-                -- 浮動戰鬥文字分頁
-                fctSettings = {
-                    order = 3,
+                -- 光環過濾分頁
+                auraFiltering = {
+                    order = 2.5,
                     type = "group",
-                    name = "浮動戰鬥文字",
+                    name = "Aura Filtering",
                     args = {
                         desc = {
                             order = 0,
                             type = "description",
-                            name = "戰鬥數字的字體大小與動畫設定。即時生效。\n\n",
+                            name = "Control which buffs/debuffs are shown on unit frames.\n" ..
+                                "Enter spell IDs separated by commas (e.g. 1459, 21562, 6673).\n" ..
+                                "You can find spell IDs by holding Shift and hovering over a spell in the tooltip.\n\n",
                         },
-                        fctFontSizeNormal = {
+                        whitelist = {
                             order = 1,
-                            type = "range",
-                            name = "一般字體大小",
-                            desc = "普通傷害/治療數字的字體大小",
-                            min = 10, max = 36, step = 1,
-                            get = function() return GetDB().hud.fctFontSizeNormal end,
-                            set = function(_, v)
-                                GetDB().hud.fctFontSizeNormal = v
-                                if LunarUI.ReloadFCTSettings then LunarUI:ReloadFCTSettings() end
-                            end,
+                            type = "input",
+                            name = "Whitelist (Always Show)",
+                            desc = "Spell IDs that should always be displayed, bypassing all filters",
+                            multiline = 3,
                             width = "full",
+                            get = function() return GetDB().auraWhitelist or "" end,
+                            set = function(_, v)
+                                GetDB().auraWhitelist = v
+                                -- 觸發快取重建
+                                if LunarUI.RebuildAuraFilterCache then LunarUI:RebuildAuraFilterCache() end
+                            end,
                         },
-                        fctFontSizeCrit = {
+                        blacklist = {
                             order = 2,
-                            type = "range",
-                            name = "暴擊字體大小",
-                            desc = "暴擊傷害/治療數字的字體大小",
-                            min = 14, max = 48, step = 1,
-                            get = function() return GetDB().hud.fctFontSizeCrit end,
-                            set = function(_, v)
-                                GetDB().hud.fctFontSizeCrit = v
-                                if LunarUI.ReloadFCTSettings then LunarUI:ReloadFCTSettings() end
-                            end,
+                            type = "input",
+                            name = "Blacklist (Always Hide)",
+                            desc = "Spell IDs that should never be displayed",
+                            multiline = 3,
                             width = "full",
-                        },
-                        fctFontSizeSmall = {
-                            order = 3,
-                            type = "range",
-                            name = "小字體大小",
-                            desc = "次要事件文字的字體大小",
-                            min = 8, max = 24, step = 1,
-                            get = function() return GetDB().hud.fctFontSizeSmall end,
+                            get = function() return GetDB().auraBlacklist or "" end,
                             set = function(_, v)
-                                GetDB().hud.fctFontSizeSmall = v
-                                if LunarUI.ReloadFCTSettings then LunarUI:ReloadFCTSettings() end
+                                GetDB().auraBlacklist = v
+                                if LunarUI.RebuildAuraFilterCache then LunarUI:RebuildAuraFilterCache() end
                             end,
-                            width = "full",
-                        },
-                        fctAnimationDuration = {
-                            order = 4,
-                            type = "range",
-                            name = "動畫時長",
-                            desc = "數字浮動的持續時間（秒）",
-                            min = 0.5, max = 4.0, step = 0.1,
-                            get = function() return GetDB().hud.fctAnimationDuration end,
-                            set = function(_, v)
-                                GetDB().hud.fctAnimationDuration = v
-                                if LunarUI.ReloadFCTSettings then LunarUI:ReloadFCTSettings() end
-                            end,
-                            width = "full",
-                        },
-                        fctAnimationHeight = {
-                            order = 5,
-                            type = "range",
-                            name = "動畫高度",
-                            desc = "數字浮動的高度（像素）",
-                            min = 30, max = 200, step = 5,
-                            get = function() return GetDB().hud.fctAnimationHeight end,
-                            set = function(_, v)
-                                GetDB().hud.fctAnimationHeight = v
-                                if LunarUI.ReloadFCTSettings then LunarUI:ReloadFCTSettings() end
-                            end,
-                            width = "full",
                         },
                     },
                 },
+
 
                 -- 冷卻追蹤分頁
                 cdSettings = {
@@ -1617,41 +1407,150 @@ local options = {
                     set = function(_, v) GetDB().style.theme = v; RefreshUI() end,
                     width = "full",
                 },
-                spacer1 = { order = 5, type = "description", name = "\n" },
-                effectsHeader = {
-                    order = 6,
-                    type = "header",
-                    name = "Effects",
-                },
-                moonlightOverlay = {
-                    order = 7,
-                    type = "toggle",
-                    name = L.moonlightOverlay,
-                    desc = L.moonlightOverlayDesc,
-                    get = function() return GetDB().style.moonlightOverlay end,
-                    set = function(_, v) GetDB().style.moonlightOverlay = v end,
+                font = {
+                    order = 2,
+                    type = "select",
+                    name = L.font,
+                    desc = L.fontDesc,
+                    values = function()
+                        local LSM = LibStub("LibSharedMedia-3.0", true)
+                        if not LSM then return {} end
+                        local fonts = LSM:List("font")
+                        local t = {}
+                        for _, name in ipairs(fonts) do
+                            t[name] = name
+                        end
+                        return t
+                    end,
+                    get = function() return GetDB().style.font end,
+                    set = function(_, v) GetDB().style.font = v; RefreshUI() end,
                     width = "full",
                 },
-                phaseGlow = {
-                    order = 8,
-                    type = "toggle",
-                    name = L.phaseGlow,
-                    desc = L.phaseGlowDesc,
-                    get = function() return GetDB().style.phaseGlow end,
-                    set = function(_, v) GetDB().style.phaseGlow = v end,
+                fontSize = {
+                    order = 3,
+                    type = "range",
+                    name = L.fontSize,
+                    desc = L.fontSizeDesc,
+                    min = 8, max = 24, step = 1,
+                    get = function() return GetDB().style.fontSize end,
+                    set = function(_, v) GetDB().style.fontSize = v; RefreshUI() end,
                     width = "full",
                 },
-                animations = {
-                    order = 9,
-                    type = "toggle",
-                    name = L.animations,
-                    desc = L.animationsDesc,
-                    get = function() return GetDB().style.animations end,
-                    set = function(_, v) GetDB().style.animations = v end,
+                statusBarTexture = {
+                    order = 4,
+                    type = "select",
+                    name = L.statusBarTexture,
+                    desc = L.statusBarTextureDesc,
+                    values = function()
+                        local LSM = LibStub("LibSharedMedia-3.0", true)
+                        if not LSM then return {} end
+                        local bars = LSM:List("statusbar")
+                        local t = {}
+                        for _, name in ipairs(bars) do
+                            t[name] = name
+                        end
+                        return t
+                    end,
+                    get = function() return GetDB().style.statusBarTexture end,
+                    set = function(_, v) GetDB().style.statusBarTexture = v; RefreshUI() end,
+                    width = "full",
+                },
+                borderStyle = {
+                    order = 4.5,
+                    type = "select",
+                    name = L.borderStyle,
+                    desc = L.borderStyleDesc,
+                    values = {
+                        ink = "Ink",
+                        clean = "Clean",
+                        none = "None",
+                    },
+                    get = function() return GetDB().style.borderStyle end,
+                    set = function(_, v) GetDB().style.borderStyle = v; RefreshUI() end,
                     width = "full",
                 },
             },
         },
+        -- Loot
+        loot = {
+            order = 10.3,
+            type = "group",
+            name = L["LootFrame"] or "Loot Frame",
+            desc = L["LootFrameDesc"] or "Custom loot frame settings",
+            args = {
+                enabled = {
+                    order = 1,
+                    type = "toggle",
+                    name = L["LootFrame"] or "Custom Loot Frame",
+                    desc = L["LootFrameDesc"] or "Replace the default loot window with a LunarUI-styled frame (requires reload)",
+                    get = function()
+                        local db = GetDB()
+                        return db and db.loot and db.loot.enabled
+                    end,
+                    set = function(_, v)
+                        local db = GetDB()
+                        if db and db.loot then
+                            db.loot.enabled = v
+                        end
+                    end,
+                    width = "full",
+                },
+            },
+        },
+        -- Automation
+        automation = {
+            order = 10.5,
+            type = "group",
+            name = "Automation",
+            desc = "Quality of life automation features",
+            args = {
+                desc = {
+                    order = 0,
+                    type = "description",
+                    name = "Convenience features that automate common tasks.\n\n",
+                },
+                autoRepair = {
+                    order = 1,
+                    type = "toggle",
+                    name = "Auto Repair",
+                    desc = "Automatically repair equipment when visiting a vendor",
+                    get = function() return GetDB().automation.autoRepair end,
+                    set = function(_, v) GetDB().automation.autoRepair = v end,
+                    width = "full",
+                },
+                useGuildRepair = {
+                    order = 2,
+                    type = "toggle",
+                    name = "Use Guild Funds",
+                    desc = "Prefer guild bank for repair costs when available",
+                    disabled = function() return not GetDB().automation.autoRepair end,
+                    get = function() return GetDB().automation.useGuildRepair end,
+                    set = function(_, v) GetDB().automation.useGuildRepair = v end,
+                    width = "full",
+                },
+                spacer1 = { order = 5, type = "description", name = "\n" },
+                autoRelease = {
+                    order = 6,
+                    type = "toggle",
+                    name = "Auto Release Spirit (BG)",
+                    desc = "Automatically release spirit when dying in battlegrounds",
+                    get = function() return GetDB().automation.autoRelease end,
+                    set = function(_, v) GetDB().automation.autoRelease = v end,
+                    width = "full",
+                },
+                spacer2 = { order = 10, type = "description", name = "\n" },
+                autoScreenshot = {
+                    order = 11,
+                    type = "toggle",
+                    name = "Achievement Screenshot",
+                    desc = "Automatically take a screenshot when earning an achievement",
+                    get = function() return GetDB().automation.autoScreenshot end,
+                    set = function(_, v) GetDB().automation.autoScreenshot = v end,
+                    width = "full",
+                },
+            },
+        },
+
         -- Skins
         skins = {
             order = 11,
@@ -1865,7 +1764,7 @@ local function RegisterOptions()
             type = "description",
             name = "Automatically switch profiles when changing specialization.\n\n",
         }
-        local numSpecs = GetNumSpecializations and GetNumSpecializations() or 0
+        local numSpecs = GetNumSpecializations and GetNumSpecializations(false) or 0
         for i = 1, numSpecs do
             local _, specName = GetSpecializationInfo(i)
             profileOptions.args["spec" .. i] = {

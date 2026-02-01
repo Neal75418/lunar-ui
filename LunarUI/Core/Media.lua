@@ -26,11 +26,12 @@ LunarUI.iconBackdropTemplate = {
     edgeSize = 1,
 }
 
--- 預設背景顏色
+-- 預設背景顏色（引用 Design Token）
+local C = LunarUI.Colors
 LunarUI.backdropColors = {
-    background = { 0.05, 0.05, 0.05, 0.9 },
-    border = { 0.15, 0.12, 0.08, 1 },
-    borderGold = { 0.4, 0.35, 0.2, 1 },
+    background = C.bg,
+    border = C.border,
+    borderGold = C.borderGold,
 }
 
 --------------------------------------------------------------------------------

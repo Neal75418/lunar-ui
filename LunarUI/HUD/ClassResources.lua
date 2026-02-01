@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 職業資源條
     顯示職業特定資源（連擊點、符文、碎片等）
@@ -181,7 +181,7 @@ end
 local function CreateResourceBar(parent)
     local bar = CreateFrame("StatusBar", nil, parent)
     bar:SetSize(ICON_SIZE * 5 + ICON_SPACING * 4, BAR_HEIGHT)
-    bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    bar:SetStatusBarTexture(LunarUI.GetSelectedStatusBarTexture())
     bar:SetMinMaxValues(0, 100)
     bar:SetValue(0)
 
@@ -411,26 +411,6 @@ eventFrame:SetScript("OnEvent", function(_self, event, arg1)
 end)
 
 --------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
-local function UpdateForPhase()
-    if not resourceFrame then return end
-
-    -- 使用共用 ApplyPhaseAlpha
-    local alpha = LunarUI:ApplyPhaseAlpha(resourceFrame, "classResources")
-
-    -- 特殊邏輯：無資源類型時隱藏
-    if alpha > 0 and not resourceType then
-        resourceFrame:Hide()
-    end
-end
-
-local function OnPhaseChanged(_oldPhase, _newPhase)
-    UpdateForPhase()
-end
-
---------------------------------------------------------------------------------
 -- 初始化
 --------------------------------------------------------------------------------
 
@@ -448,11 +428,6 @@ local function Initialize()
         LunarUI:RegisterMovableFrame("ClassResources", resourceFrame, "職業資源")
     end
 
-    -- 註冊月相變化回呼
-    LunarUI:RegisterPhaseCallback(OnPhaseChanged)
-
-    -- 初始狀態
-    UpdateForPhase()
 end
 
 -- 匯出函數
@@ -486,7 +461,8 @@ function LunarUI.CleanupClassResources()
     eventFrame:UnregisterAllEvents()
 end
 
--- 掛鉤至插件啟用
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(1.0, Initialize)
-end)
+LunarUI:RegisterModule("ClassResources", {
+    onEnable = Initialize,
+    onDisable = LunarUI.CleanupClassResources,
+    delay = 1.0,
+})

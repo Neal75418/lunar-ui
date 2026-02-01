@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 冷卻追蹤器
     監控重要技能冷卻並顯示於螢幕
@@ -7,7 +7,6 @@
     - 追蹤指定技能冷卻
     - 可拖曳圖示列
     - 冷卻結束閃光提示
-    - 月相感知顯示
 ]]
 
 local _ADDON_NAME, Engine = ...
@@ -457,15 +456,6 @@ local function UpdateCooldownIcons()
 end
 
 --------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
-local function UpdateForPhase()
-    -- 使用共用 ApplyPhaseAlpha
-    LunarUI:ApplyPhaseAlpha(cooldownFrame, "cooldownTracker")
-end
-
---------------------------------------------------------------------------------
 -- 初始化
 --------------------------------------------------------------------------------
 
@@ -485,14 +475,6 @@ local function Initialize()
     if cooldownFrame then
         LunarUI:RegisterMovableFrame("CooldownTracker", cooldownFrame, "冷卻追蹤")
     end
-
-    -- 註冊月相變化回呼
-    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
-        UpdateForPhase()
-    end)
-
-    -- 初始狀態
-    UpdateForPhase()
 
     isInitialized = true
 end
@@ -617,7 +599,8 @@ function LunarUI.CleanupCooldownTracker()
     wipe(spellTextureCache)  -- 清理圖示快取
 end
 
--- 掛鉤至插件啟用
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(1.5, Initialize)
-end)
+LunarUI:RegisterModule("CooldownTracker", {
+    onEnable = Initialize,
+    onDisable = LunarUI.CleanupCooldownTracker,
+    delay = 1.5,
+})

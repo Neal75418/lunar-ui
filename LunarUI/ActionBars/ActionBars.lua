@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 動作條
     基於 LibActionButton 的動作條系統，具有月相感知
@@ -6,7 +6,6 @@
     功能：
     - 主動作條（1-6）
     - 姿態條 / 寵物條 / 載具條
-    - 月相感知透明度
     - 冷卻文字顯示
     - 快捷鍵懸停模式
     - 可設定按鈕大小與間距
@@ -23,6 +22,18 @@ if not LAB then
     return
 end
 
+-- Masque support (optional)
+local Masque = LibStub("Masque", true)
+local masqueGroups = {}
+
+local function GetMasqueGroup(barName)
+    if not Masque or InCombatLockdown() then return nil end
+    if not masqueGroups[barName] then
+        masqueGroups[barName] = Masque:Group("LunarUI", barName)
+    end
+    return masqueGroups[barName]
+end
+
 --------------------------------------------------------------------------------
 -- 常數與輔助函數
 --------------------------------------------------------------------------------
@@ -32,12 +43,12 @@ local DEFAULT_BUTTON_SPACING = 4
 
 -- 從設定讀取按鈕大小
 local function GetButtonSize()
-    return LunarUI.db and LunarUI.db.profile.actionbars.buttonSize or DEFAULT_BUTTON_SIZE
+    return LunarUI.db.profile.actionbars.buttonSize or DEFAULT_BUTTON_SIZE
 end
 
 -- 從設定讀取按鈕間距
 local function GetButtonSpacing()
-    return LunarUI.db and LunarUI.db.profile.actionbars.buttonSpacing or DEFAULT_BUTTON_SPACING
+    return LunarUI.db.profile.actionbars.buttonSpacing or DEFAULT_BUTTON_SPACING
 end
 
 local backdropTemplate = LunarUI.backdropTemplate
@@ -76,6 +87,32 @@ end
 -- WoW 12.0 對 GetActionCooldown 回傳密值，即使用 pcall 保護也無法比較
 -- 停用自訂冷卻文字，使用內建顯示與 OmniCC 等插件
 
+-- 批次處理冷卻去飽和（避免每次 SetCooldown 都建立 closure）
+local pendingDesaturate = {}
+local desaturateScheduled = false
+
+local function ProcessPendingDesaturate()
+    desaturateScheduled = false
+    for btn in pairs(pendingDesaturate) do
+        pendingDesaturate[btn] = nil
+        local cd = btn.cooldown
+        local btnIcon = btn.icon or (btn:GetName() and _G[btn:GetName() .. "Icon"])
+        if btnIcon and cd then
+            local ok, onCD = pcall(function()
+                local s, d = cd:GetCooldownTimes()
+                return s and d and s > 0 and d > 1500
+            end)
+            if ok and onCD then
+                btnIcon:SetDesaturated(true)
+                btnIcon:SetVertexColor(0.6, 0.6, 0.6)
+            else
+                btnIcon:SetDesaturated(false)
+                btnIcon:SetVertexColor(1, 1, 1)
+            end
+        end
+    end
+end
+
 --------------------------------------------------------------------------------
 -- 輔助函數
 --------------------------------------------------------------------------------
@@ -101,7 +138,7 @@ local function CreateBarFrame(name, numButtons, parent, orientation)
     frame:SetFrameLevel(100)
 
     -- 設定透明度
-    local alpha = LunarUI.db and LunarUI.db.profile.actionbars.alpha or 1.0
+    local alpha = LunarUI.db.profile.actionbars.alpha or 1.0
     frame:SetAlpha(alpha)
 
     -- 背景 / 解鎖 mover（掛在 UIParent 下，避免繼承 bar 的 alpha 和 secure 框架限制）
@@ -178,7 +215,7 @@ local function StyleButton(button)
 
     -- 樣式化快捷鍵文字
     if hotkey then
-        local showHotkeys = LunarUI.db and LunarUI.db.profile.actionbars.showHotkeys
+        local showHotkeys = LunarUI.db.profile.actionbars.showHotkeys
         if showHotkeys == false then
             hotkey:Hide()
         else
@@ -192,7 +229,7 @@ local function StyleButton(button)
     -- 巨集名稱
     local macroName = button.Name or _G[name .. "Name"]
     if macroName then
-        local showMacroNames = LunarUI.db and LunarUI.db.profile.actionbars.showMacroNames
+        local showMacroNames = LunarUI.db.profile.actionbars.showMacroNames
         if showMacroNames then
             macroName:Show()
         else
@@ -244,6 +281,27 @@ local function StyleButton(button)
         cooldown:SetSwipeColor(0, 0, 0, 0.8)
         cooldown:SetDrawEdge(true)
         cooldown:SetFrameLevel(button:GetFrameLevel() + 1)
+
+        -- 冷卻中圖示去飽和（變灰）— 使用 dirty flag 批次處理避免 GC 壓力
+        if not button._lunarHookedCooldown then
+            button._lunarHookedCooldown = true
+
+            hooksecurefunc(cooldown, "SetCooldown", function()
+                pendingDesaturate[button] = true
+                if not desaturateScheduled then
+                    desaturateScheduled = true
+                    C_Timer.After(0, ProcessPendingDesaturate)
+                end
+            end)
+
+            cooldown:HookScript("OnHide", function()
+                local btnIcon = button.icon or (button:GetName() and _G[button:GetName() .. "Icon"])
+                if btnIcon then
+                    btnIcon:SetDesaturated(false)
+                    btnIcon:SetVertexColor(1, 1, 1)
+                end
+            end)
+        end
     end
 
     -- 建立自訂邊框（frame level 在 cooldown 之上，但填充透明不遮蓋）
@@ -331,7 +389,7 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateActionBar(id, page)
-    local db = LunarUI.db and LunarUI.db.profile.actionbars["bar" .. id]
+    local db = LunarUI.db.profile.actionbars["bar" .. id]
     if not db or not db.enabled then return end
 
     local numButtons = db.buttons or 12
@@ -391,13 +449,19 @@ local function CreateActionBar(id, page)
         end
 
         -- 技能距離著色（超出範圍時按鈕變紅）
-        local rangeDb = LunarUI.db and LunarUI.db.profile.actionbars
+        local rangeDb = LunarUI.db.profile.actionbars
         if rangeDb and rangeDb.outOfRangeColoring ~= false and button.UpdateConfig then
             button.config = button.config or {}
             button.config.outOfRangeColoring = "button"
             button.config.colors = button.config.colors or {}
             button.config.colors.range = { 0.8, 0.1, 0.1 }
             button:UpdateConfig()
+        end
+
+        -- Masque skinning (if available)
+        local masqueGroup = GetMasqueGroup(name)
+        if masqueGroup then
+            masqueGroup:AddButton(button)
         end
 
         bar.buttons[i] = button
@@ -466,7 +530,7 @@ local function UpdateStanceButton(button, index)
 end
 
 local function CreateStanceBar()
-    local db = LunarUI.db and LunarUI.db.profile.actionbars.stancebar
+    local db = LunarUI.db.profile.actionbars.stancebar
     if not db or not db.enabled then return end
 
     local numStances = GetNumShapeshiftForms() or 0
@@ -494,6 +558,12 @@ local function CreateStanceBar()
         UpdateStanceButton(button, i)
 
         StyleButton(button)
+
+        local masqueGroup = GetMasqueGroup("Stance Bar")
+        if masqueGroup then
+            masqueGroup:AddButton(button)
+        end
+
         bar.buttons[i] = button
     end
 
@@ -526,7 +596,7 @@ local function CreateStanceBar()
 end
 
 local function CreatePetBar()
-    local db = LunarUI.db and LunarUI.db.profile.actionbars.petbar
+    local db = LunarUI.db.profile.actionbars.petbar
     if not db or not db.enabled then return end
 
     local numButtons = 10
@@ -546,6 +616,12 @@ local function CreatePetBar()
         button:SetID(i)
 
         StyleButton(button)
+
+        local masqueGroup = GetMasqueGroup("Pet Bar")
+        if masqueGroup then
+            masqueGroup:AddButton(button)
+        end
+
         bar.buttons[i] = button
     end
 
@@ -570,35 +646,6 @@ local function CreatePetBar()
 end
 
 --------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
-local phaseCallbackRegistered = false
-
-local function UpdateAllBarsForPhase()
-    local tokens = LunarUI:GetTokens()
-
-    -- 動作條即使在新月階段也應保持較高可見度
-    local minAlpha = 0.5
-    local alpha = math.max(tokens.alpha, minAlpha)
-
-    for _name, bar in pairs(bars) do
-        if bar and bar:IsShown() then
-            bar:SetAlpha(alpha)
-        end
-    end
-end
-
-local function RegisterBarPhaseCallback()
-    if phaseCallbackRegistered then return end
-    phaseCallbackRegistered = true
-
-    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
-        UpdateAllBarsForPhase()
-    end)
-end
-
---------------------------------------------------------------------------------
 -- 非戰鬥淡入淡出
 --------------------------------------------------------------------------------
 
@@ -607,8 +654,8 @@ local isBarsUnlocked = false  -- 解鎖時完全停用淡出
 local fadeState = {}  -- { [barKey] = { alpha, targetAlpha, hovered, timer } }
 
 local function GetFadeSettings()
-    local db = LunarUI.db and LunarUI.db.profile.actionbars
-    if not db then return false, 0.3, 2.0, 0.4 end
+    local db = LunarUI.db.profile.actionbars
+    -- if not db then return false, 0.3, 2.0, 0.4 end
     return db.fadeEnabled ~= false,
            db.fadeAlpha or 0.3,
            db.fadeDelay or 2.0,
@@ -621,7 +668,7 @@ local function IsBarFadeEnabled(barKey)
     if not globalEnabled then return false end
 
     -- 每條 bar 可獨立覆蓋
-    local db = LunarUI.db and LunarUI.db.profile.actionbars
+    local db = LunarUI.db.profile.actionbars
     if db and type(db[barKey]) == "table" and db[barKey].fadeEnabled ~= nil then
         return db[barKey].fadeEnabled
     end
@@ -631,7 +678,7 @@ end
 local function SetBarAlpha(bar, alpha)
     if not bar then return end
     -- 不在戰鬥中才修改透明度（安全考量）
-    local baseAlpha = LunarUI.db and LunarUI.db.profile.actionbars.alpha or 1.0
+    local baseAlpha = LunarUI.db.profile.actionbars.alpha or 1.0
     bar:SetAlpha(alpha * baseAlpha)
 end
 
@@ -817,7 +864,7 @@ local function InitializeFade()
 end
 
 -- 匯出更新函數（供 Config 面板即時更新）
-function LunarUI:UpdateActionBarFade()
+function LunarUI.UpdateActionBarFade()
     local enabled = GetFadeSettings()
     if enabled then
         if not isInCombat then
@@ -976,11 +1023,24 @@ local function HideTextureForcefully(texture)
     pcall(function() texture:SetAtlas(nil) end)
 end
 
+-- 不應被隱藏的框架白名單（飛行活力條相關）
+-- EncounterBar 是 UIWidgetPowerBarContainerFrame 的父框架
+-- 如果被遞迴隱藏，活力條即使 alpha=1 也看不到
+local VIGOR_PROTECTED_FRAMES = {
+    ["PlayerPowerBarAlt"] = true,
+    ["UIWidgetPowerBarContainerFrame"] = true,
+    ["EncounterBar"] = true,
+}
+
 -- 遞迴隱藏框架及其所有子框架/區域
 local function HideFrameRecursive(frame)
     if not frame then return end
     -- 跳過 OverrideActionBar，飛龍騎術等需要它
     if frame == OverrideActionBar then return end
+    -- 保護飛行活力條框架
+    local frameName = frame:GetName()
+    if frameName and VIGOR_PROTECTED_FRAMES[frameName] then return end
+
     HideFrameSafely(frame)
     HideFrameRegions(frame)
 
@@ -1045,7 +1105,7 @@ local function HideBlizzardBars()
         end
 
         -- 遍歷所有 Lua 屬性，隱藏所有可能的子框架/材質
-        for key, value in pairs(MainMenuBarArtFrame) do
+        for _, value in pairs(MainMenuBarArtFrame) do
             if type(value) == "table" and value.SetAlpha then
                 pcall(function() value:SetAlpha(0) end)
             end
@@ -1180,8 +1240,6 @@ local function HideBlizzardBars()
     local wow12Frames = {
         "MainMenuBarManager",
         "PossessActionBar",
-        "MainStatusTrackingBarContainer",
-        "SecondaryStatusTrackingBarContainer",
         -- WoW 12.0 獅鷲相關框架
         "MainMenuBarArtFrame",
         "MainMenuBarArtFrameBackground",
@@ -1192,6 +1250,34 @@ local function HideBlizzardBars()
         if frame then
             HideFramePermanentlyWithHook(frame)
         end
+    end
+
+    -- Status Tracking 容器：隱藏並 hook，但允許 Vigor 相關子框架恢復
+    -- 使用自訂 hook 而非 HideFramePermanentlyWithHook，避免阻止活力條恢復
+    local function HideStatusTrackingBar(frame)
+        if not frame then return end
+        HideFrameSafely(frame)
+        if not hookedFrames[frame] then
+            hookedFrames[frame] = true
+            pcall(function()
+                hooksecurefunc(frame, "SetAlpha", function(self, alpha)
+                    if self._lunarUIForceHidden then return end
+                    -- 允許 vigor 保護機制恢復 alpha（由 EnsureVigorBarVisible 觸發）
+                    -- 僅攔截 Blizzard 自動重新顯示（alpha > 0 且非由 LunarUI 主動設定）
+                    if alpha > 0 and not self._lunarUIAllowAlpha then
+                        self._lunarUIForceHidden = true
+                        pcall(function() self:SetAlpha(0) end)
+                        self._lunarUIForceHidden = nil
+                    end
+                end)
+            end)
+        end
+    end
+    if _G.MainStatusTrackingBarContainer then
+        HideStatusTrackingBar(_G.MainStatusTrackingBarContainer)
+    end
+    if _G.SecondaryStatusTrackingBarContainer then
+        HideStatusTrackingBar(_G.SecondaryStatusTrackingBarContainer)
     end
 
     -- WoW 12.0 TWW: 嘗試更多可能的獅鷲容器
@@ -1258,22 +1344,29 @@ local function HideBlizzardBars()
         end
     end
 
-    -- 搜尋全域變數中所有可能的獅鷲/EndCap 框架
-    local gryphonPatterns = {"Gryphon", "EndCap", "LeftCap", "RightCap", "MainMenuBarArt"}
-    for globalName, globalValue in pairs(_G) do
-        if type(globalName) == "string" and type(globalValue) == "table" then
-            for _, pattern in ipairs(gryphonPatterns) do
-                if globalName:find(pattern) then
-                    -- 對所有匹配的框架/材質使用強力隱藏
-                    HideTextureForcefully(globalValue)
-                    if globalValue.SetAlpha then
-                        pcall(function() globalValue:SetAlpha(0) end)
-                    end
-                    if globalValue.Hide then
-                        pcall(function() globalValue:Hide() end)
-                    end
-                    break
-                end
+    -- 隱藏已知的獅鷲/EndCap 框架（避免 pairs(_G) 遍歷全域表）
+    local gryphonFrameNames = {
+        "MainMenuBarArtFrameBackground",
+        "MainMenuBarArtFrame",
+        "MicroButtonAndBagsBar",
+    }
+    for _, name in ipairs(gryphonFrameNames) do
+        local obj = _G[name]
+        if obj then
+            HideTextureForcefully(obj)
+            if obj.SetAlpha then pcall(function() obj:SetAlpha(0) end) end
+            if obj.Hide then pcall(function() obj:Hide() end) end
+        end
+    end
+    -- 處理巢狀子物件（LeftEndCap / RightEndCap）
+    local artFrame = _G["MainMenuBarArtFrameBackground"]
+    if artFrame then
+        for _, childName in ipairs({"LeftEndCap", "RightEndCap"}) do
+            local child = artFrame[childName]
+            if child then
+                HideTextureForcefully(child)
+                if child.SetAlpha then pcall(function() child:SetAlpha(0) end) end
+                if child.Hide then pcall(function() child:Hide() end) end
             end
         end
     end
@@ -1312,10 +1405,10 @@ end
 --------------------------------------------------------------------------------
 
 local function StyleExtraActionButton()
-    local db = LunarUI.db and LunarUI.db.profile.actionbars
-    if not db or db.extraActionButton == false then return end
+    local db = LunarUI.db.profile.actionbars
+    if db.extraActionButton == false then return end
 
-    local extra = ExtraActionBarFrame
+    local extra = _G.ExtraActionBarFrame
     if not extra then return end
 
     -- 重新定位至畫面中下方
@@ -1340,7 +1433,7 @@ local function StyleExtraActionButton()
     end
 
     -- 樣式化 ExtraActionButton1
-    local btn = ExtraActionButton1
+    local btn = _G.ExtraActionButton1
     if not btn then return end
 
     local buttonSize = db.buttonSize or DEFAULT_BUTTON_SIZE
@@ -1360,10 +1453,10 @@ end
 
 -- Zone Ability Button（龍島飛行等區域技能）
 local function StyleZoneAbilityButton()
-    local db = LunarUI.db and LunarUI.db.profile.actionbars
-    if not db or db.extraActionButton == false then return end
+    local db = LunarUI.db.profile.actionbars
+    if db.extraActionButton == false then return end
 
-    local zone = ZoneAbilityFrame
+    local zone = _G.ZoneAbilityFrame
     if not zone then return end
 
     -- 重新定位
@@ -1392,7 +1485,7 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateMicroBar()
-    local db = LunarUI.db and LunarUI.db.profile.actionbars.microBar
+    local db = LunarUI.db.profile.actionbars.microBar
     if not db or not db.enabled then return end
     if InCombatLockdown() then return end
 
@@ -1411,6 +1504,7 @@ local function CreateMicroBar()
         "EJMicroButton",
         "StoreMicroButton",
         "MainMenuMicroButton",
+        "HelpMicroButton",
     }
     for _, btnName in ipairs(microButtonNames) do
         local btn = _G[btnName]
@@ -1465,8 +1559,17 @@ local function CreateMicroBar()
         end
     end
 
-    -- 月相感知透明度
-    microBar._lunarMinAlpha = 0.3
+    -- 隱藏原始 MicroMenu 容器，避免 Blizzard Layout 在按鈕被搬走後崩潰
+    if _G.MicroMenu then
+        _G.MicroMenu:Hide()
+        if _G.MicroMenu.Layout then
+            hooksecurefunc(_G.MicroMenu, "Show", function(self)
+                if bars.microBar then
+                    self:Hide()
+                end
+            end)
+        end
+    end
 
     bars.microBar = microBar
 end
@@ -1483,6 +1586,11 @@ local function CleanupMicroBar()
         end
         bars.microBar:Hide()
         bars.microBar = nil
+
+        -- 還原原始 MicroMenu 容器
+        if _G.MicroMenu then
+            _G.MicroMenu:Show()
+        end
     end
 end
 
@@ -1491,7 +1599,7 @@ end
 --------------------------------------------------------------------------------
 
 local function SpawnActionBars()
-    local db = LunarUI.db and LunarUI.db.profile.actionbars
+    local db = LunarUI.db.profile.actionbars
     if not db then return end
 
     -- 檢查是否啟用自訂動作條
@@ -1530,12 +1638,6 @@ local function SpawnActionBars()
     -- 微型按鈕列
     CreateMicroBar()
 
-    -- 註冊月相更新
-    RegisterBarPhaseCallback()
-
-    -- 套用初始月相
-    UpdateAllBarsForPhase()
-
     -- 初始化淡入淡出系統
     C_Timer.After(1.0, InitializeFade)
 end
@@ -1543,17 +1645,17 @@ end
 -- 清理函數
 local function CleanupActionBars()
     -- 還原 ExtraActionBarFrame
-    if ExtraActionBarFrame and bars.extraActionButton then
-        if ExtraActionBarFrame.intro then
-            ExtraActionBarFrame.intro:SetAlpha(1)
+    if _G.ExtraActionBarFrame and bars.extraActionButton then
+        if _G.ExtraActionBarFrame.intro then
+            _G.ExtraActionBarFrame.intro:SetAlpha(1)
         end
         bars.extraActionButton = nil
     end
 
     -- 還原 ZoneAbilityFrame
-    if ZoneAbilityFrame and bars.zoneAbilityButton then
-        if ZoneAbilityFrame.Style then
-            ZoneAbilityFrame.Style:SetAlpha(1)
+    if _G.ZoneAbilityFrame and bars.zoneAbilityButton then
+        if _G.ZoneAbilityFrame.Style then
+            _G.ZoneAbilityFrame.Style:SetAlpha(1)
         end
         bars.zoneAbilityButton = nil
     end
@@ -1569,20 +1671,11 @@ LunarUI.ExitKeybindMode = ExitKeybindMode
 LunarUI.CleanupActionBars = CleanupActionBars
 LunarUI.actionBars = bars
 
--- 掛鉤至插件啟用
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(0.3, SpawnActionBars)
-end)
-
--- 實現快捷鍵模式命令
-hooksecurefunc(LunarUI, "RegisterCommands", function(self)
-    -- 新增 /lunar keybind 命令
-    local origHandler = self.slashCommands and self.slashCommands["keybind"]
-    if not origHandler then
-        -- 如果命令系統支援，將 keybind 註冊為子命令
-        -- 否則使用者可透過 EnterKeybindMode/ExitKeybindMode 函數切換
-    end
-end)
+LunarUI:RegisterModule("ActionBars", {
+    onEnable = SpawnActionBars,
+    onDisable = CleanupActionBars,
+    delay = 0.3,
+})
 
 -- 註冊快捷鍵切換函數
 function LunarUI.ToggleKeybindMode()
@@ -1719,7 +1812,7 @@ function LunarUI:ToggleActionBarLock(locked)
         isBarsUnlocked = false
         -- 重啟淡出系統
         if LunarUI.UpdateActionBarFade then
-            LunarUI:UpdateActionBarFade()
+            LunarUI.UpdateActionBarFade()
         end
         self:Print("動作條已鎖定")
     else

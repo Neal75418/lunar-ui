@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, unused-local
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local
 --[[
     LunarUI - Buff/Debuff 框架（重新設計）
     在螢幕上顯示玩家的增益和減益效果
@@ -9,12 +9,12 @@
     - 智慧過濾（隱藏食物等瑣碎 Buff）
     - 減益類型著色（魔法/詛咒/疾病/毒）
     - 淡入動畫
-    - 月相感知
     - 框架移動器整合
 ]]
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
 -- 效能：快取全域變數
@@ -31,7 +31,7 @@ local ipairs = ipairs
 --------------------------------------------------------------------------------
 
 -- 預設值（初始化時從 DB 讀取）
-local ICON_SIZE = 40
+local ICON_SIZE = 30
 local ICON_SPACING = 4
 local ICONS_PER_ROW = 8
 local MAX_BUFFS = 16
@@ -44,7 +44,7 @@ local BAR_OFFSET = 1  -- 圖示與計時條間距
 local function LoadSettings()
     local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
     if db then
-        ICON_SIZE = db.auraIconSize or 40
+        ICON_SIZE = db.auraIconSize or 30
         ICON_SPACING = db.auraIconSpacing or 4
         ICONS_PER_ROW = db.auraIconsPerRow or 8
         MAX_BUFFS = db.maxBuffs or 16
@@ -90,9 +90,9 @@ local buffIcons = {}
 local debuffIcons = {}
 local isInitialized = false
 
-local auraDirty = false
+-- /reload 時舊框架已在正確位置，不隱藏它（避免閃爍和位置跳動）
+
 local AURA_THROTTLE = 0.1
-local lastAuraUpdate = 0
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -110,19 +110,11 @@ local function _FormatDuration(seconds)
     end
 end
 
-local function ShouldShowBuff(name, duration)
+local function ShouldShowBuff(name, _duration)
     -- WoW secret value 不能當 table index，用 pcall 保護
     local ok, isFiltered = pcall(function() return FILTERED_BUFF_NAMES[name] end)
     if not ok or isFiltered then
         return false
-    end
-    -- 月相過濾：NEW 月相只顯示短期 Buff
-    local phase = LunarUI:GetPhase()
-    if phase == "NEW" then
-        local dur = tonumber(duration) or 0
-        if dur == 0 or dur > 300 then
-            return false
-        end
     end
     return true
 end
@@ -230,7 +222,7 @@ local function CreateAuraIcon(parent, _index)
     icon:SetSize(ICON_SIZE, totalHeight)
     icon:SetBackdrop(backdropTemplate)
     icon:SetBackdropColor(0.08, 0.08, 0.08, 0.85)
-    icon:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.8)
+    icon:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.8)
 
     CreateAuraIconVisuals(icon)
     SetupAuraIconAnimation(icon)
@@ -249,8 +241,10 @@ end
 local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY)
     local existingFrame = _G[name]
     local frame
+    local isReused = false
     if existingFrame then
         frame = existingFrame
+        isReused = true
         -- 清除舊的子物件（避免重載時重複）
         for _, child in ipairs({frame:GetRegions()}) do
             if child.lunarLabel then child:Show() end
@@ -264,8 +258,16 @@ local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY)
         ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
         totalIconHeight * 2 + ICON_SPACING + 16  -- 16 = 標籤高度
     )
-    frame:SetPoint(anchorPoint, UIParent, anchorPoint, offsetX, offsetY)
-    frame:SetFrameStrata("MEDIUM")
+    -- 重用舊框架時保留其位置（/reload 時舊框架已在正確位置）
+    if not isReused then
+        frame:ClearAllPoints()
+        frame:SetPoint(anchorPoint, UIParent, anchorPoint, offsetX, offsetY)
+    end
+    frame:SetFrameStrata("HIGH")
+    -- 重用框架時保持可見（避免 /reload 閃爍）；新框架則隱藏等初始化
+    if not isReused then
+        frame:Hide()
+    end
 
     -- 分類標籤（隱藏，只顯示圖示）
     if not frame.label then
@@ -337,7 +339,7 @@ local function UpdateAuraIcon(iconFrame, auraData, index, filter, isDebuff)
         local color = DEBUFF_TYPE_COLORS[debuffType] or DEBUFF_TYPE_COLORS[""]
         iconFrame:SetBackdropBorderColor(color.r, color.g, color.b, 1)
     else
-        iconFrame:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.8)
+        iconFrame:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.8)
     end
 
     -- 堆疊數量
@@ -480,47 +482,28 @@ local function UpdateTimerBars()
 end
 
 --------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
-local function UpdateForPhase()
-    if not buffFrame or not debuffFrame then return end
-
-    local alpha = LunarUI:ApplyPhaseAlpha(buffFrame, "auraFrames")
-    LunarUI:ApplyPhaseAlpha(debuffFrame, "auraFrames")
-
-    if alpha > 0 then
-        UpdateAuras()
-    end
-end
-
---------------------------------------------------------------------------------
 -- 暴雪框架隱藏
 --------------------------------------------------------------------------------
 
+local blizzHider = nil  -- 隱藏用父框架（全域保持引用避免 GC）
+
 local function HideBlizzardBuffFrames()
+    -- 使用隱藏父框架取代 hooksecurefunc（避免戰鬥中 taint 汙染）
+    if not blizzHider then
+        blizzHider = CreateFrame("Frame")
+        blizzHider:Hide()
+    end
+
     local blizzardBuffFrame = _G.BuffFrame
     if blizzardBuffFrame then
         pcall(function() blizzardBuffFrame:UnregisterAllEvents() end)
-        pcall(function() blizzardBuffFrame:Hide() end)
-        pcall(function() blizzardBuffFrame:SetAlpha(0) end)
-        pcall(function()
-            hooksecurefunc(blizzardBuffFrame, "Show", function(self)
-                self:Hide()
-            end)
-        end)
+        pcall(function() blizzardBuffFrame:SetParent(blizzHider) end)
     end
 
     local blizzardDebuffFrame = _G.DebuffFrame
     if blizzardDebuffFrame then
         pcall(function() blizzardDebuffFrame:UnregisterAllEvents() end)
-        pcall(function() blizzardDebuffFrame:Hide() end)
-        pcall(function() blizzardDebuffFrame:SetAlpha(0) end)
-        pcall(function()
-            hooksecurefunc(blizzardDebuffFrame, "Show", function(self)
-                self:Hide()
-            end)
-        end)
+        pcall(function() blizzardDebuffFrame:SetParent(blizzHider) end)
     end
 end
 
@@ -535,7 +518,7 @@ local function Initialize()
     HideBlizzardBuffFrames()
     SetupFrames()
 
-    -- 註冊至框架移動器
+    -- 註冊至框架移動器（支援拖曳定位）
     if buffFrame then
         LunarUI:RegisterMovableFrame("BuffFrame", buffFrame, "增益框架")
     end
@@ -543,13 +526,12 @@ local function Initialize()
         LunarUI:RegisterMovableFrame("DebuffFrame", debuffFrame, "減益框架")
     end
 
-    -- 月相回呼
-    LunarUI:RegisterPhaseCallback(function()
-        UpdateForPhase()
-    end)
-
-    UpdateForPhase()
     isInitialized = true
+
+    -- 位置已同步套用，可以立即顯示
+    if buffFrame then buffFrame:Show() end
+    if debuffFrame then debuffFrame:Show() end
+    UpdateAuras()
 end
 
 --------------------------------------------------------------------------------
@@ -559,33 +541,44 @@ end
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:RegisterEvent("UNIT_AURA")
+eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+
+-- 光環資料節流更新（用 C_Timer 取代 OnUpdate 輪詢）
+local auraUpdateScheduled = false
+local function ScheduleAuraUpdate()
+    if auraUpdateScheduled then return end
+    auraUpdateScheduled = true
+    C_Timer.After(AURA_THROTTLE, function()
+        auraUpdateScheduled = false
+        if isInitialized then
+            UpdateAuras()
+        end
+    end)
+end
 
 eventFrame:SetScript("OnEvent", function(_self, event, arg1)
     if event == "PLAYER_ENTERING_WORLD" then
         C_Timer.After(1.0, Initialize)
     elseif event == "UNIT_AURA" then
         if arg1 == "player" and isInitialized then
-            auraDirty = true
+            ScheduleAuraUpdate()
+        end
+    elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
+        -- 戰鬥狀態切換時，確保框架可見並強制更新
+        if isInitialized then
+            if buffFrame and not buffFrame:IsShown() then buffFrame:Show() end
+            if debuffFrame and not debuffFrame:IsShown() then debuffFrame:Show() end
+            ScheduleAuraUpdate()
         end
     end
 end)
 
--- 節流更新 + 計時條即時更新
+-- 計時條平滑更新（OnUpdate 僅負責計時條，不再輪詢 auraDirty）
 local timerElapsed = 0
 local TIMER_UPDATE_INTERVAL = 0.05  -- 計時條 20 FPS
 
 eventFrame:SetScript("OnUpdate", function(_self, elapsed)
-    -- 光環資料節流更新
-    if auraDirty then
-        local now = GetTime()
-        if now - lastAuraUpdate >= AURA_THROTTLE then
-            auraDirty = false
-            lastAuraUpdate = now
-            UpdateAuras()
-        end
-    end
-
-    -- 計時條平滑更新
     if isInitialized then
         timerElapsed = timerElapsed + elapsed
         if timerElapsed >= TIMER_UPDATE_INTERVAL then
@@ -717,7 +710,8 @@ function LunarUI.CleanupAuraFrames()
     eventFrame:SetScript("OnUpdate", nil)
 end
 
--- 啟用自訂 Buff/Debuff 框架
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(1.5, Initialize)
-end)
+LunarUI:RegisterModule("AuraFrames", {
+    onEnable = Initialize,
+    onDisable = LunarUI.CleanupAuraFrames,
+    delay = 1.5,
+})

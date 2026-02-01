@@ -1,48 +1,40 @@
 ---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
-    LunarUI - 設計標記
-    每個月相的視覺參數設定
+    LunarUI - 色彩與工具函數
+    共用色彩定義與緩動函數
 ]]
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
--- 預設標記值
---------------------------------------------------------------------------------
-
-local DEFAULT_TOKENS = {
-    NEW = {
-        alpha = 1.00,           -- 停用月相：全部顯示
-        scale = 1.00,
-        contrast = 1.0,
-        glowIntensity = 0,
-    },
-    WAXING = {
-        alpha = 1.00,
-        scale = 1.00,
-        contrast = 1.0,
-        glowIntensity = 0,
-    },
-    FULL = {
-        alpha = 1.00,
-        scale = 1.00,
-        contrast = 1.0,
-        glowIntensity = 0,
-    },
-    WANING = {
-        alpha = 1.00,
-        scale = 1.00,
-        contrast = 1.0,
-        glowIntensity = 0,
-    },
-}
-
---------------------------------------------------------------------------------
 -- 色彩配置
 --------------------------------------------------------------------------------
 
 LunarUI.Colors = {
+    -- 背景
+    bg        = { 0.05, 0.05, 0.05, 0.9 },
+    bgSolid   = { 0.05, 0.05, 0.05, 0.95 },
+    bgLight   = { 0.05, 0.05, 0.05, 0.85 },
+
+    -- 邊框
+    border       = { 0.15, 0.12, 0.08, 1 },
+    borderSubtle = { 0.1, 0.1, 0.1, 1 },
+    borderGold   = { 0.4, 0.35, 0.2, 1 },
+
+    -- 文字
+    textPrimary   = { 1, 1, 1, 1 },
+    textSecondary = { 0.9, 0.9, 0.9, 1 },
+    textMuted     = { 0.7, 0.7, 0.7, 1 },
+    textDim       = { 0.6, 0.6, 0.6, 1 },
+    textGold      = { 1, 0.82, 0, 1 },
+
+    -- 功能色
+    success = { 0.1, 1.0, 0.1, 1 },
+    warning = { 1.0, 0.7, 0.0, 1 },
+    danger  = { 1.0, 0.1, 0.1, 1 },
+    info    = { 0.41, 0.8, 0.94, 1 },
+
     -- 羊皮紙風格（手繪風）
     parchment = { 0.85, 0.78, 0.65, 0.95 },
     inkDark = { 0.15, 0.12, 0.08, 1 },
@@ -55,111 +47,18 @@ LunarUI.Colors = {
     rage = { 0.8, 0.2, 0.2, 1 },
     focus = { 0.7, 0.5, 0.3, 1 },
 
-    -- 月相主題
+    -- 月光主題
     moonSilver = { 0.75, 0.78, 0.85, 1 },
     nightPurple = { 0.25, 0.2, 0.4, 1 },
     starGold = { 0.9, 0.8, 0.5, 1 },
     lunarGlow = { 0.6, 0.7, 0.9, 0.5 },
-
-    -- 介面元素
-    border = { 0.1, 0.1, 0.1, 1 },
-    backdrop = { 0.05, 0.05, 0.05, 0.9 },
 }
 
--- 目前標記（根據月相更新）
-LunarUI.tokens = {}
-
 --------------------------------------------------------------------------------
--- 標記取得函數
+-- 緩動函數庫 (Easing Functions)
 --------------------------------------------------------------------------------
 
 --[[
-    取得指定月相的標記
-    @param phase 月相名稱（NEW, WAXING, FULL, WANING）
-    @return table 標記值
-]]
-function LunarUI:GetTokensForPhase(phase)
-    local db = self.db and self.db.profile and self.db.profile.tokens
-    if db and db[phase] then
-        return db[phase]
-    end
-    return DEFAULT_TOKENS[phase] or DEFAULT_TOKENS.NEW
-end
-
---[[
-    取得目前月相的標記
-    @return table 目前標記值
-]]
-function LunarUI:GetTokens()
-    local phase = self:GetPhase()
-    return self:GetTokensForPhase(phase)
-end
-
---[[
-    更新目前標記（月相變化時呼叫）
-]]
-function LunarUI:UpdateTokens()
-    self.tokens = self:GetTokens()
-end
-
---------------------------------------------------------------------------------
--- 標記應用函數
---------------------------------------------------------------------------------
-
---[[
-    將標記套用至框架
-    @param frame 要套用的框架
-    @param tokens 指定的標記（可選）
-]]
-function LunarUI:ApplyTokensToFrame(frame, tokens)
-    tokens = tokens or self:GetTokens()
-
-    if not frame then return end
-    if not tokens then return end
-
-    -- 套用透明度（需型別檢查）
-    if tokens.alpha and type(tokens.alpha) == "number" then
-        frame:SetAlpha(tokens.alpha)
-    end
-
-    -- 套用縮放（需型別檢查）
-    if tokens.scale and type(tokens.scale) == "number" then
-        frame:SetScale(tokens.scale)
-    end
-end
-
---[[
-    在兩組標記間進行插值（用於平滑過渡）
-    @param from 起始標記
-    @param to 目標標記
-    @param progress 進度（0 至 1）
-    @return table 插值後的標記
-]]
-function LunarUI.InterpolateTokens(from, to, progress)
-    local result = {}
-
-    -- 處理 from 為 nil 或空值的邊界情況
-    from = from or {}
-    to = to or {}
-
-    for key, toValue in pairs(to) do
-        -- 安全取得 from 值，若為 nil 則使用 toValue
-        local fromValue = from[key]
-        if fromValue == nil then
-            fromValue = toValue
-        end
-
-        if type(toValue) == "number" and type(fromValue) == "number" then
-            result[key] = fromValue + (toValue - fromValue) * progress
-        else
-            result[key] = toValue
-        end
-    end
-    return result
-end
-
---[[
-    緩動函數庫 (Easing Functions)
     t: current time/progress (0-1)
     b: beginning value (usually 0)
     c: change in value (usually 1)
@@ -188,66 +87,3 @@ LunarUI.Easing = {
         return -c / 2 * (t * (t - 2) - 1) + b
     end,
 }
-
--- 匯出預設值供資料庫使用
-LunarUI.DEFAULT_TOKENS = DEFAULT_TOKENS
-
---------------------------------------------------------------------------------
--- HUD 模組共用常數與函數
---------------------------------------------------------------------------------
-
---[[
-    HUD 模組的月相透明度設定
-    各 HUD 模組應使用此共用常數，而非各自定義
-]]
-LunarUI.PHASE_ALPHA = {
-    NEW = 1.0,      -- 停用月相：全部顯示
-    WAXING = 1.0,
-    FULL = 1.0,
-    WANING = 1.0,
-}
-
---[[
-    將月相透明度套用至 HUD 框架
-    統一所有 HUD 模組的月相感知邏輯
-
-    @param frame 要套用的框架
-    @param configKey HUD 設定鍵（如 "classResources", "cooldownTracker"）
-    @param customAlpha 自訂透明度表（可選，預設使用 PHASE_ALPHA）
-    @return number 實際套用的透明度
-]]
-function LunarUI:ApplyPhaseAlpha(frame, configKey, customAlpha)
-    if not frame then return 0 end
-
-    local alpha
-    if customAlpha then
-        -- 自訂透明度表（如 PerformanceMonitor）：依月相查表
-        local phase = self:GetPhase()
-        alpha = customAlpha[phase] or 1
-    else
-        -- 優先使用插值中的 tokens（平滑過渡），否則回退到固定表
-        local tokens = self.tokens
-        if tokens and tokens.alpha and type(tokens.alpha) == "number" then
-            alpha = tokens.alpha
-        else
-            local phase = self:GetPhase()
-            alpha = self.PHASE_ALPHA[phase] or 1
-        end
-    end
-
-    -- 檢查 HUD 設定
-    local db = self.db and self.db.profile and self.db.profile.hud
-    if db and configKey and db[configKey] == false then
-        alpha = 0
-    end
-
-    frame:SetAlpha(alpha)
-
-    if alpha > 0 then
-        frame:Show()
-    else
-        frame:Hide()
-    end
-
-    return alpha
-end

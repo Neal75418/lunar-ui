@@ -13,6 +13,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local C = LunarUI.Colors
 
 -- Wait for oUF
 -- oUF is exposed as LunarUF via X-oUF TOC header
@@ -25,7 +26,13 @@ end
 -- Constants
 --------------------------------------------------------------------------------
 
-local statusBarTexture = "Interface\\TargetingFrame\\UI-StatusBar"
+local statusBarTexture  -- lazy: resolved after DB is ready
+local function GetStatusBarTexture()
+    if not statusBarTexture then
+        statusBarTexture = LunarUI.GetSelectedStatusBarTexture()
+    end
+    return statusBarTexture
+end
 local backdropTemplate = LunarUI.backdropTemplate
 
 -- Classification colors
@@ -50,8 +57,8 @@ local function CreateBackdrop(frame)
     backdrop:SetPoint("BOTTOMRIGHT", 1, -1)
     backdrop:SetFrameLevel(math.max(frame:GetFrameLevel() - 1, 0))
     backdrop:SetBackdrop(backdropTemplate)
-    backdrop:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
-    backdrop:SetBackdropBorderColor(0.1, 0.1, 0.1, 1)
+    backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
+    backdrop:SetBackdropBorderColor(C.borderSubtle[1], C.borderSubtle[2], C.borderSubtle[3], C.borderSubtle[4])
     frame.Backdrop = backdrop
     return backdrop
 end
@@ -78,7 +85,7 @@ local function CreateHealthBar(frame)
     local db = LunarUI.db and LunarUI.db.profile.nameplates
 
     local health = CreateFrame("StatusBar", nil, frame)
-    health:SetStatusBarTexture(statusBarTexture)
+    health:SetStatusBarTexture(GetStatusBarTexture())
     health:SetAllPoints()
 
     -- Reaction colors (hostile/friendly)
@@ -89,7 +96,7 @@ local function CreateHealthBar(frame)
     -- Background
     health.bg = health:CreateTexture(nil, "BACKGROUND")
     health.bg:SetAllPoints()
-    health.bg:SetTexture(statusBarTexture)
+    health.bg:SetTexture(GetStatusBarTexture())
     health.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
     health.bg.multiplier = 0.3
 
@@ -161,7 +168,7 @@ end
 local function CreateLevelText(frame)
     local level = frame:CreateFontString(nil, "OVERLAY")
     level:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
-    level:SetPoint("RIGHT", frame.Name or frame, "LEFT", -2, 0)
+    level:SetPoint("BOTTOMRIGHT", frame, "TOPLEFT", -2, 2)
     level:SetJustifyH("RIGHT")
 
     frame:Tag(level, "[difficulty][level]")
@@ -172,7 +179,7 @@ end
 --[[ Castbar ]]
 local function CreateCastbar(frame)
     local castbar = CreateFrame("StatusBar", nil, frame)
-    castbar:SetStatusBarTexture(statusBarTexture)
+    castbar:SetStatusBarTexture(GetStatusBarTexture())
     castbar:SetStatusBarColor(0.4, 0.6, 0.8, 1)
     castbar:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 0, -3)
     castbar:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, -3)
@@ -181,8 +188,8 @@ local function CreateCastbar(frame)
     -- Background
     local bg = castbar:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
-    bg:SetTexture(statusBarTexture)
-    bg:SetVertexColor(0.05, 0.05, 0.05, 0.9)
+    bg:SetTexture(GetStatusBarTexture())
+    bg:SetVertexColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
     castbar.bg = bg
 
     -- Border
@@ -191,7 +198,7 @@ local function CreateCastbar(frame)
     border:SetPoint("BOTTOMRIGHT", 1, -1)
     border:SetBackdrop(backdropTemplate)
     border:SetBackdropColor(0, 0, 0, 0)
-    border:SetBackdropBorderColor(0.1, 0.1, 0.1, 1)
+    border:SetBackdropBorderColor(C.borderSubtle[1], C.borderSubtle[2], C.borderSubtle[3], C.borderSubtle[4])
 
     -- Icon
     local icon = castbar:CreateTexture(nil, "OVERLAY")
@@ -263,12 +270,10 @@ local function CreateDebuffs(frame)
 
         -- Fix #49: Apply BackdropTemplateMixin before calling SetBackdrop
         -- oUF aura buttons don't inherit from BackdropTemplate
-        if BackdropTemplateMixin then
-            Mixin(button, BackdropTemplateMixin)
-            button:OnBackdropLoaded()
-            button:SetBackdrop(backdropTemplate)
-            button:SetBackdropColor(0, 0, 0, 0.5)
-        end
+        Mixin(button, BackdropTemplateMixin)
+        button:OnBackdropLoaded()
+        button:SetBackdrop(backdropTemplate)
+        button:SetBackdropColor(0, 0, 0, 0.5)
     end
 
     -- Post-update for debuff type colors
@@ -318,12 +323,10 @@ local function CreateNameplateBuffs(frame)
         button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
 
-        if BackdropTemplateMixin then
-            Mixin(button, BackdropTemplateMixin)
-            button:OnBackdropLoaded()
-            button:SetBackdrop(backdropTemplate)
-            button:SetBackdropColor(0, 0, 0, 0.5)
-        end
+        Mixin(button, BackdropTemplateMixin)
+        button:OnBackdropLoaded()
+        button:SetBackdrop(backdropTemplate)
+        button:SetBackdropColor(0, 0, 0, 0.5)
     end
 
     -- Stealable buffs get a bright border
@@ -420,46 +423,8 @@ local function CreateTargetIndicator(frame)
     return highlight
 end
 
---------------------------------------------------------------------------------
--- Phase Awareness for Nameplates
---------------------------------------------------------------------------------
-
--- Fix #4: Use weak table to prevent memory leaks from frame references
+-- Weak table for nameplate frame tracking (stacking detection, etc.)
 local nameplateFrames = setmetatable({}, { __mode = "v" })
-
-local function UpdateNameplatePhase(frame)
-    if not frame then return end
-
-    local tokens = LunarUI:GetTokens()
-    local _db = LunarUI.db and LunarUI.db.profile.nameplates  -- 保留供未來使用
-
-    -- Nameplates should be more visible even in NEW phase
-    -- Use a minimum alpha to keep them usable
-    local minAlpha = 0.5
-    local alpha = math.max(tokens.alpha, minAlpha)
-
-    frame:SetAlpha(alpha)
-end
-
-local function RegisterNameplateForPhase(frame)
-    nameplateFrames[frame] = true
-
-    -- Register global callback if not done
-    if not LunarUI._nameplatePhaseRegistered then
-        LunarUI._nameplatePhaseRegistered = true
-
-        LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
-            for np in pairs(nameplateFrames) do
-                if np and np:IsShown() then
-                    UpdateNameplatePhase(np)
-                end
-            end
-        end)
-    end
-
-    -- Apply initial phase
-    UpdateNameplatePhase(frame)
-end
 
 --------------------------------------------------------------------------------
 -- Layout Functions
@@ -507,9 +472,6 @@ local function EnemyNameplateLayout(frame, _unit)
         CreateQuestIndicator(frame)
     end
 
-    -- Register for phase updates
-    RegisterNameplateForPhase(frame)
-
     return frame
 end
 
@@ -534,9 +496,6 @@ local function FriendlyNameplateLayout(frame, _unit)
 
     CreateRaidTargetIndicator(frame)
     CreateTargetIndicator(frame)
-
-    -- Register for phase updates
-    RegisterNameplateForPhase(frame)
 
     return frame
 end
@@ -563,7 +522,7 @@ end
 --[[ Update quest indicator ]]
 local function UpdateQuestIndicator(frame)
     if not frame or not frame.QuestIndicator or not frame.unit then return end
-    local isQuest = C_QuestLog.UnitIsRelatedToActiveQuest and C_QuestLog.UnitIsRelatedToActiveQuest(frame.unit)
+    local isQuest = C_QuestLog.UnitIsRelatedToActiveQuest(frame.unit)
     if isQuest then
         frame.QuestIndicator:Show()
     else
@@ -589,9 +548,6 @@ local function Nameplate_OnShow(frame)
 
     -- Re-register frame for tracking (removed on hide)
     nameplateFrames[frame] = true
-
-    -- Update phase alpha
-    UpdateNameplatePhase(frame)
 
     -- Update target indicator
     UpdateTargetIndicator(frame)
@@ -893,11 +849,10 @@ function LunarUI:CleanupNameplates()
     StopStackingDetection()
     -- Clear weak table references
     wipe(nameplateFrames)
-    -- Reset registration flag
-    self._nameplatePhaseRegistered = nil
 end
 
--- Hook into addon enable
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(0.2, SpawnNameplates)
-end)
+LunarUI:RegisterModule("Nameplates", {
+    onEnable = SpawnNameplates,
+    onDisable = function() LunarUI:CleanupNameplates() end,
+    delay = 0.2,
+})

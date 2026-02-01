@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, missing-parameter
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter
 --[[
     LunarUI - 聊天模組
     Lunar 主題風格的聊天框架
@@ -9,7 +9,6 @@
     - 文字複製功能
     - 網址偵測與可點擊連結
     - 職業著色名稱
-    - 月相感知淡出
     - 關鍵字警報（音效 + 標籤閃爍）
     - 短頻道名稱
     - 表情符號替換
@@ -20,6 +19,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local C = LunarUI.Colors
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
@@ -228,8 +228,8 @@ local function StyleChatEditBox(chatFrame)
         backdrop:SetPoint("TOPLEFT", -4, 4)
         backdrop:SetPoint("BOTTOMRIGHT", 4, -4)
         backdrop:SetBackdrop(backdropTemplate)
-        backdrop:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
-        backdrop:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+        backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
+        backdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
         backdrop:SetFrameLevel(editBox:GetFrameLevel() - 1)
         editBox.LunarBackdrop = backdrop
     end
@@ -270,8 +270,8 @@ local function StyleChatFrame(chatFrame)
         backdrop:SetPoint("TOPLEFT", -4, 4)
         backdrop:SetPoint("BOTTOMRIGHT", 4, -4)
         backdrop:SetBackdrop(backdropTemplate)
-        backdrop:SetBackdropColor(0.05, 0.05, 0.05, 0.5)
-        backdrop:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.6)
+        backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], 0.5)
+        backdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.6)
         backdrop:SetFrameLevel(chatFrame:GetFrameLevel() - 1)
         backdrop:SetAlpha(0)
         backdrop:Hide()
@@ -382,8 +382,8 @@ local function CreateCopyFrame()
     copyFrame:SetSize(500, 300)
     copyFrame:SetPoint("CENTER")
     copyFrame:SetBackdrop(backdropTemplate)
-    copyFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    copyFrame:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+    copyFrame:SetBackdropColor(C.bgSolid[1], C.bgSolid[2], C.bgSolid[3], C.bgSolid[4])
+    copyFrame:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
     copyFrame:SetFrameStrata("DIALOG")
     copyFrame:SetMovable(true)
     copyFrame:EnableMouse(true)
@@ -1008,40 +1008,6 @@ local function RegisterChatEnhancementFilters()
 end
 
 --------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
-local phaseCallbackRegistered = false
-
-local function UpdateChatForPhase()
-    local tokens = LunarUI:GetTokens()
-
-    -- 聊天即使在新月階段也應保持較高可見度
-    local minAlpha = 0.7
-    local alpha = math.max(tokens.alpha, minAlpha)
-
-    for _, frameName in ipairs(CHAT_FRAMES) do
-        local frame = _G[frameName]
-        if frame and frame:IsShown() then
-            -- 僅調整背景透明度，不影響聊天文字
-            if frame.LunarBackdrop then
-                local r, g, b = frame.LunarBackdrop:GetBackdropColor()
-                frame.LunarBackdrop:SetBackdropColor(r or 0.05, g or 0.05, b or 0.05, 0.5 * alpha)
-            end
-        end
-    end
-end
-
-local function RegisterChatPhaseCallback()
-    if phaseCallbackRegistered then return end
-    phaseCallbackRegistered = true
-
-    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
-        UpdateChatForPhase()
-    end)
-end
-
---------------------------------------------------------------------------------
 -- 右鍵選單
 --------------------------------------------------------------------------------
 
@@ -1113,12 +1079,6 @@ local function InitializeChat()
     -- 連結懸停 Tooltip 預覽
     SetupLinkTooltipPreview()
 
-    -- 註冊月相更新
-    RegisterChatPhaseCallback()
-
-    -- 套用初始月相
-    UpdateChatForPhase()
-
     -- 隱藏聊天按鈕
     if ChatFrameMenuButton then ChatFrameMenuButton:Hide() end
     if ChatFrameChannelButton then ChatFrameChannelButton:Hide() end
@@ -1129,12 +1089,7 @@ end
 LunarUI.InitializeChat = InitializeChat
 LunarUI.ShowChatCopy = ShowCopyFrame
 
--- 掛鉤至插件啟用
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(0.8, InitializeChat)
-end)
-
--- 新增複製命令
-hooksecurefunc(LunarUI, "RegisterCommands", function(_self)
-    -- /lunar copy - 複製目前聊天
-end)
+LunarUI:RegisterModule("Chat", {
+    onEnable = InitializeChat,
+    delay = 0.8,
+})

@@ -1,6 +1,6 @@
 ---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
-    LunarUI - 月相驅動的戰鬥 UI 系統
+    LunarUI - 現代化戰鬥 UI 系統
     使用 Ace3 框架的核心初始化模組
 ]]
 
@@ -34,19 +34,42 @@ Engine.LunarUI = LunarUI
 LunarUI.name = ADDON_NAME
 LunarUI.version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "dev"
 
--- 月相常數
-LunarUI.PHASES = {
-    NEW = "NEW",         -- 非戰鬥，最小化顯示
-    WAXING = "WAXING",   -- 準備戰鬥
-    FULL = "FULL",       -- 戰鬥中，最大化顯示
-    WANING = "WANING",   -- 戰鬥結束，逐漸淡出
-}
-
 -- oUF 參照（oUF 載入後設定）
 LunarUI.oUF = nil
 
--- 月相變化回呼函數
-LunarUI.phaseCallbacks = {}
+--------------------------------------------------------------------------------
+-- 模組註冊系統
+--------------------------------------------------------------------------------
+
+local moduleRegistry = {}
+
+--[[
+    RegisterModule - 註冊模組至中央管理表
+    @param name     string   模組名稱（用於除錯與記錄）
+    @param callbacks table   回呼表：
+        onEnable   function  插件啟用時呼叫（可選）
+        onDisable  function  插件停用時呼叫（可選）
+        delay      number    onEnable 延遲秒數，預設 0（可選）
+]]
+function LunarUI:RegisterModule(name, callbacks)
+    if not name or not callbacks then return end
+    local entry = {
+        name = name,
+        onEnable = callbacks.onEnable or function() end,
+        onDisable = callbacks.onDisable or function() end,
+        delay = callbacks.delay or 0,
+    }
+    moduleRegistry[#moduleRegistry + 1] = entry
+
+    -- 若 OnEnable 已觸發（例如延遲載入的模組），立即執行初始化
+    if self._modulesEnabled then
+        if entry.delay > 0 then
+            C_Timer.After(entry.delay, entry.onEnable)
+        else
+            entry.onEnable()
+        end
+    end
+end
 
 --------------------------------------------------------------------------------
 -- Ace3 生命週期
@@ -73,24 +96,29 @@ function LunarUI:OnEnable()
     -- 取得 oUF 參照（TOC 中設定 X-oUF: LunarUF）
     self.oUF = Engine.oUF or _G.LunarUF or _G.oUF
 
-    -- 初始化月相管理器
-    if self.InitPhaseManager then
-        self:InitPhaseManager()
-    end
-
     -- 註冊斜線命令
-    if self.RegisterCommands then
+    -- if self.RegisterCommands then
         self:RegisterCommands()
-    end
+    -- end
 
     -- 設置 ESC 選項面板
-    if self.SetupOptions then
+    -- if self.SetupOptions then
         self:SetupOptions()
-    end
+    -- end
 
     -- 設置 ESC 主選單按鈕
-    if self.SetupGameMenuButton then
+    -- if self.SetupGameMenuButton then
         self:SetupGameMenuButton()
+    -- end
+
+    -- 啟用所有已註冊的模組
+    self._modulesEnabled = true
+    for _, mod in ipairs(moduleRegistry) do
+        if mod.delay > 0 then
+            C_Timer.After(mod.delay, mod.onEnable)
+        else
+            mod.onEnable()
+        end
     end
 
     local L = Engine.L or {}
@@ -103,84 +131,18 @@ end
     清理所有事件與計時器以防止記憶體洩漏
 ]]
 function LunarUI:OnDisable()
-    -- 取消註冊戰鬥事件
-    self:UnregisterEvent("PLAYER_REGEN_DISABLED")
-    self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-
     -- 取消所有計時器
     self:CancelAllTimers()
-
-    -- 清除月相回呼
-    if self.phaseCallbacks then
-        wipe(self.phaseCallbacks)
-    end
 
     -- 隱藏除錯面板
     if self.HideDebugOverlay then
         self:HideDebugOverlay()
     end
 
-    -- 清理小地圖
-    if self.CleanupMinimap then
-        self:CleanupMinimap()
-    end
-
-    -- 清理月相指示器
-    if self.CleanupPhaseIndicator then
-        self:CleanupPhaseIndicator()
-    end
-
-    -- 清理名牌事件
-    if self.CleanupNameplates then
-        self:CleanupNameplates()
-    end
-
-    -- 清理資料條
-    if self.CleanupDataBars then
-        self:CleanupDataBars()
-    end
-
-    -- 清理資料文字
-    if self.CleanupDataTexts then
-        self:CleanupDataTexts()
-    end
-
-    -- 清理動作條
-    if self.CleanupActionBars then
-        self:CleanupActionBars()
-    end
-
-    -- 清理 Skins
-    if self.CleanupSkins then
-        self:CleanupSkins()
-    end
-
-    -- 停止月相光暈動畫
-    if self.StopGlowAnimation then
-        self:StopGlowAnimation()
-    end
-end
-
---------------------------------------------------------------------------------
--- 月相回呼系統
---------------------------------------------------------------------------------
-
---[[
-    註冊月相變化回呼
-    @param callback function(oldPhase, newPhase)
-]]
-function LunarUI:RegisterPhaseCallback(callback)
-    if type(callback) == "function" then
-        table.insert(self.phaseCallbacks, callback)
-    end
-end
-
---[[
-    通知所有回呼月相已變化
-]]
-function LunarUI:NotifyPhaseChange(oldPhase, newPhase)
-    for _, callback in ipairs(self.phaseCallbacks) do
-        pcall(callback, oldPhase, newPhase)
+    -- 停用所有已註冊的模組（反向迭代，後啟用的先清理）
+    for i = #moduleRegistry, 1, -1 do
+        local mod = moduleRegistry[i]
+        mod.onDisable()
     end
 end
 
@@ -190,48 +152,21 @@ end
 
 local gameMenuHooked = false
 
-function LunarUI:SetupGameMenuButton()
+function LunarUI.SetupGameMenuButton(_self)
     if gameMenuHooked then return end
+    if not _G.GameMenuFrame or not _G.GameMenuFrame.InitButtons then return end
     gameMenuHooked = true
 
     -- WoW 11.0+ 使用 GameMenuFrame:AddButton() API
     -- Hook InitButtons 在按鈕初始化後新增 LunarUI 按鈕
-    hooksecurefunc(GameMenuFrame, "InitButtons", function(self)
-        -- 先新增按鈕（會在最後面）
+    -- 注意：不交換 buttonPool 中的按鈕位置，避免 taint 風險
+    hooksecurefunc(_G.GameMenuFrame, "InitButtons", function(self)
         self:AddButton("LunarUI", function()
             PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
-            HideUIPanel(GameMenuFrame)
+            if _G.HideUIPanel then _G.HideUIPanel(_G.GameMenuFrame) end
             local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
             if AceConfigDialog then
                 AceConfigDialog:Open("LunarUI")
-            end
-        end)
-
-        -- 把按鈕移到最上面
-        C_Timer.After(0, function()
-            if self.buttonPool then
-                -- 找到 LunarUI 按鈕和最上面的按鈕（Y 座標最大）
-                local lunarBtn, topBtn
-                local topY = -99999
-                for btn in self.buttonPool:EnumerateActive() do
-                    if btn:GetText() == "LunarUI" then
-                        lunarBtn = btn
-                    end
-                    local _, _, _, _, y = btn:GetPoint(1)
-                    if y and y > topY then
-                        topY = y
-                        topBtn = btn
-                    end
-                end
-                -- 交換位置
-                if lunarBtn and topBtn and lunarBtn ~= topBtn then
-                    local p1, r1, rp1, x1, y1 = topBtn:GetPoint(1)
-                    local p2, r2, rp2, x2, y2 = lunarBtn:GetPoint(1)
-                    lunarBtn:ClearAllPoints()
-                    lunarBtn:SetPoint(p1, r1, rp1, x1, y1)
-                    topBtn:ClearAllPoints()
-                    topBtn:SetPoint(p2, r2, rp2, x2, y2)
-                end
             end
         end)
     end)

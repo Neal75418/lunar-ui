@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Media Registration
     Register custom textures, fonts, and sounds with LibSharedMedia
@@ -44,12 +44,6 @@ local TEXTURES = {
     parchment = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Parchment",
     dark = "Interface\\Buttons\\WHITE8x8",
 
-    -- Moon phases (for Phase Indicator)
-    moonNew = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Moon\\MoonNew",
-    moonWaxing = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Moon\\MoonWaxing",
-    moonFull = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Moon\\MoonFull",
-    moonWaning = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Moon\\MoonWaning",
-
     -- Effects
     glow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Glow",
     spark = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Spark",
@@ -62,10 +56,6 @@ local TEXTURE_FALLBACKS = {
     borderInk = "Interface\\Buttons\\WHITE8x8",
     borderGlow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
     parchment = "Interface\\ACHIEVEMENTFRAME\\UI-Achievement-Parchment-Horizontal",
-    moonNew = "Interface\\Icons\\Spell_Shadow_Twilight",
-    moonWaxing = "Interface\\Icons\\Spell_Nature_MoonKey",
-    moonFull = "Interface\\Icons\\Spell_Nature_StarFall",
-    moonWaning = "Interface\\Icons\\Spell_Arcane_Starfire",
     glow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
     spark = "Interface\\Cooldown\\star4",
 }
@@ -74,50 +64,32 @@ local TEXTURE_FALLBACKS = {
 -- Color Palettes
 --------------------------------------------------------------------------------
 
--- Lunar color palette
-LunarUI.Colors = {
-    -- Primary colors
-    moonlight = { 0.85, 0.90, 1.00, 1.0 },     -- Soft blue-white
-    moonGlow = { 0.70, 0.80, 0.95, 0.8 },      -- Subtle glow
-    nightSky = { 0.08, 0.08, 0.12, 0.95 },     -- Dark background
-    parchment = { 0.95, 0.90, 0.82, 0.9 },     -- Warm beige
+-- Lunar color palette (擴充 Tokens.lua 定義的 LunarUI.Colors)
+-- 基礎 design tokens（bg, border, text 等）已在 Core/Tokens.lua 定義
+-- 此處僅新增 Media 專用的延伸色彩
+local Colors = LunarUI.Colors
+Colors.moonlight       = { 0.85, 0.90, 1.00, 1.0 }      -- Soft blue-white
+Colors.moonGlow        = { 0.70, 0.80, 0.95, 0.8 }      -- Subtle glow
+Colors.nightSky        = { 0.08, 0.08, 0.12, 0.95 }     -- Dark background
+Colors.borderHighlight = { 0.40, 0.45, 0.55, 1.0 }      -- Highlighted border
+Colors.text            = { 0.90, 0.90, 0.88, 1.0 }      -- Off-white text
+Colors.healthLow       = { 0.75, 0.25, 0.20, 1.0 }      -- Muted red
 
-    -- Phase colors
-    phaseNew = { 0.30, 0.35, 0.50, 0.6 },      -- Dim, mysterious
-    phaseWaxing = { 0.50, 0.55, 0.70, 0.8 },   -- Building intensity
-    phaseFull = { 0.90, 0.95, 1.00, 1.0 },     -- Bright, clear
-    phaseWaning = { 0.60, 0.65, 0.80, 0.85 },  -- Fading glow
-
-    -- UI colors
-    border = { 0.15, 0.12, 0.08, 1.0 },        -- Dark brown/black
-    borderHighlight = { 0.40, 0.45, 0.55, 1.0 }, -- Highlighted border
-    text = { 0.90, 0.90, 0.88, 1.0 },          -- Off-white text
-    textDim = { 0.60, 0.60, 0.58, 1.0 },       -- Dimmed text
-
-    -- Health colors (muted, organic)
-    health = { 0.20, 0.65, 0.35, 1.0 },        -- Soft green
-    healthLow = { 0.75, 0.25, 0.20, 1.0 },     -- Muted red
-    mana = { 0.25, 0.40, 0.75, 1.0 },          -- Deep blue
-    energy = { 0.85, 0.75, 0.25, 1.0 },        -- Warm yellow
-    rage = { 0.70, 0.20, 0.20, 1.0 },          -- Dark red
-    focus = { 0.75, 0.45, 0.20, 1.0 },         -- Amber
-
-    -- Class colors (slightly desaturated for Lunar theme)
-    classColors = {
-        WARRIOR = { 0.78, 0.61, 0.43 },
-        PALADIN = { 0.96, 0.55, 0.73 },
-        HUNTER = { 0.67, 0.83, 0.45 },
-        ROGUE = { 1.00, 0.96, 0.41 },
-        PRIEST = { 1.00, 1.00, 1.00 },
-        DEATHKNIGHT = { 0.77, 0.12, 0.23 },
-        SHAMAN = { 0.00, 0.44, 0.87 },
-        MAGE = { 0.41, 0.80, 0.94 },
-        WARLOCK = { 0.58, 0.51, 0.79 },
-        MONK = { 0.00, 0.78, 0.59 },
-        DRUID = { 1.00, 0.49, 0.04 },
-        DEMONHUNTER = { 0.64, 0.19, 0.79 },
-        EVOKER = { 0.20, 0.58, 0.50 },
-    },
+-- Class colors (slightly desaturated for Lunar theme)
+Colors.classColors = {
+    WARRIOR = { 0.78, 0.61, 0.43 },
+    PALADIN = { 0.96, 0.55, 0.73 },
+    HUNTER = { 0.67, 0.83, 0.45 },
+    ROGUE = { 1.00, 0.96, 0.41 },
+    PRIEST = { 1.00, 1.00, 1.00 },
+    DEATHKNIGHT = { 0.77, 0.12, 0.23 },
+    SHAMAN = { 0.00, 0.44, 0.87 },
+    MAGE = { 0.41, 0.80, 0.94 },
+    WARLOCK = { 0.58, 0.51, 0.79 },
+    MONK = { 0.00, 0.78, 0.59 },
+    DRUID = { 1.00, 0.49, 0.04 },
+    DEMONHUNTER = { 0.64, 0.19, 0.79 },
+    EVOKER = { 0.20, 0.58, 0.50 },
 }
 
 --------------------------------------------------------------------------------
@@ -206,38 +178,42 @@ function LunarUI.GetTexture(name)
     return path
 end
 
--- Get moon phase texture
-function LunarUI.GetMoonTexture(phase)
-    local textureMap = {
-        NEW = "moonNew",
-        WAXING = "moonWaxing",
-        FULL = "moonFull",
-        WANING = "moonWaning",
-    }
-
-    local key = textureMap[phase] or "moonNew"
-    return TEXTURE_FALLBACKS[key] or TEXTURES[key]
-end
-
 -- Get font path
 function LunarUI.GetFont(name)
     return FONTS[name] or FONTS.normal
 end
 
+-- Get user-selected font from LSM (reads db.profile.style.font)
+function LunarUI.GetSelectedFont()
+    local db = LunarUI.db and LunarUI.db.profile
+    local fontName = db and db.style and db.style.font
+    if fontName and LSM then
+        local ok, path = pcall(LSM.Fetch, LSM, "font", fontName)
+        if ok and path then return path end
+    end
+    return FONTS.normal
+end
+
+-- Get user-selected font size from db
+function LunarUI.GetSelectedFontSize()
+    local db = LunarUI.db and LunarUI.db.profile
+    return db and db.style and db.style.fontSize or 12
+end
+
+-- Get user-selected statusbar texture from LSM (reads db.profile.style.statusBarTexture)
+function LunarUI.GetSelectedStatusBarTexture()
+    local db = LunarUI.db and LunarUI.db.profile
+    local texName = db and db.style and db.style.statusBarTexture
+    if texName and LSM then
+        local ok, path = pcall(LSM.Fetch, LSM, "statusbar", texName)
+        if ok and path then return path end
+    end
+    return "Interface\\TargetingFrame\\UI-StatusBar"
+end
+
 -- Get color by name
 function LunarUI:GetColor(name)
     return self.Colors[name]
-end
-
--- Get phase color
-function LunarUI:GetPhaseColor(phase)
-    local colorMap = {
-        NEW = self.Colors.phaseNew,
-        WAXING = self.Colors.phaseWaxing,
-        FULL = self.Colors.phaseFull,
-        WANING = self.Colors.phaseWaning,
-    }
-    return colorMap[phase] or self.Colors.moonlight
 end
 
 --------------------------------------------------------------------------------
@@ -282,16 +258,9 @@ LunarUI.Backdrops = {
     },
 }
 
--- Get backdrop colors for phase
-function LunarUI:GetBackdropColors(phase)
-    local bg = self.Colors.nightSky
-    local border = self.Colors.border
-
-    if phase == "FULL" then
-        border = self.Colors.borderHighlight
-    end
-
-    return bg, border
+-- Get backdrop colors
+function LunarUI:GetBackdropColors()
+    return self.Colors.nightSky, self.Colors.border
 end
 
 --------------------------------------------------------------------------------

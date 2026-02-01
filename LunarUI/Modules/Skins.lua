@@ -12,7 +12,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
-local L = Engine.L or {}
+local _L = Engine.L or {}
 
 --------------------------------------------------------------------------------
 -- State
@@ -71,7 +71,7 @@ function LunarUI:SkinFrame(frame)
 end
 
 --- 替換按鈕樣式
-function LunarUI:SkinButton(btn)
+function LunarUI.SkinButton(_self, btn)
     if not btn then return end
 
     StripTextures(btn)
@@ -96,7 +96,7 @@ function LunarUI:SkinButton(btn)
 end
 
 --- 替換關閉按鈕
-function LunarUI:SkinCloseButton(btn)
+function LunarUI.SkinCloseButton(_self, btn)
     if not btn then return end
 
     StripTextures(btn)
@@ -150,7 +150,7 @@ function LunarUI:SkinTab(tab)
 end
 
 --- 替換捲軸條
-function LunarUI:SkinScrollBar(scrollBar)
+function LunarUI.SkinScrollBar(_self, scrollBar)
     if not scrollBar then return end
     StripTextures(scrollBar)
 end
@@ -160,7 +160,7 @@ end
 --------------------------------------------------------------------------------
 
 --- 註冊 skin（延遲載入）
-function LunarUI:RegisterSkin(name, loadEvent, skinFunc)
+function LunarUI.RegisterSkin(_self, name, loadEvent, skinFunc)
     skins[name] = { event = loadEvent, func = skinFunc }
 end
 
@@ -170,13 +170,13 @@ local function ApplySkin(name)
     local skin = skins[name]
     if not skin or not skin.func then return end
 
-    local ok, err = pcall(skin.func)
+    local ok, _err = pcall(skin.func)
     if ok then
         skinned[name] = true
     else
-        if LunarUI.DebugPrint then
-            LunarUI:DebugPrint("Skin error [" .. name .. "]: " .. tostring(err))
-        end
+        -- if LunarUI.DebugPrint then
+        --     LunarUI:DebugPrint("Skin error [" .. name .. "]: " .. tostring(err))
+        -- end
     end
 end
 
@@ -231,7 +231,7 @@ LunarUI.StripTextures = StripTextures
 LunarUI.InitializeSkins = InitializeSkins
 
 --- 標記框架已 skin 過，回傳 true 代表首次標記（應套用 skin）
-function LunarUI:MarkSkinned(frame)
+function LunarUI.MarkSkinned(_self, frame)
     if not frame or frame._lunarSkinned then return false end
     frame._lunarSkinned = true
     return true
@@ -245,10 +245,8 @@ function LunarUI:CleanupSkins()
     end
 end
 
--- Fix 12: 掛鉤至插件啟用（加 guard 防止重複註冊）
-if not LunarUI._skinsHookRegistered then
-    LunarUI._skinsHookRegistered = true
-    hooksecurefunc(LunarUI, "OnEnable", function()
-        C_Timer.After(1.5, InitializeSkins)
-    end)
-end
+LunarUI:RegisterModule("Skins", {
+    onEnable = InitializeSkins,
+    onDisable = function() LunarUI:CleanupSkins() end,
+    delay = 1.5,
+})

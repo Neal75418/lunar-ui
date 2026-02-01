@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, missing-parameter, undefined-global, unused-local
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter, undefined-global, unused-local
 --[[
     LunarUI - 滑鼠提示模組（增強版）
     Lunar 主題風格的統一滑鼠提示
@@ -12,11 +12,11 @@
     - AFK / DND 狀態標記
     - 等級差異著色（灰/綠/黃/橙/紅）
     - 裝備等級 + 專精顯示（Shift 懸停 / NotifyInspect）
-    - 月相感知定位
 ]]
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
 -- 常數
@@ -33,7 +33,7 @@ local CLASS_COLORS = RAID_CLASS_COLORS
 
 -- 等級差異顏色
 local function GetLevelDifficultyColor(unitLevel)
-    if unitLevel <= 0 then return 1, 1, 0 end  -- 等級未知
+    -- if unitLevel <= 0 then return 1, 1, 0 end  -- 等級未知 (Caller ensures > 0)
     local playerLevel = UnitLevel("player") or 1
     local diff = unitLevel - playerLevel
 
@@ -67,15 +67,13 @@ local pendingInspect = nil    -- 目前等待中的 inspect GUID
 --------------------------------------------------------------------------------
 
 local function GetItemLevel(itemLink)
-    if not itemLink then return nil end
+    -- if not itemLink then return nil end (Caller ensures exists)
     local itemLevel = select(1, C_Item.GetDetailedItemLevelInfo(itemLink))
     return itemLevel
 end
 
 local function GetUnitColor(unit)
-    if not unit or not UnitExists(unit) then
-        return 1, 1, 1
-    end
+    -- if not unit or not UnitExists(unit) then return 1, 1, 1 end (Caller ensures)
 
     if UnitIsPlayer(unit) then
         local _, class = UnitClass(unit)
@@ -153,7 +151,7 @@ end
 
 -- 取得專精名稱
 local function GetInspectSpec(unit)
-    if not unit or not UnitIsPlayer(unit) then return nil end
+    -- if not unit or not UnitIsPlayer(unit) then return nil end (Caller ensures)
 
     local specID
     if GetInspectSpecialization then
@@ -169,7 +167,7 @@ end
 
 -- 請求 Inspect
 local function RequestInspect(unit)
-    if not unit or not UnitIsPlayer(unit) then return end
+    -- if not unit or not UnitIsPlayer(unit) then return end (Caller ensures)
     if not CanInspect(unit) then return end
     if InCombatLockdown() then return end
 
@@ -224,13 +222,13 @@ end)
 --------------------------------------------------------------------------------
 
 local function StyleTooltip(tooltip)
-    if not tooltip then return end
+    -- if not tooltip then return end (Caller ensures)
 
     -- 套用背景
     if tooltip.SetBackdrop then
         tooltip:SetBackdrop(backdropTemplate)
-        tooltip:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-        tooltip:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+        tooltip:SetBackdropColor(C.bgSolid[1], C.bgSolid[2], C.bgSolid[3], C.bgSolid[4])
+        tooltip:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
     elseif tooltip.NineSlice then
         -- 正式服滑鼠提示使用 NineSlice
         tooltip.NineSlice:SetAlpha(0)
@@ -240,8 +238,8 @@ local function StyleTooltip(tooltip)
             backdrop:SetAllPoints()
             backdrop:SetFrameLevel(tooltip:GetFrameLevel())
             backdrop:SetBackdrop(backdropTemplate)
-            backdrop:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-            backdrop:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+            backdrop:SetBackdropColor(C.bgSolid[1], C.bgSolid[2], C.bgSolid[3], C.bgSolid[4])
+            backdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
             tooltip.LunarBackdrop = backdrop
         end
     end
@@ -249,7 +247,7 @@ local function StyleTooltip(tooltip)
     -- 樣式化狀態列（血量條）
     if tooltip.StatusBar or GameTooltipStatusBar then
         local statusBar = tooltip.StatusBar or GameTooltipStatusBar
-        statusBar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+        statusBar:SetStatusBarTexture(LunarUI.GetSelectedStatusBarTexture())
         statusBar:SetHeight(4)
         statusBar:ClearAllPoints()
         statusBar:SetPoint("BOTTOMLEFT", tooltip, "BOTTOMLEFT", 2, 2)
@@ -447,7 +445,7 @@ local function OnTooltipSetItem(tooltip)
         local itemID = itemLink:match("item:(%d+)")
         if itemID then
             local numID = tonumber(itemID)
-            if numID then
+                -- if numID then (Always true after tonumber match)
                 local bagCount = C_Item.GetItemCount(numID, false)
                 local totalCount = C_Item.GetItemCount(numID, true)  -- 含銀行
                 if totalCount and totalCount > 0 then
@@ -467,7 +465,6 @@ local function OnTooltipSetItem(tooltip)
                     end
                     tooltip:AddLine("|cff888888" .. countText .. "|r")
                 end
-            end
         end
     end
 
@@ -487,13 +484,13 @@ local function OnTooltipSetItem(tooltip)
     end
     if quality and quality > 1 then
         local qr, qg, qb = C_Item.GetItemQualityColor(quality)
-        if qr and qg and qb then
+        -- if qr and qg and qb then
             if tooltip.SetBackdropBorderColor then
                 tooltip:SetBackdropBorderColor(qr, qg, qb, 1)
             elseif tooltip.LunarBackdrop then
                 tooltip.LunarBackdrop:SetBackdropBorderColor(qr, qg, qb, 1)
             end
-        end
+        -- end
     end
 
     tooltip:Show()
@@ -583,25 +580,6 @@ local function SetTooltipPosition()
 end
 
 --------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
-local phaseCallbackRegistered = false
-
-local function UpdateTooltipForPhase()
-    -- 滑鼠提示為瞬態不需月相感知
-end
-
-local function RegisterTooltipPhaseCallback()
-    if phaseCallbackRegistered then return end
-    phaseCallbackRegistered = true
-
-    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
-        UpdateTooltipForPhase()
-    end)
-end
-
---------------------------------------------------------------------------------
 -- 初始化
 --------------------------------------------------------------------------------
 
@@ -643,24 +621,21 @@ local function InitializeTooltip()
         -- 清除時重設邊框顏色
         GameTooltip:HookScript("OnTooltipCleared", function(self)
             if self.SetBackdropBorderColor then
-                self:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+                self:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
             elseif self.LunarBackdrop then
-                self.LunarBackdrop:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+                self.LunarBackdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
             end
         end)
     end
 
     -- 設定定位
     SetTooltipPosition()
-
-    -- 註冊月相更新
-    RegisterTooltipPhaseCallback()
 end
 
 -- 匯出
 LunarUI.InitializeTooltip = InitializeTooltip
 
--- 掛鉤至插件啟用
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(0.3, InitializeTooltip)
-end)
+LunarUI:RegisterModule("Tooltip", {
+    onEnable = InitializeTooltip,
+    delay = 0.3,
+})

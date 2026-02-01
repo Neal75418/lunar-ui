@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 小地圖模組
     Lunar 主題風格的統一小地圖
@@ -8,13 +8,14 @@
     - 按鈕整理（LibDBIcon 支援）
     - 座標顯示
     - 區域文字樣式化
-    - 月相感知透明度
 ]]
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local C = LunarUI.Colors
 
--- 覆寫形狀函數（必須在模組範圍定義以避免 Lint 錯誤）
+-- 覆寫形狀函數（備份原始版本以便清理時還原）
+local originalGetMinimapShape = GetMinimapShape
 function GetMinimapShape() return "SQUARE" end
 
 --------------------------------------------------------------------------------
@@ -335,40 +336,6 @@ local function ScanForMinimapButtons()
 end
 
 --------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
-local phaseCallbackRegistered = false
-
-local function UpdateMinimapForPhase()
-    if not minimapFrame then return end
-
-    local tokens = LunarUI:GetTokens()
-    if not tokens then return end
-
-    -- 小地圖即使在新月階段也應保持較高可見度
-    local minAlpha = 0.6
-    local alpha = math.max(tokens.alpha or 1, minAlpha)
-
-    -- 與滑鼠離開淡出互動：若啟用且滑鼠不在上面，取較低的 alpha
-    local db = LunarUI.db and LunarUI.db.profile.minimap
-    if db and db.fadeOnMouseLeave and not minimapFrame:IsMouseOver() then
-        alpha = math.min(alpha, db.fadeAlpha or 0.5)
-    end
-
-    minimapFrame:SetAlpha(alpha)
-end
-
-local function RegisterMinimapPhaseCallback()
-    if phaseCallbackRegistered then return end
-    phaseCallbackRegistered = true
-
-    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
-        UpdateMinimapForPhase()
-    end)
-end
-
---------------------------------------------------------------------------------
 -- 小地圖樣式化
 --------------------------------------------------------------------------------
 
@@ -582,7 +549,7 @@ local function CreateMinimapFrame()
     minimapFrame:SetSize(size + BORDER_SIZE * 2, size + BORDER_SIZE * 2)
     minimapFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -20, -20)
     minimapFrame:SetBackdrop(backdropTemplate)
-    minimapFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.8)
+    minimapFrame:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], 0.8)
     minimapFrame:SetBackdropBorderColor(bc.r, bc.g, bc.b, bc.a)
     minimapFrame:SetFrameStrata("LOW")
     minimapFrame:SetMovable(true)
@@ -642,7 +609,7 @@ local function CreateMinimapFrame()
     buttonFrame:SetPoint("TOPLEFT", minimapFrame, "BOTTOMLEFT", 0, -6)
     buttonFrame:SetSize(100, 50)
     buttonFrame:SetBackdrop(backdropTemplate)
-    buttonFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.6)
+    buttonFrame:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], 0.6)
     buttonFrame:SetBackdropBorderColor(bc.r, bc.g, bc.b, bc.a * 0.8)
     buttonFrame:Hide()
 
@@ -934,14 +901,7 @@ local function ApplyMouseFade()
 
     minimapFrame:SetScript("OnLeave", function(self)
         if fadeEnabled then
-            -- 與月相系統互動：取較低的目標 alpha
-            local targetAlpha = fadeAlpha
-            local tokens = LunarUI:GetTokens()
-            if tokens and tokens.alpha then
-                local moonAlpha = math.max(tokens.alpha, 0.6)
-                targetAlpha = math.min(fadeAlpha, moonAlpha)
-            end
-            FadeTo(self, targetAlpha, fadeDuration)
+            FadeTo(self, fadeAlpha, fadeDuration)
         end
         if zoneMode == "MOUSEOVER" and zoneText then
             FadeTo(zoneText, 0, 0.2)
@@ -1030,9 +990,6 @@ function LunarUI.RefreshMinimap()
     -- 圖釘縮放
     ApplyPinScale()
 
-    -- 月相 alpha（必須最後，處理整體 alpha）
-    UpdateMinimapForPhase()
-
     -- 重新整理按鈕
     if db.organizeButtons then
         ScanForMinimapButtons()
@@ -1088,12 +1045,6 @@ local function InitializeMinimap()
     buttonScanTimers[2] = C_Timer.NewTimer(5, ScanForMinimapButtons)
     buttonScanTimers[3] = C_Timer.NewTimer(10, ScanForMinimapButtons)
 
-    -- 註冊月相更新
-    RegisterMinimapPhaseCallback()
-
-    -- 套用初始月相
-    UpdateMinimapForPhase()
-
     -- 套用區域文字顯示模式
     ApplyZoneTextDisplayMode(db.zoneTextDisplay or "SHOW")
 
@@ -1133,6 +1084,10 @@ function LunarUI.CleanupMinimap()
         addonLoadedFrame:SetScript("OnEvent", nil)
         addonLoadedFrame = nil
     end
+    -- 還原 GetMinimapShape 全域函數
+    if originalGetMinimapShape then
+        GetMinimapShape = originalGetMinimapShape
+    end
 end
 
 -- 匯出
@@ -1140,7 +1095,8 @@ LunarUI.InitializeMinimap = InitializeMinimap
 LunarUI.minimapFrame = minimapFrame
 -- RefreshMinimap 已在上方定義為 LunarUI:RefreshMinimap()
 
--- 掛鉤至插件啟用
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(0.5, InitializeMinimap)
-end)
+LunarUI:RegisterModule("Minimap", {
+    onEnable = InitializeMinimap,
+    onDisable = function() LunarUI:CleanupMinimap() end,
+    delay = 0.5,
+})

@@ -18,13 +18,6 @@ L["No"] = "否"
 L["On"] = "開"
 L["Off"] = "關"
 
--- 月相
-L["Phase"] = "月相"
-L["NEW"] = "新月"
-L["WAXING"] = "上弦月"
-L["FULL"] = "滿月"
-L["WANING"] = "下弦月"
-
 -- 命令
 L["Commands"] = "命令"
 L["Help"] = "說明"
@@ -66,9 +59,7 @@ L["CmdDebug"] = "切換除錯模式"
 L["CmdReset"] = "重置為預設值"
 L["CmdTest"] = "執行戰鬥模擬"
 
--- 月相訊息
-L["PhaseChanged"] = "月相：%s → %s"
-L["CurrentPhase"] = "目前月相：%s"
+-- 戰鬥訊息
 L["CombatEnter"] = "進入戰鬥"
 L["CombatLeave"] = "脫離戰鬥"
 
@@ -200,6 +191,71 @@ L["SkinsDesc"] = "將暴雪預設 UI 框架重新造型以符合 LunarUI 主題�
 
 -- 設定檔
 L["ProfileChanged"] = "設定檔已變更，UI 已重新整理"
+
+-- 安裝精靈
+L["InstallWelcome"] = "歡迎使用 |cff8882ffLunar|r|cffffffffUI|r！"
+L["InstallSkipped"] = "已跳過設定。使用 |cff8882ff/lunar config|r 隨時設定。"
+L["InstallComplete"] = "設定完成！正在重新載入 UI..."
+L["InstallReloadText"] = "LunarUI 設定完成。是否重新載入 UI 以套用變更？"
+L["InstallReloadBtn"] = "重新載入"
+L["InstallReloadLater"] = "稍後"
+L["InstallTitle"] = "|cff8882ffLunar|r|cffffffffUI|r 安裝精靈"
+L["InstallStep"] = "步驟 %d / %d"
+L["InstallWelcomeBody"] = "歡迎使用 |cff8882ffLunar|r|cffffffffUI|r！\n\n此精靈將協助你完成基本設定。你可以隨時透過 |cff8882ff/lunar config|r 修改。\n"
+L["InstallUIScale"] = "UI 縮放"
+L["InstallUIScaleTip"] = "|cff888888提示：數值越大 UI 元素越大。1920x1080 解析度建議使用 0.75。|r"
+L["InstallLayoutTitle"] = "選擇你的主要角色定位，這將調整團隊/隊伍框架的大小與佈局。\n"
+L["InstallLayoutDPS"] = "輸出"
+L["InstallLayoutDPSDesc"] = "精簡的團隊框架、較大的玩家/目標框、著重減益顯示"
+L["InstallLayoutTank"] = "坦克"
+L["InstallLayoutTankDesc"] = "較寬的團隊框架（含仇恨顯示）、較大的名牌"
+L["InstallLayoutHealer"] = "治療"
+L["InstallLayoutHealerDesc"] = "較大的團隊框架（含治療預測）、置中位置"
+L["InstallActionBarTitle"] = "動作條選項\n\n設定動作條在非戰鬥狀態下的行為。\n"
+L["InstallActionBarFade"] = "非戰鬥時動作條淡出"
+L["InstallActionBarFadeDesc"] = "|cff888888非戰鬥時動作條透明度降至 30%，進入戰鬥或滑鼠移到上方時立即顯示。|r"
+L["InstallSummaryTitle"] = "|cff8882ff設定完成！|r"
+L["InstallSummary"] = "你的設定摘要："
+L["InstallSummaryScale"] = "|cff8882ffUI 縮放:|r %s"
+L["InstallSummaryLayout"] = "|cff8882ff佈局:|r %s"
+L["InstallSummaryFade"] = "|cff8882ff動作條淡出:|r %s"
+L["InstallSummaryHint"] = "|cff888888點擊「完成」套用設定並重新載入 UI。\n你可以隨時透過 |cff8882ff/lunar config|r 重新設定。|r"
+L["InstallBtnSkip"] = "跳過"
+L["InstallBtnBack"] = "上一步"
+L["InstallBtnNext"] = "下一步"
+L["InstallBtnFinish"] = "完成"
+
+-- 自動化
+L["AutoRepair"] = "自動修裝"
+L["AutoRepairDesc"] = "在商人處自動修理裝備"
+L["AutoRepairGuild"] = "使用公會資金"
+L["AutoRepairGuildDesc"] = "優先使用公會銀行支付修理費用"
+L["AutoRelease"] = "自動釋放靈魂"
+L["AutoReleaseDesc"] = "在戰場中自動釋放靈魂"
+L["AutoScreenshot"] = "成就截圖"
+L["AutoScreenshotDesc"] = "獲得成就時自動截圖"
+L["RepairCost"] = "修理費用 %s"
+L["RepairCostGuild"] = "修理費用 %s（公會銀行）"
+L["RepairNoFunds"] = "金幣不足，無法修理"
+
+-- 拾取
+L["LootTitle"] = "拾取"
+L["LootAll"] = "全部拾取"
+L["LootFrame"] = "自訂拾取視窗"
+L["LootFrameDesc"] = "使用 LunarUI 風格的拾取視窗取代預設拾取框（需重載）"
+
+-- 視覺風格
+L["style"] = "視覺風格"
+L["styleDesc"] = "自訂 LunarUI 的整體外觀"
+L["theme"] = "主題"
+L["font"] = "字型"
+L["fontDesc"] = "所有 LunarUI 元素使用的字型（需重載）"
+L["fontSize"] = "字型大小"
+L["fontSizeDesc"] = "LunarUI 元素的基礎字型大小（需重載）"
+L["statusBarTexture"] = "狀態條材質"
+L["statusBarTextureDesc"] = "血量、能量及其他狀態條使用的材質（需重載）"
+L["borderStyle"] = "邊框風格"
+L["borderStyleDesc"] = "LunarUI 框架的邊框風格"
 
 -- 錯誤
 L["ErrorOUFNotFound"] = "錯誤：找不到 oUF 框架"

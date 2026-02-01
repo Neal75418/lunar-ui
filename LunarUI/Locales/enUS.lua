@@ -15,13 +15,6 @@ L["No"] = "No"
 L["On"] = "ON"
 L["Off"] = "OFF"
 
--- Phases
-L["Phase"] = "Phase"
-L["NEW"] = "New Moon"
-L["WAXING"] = "Waxing"
-L["FULL"] = "Full Moon"
-L["WANING"] = "Waning"
-
 -- Commands
 L["Commands"] = "Commands"
 L["Help"] = "Help"
@@ -63,9 +56,7 @@ L["CmdDebug"] = "Toggle debug mode"
 L["CmdReset"] = "Reset to defaults"
 L["CmdTest"] = "Run combat simulation"
 
--- Phase Messages
-L["PhaseChanged"] = "Phase: %s → %s"
-L["CurrentPhase"] = "Current phase: %s"
+-- Combat Messages
 L["CombatEnter"] = "Entering combat"
 L["CombatLeave"] = "Leaving combat"
 
@@ -197,6 +188,71 @@ L["SkinsDesc"] = "Restyle Blizzard UI frames to match LunarUI theme (requires re
 
 -- Profile
 L["ProfileChanged"] = "Profile changed, UI refreshed"
+
+-- Install Wizard
+L["InstallWelcome"] = "Welcome to |cff8882ffLunar|r|cffffffffUI|r!"
+L["InstallSkipped"] = "Setup skipped. Use |cff8882ff/lunar config|r to configure later."
+L["InstallComplete"] = "Setup complete! Reloading UI..."
+L["InstallReloadText"] = "LunarUI setup complete. Reload UI to apply changes?"
+L["InstallReloadBtn"] = "Reload"
+L["InstallReloadLater"] = "Later"
+L["InstallTitle"] = "|cff8882ffLunar|r|cffffffffUI|r Setup"
+L["InstallStep"] = "Step %d / %d"
+L["InstallWelcomeBody"] = "Welcome to |cff8882ffLunar|r|cffffffffUI|r!\n\nThis wizard will help you configure the essential settings. You can always change these later via |cff8882ff/lunar config|r.\n"
+L["InstallUIScale"] = "UI Scale"
+L["InstallUIScaleTip"] = "|cff888888Tip: Higher values = bigger UI elements. The recommended value is 0.75 for 1920x1080.|r"
+L["InstallLayoutTitle"] = "Choose your primary role. This adjusts the size and layout of raid/party frames to match your playstyle.\n"
+L["InstallLayoutDPS"] = "DPS"
+L["InstallLayoutDPSDesc"] = "Compact raid frames, large player/target, debuff-focused"
+L["InstallLayoutTank"] = "Tank"
+L["InstallLayoutTankDesc"] = "Wider raid frames with threat, large nameplates"
+L["InstallLayoutHealer"] = "Healer"
+L["InstallLayoutHealerDesc"] = "Large raid frames with heal prediction, centered position"
+L["InstallActionBarTitle"] = "Action Bar Options\n\nConfigure how your action bars behave outside of combat.\n"
+L["InstallActionBarFade"] = "Fade action bars when out of combat"
+L["InstallActionBarFadeDesc"] = "|cff888888Action bars will fade to 30% opacity when you are not in combat, and instantly appear when entering combat or hovering over them.|r"
+L["InstallSummaryTitle"] = "|cff8882ffSetup Complete!|r"
+L["InstallSummary"] = "Your settings summary:"
+L["InstallSummaryScale"] = "|cff8882ffUI Scale:|r %s"
+L["InstallSummaryLayout"] = "|cff8882ffLayout:|r %s"
+L["InstallSummaryFade"] = "|cff8882ffAction Bar Fade:|r %s"
+L["InstallSummaryHint"] = "|cff888888Click \"Finish\" to apply settings and reload the UI.\nYou can always reconfigure via |cff8882ff/lunar config|r.|r"
+L["InstallBtnSkip"] = "Skip"
+L["InstallBtnBack"] = "Back"
+L["InstallBtnNext"] = "Next"
+L["InstallBtnFinish"] = "Finish"
+
+-- Automation
+L["AutoRepair"] = "Auto Repair"
+L["AutoRepairDesc"] = "Automatically repair equipment when visiting a vendor"
+L["AutoRepairGuild"] = "Use Guild Funds"
+L["AutoRepairGuildDesc"] = "Prefer guild bank for repair costs when available"
+L["AutoRelease"] = "Auto Release Spirit"
+L["AutoReleaseDesc"] = "Automatically release spirit in battlegrounds"
+L["AutoScreenshot"] = "Achievement Screenshot"
+L["AutoScreenshotDesc"] = "Automatically take a screenshot when earning an achievement"
+L["RepairCost"] = "Repaired for %s"
+L["RepairCostGuild"] = "Repaired for %s (Guild Bank)"
+L["RepairNoFunds"] = "Not enough gold to repair"
+
+-- Loot
+L["LootTitle"] = "Loot"
+L["LootAll"] = "Loot All"
+L["LootFrame"] = "Custom Loot Frame"
+L["LootFrameDesc"] = "Replace the default loot window with a LunarUI-styled frame (requires reload)"
+
+-- Visual Style
+L["style"] = "Visual Style"
+L["styleDesc"] = "Customize the overall appearance of LunarUI"
+L["theme"] = "Theme"
+L["font"] = "Font"
+L["fontDesc"] = "Font used across all LunarUI elements (requires reload)"
+L["fontSize"] = "Font Size"
+L["fontSizeDesc"] = "Base font size for LunarUI elements (requires reload)"
+L["statusBarTexture"] = "Status Bar Texture"
+L["statusBarTextureDesc"] = "Texture used for health, power, and other status bars (requires reload)"
+L["borderStyle"] = "Border Style"
+L["borderStyleDesc"] = "Border style for LunarUI frames"
 
 -- Errors
 L["ErrorOUFNotFound"] = "Error: oUF framework not found"

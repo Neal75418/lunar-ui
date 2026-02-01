@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 效能監控
     顯示 FPS 與延遲資訊
@@ -6,7 +6,6 @@
     功能：
     - FPS 即時顯示
     - 本地/世界延遲顯示
-    - 月相感知（NEW 隱藏，FULL 顯示）
     - 可拖曳位置
 ]]
 
@@ -30,14 +29,6 @@ local LATENCY_THRESHOLDS = {
     good = 100,    -- 綠色
     medium = 200,  -- 黃色
     bad = 400,     -- 紅色
-}
-
--- 效能監控專用透明度（停用月相：全部顯示）
-local PERF_PHASE_ALPHA = {
-    NEW = 1.0,
-    WAXING = 1.0,
-    FULL = 1.0,
-    WANING = 1.0,
 }
 
 --------------------------------------------------------------------------------
@@ -88,7 +79,7 @@ local function CreatePerfFrame()
         perfFrame = CreateFrame("Frame", "LunarUI_PerformanceMonitor", UIParent, "BackdropTemplate")
     end
 
-    perfFrame:SetSize(100, 36)
+    perfFrame:SetSize(120, 40)
     perfFrame:ClearAllPoints()
     perfFrame:SetPoint("TOPRIGHT", Minimap or UIParent, "BOTTOMRIGHT", 0, -24)
     perfFrame:SetFrameStrata("HIGH")
@@ -109,22 +100,36 @@ local function CreatePerfFrame()
 
     -- 背景樣式
     perfFrame:SetBackdrop(LunarUI.iconBackdropTemplate)
-    perfFrame:SetBackdropColor(0, 0, 0, 0.6)
-    perfFrame:SetBackdropBorderColor(0.15, 0.12, 0.08, 0.8)
+    perfFrame:SetBackdropColor(0.05, 0.05, 0.08, 0.75)
+    perfFrame:SetBackdropBorderColor(0.20, 0.18, 0.30, 0.9)
 
-    -- FPS 文字
+    -- FPS 文字（左側）
     local fpsText = perfFrame:CreateFontString(nil, "OVERLAY")
-    fpsText:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
-    fpsText:SetPoint("TOPLEFT", 6, -6)
+    fpsText:SetFont(STANDARD_TEXT_FONT, 13, "OUTLINE")
+    fpsText:SetPoint("LEFT", 8, 5)
     fpsText:SetJustifyH("LEFT")
     perfFrame.fpsText = fpsText
 
-    -- 延遲文字
+    -- FPS 標籤
+    local fpsLabel = perfFrame:CreateFontString(nil, "OVERLAY")
+    fpsLabel:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+    fpsLabel:SetPoint("TOPLEFT", fpsText, "BOTTOMLEFT", 0, -1)
+    fpsLabel:SetText("|cff666688FPS|r")
+    perfFrame.fpsLabel = fpsLabel
+
+    -- 延遲文字（右側）
     local latencyText = perfFrame:CreateFontString(nil, "OVERLAY")
-    latencyText:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
-    latencyText:SetPoint("TOPLEFT", 6, -20)
-    latencyText:SetJustifyH("LEFT")
+    latencyText:SetFont(STANDARD_TEXT_FONT, 13, "OUTLINE")
+    latencyText:SetPoint("RIGHT", -8, 5)
+    latencyText:SetJustifyH("RIGHT")
     perfFrame.latencyText = latencyText
+
+    -- 延遲標籤
+    local latencyLabel = perfFrame:CreateFontString(nil, "OVERLAY")
+    latencyLabel:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+    latencyLabel:SetPoint("TOPRIGHT", latencyText, "BOTTOMRIGHT", 0, -1)
+    latencyLabel:SetText("|cff666688MS|r")
+    perfFrame.latencyLabel = latencyLabel
 
     -- 提示
     perfFrame:SetScript("OnEnter", function(self)
@@ -162,15 +167,15 @@ local function UpdatePerformance()
     local fps = GetFramerate()
     local _, _, homeMs, worldMs = GetNetStats()
 
-    -- 更新 FPS
+    -- 更新 FPS（僅顯示數字，標籤獨立）
     local r, g, b = GetFPSColor(fps)
-    perfFrame.fpsText:SetFormattedText("|cff888888FPS:|r %.0f", fps)
+    perfFrame.fpsText:SetFormattedText("%.0f", fps)
     perfFrame.fpsText:SetTextColor(r, g, b)
 
     -- 更新延遲（顯示較高的那個）
     local latency = math.max(homeMs, worldMs)
     r, g, b = GetLatencyColor(latency)
-    perfFrame.latencyText:SetFormattedText("|cff888888MS:|r %d", latency)
+    perfFrame.latencyText:SetFormattedText("%d", latency)
     perfFrame.latencyText:SetTextColor(r, g, b)
 end
 
@@ -196,28 +201,6 @@ local function StopUpdating()
 end
 
 --------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
-local function UpdateForPhase()
-    if not perfFrame then return end
-
-    -- 使用共用函數，但用自訂透明度表
-    local alpha = LunarUI:ApplyPhaseAlpha(perfFrame, "performanceMonitor", PERF_PHASE_ALPHA)
-
-    -- 根據可見性控制更新
-    if alpha > 0 then
-        StartUpdating()
-    else
-        StopUpdating()
-    end
-end
-
-local function OnPhaseChanged(_oldPhase, _newPhase)
-    UpdateForPhase()
-end
-
---------------------------------------------------------------------------------
 -- 初始化
 --------------------------------------------------------------------------------
 
@@ -227,11 +210,8 @@ local function Initialize()
     -- 註冊至框架移動器
     LunarUI:RegisterMovableFrame("PerformanceMonitor", perfFrame, "效能監控")
 
-    -- 註冊月相變化回呼
-    LunarUI:RegisterPhaseCallback(OnPhaseChanged)
-
-    -- 初始狀態
-    UpdateForPhase()
+    -- 啟動更新
+    StartUpdating()
 end
 
 -- 匯出函數
@@ -266,7 +246,8 @@ function LunarUI.CleanupPerformanceMonitor()
     end
 end
 
--- 掛鉤至插件啟用
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(0.5, Initialize)
-end)
+LunarUI:RegisterModule("PerformanceMonitor", {
+    onEnable = Initialize,
+    onDisable = LunarUI.CleanupPerformanceMonitor,
+    delay = 0.5,
+})

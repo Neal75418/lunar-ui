@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - DataTexts 模組
     可配置的文字資訊面板（FPS、延遲、金幣、耐久度、背包空位等）
@@ -13,6 +13,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local C = LunarUI.Colors
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
@@ -32,10 +33,9 @@ local providers = {}          -- Registered data text providers
 local onUpdateProviders = {}  -- Only providers with onUpdate=true (Fix 1)
 local panels = {}             -- Created panel frames
 local slotsByProvider = {}    -- Reverse lookup: providerName → { slot1, slot2, ... } (Fix 5)
-local updateTimers = {}       -- OnUpdate throttle timers
+local _updateTimers = {}       -- OnUpdate throttle timers
 local eventFrame              -- Shared event handler frame
 local eventToProviders = {}   -- event → { providerName1, providerName2, ... } (Fix 2)
-local phaseRegistered = false
 
 --------------------------------------------------------------------------------
 -- Provider Registration
@@ -245,7 +245,7 @@ RegisterProvider("friends", {
     update = function()
         local _, onlineFriends = C_FriendList.GetNumFriends()
         local bnOnline = 0
-        local numBN = BNGetNumFriends and BNGetNumFriends() or 0
+        local numBN = BNGetNumFriends() or 0
         for i = 1, numBN do
             local accountInfo = C_BattleNet.GetFriendAccountInfo(i)
             if accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.isOnline then
@@ -260,7 +260,7 @@ RegisterProvider("friends", {
     end,
     tooltip = function(slot)
         local _, onlineFriends = C_FriendList.GetNumFriends()
-        local numBN = BNGetNumFriends and BNGetNumFriends() or 0
+        local numBN = BNGetNumFriends() or 0
         local bnOnline = 0
         for i = 1, numBN do
             local accountInfo = C_BattleNet.GetFriendAccountInfo(i)
@@ -285,7 +285,7 @@ RegisterProvider("guild", {
         if not IsInGuild() then
             return format("%s: |cff999999-|r", L["Guild"] or "Guild")
         end
-        if C_GuildInfo and C_GuildInfo.GuildRoster then
+        if C_GuildInfo.GuildRoster then
             C_GuildInfo.GuildRoster()
         end
         local _, numOnline = GetNumGuildMembers()
@@ -313,24 +313,18 @@ RegisterProvider("spec", {
     label = L["Spec"] or "Spec",
     events = { "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_TALENT_UPDATE", "PLAYER_ENTERING_WORLD" },
     update = function()
-        if not GetSpecialization then return L["Spec"] or "Spec" end
         local specIndex = GetSpecialization()
         if not specIndex then return L["Spec"] or "Spec" end
         local _, specName = GetSpecializationInfo(specIndex)
         return specName or (L["Spec"] or "Spec")
     end,
     click = function()
-        if ToggleTalentFrame then
-            ToggleTalentFrame()
-        elseif PlayerSpellsFrame then
-            TogglePlayerSpellsFrame()
-        end
+        ToggleTalentFrame()
     end,
     tooltip = function(slot)
-        if not GetSpecialization then return end
         local specIndex = GetSpecialization()
         if not specIndex then return end
-        local _, specName, _, icon = GetSpecializationInfo(specIndex)
+        local _, specName, _, _icon = GetSpecializationInfo(specIndex)
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
         GameTooltip:AddLine(L["Spec"] or "Specialization", 1, 1, 1)
@@ -406,13 +400,13 @@ local function CreateDataPanel(name, db)
     -- Backdrop
     if backdropTemplate then
         panel:SetBackdrop(backdropTemplate)
-        panel:SetBackdropColor(0.05, 0.05, 0.05, 0.85)
-        panel:SetBackdropBorderColor(0.15, 0.12, 0.08, 1)
+        panel:SetBackdropColor(C.bgLight[1], C.bgLight[2], C.bgLight[3], C.bgLight[4])
+        panel:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
     else
         -- Fallback: simple background
         panel.bg = panel:CreateTexture(nil, "BACKGROUND")
         panel.bg:SetAllPoints()
-        panel.bg:SetColorTexture(0.05, 0.05, 0.05, 0.85)
+        panel.bg:SetColorTexture(C.bgLight[1], C.bgLight[2], C.bgLight[3], C.bgLight[4])
     end
 
     -- Create slots
@@ -477,7 +471,7 @@ local function BindSlotToProvider(slot, providerName)
     slotsByProvider[providerName][#slotsByProvider[providerName] + 1] = slot
 
     -- Click handler
-    slot:SetScript("OnClick", function(self, button)
+    slot:SetScript("OnClick", function(_self, button)
         if provider.click then
             provider.click(button)
         end
@@ -485,9 +479,9 @@ local function BindSlotToProvider(slot, providerName)
     slot:RegisterForClicks("AnyUp")
 
     -- Tooltip
-    slot:SetScript("OnEnter", function(self)
+    slot:SetScript("OnEnter", function(btn)
         if provider.tooltip then
-            provider.tooltip(self)
+            provider.tooltip(btn)
         end
     end)
     slot:SetScript("OnLeave", function()
@@ -578,40 +572,13 @@ local function SetupEvents()
 end
 
 --------------------------------------------------------------------------------
--- Phase Awareness
---------------------------------------------------------------------------------
-
-local function UpdateDataTextsPhase()
-    local tokens = LunarUI:GetTokens()
-    if not tokens then return end
-
-    local minAlpha = 0.6
-    local alpha = math.max(tokens.alpha or 1, minAlpha)
-
-    for _, panel in pairs(panels) do
-        if panel and panel:IsShown() then
-            panel:SetAlpha(alpha)
-        end
-    end
-end
-
-local function RegisterPhaseCallbackOnce()
-    if phaseRegistered then return end
-    phaseRegistered = true
-
-    LunarUI:RegisterPhaseCallback(function(_oldPhase, _newPhase)
-        UpdateDataTextsPhase()
-    end)
-end
-
---------------------------------------------------------------------------------
 -- Initialize
 --------------------------------------------------------------------------------
 
 local function InitializeDataTexts()
     -- Clean up existing panels first (prevents duplicates on profile change)
     if next(panels) then
-        LunarUI:CleanupDataTexts()
+        LunarUI.CleanupDataTexts()
     end
 
     local db = LunarUI.db and LunarUI.db.profile.datatexts
@@ -644,16 +611,13 @@ local function InitializeDataTexts()
     -- Initial full update
     UpdateAllProviders()
 
-    -- Phase awareness
-    RegisterPhaseCallbackOnce()
-    UpdateDataTextsPhase()
 end
 
 --------------------------------------------------------------------------------
 -- Cleanup
 --------------------------------------------------------------------------------
 
-function LunarUI:CleanupDataTexts()
+function LunarUI.CleanupDataTexts()
     -- Stop OnUpdate
     if onUpdateFrame then
         onUpdateFrame:SetScript("OnUpdate", nil)
@@ -681,13 +645,13 @@ function LunarUI:CleanupDataTexts()
     end
 
     wipe(onUpdateElapsed)
-    phaseRegistered = false
 end
 
 -- Export
 LunarUI.InitializeDataTexts = InitializeDataTexts
 
--- Hook into addon enable
-hooksecurefunc(LunarUI, "OnEnable", function()
-    C_Timer.After(0.4, InitializeDataTexts)
-end)
+LunarUI:RegisterModule("DataTexts", {
+    onEnable = InitializeDataTexts,
+    onDisable = function() LunarUI.CleanupDataTexts() end,
+    delay = 0.4,
+})

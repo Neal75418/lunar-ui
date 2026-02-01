@@ -1,7 +1,7 @@
 ## Interface: 120000
 ## Title: |cff8882ffLunar|r|cffffffffUI|r
-## Notes: Phase-driven combat UI system inspired by lunar cycles
-## Notes-zhTW: 月相驅動的戰鬥 UI 系統
+## Notes: Modern combat UI replacement with Lunar theme
+## Notes-zhTW: 現代化戰鬥 UI 替換，月光主題
 ## Author: NealChen
 ## Version: 0.7.0
 ## SavedVariables: LunarUIDB
@@ -32,15 +32,16 @@ Locales\zhTW.lua
 # Core
 Core\Init.lua
 Core\Tokens.lua
-Core\PhaseManager.lua
+Core\Defaults.lua
 Core\Config.lua
+Core\Options.lua
+Core\InstallWizard.lua
 Core\Commands.lua
 Core\Debug.lua
 
 # Media & Visual Theme
 Core\Media.lua
 Media\Media.lua
-Effects\PhaseGlow.lua
 
 # UnitFrames
 UnitFrames\Layout.lua
@@ -52,14 +53,13 @@ Nameplates\Nameplates.lua
 ActionBars\ActionBars.lua
 
 # HUD
-HUD\PhaseIndicator.lua
 HUD\PerformanceMonitor.lua
 HUD\ClassResources.lua
 HUD\CooldownTracker.lua
-HUD\FloatingCombatText.lua
 HUD\AuraFrames.lua
 
 # Modules (Non-combat UI)
+Modules\Automation.lua
 Modules\FrameMover.lua
 Modules\Minimap.lua
 Modules\Tooltip.lua
@@ -67,6 +67,7 @@ Modules\Chat.lua
 Modules\Bags.lua
 Modules\DataBars.lua
 Modules\DataTexts.lua
+Modules\Loot.lua
 Modules\Skins.lua
 Modules\Skins\Character.lua
 Modules\Skins\Spellbook.lua
@@ -80,3 +81,5 @@ Modules\Skins\Mail.lua
 Modules\Skins\Collections.lua
 Modules\Skins\LFG.lua
 Modules\Skins\EncounterJournal.lua
+Modules\Skins\AuctionHouse.lua
+Modules\Skins\Communities.lua
