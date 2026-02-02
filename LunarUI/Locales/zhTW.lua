@@ -177,13 +177,32 @@ L["ServerTime"] = "伺服器時間"
 L["Backpack"] = "背包"
 L["Zone"] = "區域"
 
+-- 提示框額外資訊
+L["TooltipSpec"] = "專精:"
+L["TooltipILvl"] = "裝等:"
+L["TooltipTarget"] = "目標:"
+L["TooltipRole"] = "角色:"
+L["TooltipItemLevel"] = "物品等級:"
+L["RoleTank"] = "坦克"
+L["RoleHealer"] = "治療"
+L["RoleDPS"] = "傷害"
+
+-- 框架移動器
+L["MoverResetToDefault"] = "%s 已重設到預設位置"
+L["MoverDragToMove"] = "左鍵拖曳移動"
+L["MoverCtrlSnap"] = "Ctrl+拖曳 網格對齊"
+L["MoverRightReset"] = "右鍵 重設位置"
+L["MoverCombatLocked"] = "戰鬥中無法進入移動模式"
+L["MoverEnterMode"] = "進入移動模式 — 拖曳藍色框架移動 UI | Ctrl+拖曳對齊網格 | 右鍵重設 | ESC 退出"
+L["MoverExitMode"] = "已退出移動模式"
+L["MoverAllReset"] = "所有框架位置已重設"
+
 -- 聊天與提示框增強
 L["Timestamps"] = "時間戳記"
 L["TimestampsDesc"] = "在聊天訊息前顯示時間戳記（需重載）"
 L["TimestampFormat"] = "時間戳記格式"
 L["ItemCount"] = "物品數量"
 L["ItemCountDesc"] = "在滑鼠提示框中顯示物品持有數量（背包/銀行）"
-L["BankTitle"] = "銀行"
 
 -- 單位框架增強
 L["ClassPower"] = "職業資源"

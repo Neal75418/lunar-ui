@@ -14,6 +14,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
 -- 常數
@@ -225,7 +226,7 @@ local function CreateMover(name, targetFrame, label)
             -- 同步 mover 位置
             self:ClearAllPoints()
             self:SetPoint("CENTER", targetFrame, "CENTER", 0, 0)
-            LunarUI:Print(name .. " 已重設到預設位置")
+            LunarUI:Print(string.format(L["MoverResetToDefault"] or "%s reset to default position", name))
         end
     end)
 
@@ -233,9 +234,9 @@ local function CreateMover(name, targetFrame, label)
     mover:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText("|cff8882ffLunarUI|r " .. (label or name))
-        GameTooltip:AddLine("左鍵拖曳移動", 0.7, 0.7, 0.7)
-        GameTooltip:AddLine("Ctrl+拖曳 網格對齊", 0.7, 0.7, 0.7)
-        GameTooltip:AddLine("右鍵 重設位置", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["MoverDragToMove"] or "Left-click drag to move", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["MoverCtrlSnap"] or "Ctrl+drag to snap to grid", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["MoverRightReset"] or "Right-click to reset", 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
 
@@ -280,7 +281,7 @@ end
 
 local function EnterMoveMode()
     if InCombatLockdown() then
-        LunarUI:Print("戰鬥中無法進入移動模式")
+        LunarUI:Print(L["MoverCombatLocked"] or "Cannot enter move mode during combat")
         return
     end
 
@@ -306,7 +307,7 @@ local function EnterMoveMode()
         end
     end
 
-    LunarUI:Print("進入移動模式 — 拖曳藍色框架移動 UI | Ctrl+拖曳對齊網格 | 右鍵重設 | ESC 退出")
+    LunarUI:Print(L["MoverEnterMode"] or "Move mode — drag blue frames | Ctrl+drag snap | Right-click reset | ESC exit")
 end
 
 local function ExitMoveMode()
@@ -320,7 +321,7 @@ local function ExitMoveMode()
         data.mover:Hide()
     end
 
-    LunarUI:Print("已退出移動模式")
+    LunarUI:Print(L["MoverExitMode"] or "Exited move mode")
 end
 
 local function ToggleMoveMode()
@@ -418,7 +419,7 @@ function LunarUI.ResetAllPositions()
         end
     end
 
-    LunarUI:Print("所有框架位置已重設")
+    LunarUI:Print(L["MoverAllReset"] or "All frame positions reset")
 end
 
 -- 清理函數

@@ -47,7 +47,7 @@ local function SkinMerchant()
                 local btn = _G["MerchantItem" .. i]
                 if LunarUI:MarkSkinned(btn) then
                     LunarUI.StripTextures(btn)
-                    -- TODO: 物品按鈕圖示邊框 — 保留品質著色但縮小邊框
+                    -- TODO(#28): 物品按鈕圖示邊框 — 保留品質著色但縮小邊框
                 end
             end
         end)

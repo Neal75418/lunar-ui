@@ -35,37 +35,16 @@ local BUTTON_WIDTH = 120
 local BUTTON_HEIGHT = 28
 local TOTAL_STEPS = 4
 
--- 佈局預設值（label/desc 使用函數以支援延遲載入的 L）
+-- 佈局預設值（從 Engine.GetLayoutPresets 取得共用資料，加上 label/desc）
 local function GetLayoutPresets()
-    return {
-        dps = {
-            label = L["InstallLayoutDPS"] or "DPS",
-            desc = L["InstallLayoutDPSDesc"] or "Compact raid frames, large player/target, debuff-focused",
-            unitframes = {
-                raid = { width = 72, height = 28, spacing = 3 },
-                party = { width = 140, height = 32, spacing = 5 },
-            },
-        },
-        tank = {
-            label = L["InstallLayoutTank"] or "Tank",
-            desc = L["InstallLayoutTankDesc"] or "Wider raid frames with threat, large nameplates",
-            unitframes = {
-                raid = { width = 85, height = 32, spacing = 3 },
-                party = { width = 155, height = 38, spacing = 5 },
-            },
-            nameplates = {
-                height = 10,
-            },
-        },
-        healer = {
-            label = L["InstallLayoutHealer"] or "Healer",
-            desc = L["InstallLayoutHealerDesc"] or "Large raid frames with heal prediction, centered position",
-            unitframes = {
-                raid = { width = 90, height = 38, spacing = 2 },
-                party = { width = 165, height = 42, spacing = 4 },
-            },
-        },
-    }
+    local presets = Engine.GetLayoutPresets()
+    presets.dps.label = L["InstallLayoutDPS"] or "DPS"
+    presets.dps.desc = L["InstallLayoutDPSDesc"] or "Compact raid frames, large player/target, debuff-focused"
+    presets.tank.label = L["InstallLayoutTank"] or "Tank"
+    presets.tank.desc = L["InstallLayoutTankDesc"] or "Wider raid frames with threat, large nameplates"
+    presets.healer.label = L["InstallLayoutHealer"] or "Healer"
+    presets.healer.desc = L["InstallLayoutHealerDesc"] or "Large raid frames with heal prediction, centered position"
+    return presets
 end
 
 --------------------------------------------------------------------------------

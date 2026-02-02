@@ -20,44 +20,43 @@ if not LSM then return end
 --------------------------------------------------------------------------------
 
 local MEDIA_PATH = "Interface\\AddOns\\LunarUI\\Media\\"
-local TEXTURE_PATH = MEDIA_PATH .. "Textures\\"
 local FONT_PATH = MEDIA_PATH .. "Fonts\\"
-local _SOUND_PATH = MEDIA_PATH .. "Sounds\\"  -- Reserved for future use
 
 --------------------------------------------------------------------------------
 -- Texture Definitions
 --------------------------------------------------------------------------------
 
--- Core textures (using built-in WoW textures as fallbacks until custom ones are made)
+-- Core textures — custom LunarUI paths stored for future asset creation,
+-- effective paths use WoW built-in fallbacks until custom assets are ready.
+local _TEXTURE_CUSTOM = {
+    gradient   = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarGradient",
+    smooth     = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarSmooth",
+    borderInk  = "Interface\\AddOns\\LunarUI\\Media\\Textures\\InkBorder",
+    borderGlow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\GlowBorder",
+    parchment  = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Parchment",
+    glow       = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Glow",
+    spark      = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Spark",
+}
+
+-- Effective textures: built-in paths used at runtime
 local TEXTURES = {
     -- Status bars
-    flat = "Interface\\Buttons\\WHITE8x8",
-    gradient = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarGradient",
-    smooth = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarSmooth",
+    flat       = "Interface\\Buttons\\WHITE8x8",
+    gradient   = "Interface\\TARGETINGFRAME\\UI-StatusBar",
+    smooth     = "Interface\\TARGETINGFRAME\\UI-StatusBar",
 
     -- Borders
     borderThin = "Interface\\Buttons\\WHITE8x8",
-    borderInk = "Interface\\AddOns\\LunarUI\\Media\\Textures\\InkBorder",
-    borderGlow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\GlowBorder",
+    borderInk  = "Interface\\Buttons\\WHITE8x8",
+    borderGlow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
 
     -- Backgrounds
-    parchment = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Parchment",
-    dark = "Interface\\Buttons\\WHITE8x8",
+    parchment  = "Interface\\ACHIEVEMENTFRAME\\UI-Achievement-Parchment-Horizontal",
+    dark       = "Interface\\Buttons\\WHITE8x8",
 
     -- Effects
-    glow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Glow",
-    spark = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Spark",
-}
-
--- Fallback textures (use WoW built-in until custom assets are ready)
-local TEXTURE_FALLBACKS = {
-    gradient = "Interface\\TARGETINGFRAME\\UI-StatusBar",
-    smooth = "Interface\\TARGETINGFRAME\\UI-StatusBar",
-    borderInk = "Interface\\Buttons\\WHITE8x8",
-    borderGlow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
-    parchment = "Interface\\ACHIEVEMENTFRAME\\UI-Achievement-Parchment-Horizontal",
-    glow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
-    spark = "Interface\\Cooldown\\star4",
+    glow       = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
+    spark      = "Interface\\Cooldown\\star4",
 }
 
 --------------------------------------------------------------------------------
@@ -129,17 +128,17 @@ LunarUI.FontSizes = {
 local function RegisterMedia()
     -- Register status bar textures
     LSM:Register("statusbar", "Lunar Flat", TEXTURES.flat)
-    LSM:Register("statusbar", "Lunar Gradient", TEXTURE_FALLBACKS.gradient)
-    LSM:Register("statusbar", "Lunar Smooth", TEXTURE_FALLBACKS.smooth)
+    LSM:Register("statusbar", "Lunar Gradient", TEXTURES.gradient)
+    LSM:Register("statusbar", "Lunar Smooth", TEXTURES.smooth)
 
     -- Register border textures
     LSM:Register("border", "Lunar Thin", TEXTURES.borderThin)
-    LSM:Register("border", "Lunar Ink", TEXTURE_FALLBACKS.borderInk)
-    LSM:Register("border", "Lunar Glow", TEXTURE_FALLBACKS.borderGlow)
+    LSM:Register("border", "Lunar Ink", TEXTURES.borderInk)
+    LSM:Register("border", "Lunar Glow", TEXTURES.borderGlow)
 
     -- Register background textures
     LSM:Register("background", "Lunar Dark", TEXTURES.dark)
-    LSM:Register("background", "Lunar Parchment", TEXTURE_FALLBACKS.parchment)
+    LSM:Register("background", "Lunar Parchment", TEXTURES.parchment)
 
     -- Register fonts
     LSM:Register("font", "Lunar Normal", FONTS.normal)
@@ -157,25 +156,9 @@ end
 -- Texture Getter
 --------------------------------------------------------------------------------
 
--- Fix #7: Improved GetTexture logic with clear fallback behavior
--- Get texture path with fallback support
+-- Get texture path (TEXTURES already contains effective runtime paths)
 function LunarUI.GetTexture(name)
-    local path = TEXTURES[name]
-    if not path then
-        return TEXTURES.flat
-    end
-
-    -- Check if this is a custom LunarUI texture path (contains "LunarUI")
-    -- Custom textures are not yet created, so use fallbacks
-    if path:find("LunarUI") then
-        -- Use fallback for custom textures until assets are made
-        if TEXTURE_FALLBACKS[name] then
-            return TEXTURE_FALLBACKS[name]
-        end
-    end
-
-    -- Return the texture path (built-in textures like WHITE8x8)
-    return path
+    return TEXTURES[name] or TEXTURES.flat
 end
 
 -- Get font path
@@ -252,7 +235,7 @@ LunarUI.Backdrops = {
 
     glow = {
         bgFile = nil,
-        edgeFile = TEXTURE_FALLBACKS.glow,
+        edgeFile = TEXTURES.glow,
         edgeSize = 8,
         insets = { left = 4, right = 4, top = 4, bottom = 4 },
     },
@@ -274,5 +257,5 @@ end)
 
 -- Export paths for direct access
 LunarUI.MediaPath = MEDIA_PATH
-LunarUI.TexturePath = TEXTURE_PATH
+LunarUI.TexturePath = MEDIA_PATH .. "Textures\\"
 LunarUI.FontPath = FONT_PATH

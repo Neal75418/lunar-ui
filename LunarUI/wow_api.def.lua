@@ -233,7 +233,7 @@ C_Container = {}
 ---@field GetCurrentItemLevel fun(itemLocation: table): number?
 C_Item = {}
 
----@class C_MountJournal
+---@class C_MountJournal -- Stub: add methods as needed
 C_MountJournal = {}
 
 ---@class C_TooltipInfo
@@ -262,10 +262,10 @@ C_CVar = {}
 ---@field IsInBattle fun(): boolean
 C_PetBattles = {}
 
----@class C_QuestLog
+---@class C_QuestLog -- Stub: add methods as needed
 C_QuestLog = {}
 
----@class C_NamePlate
+---@class C_NamePlate -- Stub: add methods as needed
 C_NamePlate = {}
 
 ---@class C_NewItems
@@ -273,19 +273,19 @@ C_NamePlate = {}
 ---@field RemoveNewItem fun(bagID: number, slotID: number)
 C_NewItems = {}
 
----@class C_FriendList
+---@class C_FriendList -- Stub: add methods as needed
 C_FriendList = {}
 
----@class C_BattleNet
+---@class C_BattleNet -- Stub: add methods as needed
 C_BattleNet = {}
 
----@class C_GuildInfo
+---@class C_GuildInfo -- Stub: add methods as needed
 C_GuildInfo = {}
 
----@class C_DateAndTime
+---@class C_DateAndTime -- Stub: add methods as needed
 C_DateAndTime = {}
 
----@class C_SpecializationInfo
+---@class C_SpecializationInfo -- Stub: add methods as needed
 C_SpecializationInfo = {}
 
 ---@class C_SpellBook

@@ -229,8 +229,9 @@ local function UpdateReputation()
     -- GetWatchedFactionInfo is available in all WoW versions
     local name, standing, barMin, barMax, barValue, factionID
     if _G.C_Reputation and _G.C_Reputation.GetWatchedFactionData then
-        local data = _G.C_Reputation.GetWatchedFactionData()
-        if data then
+        -- pcall protection: WoW 12.0 may protect some reputation fields as secret values
+        local ok, data = pcall(_G.C_Reputation.GetWatchedFactionData)
+        if ok and data then
             name = data.name
             standing = data.reaction
             barMin = data.currentReactionThreshold or 0

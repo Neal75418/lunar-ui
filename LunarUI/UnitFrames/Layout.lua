@@ -92,10 +92,12 @@ local function CreateHealthBar(frame, unit)
     -- 頻繁更新以確保動畫流暢
     health.frequentUpdates = true
 
-    -- 更新後鉤子：確保職業顏色正確套用
+    -- 更新後鉤子：確保職業顏色正確套用（含 color cache 避免每幀重設）
     health.PostUpdate = function(self, _unit, _cur, _max)
         local ownerUnit = self.__owner and self.__owner.unit
         if not ownerUnit then return end
+
+        local r, g, b
 
         -- 玩家使用職業顏色
         if UnitIsPlayer(ownerUnit) then
@@ -103,26 +105,32 @@ local function CreateHealthBar(frame, unit)
             if class then
                 local color = RAID_CLASS_COLORS[class]
                 if color then
-                    self:SetStatusBarColor(color.r, color.g, color.b)
-                    self.bg:SetVertexColor(color.r * 0.3, color.g * 0.3, color.b * 0.3, 0.8)
-                    return
+                    r, g, b = color.r, color.g, color.b
                 end
             end
         end
 
         -- NPC 使用聲望顏色
-        local reaction = UnitReaction(ownerUnit, "player")
-        if reaction then
-            local color
-            if reaction >= 5 then
-                color = { r = 0.2, g = 0.9, b = 0.3 }  -- 友善
-            elseif reaction == 4 then
-                color = { r = 0.9, g = 0.9, b = 0.2 }  -- 中立
-            else
-                color = { r = 0.9, g = 0.2, b = 0.2 }  -- 敵對
+        if not r then
+            local reaction = UnitReaction(ownerUnit, "player")
+            if reaction then
+                if reaction >= 5 then
+                    r, g, b = 0.2, 0.9, 0.3  -- 友善
+                elseif reaction == 4 then
+                    r, g, b = 0.9, 0.9, 0.2  -- 中立
+                else
+                    r, g, b = 0.9, 0.2, 0.2  -- 敵對
+                end
             end
-            self:SetStatusBarColor(color.r, color.g, color.b)
-            self.bg:SetVertexColor(color.r * 0.3, color.g * 0.3, color.b * 0.3, 0.8)
+        end
+
+        if not r then return end
+
+        -- 僅在顏色變更時呼叫 SetStatusBarColor
+        if self._lastR ~= r or self._lastG ~= g or self._lastB ~= b then
+            self._lastR, self._lastG, self._lastB = r, g, b
+            self:SetStatusBarColor(r, g, b)
+            self.bg:SetVertexColor(r * 0.3, g * 0.3, b * 0.3, 0.8)
         end
     end
 
@@ -362,78 +370,83 @@ local function PostUpdateDebuffIcon(_self, button, _unit, data, _position)
     end
 end
 
+--[[ 光環框架共用建構 ]]
+local function CreateAuraFrame(frame, unit, isDebuff)
+    local unitKey = unit and unit:gsub("%d+$", "") or (isDebuff and "unknown" or "player")
+    local ufDB = LunarUI.db.profile.unitframes[unitKey]
+
+    -- 檢查是否啟用
+    if isDebuff then
+        if ufDB and not ufDB.showDebuffs then return end
+    else
+        if ufDB and not ufDB.showBuffs then return end
+    end
+
+    local sizeKey = isDebuff and "debuffSize" or "buffSize"
+    local numKey = isDebuff and "maxDebuffs" or "maxBuffs"
+    local defaultSize = isDebuff and 18 or 22
+    local defaultNum = isDebuff and 4 or 16
+
+    local auraSize = ufDB and ufDB[sizeKey] or defaultSize
+    local auraNum = ufDB and ufDB[numKey] or defaultNum
+
+    local auras = CreateFrame("Frame", nil, frame)
+    auras.size = auraSize
+    auras.spacing = isDebuff and 2 or 3
+    auras.num = auraNum
+    auras.FilterAura = AuraFilter
+    auras.PostCreateButton = PostCreateAuraIcon
+
+    if isDebuff then
+        auras:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
+        auras:SetSize(frame:GetWidth(), auraSize)
+        auras.initialAnchor = "BOTTOMLEFT"
+        auras["growth-x"] = "RIGHT"
+        auras["growth-y"] = "UP"
+        auras.PostUpdateButton = PostUpdateDebuffIcon
+    else
+        -- 增益使用預設邊框色
+        auras.PostUpdateButton = function(_self, button, _unit, _data, _position)
+            button:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
+        end
+
+        -- 定位依單位類型
+        if unitKey == "player" then
+            auras:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
+            auras:SetSize(frame:GetWidth() > 0 and frame:GetWidth() or 220, auraSize * 2 + 3)
+            auras.initialAnchor = "BOTTOMLEFT"
+            auras["growth-x"] = "RIGHT"
+            auras["growth-y"] = "UP"
+        elseif unitKey == "target" or unitKey == "focus" then
+            auras:SetPoint("TOPLEFT", frame, "TOPRIGHT", 4, 0)
+            auras:SetSize(180, auraSize * 2 + 3)
+            auras.initialAnchor = "TOPLEFT"
+            auras["growth-x"] = "RIGHT"
+            auras["growth-y"] = "DOWN"
+        else
+            auras:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
+            auras:SetSize(frame:GetWidth() > 0 and frame:GetWidth() or 160, auraSize)
+            auras.initialAnchor = "BOTTOMLEFT"
+            auras["growth-x"] = "RIGHT"
+            auras["growth-y"] = "UP"
+        end
+    end
+
+    return auras
+end
+
 --[[ 增益框架 ]]
 local function CreateBuffs(frame, unit)
-    local unitKey = unit and unit:gsub("%d+$", "") or "player"
-    local ufDB = LunarUI.db.profile.unitframes[unitKey]
-    if ufDB and not ufDB.showBuffs then return end
-
-    local buffSize = ufDB and ufDB.buffSize or 22
-    local maxBuffs = ufDB and ufDB.maxBuffs or 16
-
-    local buffs = CreateFrame("Frame", nil, frame)
-    buffs.size = buffSize
-    buffs.spacing = 3
-    buffs.num = maxBuffs
-    buffs.FilterAura = AuraFilter
-    buffs.PostCreateButton = PostCreateAuraIcon
-
-    -- 增益使用預設邊框色
-    buffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
-        button:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
-    end
-
-    -- 定位依單位類型
-    if unitKey == "player" then
-        buffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
-        buffs:SetSize(frame:GetWidth() > 0 and frame:GetWidth() or 220, buffSize * 2 + 3)
-        buffs.initialAnchor = "BOTTOMLEFT"
-        buffs["growth-x"] = "RIGHT"
-        buffs["growth-y"] = "UP"
-
-    elseif unitKey == "target" or unitKey == "focus" then
-        buffs:SetPoint("TOPLEFT", frame, "TOPRIGHT", 4, 0)
-        buffs:SetSize(180, buffSize * 2 + 3)
-        buffs.initialAnchor = "TOPLEFT"
-        buffs["growth-x"] = "RIGHT"
-        buffs["growth-y"] = "DOWN"
-    else
-        buffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
-        buffs:SetSize(frame:GetWidth() > 0 and frame:GetWidth() or 160, buffSize)
-        buffs.initialAnchor = "BOTTOMLEFT"
-        buffs["growth-x"] = "RIGHT"
-        buffs["growth-y"] = "UP"
-    end
-
+    local buffs = CreateAuraFrame(frame, unit, false)
+    if not buffs then return end
     frame.Buffs = buffs
     return buffs
 end
 
-
 --[[ 僅減益（用於隊伍/團隊/目標/焦點/首領） ]]
 local function CreateDebuffs(frame, unit)
-    local unitKey = unit and unit:gsub("%d+$", "") or "unknown"
-    local ufDB = LunarUI.db.profile.unitframes[unitKey]
-    if ufDB and not ufDB.showDebuffs then return end
-
-    local debuffSize = ufDB and ufDB.debuffSize or 18
-    local maxDebuffs = ufDB and ufDB.maxDebuffs or 4
-
-    local debuffs = CreateFrame("Frame", nil, frame)
-    debuffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
-    debuffs:SetSize(frame:GetWidth(), debuffSize)
-
-    debuffs.size = debuffSize
-    debuffs.spacing = 2
-    debuffs.num = maxDebuffs
-    debuffs.initialAnchor = "BOTTOMLEFT"
-    debuffs["growth-x"] = "RIGHT"
-    debuffs["growth-y"] = "UP"
-
-    debuffs.FilterAura = AuraFilter
-    debuffs.PostCreateButton = PostCreateAuraIcon
-    debuffs.PostUpdateButton = PostUpdateDebuffIcon
-
+    local debuffs = CreateAuraFrame(frame, unit, true)
+    if not debuffs then return end
     frame.Debuffs = debuffs
     return debuffs
 end
@@ -1039,6 +1052,9 @@ oUF:SetActiveStyle("LunarUI")
 -- 生成函數
 --------------------------------------------------------------------------------
 
+local spawnRetries = 0
+local MAX_SPAWN_RETRIES = 15  -- 最多重試 15 次（3 秒）
+
 local function SpawnUnitFrames()
     -- 使用事件驅動重試取代固定計時器（處理戰鬥鎖定）
     if _G.InCombatLockdown() then
@@ -1052,7 +1068,13 @@ local function SpawnUnitFrames()
         return
     end
 
-    if not LunarUI.db then return end
+    if not LunarUI.db or not LunarUI.db.profile then
+        spawnRetries = spawnRetries + 1
+        if spawnRetries < MAX_SPAWN_RETRIES then
+            C_Timer.After(0.2, SpawnUnitFrames)
+        end
+        return
+    end
     local uf = LunarUI.db.profile.unitframes
 
     -- 初始化光環過濾快取

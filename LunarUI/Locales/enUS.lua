@@ -174,13 +174,32 @@ L["ServerTime"] = "Server"
 L["Backpack"] = "Backpack"
 L["Zone"] = "Zone"
 
+-- Tooltip extras
+L["TooltipSpec"] = "Spec:"
+L["TooltipILvl"] = "iLvl:"
+L["TooltipTarget"] = "Target:"
+L["TooltipRole"] = "Role:"
+L["TooltipItemLevel"] = "Item Level:"
+L["RoleTank"] = "Tank"
+L["RoleHealer"] = "Healer"
+L["RoleDPS"] = "DPS"
+
+-- Frame Mover
+L["MoverResetToDefault"] = "%s reset to default position"
+L["MoverDragToMove"] = "Left-click drag to move"
+L["MoverCtrlSnap"] = "Ctrl+drag to snap to grid"
+L["MoverRightReset"] = "Right-click to reset"
+L["MoverCombatLocked"] = "Cannot enter move mode during combat"
+L["MoverEnterMode"] = "Move mode — drag blue frames | Ctrl+drag snap | Right-click reset | ESC exit"
+L["MoverExitMode"] = "Exited move mode"
+L["MoverAllReset"] = "All frame positions reset"
+
 -- Chat & Tooltip enhancements
 L["Timestamps"] = "Timestamps"
 L["TimestampsDesc"] = "Show timestamps before chat messages (requires reload)"
 L["TimestampFormat"] = "Timestamp Format"
 L["ItemCount"] = "Item Count"
 L["ItemCountDesc"] = "Show item count (bags/bank) in tooltips"
-L["BankTitle"] = "Bank"
 
 -- UnitFrame enhancements
 L["ClassPower"] = "Class Power"

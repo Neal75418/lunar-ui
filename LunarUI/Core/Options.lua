@@ -11,28 +11,16 @@ local LunarUI = Engine.LunarUI
 -- 角色佈局預設
 --------------------------------------------------------------------------------
 
--- 角色佈局預設值（覆蓋 unitframes 中的部分設定）
-local ROLE_PRESETS = {
-    DAMAGER = {
-        unitframes = {
-            raid = { width = 72, height = 28, spacing = 3 },
-            party = { width = 140, height = 32, spacing = 5 },
-        },
-    },
-    TANK = {
-        unitframes = {
-            raid = { width = 85, height = 32, spacing = 3 },
-            party = { width = 155, height = 38, spacing = 5 },
-        },
-        nameplates = { height = 10 },
-    },
-    HEALER = {
-        unitframes = {
-            raid = { width = 90, height = 38, spacing = 2 },
-            party = { width = 165, height = 42, spacing = 4 },
-        },
-    },
-}
+-- 角色佈局預設值（從 Engine.GetLayoutPresets 取得共用資料，映射至 WoW API 角色名稱）
+local function BuildRolePresets()
+    local presets = Engine.GetLayoutPresets()
+    return {
+        DAMAGER = presets.dps,
+        TANK = presets.tank,
+        HEALER = presets.healer,
+    }
+end
+local ROLE_PRESETS = BuildRolePresets()
 
 --[[
     偵測目前天賦角色
@@ -98,7 +86,7 @@ local function SerializeValue(val, depth)
         return string.format("%q", val)
     elseif valType == "table" then
         local parts = {}
-        local _isArray = #val > 0  -- 保留供未來 JSON 相容
+        local _ = #val > 0  -- reserved for future JSON array detection
         for k, v in pairs(val) do
             local keyStr
             if type(k) == "string" then
@@ -118,7 +106,7 @@ end
     安全的表格反序列化器（不使用 loadstring，防止程式碼注入）
     這是一個簡單的遞迴下降解析器，用於解析 Lua 表格字面值
 ]]
-local function DeserializeString(str)
+local function DeserializeStringInner(str)
     if not str or str == "" then
         return nil, "空字串"
     end
@@ -316,6 +304,15 @@ local function DeserializeString(str)
     end
 
     return result
+end
+
+-- Top-level pcall wrapper: 防止深層遞迴或意外錯誤導致 UI 崩潰
+local function DeserializeString(str)
+    local ok, result, err = pcall(DeserializeStringInner, str)
+    if not ok then
+        return nil, "Parse error: " .. tostring(result)
+    end
+    return result, err
 end
 
 --------------------------------------------------------------------------------
@@ -625,6 +622,31 @@ end
 local AceConfig = LibStub("AceConfig-3.0", true)
 local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
 local AceDBOptions = LibStub("AceDBOptions-3.0", true)
+
+-- DataText 欄位選擇器 helper（消除 slot 1/2/3 重複）
+local function CreateSlotSelector(L, order, slotNumber)
+    return {
+        order = order,
+        type = "select",
+        name = (L["DTSlot"] or "Slot") .. " " .. slotNumber,
+        values = function()
+            return {
+                fps = "FPS",
+                latency = L["Latency"] or "Latency",
+                gold = L["Gold"] or "Gold",
+                durability = L["Durability"] or "Durability",
+                bagSlots = L["BagSlots"] or "Bag Slots",
+                friends = L["Friends"] or "Friends",
+                guild = L["Guild"] or "Guild",
+                spec = L["Spec"] or "Spec",
+                clock = L["Clock"] or "Clock",
+                coords = L["Coords"] or "Coords",
+            }
+        end,
+        get = function() return LunarUI.db.profile.datatexts.panels.bottom.slots[slotNumber] end,
+        set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.slots[slotNumber] = val end,
+    }
+end
 
 -- 建立選項表
 local function GetOptionsTable()
@@ -1417,69 +1439,9 @@ local function GetOptionsTable()
                         get = function() return LunarUI.db.profile.datatexts.panels.bottom.enabled end,
                         set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.enabled = val end,
                     },
-                    datatextsBottomSlot1 = {
-                        order = 83,
-                        type = "select",
-                        name = (L["DTSlot"] or "Slot") .. " 1",
-                        values = function()
-                            return {
-                                fps = "FPS",
-                                latency = L["Latency"] or "Latency",
-                                gold = L["Gold"] or "Gold",
-                                durability = L["Durability"] or "Durability",
-                                bagSlots = L["BagSlots"] or "Bag Slots",
-                                friends = L["Friends"] or "Friends",
-                                guild = L["Guild"] or "Guild",
-                                spec = L["Spec"] or "Spec",
-                                clock = L["Clock"] or "Clock",
-                                coords = L["Coords"] or "Coords",
-                            }
-                        end,
-                        get = function() return LunarUI.db.profile.datatexts.panels.bottom.slots[1] end,
-                        set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.slots[1] = val end,
-                    },
-                    datatextsBottomSlot2 = {
-                        order = 84,
-                        type = "select",
-                        name = (L["DTSlot"] or "Slot") .. " 2",
-                        values = function()
-                            return {
-                                fps = "FPS",
-                                latency = L["Latency"] or "Latency",
-                                gold = L["Gold"] or "Gold",
-                                durability = L["Durability"] or "Durability",
-                                bagSlots = L["BagSlots"] or "Bag Slots",
-                                friends = L["Friends"] or "Friends",
-                                guild = L["Guild"] or "Guild",
-                                spec = L["Spec"] or "Spec",
-                                clock = L["Clock"] or "Clock",
-                                coords = L["Coords"] or "Coords",
-                            }
-                        end,
-                        get = function() return LunarUI.db.profile.datatexts.panels.bottom.slots[2] end,
-                        set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.slots[2] = val end,
-                    },
-                    datatextsBottomSlot3 = {
-                        order = 85,
-                        type = "select",
-                        name = (L["DTSlot"] or "Slot") .. " 3",
-                        values = function()
-                            return {
-                                fps = "FPS",
-                                latency = L["Latency"] or "Latency",
-                                gold = L["Gold"] or "Gold",
-                                durability = L["Durability"] or "Durability",
-                                bagSlots = L["BagSlots"] or "Bag Slots",
-                                friends = L["Friends"] or "Friends",
-                                guild = L["Guild"] or "Guild",
-                                spec = L["Spec"] or "Spec",
-                                clock = L["Clock"] or "Clock",
-                                coords = L["Coords"] or "Coords",
-                            }
-                        end,
-                        get = function() return LunarUI.db.profile.datatexts.panels.bottom.slots[3] end,
-                        set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.slots[3] = val end,
-                    },
+                    datatextsBottomSlot1 = CreateSlotSelector(L, 83, 1),
+                    datatextsBottomSlot2 = CreateSlotSelector(L, 84, 2),
+                    datatextsBottomSlot3 = CreateSlotSelector(L, 85, 3),
                 },
             },
 

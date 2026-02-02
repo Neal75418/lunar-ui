@@ -158,7 +158,8 @@ local KEYWORD_ALERT_FALLBACK_SOUND = SOUNDKIT and SOUNDKIT.TELL_MESSAGE or 3081
 local styledFrames = {}
 local copyFrame
 local copyEditBox
-local escapedEmojiMap = nil    -- Fix 3a: 預快取 emoji escaped pattern → icon
+-- Emoji 觸發字元 character class（匹配所有可能的 2-char emoji 序列）
+local EMOJI_PATTERN = "[%:%;<B][%)%(DPO3]"
 local escapedKeywordCache = {} -- Fix 3b: 預快取 keyword escaped pattern
 
 --------------------------------------------------------------------------------
@@ -724,19 +725,8 @@ local function AddEmojisToMessage(_self, _event, msg, ...)
 
     CheckEmojiTextures()
 
-    -- Fix 3a: 預建 escaped pattern map（只建一次）
-    if not escapedEmojiMap then
-        escapedEmojiMap = {}
-        for text, icon in pairs(useEmojiMap) do
-            local escaped = text:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
-            escapedEmojiMap[escaped] = icon
-        end
-    end
-
-    local newMsg = msg
-    for escaped, icon in pairs(escapedEmojiMap) do
-        newMsg = newMsg:gsub(escaped, icon)
-    end
+    -- 單一 gsub + table lookup 取代逐一迴圈（useEmojiMap 以原始文字為 key）
+    local newMsg = msg:gsub(EMOJI_PATTERN, useEmojiMap)
 
     if newMsg ~= msg then
         return false, newMsg, ...

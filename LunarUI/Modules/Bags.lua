@@ -108,7 +108,7 @@ local slots = {}
 local bankSlots = {}
 local searchBox
 local bankSearchBox
-local _moneyFrame  -- 保留供未來使用
+-- moneyFrame: reserved for future currency display feature
 local sortButton
 local closeButton
 local isOpen = false

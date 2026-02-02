@@ -116,18 +116,18 @@ end
 function LunarUI:PrintHelp()
     local L = Engine.L or {}
     self:Print(L["HelpTitle"] or "LunarUI Commands:")
-    print("  |cffffd100/lunar|r - " .. (L["CmdHelp"] or "Show this help"))
-    print("  |cffffd100/lunar toggle|r - " .. (L["CmdToggle"] or "Toggle addon on/off"))
-    print("  |cffffd100/lunar debug|r - " .. (L["CmdDebug"] or "Toggle debug mode"))
-    print("  |cffffd100/lunar status|r - " .. (L["CmdStatus"] or "Show current status"))
-    print("  |cffffd100/lunar config|r - " .. (L["CmdConfig"] or "Open settings"))
-    print("  |cffffd100/lunar keybind|r - " .. (L["CmdKeybind"] or "Toggle keybind edit mode"))
-    print("  |cffffd100/lunar export|r - " .. (L["CmdExport"] or "Export settings"))
-    print("  |cffffd100/lunar import|r - " .. (L["CmdImport"] or "Import settings"))
-    print("  |cffffd100/lunar install|r - " .. (L["CmdInstall"] or "Re-run install wizard"))
-    print("  |cffffd100/lunar move|r - " .. (L["CmdMove"] or "Toggle frame mover"))
-    print("  |cffffd100/lunar reset|r - " .. (L["CmdReset"] or "Reset frame positions"))
-    print("  |cffffd100/lunar test|r - " .. (L["CmdTest"] or "Run test"))
+    self:Print("  |cffffd100/lunar|r - " .. (L["CmdHelp"] or "Show this help"))
+    self:Print("  |cffffd100/lunar toggle|r - " .. (L["CmdToggle"] or "Toggle addon on/off"))
+    self:Print("  |cffffd100/lunar debug|r - " .. (L["CmdDebug"] or "Toggle debug mode"))
+    self:Print("  |cffffd100/lunar status|r - " .. (L["CmdStatus"] or "Show current status"))
+    self:Print("  |cffffd100/lunar config|r - " .. (L["CmdConfig"] or "Open settings"))
+    self:Print("  |cffffd100/lunar keybind|r - " .. (L["CmdKeybind"] or "Toggle keybind edit mode"))
+    self:Print("  |cffffd100/lunar export|r - " .. (L["CmdExport"] or "Export settings"))
+    self:Print("  |cffffd100/lunar import|r - " .. (L["CmdImport"] or "Import settings"))
+    self:Print("  |cffffd100/lunar install|r - " .. (L["CmdInstall"] or "Re-run install wizard"))
+    self:Print("  |cffffd100/lunar move|r - " .. (L["CmdMove"] or "Toggle frame mover"))
+    self:Print("  |cffffd100/lunar reset|r - " .. (L["CmdReset"] or "Reset frame positions"))
+    self:Print("  |cffffd100/lunar test|r - " .. (L["CmdTest"] or "Run test"))
 end
 
 --[[
@@ -136,9 +136,9 @@ end
 function LunarUI:PrintStatus()
     local L = Engine.L or {}
     self:Print(L["StatusTitle"] or "|cff8882ffLunarUI Status:|r")
-    print("  " .. string.format(L["StatusVersion"] or "Version: %s", self.version))
-    print("  " .. string.format(L["StatusEnabled"] or "Enabled: %s", self.db.profile.enabled and ("|cff00ff00" .. (L["Yes"] or "Yes") .. "|r") or ("|cffff0000" .. (L["No"] or "No") .. "|r")))
-    print("  " .. string.format(L["StatusDebug"] or "Debug: %s", self.db.profile.debug and ("|cff00ff00" .. (L["On"] or "ON") .. "|r") or ("|cffff0000" .. (L["Off"] or "OFF") .. "|r")))
+    self:Print("  " .. string.format(L["StatusVersion"] or "Version: %s", self.version))
+    self:Print("  " .. string.format(L["StatusEnabled"] or "Enabled: %s", self.db.profile.enabled and ("|cff00ff00" .. (L["Yes"] or "Yes") .. "|r") or ("|cffff0000" .. (L["No"] or "No") .. "|r")))
+    self:Print("  " .. string.format(L["StatusDebug"] or "Debug: %s", self.db.profile.debug and ("|cff00ff00" .. (L["On"] or "ON") .. "|r") or ("|cffff0000" .. (L["Off"] or "OFF") .. "|r")))
 end
 
 --------------------------------------------------------------------------------
@@ -219,15 +219,14 @@ end
 ]]
 function LunarUI:ResetPosition()
     -- 重置單位框架位置為預設值
-    -- if self.db then
-        for unit, data in pairs(self.db.defaults.profile.unitframes) do
-            if self.db.profile.unitframes[unit] then
-                self.db.profile.unitframes[unit].x = data.x
-                self.db.profile.unitframes[unit].y = data.y
-                self.db.profile.unitframes[unit].point = data.point
-            end
+    if not self.db or not self.db.defaults or not self.db.defaults.profile then return end
+    for unit, data in pairs(self.db.defaults.profile.unitframes) do
+        if self.db.profile.unitframes[unit] then
+            self.db.profile.unitframes[unit].x = data.x
+            self.db.profile.unitframes[unit].y = data.y
+            self.db.profile.unitframes[unit].point = data.point
         end
-    -- end
+    end
 
     local L = Engine.L or {}
     self:Print(L["PositionReset"] or "Frame positions reset to defaults")
@@ -372,12 +371,13 @@ end
 -- 測試功能
 --------------------------------------------------------------------------------
 
+-- Stub: test runner placeholder for future test scenarios (e.g., /lunar test <name>)
 function LunarUI:RunTest(scenario)
     local L = Engine.L or {}
     if scenario then
         self:Print(string.format(L["TestMode"] or "Test mode: %s", scenario))
     else
         self:Print(L["AvailableTests"] or "Available tests:")
-        print("  |cffffd100/lunar test|r - " .. (L["CmdTestDesc"] or "Show test help"))
+        self:Print("  |cffffd100/lunar test|r - " .. (L["CmdTestDesc"] or "Show test help"))
     end
 end

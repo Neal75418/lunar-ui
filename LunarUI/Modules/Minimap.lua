@@ -342,19 +342,20 @@ end
 local function HideBlizzardMinimapElements()
     -- 1. 把有用的 MinimapCluster 子元素 reparent 到 Minimap 並重設位置
     -- 原始錨點可能指向 MinimapCluster（即將移走），必須重設
+    local SafeCall = LunarUI.SafeCall
     local function ReparentButton(button, anchor, relFrame, relAnchor, x, y)
         if not button then return end
-        pcall(function()
+        SafeCall(function()
             button:SetParent(Minimap)
             button:SetFrameLevel(Minimap:GetFrameLevel() + 5)
             button:ClearAllPoints()
             button:SetPoint(anchor, relFrame or Minimap, relAnchor or anchor, x or 0, y or 0)
             button:SetAlpha(1)
             button:Show()
-        end)
+        end, "ReparentButton")
     end
 
-    pcall(function()
+    SafeCall(function()
         if MinimapCluster then
             -- 追蹤按鈕（右鍵選單）
             if MinimapCluster.Tracking then
@@ -393,18 +394,18 @@ local function HideBlizzardMinimapElements()
             -- 讓內部材質與子框架都填滿按鈕範圍（修正點擊/高亮區域不一致）
             for _, region in ipairs({ btn:GetRegions() }) do
                 if region:IsObjectType("Texture") then
-                    pcall(function()
+                    SafeCall(function()
                         region:ClearAllPoints()
                         region:SetAllPoints(btn)
-                    end)
+                    end, "ExpansionButton region")
                 end
             end
             for _, child in ipairs({ btn:GetChildren() }) do
-                pcall(function()
+                SafeCall(function()
                     child:SetSize(TARGET_SIZE, TARGET_SIZE)
                     child:ClearAllPoints()
                     child:SetAllPoints(btn)
-                end)
+                end, "ExpansionButton child")
             end
 
             -- 防止暴雪把大小改回去
@@ -418,11 +419,11 @@ local function HideBlizzardMinimapElements()
                 end
             end)
         end
-    end)
+    end, "MinimapCluster reparent")
 
     -- 2. 隱藏 MinimapCluster（裝飾性框架）
     if MinimapCluster then
-        pcall(function()
+        SafeCall(function()
             MinimapCluster:EnableMouse(false)
             MinimapCluster:SetAlpha(0)
             MinimapCluster:ClearAllPoints()
@@ -431,56 +432,56 @@ local function HideBlizzardMinimapElements()
             -- 隱藏剩餘的子框架（有用的已 reparent 走）
             for _, child in ipairs({ MinimapCluster:GetChildren() }) do
                 if child and child ~= Minimap then
-                    pcall(function()
+                    SafeCall(function()
                         child:SetAlpha(0)
                         child:EnableMouse(false)
-                    end)
+                    end, "MinimapCluster child")
                 end
             end
 
             -- 隱藏所有 regions（材質/字型等）
             for _, region in ipairs({ MinimapCluster:GetRegions() }) do
-                pcall(function()
+                SafeCall(function()
                     region:SetAlpha(0)
                     if region.Hide then region:Hide() end
-                end)
+                end, "MinimapCluster region")
             end
-        end)
+        end, "MinimapCluster hide")
     end
 
     -- 舊版追蹤按鈕
     if MiniMapTracking then
-        pcall(function()
+        SafeCall(function()
             MiniMapTracking:SetParent(Minimap)
             if MiniMapTrackingBackground then
                 MiniMapTrackingBackground:Hide()
             end
-        end)
+        end, "MiniMapTracking")
     end
 
     -- 3. ★ 隱藏 Minimap 自身的裝飾子框架（MinimapBackdrop 就是圓形邊框）
-    pcall(function()
+    SafeCall(function()
         if MinimapBackdrop then
             MinimapBackdrop:Hide()
             MinimapBackdrop:SetAlpha(0)
         end
-    end)
+    end, "MinimapBackdrop")
     -- 隱藏 Minimap 的所有非必要子框架
     for _, child in ipairs({ Minimap:GetChildren() }) do
         local name = child:GetName()
         if name and (name:find("Backdrop") or name:find("Border") or name:find("Background")) then
-            pcall(function()
+            SafeCall(function()
                 child:Hide()
                 child:SetAlpha(0)
-            end)
+            end, "Minimap child " .. name)
         end
     end
 
     -- 隱藏縮放按鈕（已有滑鼠滾輪縮放，避免與時鐘文字重疊）
-    pcall(function()
+    SafeCall(function()
         if MinimapZoomIn then MinimapZoomIn:Hide(); MinimapZoomIn:SetAlpha(0) end
         if MinimapZoomOut then MinimapZoomOut:Hide(); MinimapZoomOut:SetAlpha(0) end
-    end)
+    end, "MinimapZoom")
 
     -- 4. 方形遮罩（使用已驗證的 WHITE8X8 材質）
     Minimap:SetMaskTexture("Interface\\BUTTONS\\WHITE8X8")
@@ -492,22 +493,22 @@ local function HideBlizzardMinimapElements()
     Minimap.Layout = function() end
 
     -- 7. 完整清除 blob 環形（Scalar + Alpha 都要）
-    pcall(function() Minimap:SetArchBlobRingScalar(0) end)
-    pcall(function() Minimap:SetArchBlobRingAlpha(0) end)
-    pcall(function() Minimap:SetQuestBlobRingScalar(0) end)
-    pcall(function() Minimap:SetQuestBlobRingAlpha(0) end)
-    pcall(function() Minimap:SetArchBlobInsideTexture("") end)
-    pcall(function() Minimap:SetArchBlobOutsideTexture("") end)
-    pcall(function() Minimap:SetQuestBlobInsideTexture("") end)
-    pcall(function() Minimap:SetQuestBlobOutsideTexture("") end)
+    SafeCall(function() Minimap:SetArchBlobRingScalar(0) end, "ArchBlobRingScalar")
+    SafeCall(function() Minimap:SetArchBlobRingAlpha(0) end, "ArchBlobRingAlpha")
+    SafeCall(function() Minimap:SetQuestBlobRingScalar(0) end, "QuestBlobRingScalar")
+    SafeCall(function() Minimap:SetQuestBlobRingAlpha(0) end, "QuestBlobRingAlpha")
+    SafeCall(function() Minimap:SetArchBlobInsideTexture("") end, "ArchBlobInside")
+    SafeCall(function() Minimap:SetArchBlobOutsideTexture("") end, "ArchBlobOutside")
+    SafeCall(function() Minimap:SetQuestBlobInsideTexture("") end, "QuestBlobInside")
+    SafeCall(function() Minimap:SetQuestBlobOutsideTexture("") end, "QuestBlobOutside")
 
     -- 8. ★ 關鍵：處理 HybridMinimap（室內/副本地圖覆蓋層的圓形遮罩）
     if HybridMinimap then
-        pcall(function()
+        SafeCall(function()
             HybridMinimap.CircleMask:SetTexture("Interface\\BUTTONS\\WHITE8X8")
             HybridMinimap.MapCanvas:SetUseMaskTexture(false)
             HybridMinimap.MapCanvas:SetUseMaskTexture(true)
-        end)
+        end, "HybridMinimap mask")
     end
 
     -- 9. 縮放
@@ -643,8 +644,8 @@ local function CreateMinimapFrame()
                 elseif btn.ToggleMenu then
                     btn:ToggleMenu()
                 else
-                    -- 最後手段：包在 pcall 中避免戰鬥中報錯
-                    pcall(function() btn:Click() end)
+                    -- 最後手段：包在 SafeCall 中避免戰鬥中報錯
+                    LunarUI.SafeCall(function() btn:Click() end, "TrackingButton Click")
                 end
             elseif MiniMapTracking then
                 ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, "cursor")
@@ -1015,11 +1016,11 @@ local function InitializeMinimap()
         if addon == "Blizzard_HybridMinimap" then
             self:UnregisterEvent("ADDON_LOADED")
             if HybridMinimap then
-                pcall(function()
+                LunarUI.SafeCall(function()
                     HybridMinimap.MapCanvas:SetUseMaskTexture(false)
                     HybridMinimap.CircleMask:SetTexture("Interface\\BUTTONS\\WHITE8X8")
                     HybridMinimap.MapCanvas:SetUseMaskTexture(true)
-                end)
+                end, "HybridMinimap ADDON_LOADED")
             end
         end
     end)

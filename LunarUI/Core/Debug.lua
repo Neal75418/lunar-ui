@@ -34,8 +34,7 @@ end
 --------------------------------------------------------------------------------
 
 local debugFrame = nil
-local updateInterval = 0.1  -- 更新間隔（秒）
-local elapsed = 0
+local UPDATE_INTERVAL = 0.1  -- 更新間隔（秒）
 
 --[[
     建立除錯面板
@@ -87,13 +86,15 @@ local function CreateDebugFrame()
     combatText:SetPoint("TOPLEFT", 10, -45)
     debugFrame.combatText = combatText
 
+    debugFrame.elapsed = 0
+
     -- 更新腳本
     debugFrame:SetScript("OnUpdate", function(self, delta)
-        elapsed = elapsed + delta
-        if elapsed < updateInterval then return end
-        elapsed = 0
+        self.elapsed = (self.elapsed or 0) + delta
+        if self.elapsed < UPDATE_INTERVAL then return end
+        self.elapsed = 0
 
-        if not LunarUI.db or not LunarUI.db.profile.debug then
+        if not LunarUI.db or not LunarUI.db.profile or not LunarUI.db.profile.debug then
             self:Hide()
             return
         end

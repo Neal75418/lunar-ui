@@ -11,6 +11,46 @@ local LunarUI = Engine.LunarUI
 -- 資料庫預設值
 --------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
+-- 共用佈局預設值（InstallWizard 與 Options 共用）
+--------------------------------------------------------------------------------
+
+function Engine.GetLayoutPresets()
+    return {
+        dps = {
+            unitframes = {
+                raid = { width = 72, height = 28, spacing = 3 },
+                party = { width = 140, height = 32, spacing = 5 },
+            },
+        },
+        tank = {
+            unitframes = {
+                raid = { width = 85, height = 32, spacing = 3 },
+                party = { width = 155, height = 38, spacing = 5 },
+            },
+            nameplates = { height = 10 },
+        },
+        healer = {
+            unitframes = {
+                raid = { width = 90, height = 38, spacing = 2 },
+                party = { width = 165, height = 42, spacing = 4 },
+            },
+        },
+    }
+end
+
+--------------------------------------------------------------------------------
+-- 動作條預設值 helper
+--------------------------------------------------------------------------------
+
+local function CreateBarDefaults(buttons, x, y, orientation)
+    return { enabled = true, buttons = buttons, x = x, y = y, orientation = orientation, fadeEnabled = nil }  -- fadeEnabled = nil inherits from global actionbars.fadeEnabled
+end
+
+--------------------------------------------------------------------------------
+-- 資料庫預設值
+--------------------------------------------------------------------------------
+
 local defaults = {
     profile = {
         -- 一般設定
@@ -195,12 +235,12 @@ local defaults = {
             fadeAlpha = 0.3,      -- 淡出後透明度
             fadeDelay = 2.0,      -- 離開戰鬥後淡出延遲（秒）
             fadeDuration = 0.4,   -- 淡入淡出動畫時間（秒）
-            bar1 = { enabled = true, buttons = 12, x = 0, y = 100, orientation = "horizontal", fadeEnabled = nil },
-            bar2 = { enabled = true, buttons = 12, x = 0, y = 144, orientation = "horizontal", fadeEnabled = nil },
-            bar3 = { enabled = true, buttons = 12, x = 250, y = 300, orientation = "vertical", fadeEnabled = nil },
-            bar4 = { enabled = true, buttons = 12, x = -250, y = 300, orientation = "vertical", fadeEnabled = nil },
-            bar5 = { enabled = true, buttons = 12, x = 0, y = 276, orientation = "horizontal", fadeEnabled = nil },
-            bar6 = { enabled = true, buttons = 12, x = 0, y = 320, orientation = "horizontal", fadeEnabled = nil },
+            bar1 = CreateBarDefaults(12, 0, 100, "horizontal"),
+            bar2 = CreateBarDefaults(12, 0, 144, "horizontal"),
+            bar3 = CreateBarDefaults(12, 250, 300, "vertical"),
+            bar4 = CreateBarDefaults(12, -250, 300, "vertical"),
+            bar5 = CreateBarDefaults(12, 0, 276, "horizontal"),
+            bar6 = CreateBarDefaults(12, 0, 320, "horizontal"),
             petbar = { enabled = true, x = 0, y = 60, fadeEnabled = nil },
             stancebar = { enabled = true, x = -400, y = 200, fadeEnabled = nil },
             microBar = {

@@ -44,6 +44,32 @@ LunarUI.oUF = nil
 local moduleRegistry = {}
 
 --[[
+    ExecuteModuleCallback - 執行模組的 onEnable 回呼（含延遲支援）
+    @param entry table  模組註冊表項目
+]]
+local function ExecuteModuleCallback(entry)
+    if entry.delay > 0 then
+        C_Timer.After(entry.delay, entry.onEnable)
+    else
+        entry.onEnable()
+    end
+end
+
+--[[
+    SafeCall - 安全呼叫函數，在 debug 模式下記錄錯誤
+    @param func    function  要呼叫的函數
+    @param context string    錯誤訊息前綴（可選）
+    @return boolean          pcall 是否成功
+]]
+function LunarUI.SafeCall(func, context)
+    local ok, err = pcall(func)
+    if not ok and LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
+        LunarUI:Print("|cffff0000" .. (context or "Error") .. ":|r " .. tostring(err))
+    end
+    return ok
+end
+
+--[[
     RegisterModule - 註冊模組至中央管理表
     @param name     string   模組名稱（用於除錯與記錄）
     @param callbacks table   回呼表：
@@ -63,11 +89,7 @@ function LunarUI:RegisterModule(name, callbacks)
 
     -- 若 OnEnable 已觸發（例如延遲載入的模組），立即執行初始化
     if self._modulesEnabled then
-        if entry.delay > 0 then
-            C_Timer.After(entry.delay, entry.onEnable)
-        else
-            entry.onEnable()
-        end
+        ExecuteModuleCallback(entry)
     end
 end
 
@@ -114,11 +136,7 @@ function LunarUI:OnEnable()
     -- 啟用所有已註冊的模組
     self._modulesEnabled = true
     for _, mod in ipairs(moduleRegistry) do
-        if mod.delay > 0 then
-            C_Timer.After(mod.delay, mod.onEnable)
-        else
-            mod.onEnable()
-        end
+        ExecuteModuleCallback(mod)
     end
 
     local L = Engine.L or {}

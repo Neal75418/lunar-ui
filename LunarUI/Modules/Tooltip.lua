@@ -202,12 +202,13 @@ inspectFrame:SetScript("OnEvent", function(_self, event, inspectGUID)
             if GameTooltip:IsShown() and GameTooltip.GetUnit then
                 local _, tooltipUnit = GameTooltip:GetUnit()
                 if tooltipUnit and UnitGUID(tooltipUnit) == inspectGUID then
+                    local L = Engine.L or {}
                     -- 新增 inspect 資訊行
                     if spec then
-                        GameTooltip:AddLine("|cff888888專精:|r " .. spec, 1, 1, 1)
+                        GameTooltip:AddLine("|cff888888" .. (L["TooltipSpec"] or "Spec:") .. "|r " .. spec, 1, 1, 1)
                     end
                     if ilvl then
-                        GameTooltip:AddLine("|cff888888裝等:|r " .. ilvl, 1, 1, 1)
+                        GameTooltip:AddLine("|cff888888" .. (L["TooltipILvl"] or "iLvl:") .. "|r " .. ilvl, 1, 1, 1)
                     end
                     GameTooltip:Show()
                 end
@@ -345,6 +346,7 @@ local function OnTooltipSetUnit(tooltip)
     end
 
     -- === 新增：裝等 + 專精（玩家） ===
+    local L = Engine.L or {}
     if UnitIsPlayer(unit) then
         local guid = UnitGUID(unit)
         if guid then
@@ -352,10 +354,10 @@ local function OnTooltipSetUnit(tooltip)
             if cached then
                 -- 顯示快取的 inspect 資料
                 if cached.spec then
-                    tooltip:AddLine("|cff888888專精:|r " .. cached.spec, 1, 1, 1)
+                    tooltip:AddLine("|cff888888" .. (L["TooltipSpec"] or "Spec:") .. "|r " .. cached.spec, 1, 1, 1)
                 end
                 if cached.ilvl then
-                    tooltip:AddLine("|cff888888裝等:|r " .. cached.ilvl, 1, 1, 1)
+                    tooltip:AddLine("|cff888888" .. (L["TooltipILvl"] or "iLvl:") .. "|r " .. cached.ilvl, 1, 1, 1)
                 end
             else
                 -- 自動請求 Inspect（不需要 Shift）
@@ -370,7 +372,7 @@ local function OnTooltipSetUnit(tooltip)
         if targetName then
             local tr, tg, tb = GetUnitColor(unit .. "target")
             tooltip:AddLine(" ")
-            tooltip:AddLine("|cffffffff目標:|r " .. targetName, tr, tg, tb)
+            tooltip:AddLine("|cffffffff" .. (L["TooltipTarget"] or "Target:") .. "|r " .. targetName, tr, tg, tb)
         end
     end
 
@@ -379,12 +381,12 @@ local function OnTooltipSetUnit(tooltip)
         local role = UnitGroupRolesAssigned(unit)
         if role and role ~= "NONE" then
             local roleText = {
-                TANK = "|cff5555ff坦克|r",
-                HEALER = "|cff55ff55治療|r",
-                DAMAGER = "|cffff5555傷害|r",
+                TANK = "|cff5555ff" .. (L["RoleTank"] or "Tank") .. "|r",
+                HEALER = "|cff55ff55" .. (L["RoleHealer"] or "Healer") .. "|r",
+                DAMAGER = "|cffff5555" .. (L["RoleDPS"] or "DPS") .. "|r",
             }
             if roleText[role] then
-                tooltip:AddLine("角色: " .. roleText[role])
+                tooltip:AddLine((L["TooltipRole"] or "Role:") .. " " .. roleText[role])
             end
         end
     end
@@ -434,8 +436,9 @@ local function OnTooltipSetItem(tooltip)
             end
 
             if not found then
+                local L = Engine.L or {}
                 tooltip:AddLine(" ")
-                tooltip:AddLine("|cff00ff00物品等級: " .. itemLevel .. "|r")
+                tooltip:AddLine("|cff00ff00" .. (L["TooltipItemLevel"] or "Item Level:") .. " " .. itemLevel .. "|r")
             end
         end
     end
@@ -445,7 +448,7 @@ local function OnTooltipSetItem(tooltip)
         local itemID = itemLink:match("item:(%d+)")
         if itemID then
             local numID = tonumber(itemID)
-                -- if numID then (Always true after tonumber match)
+            if numID then
                 local bagCount = C_Item.GetItemCount(numID, false)
                 local totalCount = C_Item.GetItemCount(numID, true)  -- 含銀行
                 if totalCount and totalCount > 0 then
@@ -465,6 +468,7 @@ local function OnTooltipSetItem(tooltip)
                     end
                     tooltip:AddLine("|cff888888" .. countText .. "|r")
                 end
+            end
         end
     end
 
