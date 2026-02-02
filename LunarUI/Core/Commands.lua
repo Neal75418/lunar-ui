@@ -70,7 +70,7 @@ function LunarUI:SlashCommand(input)
         if self.ShowInstallWizard then
             self:ShowInstallWizard()
         else
-            self:Print("安裝精靈不可用")
+            self:Print(_L["InstallWizardUnavailable"] or "Install wizard unavailable")
         end
 
     elseif cmd == "move" then
@@ -80,28 +80,28 @@ function LunarUI:SlashCommand(input)
         if self.ToggleKeybindMode then
             self:ToggleKeybindMode()
         else
-            self:Print("快捷鍵模式不可用")
+            self:Print(_L["KeybindModeUnavailable"] or "Keybind mode unavailable")
         end
 
     elseif cmd == "export" then
         if self.ShowExportFrame then
             self:ShowExportFrame()
         else
-            self:Print("匯出功能不可用")
+            self:Print(_L["ExportUnavailable"] or "Export unavailable")
         end
 
     elseif cmd == "import" then
         if self.ShowImportFrame then
             self:ShowImportFrame()
         else
-            self:Print("匯入功能不可用")
+            self:Print(_L["ImportUnavailable"] or "Import unavailable")
         end
 
     elseif cmd == "debugvigor" then
         self:DebugVigorFrames()
 
     else
-        self:Print("未知命令：" .. cmd)
+        self:Print(string.format(_L["UnknownCommand"] or "Unknown command: %s", cmd))
         self:PrintHelp()
     end
 end
@@ -115,29 +115,30 @@ end
 ]]
 function LunarUI:PrintHelp()
     local L = Engine.L or {}
-    self:Print(L["HelpTitle"] or "|cff8882ffLunarUI 命令：|r")
-    print("  |cffffd100/lunar|r - 顯示此說明")
-    print("  |cffffd100/lunar toggle|r - 切換插件開關")
-    print("  |cffffd100/lunar debug|r - 切換除錯模式")
-    print("  |cffffd100/lunar status|r - 顯示目前狀態")
-    print("  |cffffd100/lunar config|r - 開啟設定介面")
-    print("  |cffffd100/lunar keybind|r - 切換快捷鍵編輯模式")
-    print("  |cffffd100/lunar export|r - 匯出設定")
-    print("  |cffffd100/lunar import|r - 匯入設定")
-    print("  |cffffd100/lunar install|r - 重新執行安裝精靈")
-    print("  |cffffd100/lunar move|r - 切換框架移動模式")
-    print("  |cffffd100/lunar reset|r - 重置框架位置")
-    print("  |cffffd100/lunar test [combat]|r - 執行測試")
+    self:Print(L["HelpTitle"] or "LunarUI Commands:")
+    print("  |cffffd100/lunar|r - " .. (L["CmdHelp"] or "Show this help"))
+    print("  |cffffd100/lunar toggle|r - " .. (L["CmdToggle"] or "Toggle addon on/off"))
+    print("  |cffffd100/lunar debug|r - " .. (L["CmdDebug"] or "Toggle debug mode"))
+    print("  |cffffd100/lunar status|r - " .. (L["CmdStatus"] or "Show current status"))
+    print("  |cffffd100/lunar config|r - " .. (L["CmdConfig"] or "Open settings"))
+    print("  |cffffd100/lunar keybind|r - " .. (L["CmdKeybind"] or "Toggle keybind edit mode"))
+    print("  |cffffd100/lunar export|r - " .. (L["CmdExport"] or "Export settings"))
+    print("  |cffffd100/lunar import|r - " .. (L["CmdImport"] or "Import settings"))
+    print("  |cffffd100/lunar install|r - " .. (L["CmdInstall"] or "Re-run install wizard"))
+    print("  |cffffd100/lunar move|r - " .. (L["CmdMove"] or "Toggle frame mover"))
+    print("  |cffffd100/lunar reset|r - " .. (L["CmdReset"] or "Reset frame positions"))
+    print("  |cffffd100/lunar test|r - " .. (L["CmdTest"] or "Run test"))
 end
 
 --[[
     顯示目前狀態
 ]]
 function LunarUI:PrintStatus()
-    self:Print("|cff8882ffLunarUI 狀態：|r")
-    print("  版本：" .. self.version)
-    print("  啟用：" .. (self.db.profile.enabled and "|cff00ff00是|r" or "|cffff0000否|r"))
-    print("  除錯：" .. (self.db.profile.debug and "|cff00ff00開|r" or "|cffff0000關|r"))
+    local L = Engine.L or {}
+    self:Print(L["StatusTitle"] or "|cff8882ffLunarUI Status:|r")
+    print("  " .. string.format(L["StatusVersion"] or "Version: %s", self.version))
+    print("  " .. string.format(L["StatusEnabled"] or "Enabled: %s", self.db.profile.enabled and ("|cff00ff00" .. (L["Yes"] or "Yes") .. "|r") or ("|cffff0000" .. (L["No"] or "No") .. "|r")))
+    print("  " .. string.format(L["StatusDebug"] or "Debug: %s", self.db.profile.debug and ("|cff00ff00" .. (L["On"] or "ON") .. "|r") or ("|cffff0000" .. (L["Off"] or "OFF") .. "|r")))
 end
 
 --------------------------------------------------------------------------------
@@ -151,13 +152,13 @@ function LunarUI:ToggleAddon(cmd)
     local L = Engine.L or {}
     if cmd == "on" then
         self.db.profile.enabled = true
-        self:Print(L["Enabled"] or "已啟用")
+        self:Print(L["Enabled"] or "Enabled")
     elseif cmd == "off" then
         self.db.profile.enabled = false
-        self:Print(L["Disabled"] or "已停用")
+        self:Print(L["Disabled"] or "Disabled")
     else
         self.db.profile.enabled = not self.db.profile.enabled
-        self:Print(self.db.profile.enabled and (L["Enabled"] or "已啟用") or (L["Disabled"] or "已停用"))
+        self:Print(self.db.profile.enabled and (L["Enabled"] or "Enabled") or (L["Disabled"] or "Disabled"))
     end
 end
 
@@ -169,9 +170,9 @@ function LunarUI:ToggleDebug()
     self.db.profile.debug = not self.db.profile.debug
 
     if self.db.profile.debug then
-        self:Print(L["DebugEnabled"] or "除錯模式：|cff00ff00開|r")
+        self:Print(L["DebugEnabled"] or "Debug mode: ON")
     else
-        self:Print(L["DebugDisabled"] or "除錯模式：|cffff0000關|r")
+        self:Print(L["DebugDisabled"] or "Debug mode: OFF")
     end
 
     -- 顯示/隱藏除錯面板
@@ -209,7 +210,8 @@ function LunarUI:OpenOptions()
         return
     end
 
-    self:Print("請在 ESC → 選項 → 插件 中找到 LunarUI")
+    local L = Engine.L or {}
+    self:Print(L["OpenOptionsHint"] or "Open ESC > Options > AddOns to find LunarUI")
 end
 
 --[[
@@ -227,7 +229,8 @@ function LunarUI:ResetPosition()
         end
     -- end
 
-    self:Print("框架位置已重置為預設值")
+    local L = Engine.L or {}
+    self:Print(L["PositionReset"] or "Frame positions reset to defaults")
 end
 
 --------------------------------------------------------------------------------
@@ -370,10 +373,11 @@ end
 --------------------------------------------------------------------------------
 
 function LunarUI:RunTest(scenario)
+    local L = Engine.L or {}
     if scenario then
-        self:Print("測試模式：" .. scenario)
+        self:Print(string.format(L["TestMode"] or "Test mode: %s", scenario))
     else
-        self:Print("可用測試：")
-        print("  |cffffd100/lunar test|r - 顯示測試說明")
+        self:Print(L["AvailableTests"] or "Available tests:")
+        print("  |cffffd100/lunar test|r - " .. (L["CmdTestDesc"] or "Show test help"))
     end
 end

@@ -173,6 +173,10 @@ local function DeserializeString(str)
         local startPos = pos
         if str:sub(pos, pos) == "-" then
             pos = pos + 1
+            -- 負號後必須跟著數字，否則不是合法數字
+            if pos > len or not str:sub(pos, pos):match("[%d%.]") then
+                return nil, "無效數字：孤立的負號，位置 " .. startPos
+            end
         end
         while pos <= len and str:sub(pos, pos):match("[%d%.eE%+%-]") do
             pos = pos + 1
