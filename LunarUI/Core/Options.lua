@@ -72,7 +72,13 @@ end
 ]]
 local function SerializeValue(val, depth)
     depth = depth or 0
-    if depth > 20 then return "nil" end  -- 防止無限遞迴
+    if depth > 20 then
+        -- 深度超限警告（避免無聲數據丟失）
+        if LunarUI and LunarUI.Debug then
+            LunarUI:Debug("Warning: Table serialization depth exceeded 20 levels")
+        end
+        return "nil"
+    end
 
     local valType = type(val)
     if valType == "nil" then
@@ -606,7 +612,9 @@ local HUD_FRAME_NAMES = {
     套用 HUD 全域縮放至所有 HUD 框架
 ]]
 function LunarUI:ApplyHUDScale()
-    local scale = self.db and self.db.profile.hud.scale or 1.0
+    if not self.db or not self.db.profile or not self.db.profile.hud then return end
+
+    local scale = self.db.profile.hud.scale or 1.0
     for _, name in ipairs(HUD_FRAME_NAMES) do
         local frame = _G[name]
         if frame then
@@ -643,8 +651,20 @@ local function CreateSlotSelector(L, order, slotNumber)
                 coords = L["Coords"] or "Coords",
             }
         end,
-        get = function() return LunarUI.db.profile.datatexts.panels.bottom.slots[slotNumber] end,
-        set = function(_, val) LunarUI.db.profile.datatexts.panels.bottom.slots[slotNumber] = val end,
+        get = function()
+            local db = LunarUI.db
+            if not db or not db.profile or not db.profile.datatexts then return nil end
+            local panels = db.profile.datatexts.panels
+            if not panels or not panels.bottom or not panels.bottom.slots then return nil end
+            return panels.bottom.slots[slotNumber]
+        end,
+        set = function(_, val)
+            local db = LunarUI.db
+            if not db or not db.profile or not db.profile.datatexts then return end
+            local panels = db.profile.datatexts.panels
+            if not panels or not panels.bottom or not panels.bottom.slots then return end
+            panels.bottom.slots[slotNumber] = val
+        end,
     }
 end
 

@@ -123,7 +123,7 @@ function LunarUI:UpdateDebugOverlay()
         debugFrame = CreateDebugFrame()
     end
 
-    if self.db and self.db.profile.debug then
+    if self.db and self.db.profile and self.db.profile.debug then
         debugFrame:Show()
     else
         debugFrame:Hide()
@@ -133,7 +133,7 @@ end
 --[[
     顯示除錯面板
 ]]
-function LunarUI.ShowDebugOverlay()
+function LunarUI:ShowDebugOverlay()
     if not debugFrame then
         debugFrame = CreateDebugFrame()
     end
@@ -144,7 +144,7 @@ end
     隱藏除錯面板
     清理 OnUpdate 腳本以節省資源
 ]]
-function LunarUI.HideDebugOverlay()
+function LunarUI:HideDebugOverlay()
     if debugFrame then
         debugFrame:SetScript("OnUpdate", nil)
         debugFrame:Hide()

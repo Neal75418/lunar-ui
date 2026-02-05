@@ -115,6 +115,11 @@ local function CreateHealthBar(frame)
             if not healthText then return end
             -- WoW secret value: type()=="number", tonumber() 原樣回傳, 但算術會報錯
             -- 唯一可靠的偵測方式是嘗試算術並 pcall
+            -- 額外檢查類型以提早過濾非數字值
+            if type(cur) ~= "number" or type(max) ~= "number" then
+                healthText:SetText("")
+                return
+            end
             local ok, pct = pcall(function()
                 if not cur or not max or max == 0 then return nil end
                 return math.floor(cur / max * 100)
@@ -353,7 +358,8 @@ local function CreateThreatIndicator(frame)
     threat:SetFrameLevel(frame:GetFrameLevel() + 5)
 
     threat.PostUpdate = function(self, _unit, status, r, g, b)
-        if status and status > 0 then
+        if not self then return end
+        if status and status > 0 and r and g and b then
             self:SetBackdropBorderColor(r, g, b, 0.8)
         else
             self:SetBackdropBorderColor(0, 0, 0, 0)
@@ -804,7 +810,8 @@ local function SpawnNameplates()
             if targetPlate then
                 -- oUF 名牌掛在 unitFrame 子框架上
                 local np = targetPlate.unitFrame or targetPlate
-                if np and nameplateFrames[np] then
+                -- 驗證框架有效性：存在於追蹤表中且仍顯示
+                if np and nameplateFrames[np] and np:IsShown() then
                     UpdateTargetIndicator(np)
                     lastTargetNameplate = np
                 else

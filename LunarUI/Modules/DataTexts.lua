@@ -33,7 +33,6 @@ local providers = {}          -- Registered data text providers
 local onUpdateProviders = {}  -- Only providers with onUpdate=true (Fix 1)
 local panels = {}             -- Created panel frames
 local slotsByProvider = {}    -- Reverse lookup: providerName → { slot1, slot2, ... } (Fix 5)
-local _updateTimers = {}       -- OnUpdate throttle timers
 local eventFrame              -- Shared event handler frame
 local eventToProviders = {}   -- event → { providerName1, providerName2, ... } (Fix 2)
 

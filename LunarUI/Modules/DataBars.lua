@@ -241,6 +241,10 @@ local function UpdateReputation()
         end
     elseif _G.GetWatchedFactionInfo then
         name, standing, barMin, barMax, barValue, factionID = _G.GetWatchedFactionInfo()
+        -- 提供預設值防止 nil 錯誤
+        barMin = barMin or 0
+        barMax = barMax or 1
+        barValue = barValue or 0
     end
 
     if not name then

@@ -56,6 +56,10 @@ local function SkinGossip()
 
     -- 對話選項按鈕（WoW 12.0 使用 ScrollFrame）
     if frame.GreetingPanel and frame.GreetingPanel.ScrollBox then
+        -- 防止重複 hook
+        if frame.GreetingPanel.ScrollBox._lunarHooked then return end
+        frame.GreetingPanel.ScrollBox._lunarHooked = true
+
         -- 對於每個對話選項，需要 hook 來處理動態內容
         hooksecurefunc(frame.GreetingPanel.ScrollBox, "Update", function(self)
             local n = select("#", self:GetChildren())

@@ -141,7 +141,7 @@ function LunarUI:SetFontMuted(fontString)
 end
 
 --- 替換按鈕樣式
-function LunarUI.SkinButton(_self, btn)
+function LunarUI:SkinButton(btn)
     if not btn then return end
 
     StripTextures(btn)
@@ -166,7 +166,7 @@ function LunarUI.SkinButton(_self, btn)
 end
 
 --- 替換關閉按鈕
-function LunarUI.SkinCloseButton(_self, btn)
+function LunarUI:SkinCloseButton(btn)
     if not btn then return end
 
     StripTextures(btn)
@@ -220,9 +220,28 @@ function LunarUI:SkinTab(tab)
 end
 
 --- 替換捲軸條
-function LunarUI.SkinScrollBar(_self, scrollBar)
+function LunarUI:SkinScrollBar(scrollBar)
     if not scrollBar then return end
     StripTextures(scrollBar)
+end
+
+--- 替換編輯框樣式
+function LunarUI:SkinEditBox(editBox)
+    if not editBox then return end
+
+    StripTextures(editBox)
+
+    -- 建立背景
+    if not editBox._lunarSkinBG then
+        editBox._lunarSkinBG = editBox:CreateTexture(nil, "BACKGROUND")
+        editBox._lunarSkinBG:SetAllPoints()
+        editBox._lunarSkinBG:SetColorTexture(0.1, 0.1, 0.1, 0.8)
+    end
+
+    -- 修復文字顏色
+    if editBox.SetTextColor then
+        editBox:SetTextColor(1, 1, 1, 1)
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -230,7 +249,7 @@ end
 --------------------------------------------------------------------------------
 
 --- 註冊 skin（延遲載入）
-function LunarUI.RegisterSkin(_self, name, loadEvent, skinFunc)
+function LunarUI:RegisterSkin(name, loadEvent, skinFunc)
     skins[name] = { event = loadEvent, func = skinFunc }
 end
 
@@ -301,7 +320,7 @@ LunarUI.StripTextures = StripTextures
 LunarUI.InitializeSkins = InitializeSkins
 
 --- 標記框架已 skin 過，回傳 true 代表首次標記（應套用 skin）
-function LunarUI.MarkSkinned(_self, frame)
+function LunarUI:MarkSkinned(frame)
     if not frame or frame._lunarSkinned then return false end
     frame._lunarSkinned = true
     return true

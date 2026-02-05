@@ -197,6 +197,7 @@ local function CreateMover(name, targetFrame, label)
 
         -- 取得目前位置
         local point, _, relativePoint, x, y = self:GetPoint(1)
+        if not point then return end  -- 防止無錨點時錯誤
 
         -- Ctrl 按住時吸附網格
         if IsControlKeyDown() then

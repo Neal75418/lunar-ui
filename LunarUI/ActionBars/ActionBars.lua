@@ -100,7 +100,8 @@ local function ProcessPendingDesaturate()
         if btnIcon and cd then
             local ok, onCD = pcall(function()
                 local s, d = cd:GetCooldownTimes()
-                return s and d and s > 0 and d > 1500
+                -- 偵測任何冷卻（s > 0 表示有冷卻開始時間，d > 0 表示有冷卻持續時間）
+                return s and d and s > 0 and d > 0
             end)
             if ok and onCD then
                 btnIcon:SetDesaturated(true)
@@ -367,15 +368,17 @@ local function PlayPressFlash(button)
         fadeOut:SetToAlpha(0)
         fadeOut:SetDuration(0.15)
         fadeOut:SetOrder(2)
-        ag:SetScript("OnPlay", function() flash:Show() end)
-        ag:SetScript("OnFinished", function() flash:Hide() end)
+        ag:SetScript("OnPlay", function() button._lunarFlash:Show() end)
+        ag:SetScript("OnFinished", function() button._lunarFlash:Hide() end)
         button._lunarFlashAG = ag
     end
-    if button._lunarFlashAG:IsPlaying() then
+    if button._lunarFlashAG and button._lunarFlashAG:IsPlaying() then
         button._lunarFlashAG:Stop()
     end
-    button._lunarFlash:Show()
-    button._lunarFlashAG:Play()
+    if button._lunarFlash and button._lunarFlashAG then
+        button._lunarFlash:Show()
+        button._lunarFlashAG:Play()
+    end
 end
 
 -- WoW 12.0 對 GetActionCooldown 回傳密值，無法進行比較
@@ -902,11 +905,9 @@ local function EnterKeybindMode()
                 -- 設定快捷鍵
                 local action = self._state_action
                 if action then
-                    local bind = GetBindingKey("ACTIONBUTTON" .. ((action - 1) % 12 + 1))
-                    if bind then
-                        SetBinding(key, "ACTIONBUTTON" .. ((action - 1) % 12 + 1))
-                        SaveBindings(GetCurrentBindingSet())
-                    end
+                    local actionSlot = "ACTIONBUTTON" .. ((action - 1) % 12 + 1)
+                    SetBinding(key, actionSlot)
+                    SaveBindings(GetCurrentBindingSet())
                 end
             end)
         end
@@ -1644,6 +1645,20 @@ end
 
 -- 清理函數
 local function CleanupActionBars()
+    -- 清理淡出計時器
+    for barKey, state in pairs(fadeState) do
+        if state and state.timer then
+            state.timer:Cancel()
+            state.timer = nil
+        end
+    end
+    wipe(fadeState)
+
+    -- 解除戰鬥事件監聽
+    if combatFrame then
+        combatFrame:UnregisterAllEvents()
+    end
+
     -- 還原 ExtraActionBarFrame
     if _G.ExtraActionBarFrame and bars.extraActionButton then
         if _G.ExtraActionBarFrame.intro then

@@ -302,7 +302,7 @@ local eventFrame = CreateFrame("Frame")
 local function OnEvent(_self, event, ...)
     if event == "LOOT_OPENED" then
         -- Check if module is enabled
-        local db = LunarUI.db.profile
+        local db = LunarUI.db and LunarUI.db.profile
         if not db or not db.loot or not db.loot.enabled then return end
 
         -- Hide Blizzard loot frame
@@ -325,7 +325,7 @@ local function OnEvent(_self, event, ...)
         UpdateLootFrame()
 
     elseif event == "LOOT_SLOT_CLEARED" then
-        local db = LunarUI.db.profile
+        local db = LunarUI.db and LunarUI.db.profile
         if not db or not db.loot or not db.loot.enabled then return end
         UpdateLootFrame()
 
@@ -351,7 +351,7 @@ local function HookBlizzardLoot()
     -- Prevent Blizzard LootFrame from showing when our module is active
     if _G.LootFrame and _G.LootFrame.Show then
         hooksecurefunc(_G.LootFrame, "Show", function(self)
-            local db = LunarUI.db.profile
+            local db = LunarUI.db and LunarUI.db.profile
             if db and db.loot and db.loot.enabled then
                 self:Hide()
             end
@@ -364,7 +364,7 @@ end
 --------------------------------------------------------------------------------
 
 local function InitializeLoot()
-    local db = LunarUI.db.profile
+    local db = LunarUI.db and LunarUI.db.profile
     if not db or not db.loot or not db.loot.enabled then return end
 
     eventFrame:RegisterEvent("LOOT_OPENED")

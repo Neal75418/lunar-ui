@@ -601,11 +601,19 @@ end
     在 OnEnable 時呼叫
 ]]
 function LunarUI:CleanupInstallWizard()
+    -- 清理步驟框架
+    for _, frame in pairs(stepFrames) do
+        if frame and frame.Hide then
+            frame:Hide()
+        end
+    end
+    wipe(stepFrames)
+
+    -- 清理主框架
     if wizardFrame then
         wizardFrame:Hide()
         wizardFrame = nil
     end
-    wipe(stepFrames)
 end
 
 function LunarUI:CheckInstallWizard()

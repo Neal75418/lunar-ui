@@ -717,11 +717,19 @@ end
 -- 表情符號替換
 --------------------------------------------------------------------------------
 
+-- 快速檢查：訊息是否包含可能的 emoji 起始字元
+local EMOJI_QUICK_CHECK = "[%:%;<B]"
+
 local function AddEmojisToMessage(_self, _event, msg, ...)
     if not msg then return false, msg, ... end
 
     local db = LunarUI.db and LunarUI.db.profile.chat
     if not db or not db.enableEmojis then return false, msg, ... end
+
+    -- 效能優化：先快速檢查是否包含 emoji 起始字元
+    if not msg:find(EMOJI_QUICK_CHECK) then
+        return false, msg, ...
+    end
 
     CheckEmojiTextures()
 
@@ -1035,15 +1043,18 @@ local function InitializeChat()
         end
     end
 
-    -- 掛鉤臨時聊天框架
-    hooksecurefunc("FCF_OpenTemporaryWindow", function()
-        for _, frameName in ipairs(CHAT_FRAMES) do
-            local frame = _G[frameName]
-            if frame and not styledFrames[frameName] then
-                StyleChatFrame(frame)
+    -- 掛鉤臨時聊天框架（防止重複掛鉤）
+    if not LunarUI._chatTempWindowHooked then
+        LunarUI._chatTempWindowHooked = true
+        hooksecurefunc("FCF_OpenTemporaryWindow", function()
+            for _, frameName in ipairs(CHAT_FRAMES) do
+                local frame = _G[frameName]
+                if frame and not styledFrames[frameName] then
+                    StyleChatFrame(frame)
+                end
             end
-        end
-    end)
+        end)
+    end
 
     -- 套用頻道顏色
     ApplyChannelColors()

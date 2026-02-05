@@ -24,12 +24,14 @@ local function SkinAuctionHouse()
         LunarUI:SkinCloseButton(frame.CloseButton)
     end
 
-    -- Tabs
+    -- Tabs (使用 pairs 避免 nil gap 問題)
     if frame.Tabs then
-        for _, tab in ipairs(frame.Tabs) do
-            LunarUI:SkinTab(tab)
-            if tab.Text then
-                LunarUI:SetFontLight(tab.Text)
+        for _, tab in pairs(frame.Tabs) do
+            if tab then
+                LunarUI:SkinTab(tab)
+                if tab.Text then
+                    LunarUI:SetFontLight(tab.Text)
+                end
             end
         end
     else

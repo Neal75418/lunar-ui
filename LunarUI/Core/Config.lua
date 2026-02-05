@@ -42,8 +42,10 @@ function LunarUI:InitDB()
 
     -- 專精切換自動設定檔
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED", function()
+        if not self.db or not self.db.profile or not self.db.char then return end
+
         local specIndex = GetSpecialization and GetSpecialization()
-        if specIndex and self.db and self.db.char and self.db.char.specProfiles then
+        if specIndex and self.db.char.specProfiles then
             local target = self.db.char.specProfiles[specIndex]
             if target and target ~= self.db:GetCurrentProfile() then
                 self.db:SetProfile(target)

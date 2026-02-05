@@ -91,10 +91,12 @@ local function SkinCommunities()
         LunarUI.StripTextures(frame.GuildDetailsFrame)
     end
 
-    -- Tabs within the frame
+    -- Tabs within the frame (使用 pairs 避免 nil gap 問題)
     if frame.Tabs then
-        for _, tab in ipairs(frame.Tabs) do
-            LunarUI:SkinTab(tab)
+        for _, tab in pairs(frame.Tabs) do
+            if tab then
+                LunarUI:SkinTab(tab)
+            end
         end
     end
 end

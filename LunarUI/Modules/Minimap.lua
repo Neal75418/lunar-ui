@@ -503,7 +503,7 @@ local function HideBlizzardMinimapElements()
     SafeCall(function() Minimap:SetQuestBlobOutsideTexture("") end, "QuestBlobOutside")
 
     -- 8. ★ 關鍵：處理 HybridMinimap（室內/副本地圖覆蓋層的圓形遮罩）
-    if HybridMinimap then
+    if HybridMinimap and HybridMinimap.CircleMask and HybridMinimap.MapCanvas then
         SafeCall(function()
             HybridMinimap.CircleMask:SetTexture("Interface\\BUTTONS\\WHITE8X8")
             HybridMinimap.MapCanvas:SetUseMaskTexture(false)
@@ -1015,7 +1015,7 @@ local function InitializeMinimap()
     addonLoadedFrame:SetScript("OnEvent", function(self, _event, addon)
         if addon == "Blizzard_HybridMinimap" then
             self:UnregisterEvent("ADDON_LOADED")
-            if HybridMinimap then
+            if HybridMinimap and HybridMinimap.CircleMask and HybridMinimap.MapCanvas then
                 LunarUI.SafeCall(function()
                     HybridMinimap.MapCanvas:SetUseMaskTexture(false)
                     HybridMinimap.CircleMask:SetTexture("Interface\\BUTTONS\\WHITE8X8")

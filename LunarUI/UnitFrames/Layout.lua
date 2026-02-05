@@ -502,8 +502,8 @@ local function CreateClassPower(frame)
         end
 
         -- 根據職業著色
-        local colors = oUF.colors.power
-        if powerType and colors[powerType] then
+        local colors = oUF and oUF.colors and oUF.colors.power
+        if colors and powerType and colors[powerType] then
             local c = colors[powerType]
             for idx = 1, maxVisible do
                 element[idx]:SetStatusBarColor(c[1] or c.r, c[2] or c.g, c[3] or c.b)
@@ -557,28 +557,28 @@ local function CreateHealPrediction(frame, unit)
     local hp = frame.Health
     if not hp then return end
 
-    -- 自身治療預測
+    -- 自身治療預測（使用 TOPLEFT+BOTTOMRIGHT 確保正確的錨點參考）
     local healingPlayer = CreateFrame("StatusBar", nil, hp)
     healingPlayer:SetStatusBarTexture(GetStatusBarTexture())
     healingPlayer:SetStatusBarColor(0.0, 0.8, 0.0, 0.4)
-    healingPlayer:SetPoint("TOP")
-    healingPlayer:SetPoint("BOTTOM")
+    healingPlayer:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
+    healingPlayer:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
     healingPlayer:SetWidth(frame:GetWidth())
 
     -- 他人治療預測
     local healingOther = CreateFrame("StatusBar", nil, hp)
     healingOther:SetStatusBarTexture(GetStatusBarTexture())
     healingOther:SetStatusBarColor(0.0, 0.6, 0.0, 0.3)
-    healingOther:SetPoint("TOP")
-    healingOther:SetPoint("BOTTOM")
+    healingOther:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
+    healingOther:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
     healingOther:SetWidth(frame:GetWidth())
 
     -- 吸收盾
     local damageAbsorb = CreateFrame("StatusBar", nil, hp)
     damageAbsorb:SetStatusBarTexture(GetStatusBarTexture())
     damageAbsorb:SetStatusBarColor(1.0, 1.0, 1.0, 0.3)
-    damageAbsorb:SetPoint("TOP")
-    damageAbsorb:SetPoint("BOTTOM")
+    damageAbsorb:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
+    damageAbsorb:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
     damageAbsorb:SetWidth(frame:GetWidth())
 
     frame.HealthPrediction = {
@@ -902,6 +902,8 @@ local function TargetLayout(frame, unit)
         frame.Debuffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
         local debuffSize = db and db.debuffSize or 22
         frame.Debuffs:SetSize(frame:GetWidth(), debuffSize * 2 + 3)
+        frame.Debuffs.initialAnchor = "BOTTOMLEFT"  -- 與 SetPoint 一致
+        frame.Debuffs["growth-x"] = "RIGHT"
         frame.Debuffs["growth-y"] = "UP"
     end
 
@@ -1021,6 +1023,7 @@ local function RaidLayout(frame, unit)
         debuffs.spacing = 2
         debuffs.num = maxDebuffs
         debuffs.initialAnchor = "CENTER"
+        debuffs["growth-x"] = "RIGHT"  -- 添加水平成長方向
         debuffs.FilterAura = AuraFilter
         debuffs.PostCreateButton = PostCreateAuraIcon
         debuffs.PostUpdateButton = PostUpdateDebuffIcon

@@ -488,13 +488,13 @@ local function OnTooltipSetItem(tooltip)
     end
     if quality and quality > 1 then
         local qr, qg, qb = C_Item.GetItemQualityColor(quality)
-        -- if qr and qg and qb then
+        if qr and qg and qb then
             if tooltip.SetBackdropBorderColor then
                 tooltip:SetBackdropBorderColor(qr, qg, qb, 1)
             elseif tooltip.LunarBackdrop then
                 tooltip.LunarBackdrop:SetBackdropBorderColor(qr, qg, qb, 1)
             end
-        -- end
+        end
     end
 
     tooltip:Show()

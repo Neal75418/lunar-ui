@@ -169,8 +169,9 @@ end
 --------------------------------------------------------------------------------
 
 local gameMenuHooked = false
+local gameMenuButtonAdded = false
 
-function LunarUI.SetupGameMenuButton(_self)
+function LunarUI:SetupGameMenuButton()
     if gameMenuHooked then return end
     if not _G.GameMenuFrame or not _G.GameMenuFrame.InitButtons then return end
     gameMenuHooked = true
@@ -179,6 +180,10 @@ function LunarUI.SetupGameMenuButton(_self)
     -- Hook InitButtons 在按鈕初始化後新增 LunarUI 按鈕
     -- 注意：不交換 buttonPool 中的按鈕位置，避免 taint 風險
     hooksecurefunc(_G.GameMenuFrame, "InitButtons", function(self)
+        -- 防止重複添加按鈕（InitButtons 可能被多次調用）
+        if gameMenuButtonAdded then return end
+        gameMenuButtonAdded = true
+
         self:AddButton("LunarUI", function()
             PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
             if _G.HideUIPanel then _G.HideUIPanel(_G.GameMenuFrame) end

@@ -337,6 +337,13 @@ function LunarUI:DebugVigorFrames()
     -- 顯示在可複製的 EditBox 彈窗
     local text = table.concat(lines, "\n")
 
+    -- 清理舊框架避免重複創建
+    local oldFrame = _G["LunarUI_DebugVigorPopup"]
+    if oldFrame then
+        oldFrame:Hide()
+        oldFrame:SetParent(nil)
+    end
+
     local f = CreateFrame("Frame", "LunarUI_DebugVigorPopup", UIParent, "BackdropTemplate")
     f:SetSize(600, 400)
     f:SetPoint("CENTER")

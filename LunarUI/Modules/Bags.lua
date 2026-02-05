@@ -602,8 +602,8 @@ local function UpdateSlot(button)
         if button.bindText then
             if db and db.showBindType and itemLink then
                 local bindType = select(14, C_Item.GetItemInfo(itemLink))
-                -- bindType: 1=BoP, 2=BoE, 3=BoU, 4=Quest
-                if bindType == 2 then
+                -- bindType: 1=BoP, 2=BoE, 3=BoU, 4=Quest（可能為 nil 若物品未載入）
+                if bindType and bindType == 2 then
                     button.bindText:SetText("BoE")
                     button.bindText:SetTextColor(0.1, 1, 0.1)
                     button.bindText:Show()
@@ -1064,11 +1064,12 @@ local function UpdateBankSlot(button)
         if button.bindText then
             if db and db.showBindType and itemLink then
                 local bindType = select(14, C_Item.GetItemInfo(itemLink))
-                if bindType == 2 then
+                -- bindType 可能為 nil 若物品未載入
+                if bindType and bindType == 2 then
                     button.bindText:SetText("BoE")
                     button.bindText:SetTextColor(0.1, 1, 0.1)
                     button.bindText:Show()
-                elseif bindType == 3 then
+                elseif bindType and bindType == 3 then
                     button.bindText:SetText("BoU")
                     button.bindText:SetTextColor(0.9, 0.6, 0.2)
                     button.bindText:Show()
