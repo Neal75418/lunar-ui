@@ -454,7 +454,7 @@ local defaults = {
 
         -- Skins 設定（暴雪框架重新造型）
         skins = {
-            enabled = false,  -- v0.8 再啟用，目前 SkinFrame 對 Blizzard 框架的換膚尚不完整
+            enabled = true,  -- v0.8 啟用，已修復文字顏色問題
             blizzard = {
                 character = true,
                 spellbook = true,

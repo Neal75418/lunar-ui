@@ -15,7 +15,12 @@ local function SkinTalents()
     local frame = ClassTalentFrame
     if not frame then return end
 
-    LunarUI:SkinFrame(frame)
+    LunarUI:SkinFrame(frame, { textDepth = 3 })
+
+    -- 標題文字
+    if frame.TitleText then
+        LunarUI:SetFontLight(frame.TitleText)
+    end
 
     -- 關閉按鈕
     if frame.CloseButton then
@@ -27,6 +32,9 @@ local function SkinTalents()
         for _, tab in ipairs(frame.TabSystem.tabs) do
             if tab then
                 LunarUI:SkinTab(tab)
+                if tab.Text then
+                    LunarUI:SetFontLight(tab.Text)
+                end
             end
         end
     end

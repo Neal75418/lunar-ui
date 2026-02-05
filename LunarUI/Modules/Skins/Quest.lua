@@ -15,6 +15,7 @@ local function SkinQuest()
     -- QuestMapFrame 本身是子框架，skin 其細節面板
     if frame.DetailsFrame then
         LunarUI.StripTextures(frame.DetailsFrame)
+        LunarUI:SkinFrameText(frame.DetailsFrame, 3)
 
         -- 完成按鈕
         if frame.DetailsFrame.CompleteQuestFrame then
@@ -39,16 +40,23 @@ local function SkinQuest()
     -- QuestLogFrame（獨立任務日誌，若存在）
     local questLog = QuestLogFrame
     if questLog then
-        LunarUI:SkinFrame(questLog)
+        LunarUI:SkinFrame(questLog, { textDepth = 3 })
         if questLog.CloseButton then
             LunarUI:SkinCloseButton(questLog.CloseButton)
         end
     end
 
-    -- QuestFrame（NPC 任務對話框）
+    -- QuestFrame（NPC 任務對話框）— 這是最重要的任務框架
     local questFrame = QuestFrame
     if questFrame then
-        LunarUI:SkinFrame(questFrame)
+        LunarUI:SkinFrame(questFrame, { textDepth = 4 })
+
+        -- 標題文字
+        if questFrame.TitleText then
+            LunarUI:SetFontLight(questFrame.TitleText)
+        elseif _G.QuestFrameTitleText then
+            LunarUI:SetFontLight(_G.QuestFrameTitleText)
+        end
 
         if questFrame.CloseButton then
             LunarUI:SkinCloseButton(questFrame.CloseButton)
@@ -71,6 +79,39 @@ local function SkinQuest()
         end
         if _G.QuestFrameGoodbyeButton then
             LunarUI:SkinButton(_G.QuestFrameGoodbyeButton)
+        end
+
+        -- 任務描述文字（重要！）
+        if _G.QuestInfoDescriptionText then
+            LunarUI:SetFontLight(_G.QuestInfoDescriptionText)
+        end
+        if _G.QuestInfoObjectivesText then
+            LunarUI:SetFontLight(_G.QuestInfoObjectivesText)
+        end
+        if _G.QuestInfoRewardText then
+            LunarUI:SetFontLight(_G.QuestInfoRewardText)
+        end
+
+        -- 任務標題
+        if _G.QuestInfoTitleHeader then
+            LunarUI:SetFontLight(_G.QuestInfoTitleHeader)
+        end
+        if _G.QuestInfoObjectivesHeader then
+            LunarUI:SetFontLight(_G.QuestInfoObjectivesHeader)
+        end
+        if _G.QuestInfoRewardsFrame then
+            LunarUI:SkinFrameText(_G.QuestInfoRewardsFrame, 2)
+        end
+
+        -- 進度框架
+        if _G.QuestProgressTitleText then
+            LunarUI:SetFontLight(_G.QuestProgressTitleText)
+        end
+        if _G.QuestProgressText then
+            LunarUI:SetFontLight(_G.QuestProgressText)
+        end
+        if _G.QuestProgressRequiredItemsText then
+            LunarUI:SetFontLight(_G.QuestProgressRequiredItemsText)
         end
     end
 end

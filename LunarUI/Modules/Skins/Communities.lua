@@ -11,8 +11,13 @@ local function SkinCommunities()
     local frame = _G.CommunitiesFrame
     if not frame then return end
 
-    -- Main frame
-    LunarUI:SkinFrame(frame)
+    -- Main frame（啟用文字修復）
+    LunarUI:SkinFrame(frame, { textDepth = 3 })
+
+    -- 標題文字
+    if frame.TitleText then
+        LunarUI:SetFontLight(frame.TitleText)
+    end
 
     -- Close button
     if frame.CloseButton then

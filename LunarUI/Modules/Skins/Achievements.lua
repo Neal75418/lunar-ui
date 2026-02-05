@@ -11,8 +11,15 @@ local function SkinAchievements()
     local frame = AchievementFrame
     if not frame then return end
 
-    -- 主框架背景
-    LunarUI:SkinFrame(frame)
+    -- 主框架背景（啟用文字修復）
+    LunarUI:SkinFrame(frame, { textDepth = 3 })
+
+    -- 標題文字
+    if frame.TitleText then
+        LunarUI:SetFontLight(frame.TitleText)
+    elseif frame.Header and frame.Header.Title then
+        LunarUI:SetFontLight(frame.Header.Title)
+    end
 
     -- 關閉按鈕
     if frame.CloseButton then
@@ -24,6 +31,7 @@ local function SkinAchievements()
     -- 標題裝飾
     if frame.Header then
         LunarUI.StripTextures(frame.Header)
+        LunarUI:SkinFrameText(frame.Header, 1)
     end
 
     -- 分頁（成就/統計）
@@ -31,6 +39,9 @@ local function SkinAchievements()
         local tab = _G["AchievementFrameTab" .. i]
         if tab then
             LunarUI:SkinTab(tab)
+            if tab.Text then
+                LunarUI:SetFontLight(tab.Text)
+            end
         end
     end
 

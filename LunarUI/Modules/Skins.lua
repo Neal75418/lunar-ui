@@ -47,8 +47,9 @@ end
 --------------------------------------------------------------------------------
 
 --- 替換框架背景為 LunarUI 風格
-function LunarUI:SkinFrame(frame)
+function LunarUI:SkinFrame(frame, options)
     if not frame then return end
+    options = options or {}
 
     -- 隱藏暴雪 NineSlice 邊框
     if frame.NineSlice then frame.NineSlice:SetAlpha(0) end
@@ -68,6 +69,75 @@ function LunarUI:SkinFrame(frame)
     frame._lunarSkinBG:SetBackdrop(self.backdropTemplate)
     frame._lunarSkinBG:SetBackdropColor(bg[1], bg[2], bg[3], bg[4] or 1)
     frame._lunarSkinBG:SetBackdropBorderColor(border[1], border[2], border[3], border[4] or 1)
+
+    -- 修復文字顏色（暗黑風格：白色文字）
+    if options.fixText ~= false then
+        self:SkinFrameText(frame, options.textDepth or 2)
+    end
+end
+
+--- 修復框架內的文字顏色（解決黑底黑字問題）
+-- @param frame 目標框架
+-- @param depth 遞迴深度限制（預設 2，避免過度遍歷影響效能）
+-- @param currentDepth 當前深度（內部使用）
+function LunarUI:SkinFrameText(frame, depth, currentDepth)
+    if not frame then return end
+    depth = depth or 2
+    currentDepth = currentDepth or 0
+
+    -- 遍歷框架的所有 region（包含 FontString）
+    local n = select("#", frame:GetRegions())
+    if n > 0 then
+        local regions = { frame:GetRegions() }
+        for i = 1, n do
+            local region = regions[i]
+            if region and region.IsObjectType and region:IsObjectType("FontString") then
+                -- 檢查是否為深色文字（需要修復）
+                local r, g, b = region:GetTextColor()
+                if r and r < 0.5 and g < 0.5 and b < 0.5 then
+                    -- 深色文字改為白色
+                    region:SetTextColor(1, 1, 1, 1)
+                end
+            end
+        end
+    end
+
+    -- 遞迴處理子框架（有深度限制）
+    -- 使用 select("#", ...) 安全遍歷，避免 ipairs 在 nil gap 時停止
+    if currentDepth < depth then
+        local childCount = select("#", frame:GetChildren())
+        if childCount > 0 then
+            local children = { frame:GetChildren() }
+            for i = 1, childCount do
+                local child = children[i]
+                -- 跳過已有 LunarUI 處理過的框架
+                if child and not child._lunarSkinBG then
+                    self:SkinFrameText(child, depth, currentDepth + 1)
+                end
+            end
+        end
+    end
+end
+
+--- 設定 FontString 為亮色（用於單獨處理特定文字）
+function LunarUI:SetFontLight(fontString)
+    if fontString and fontString.SetTextColor then
+        fontString:SetTextColor(1, 1, 1, 1)
+    end
+end
+
+--- 設定 FontString 為次要顏色（灰白色）
+function LunarUI:SetFontSecondary(fontString)
+    if fontString and fontString.SetTextColor then
+        fontString:SetTextColor(0.9, 0.9, 0.9, 1)
+    end
+end
+
+--- 設定 FontString 為柔和顏色（用於次要資訊）
+function LunarUI:SetFontMuted(fontString)
+    if fontString and fontString.SetTextColor then
+        fontString:SetTextColor(0.7, 0.7, 0.7, 1)
+    end
 end
 
 --- 替換按鈕樣式

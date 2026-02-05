@@ -11,8 +11,15 @@ local function SkinGossip()
     local frame = GossipFrame
     if not frame then return end
 
-    -- 主框架背景
-    LunarUI:SkinFrame(frame)
+    -- 主框架背景（啟用文字修復，深度 4 以覆蓋對話選項）
+    LunarUI:SkinFrame(frame, { textDepth = 4 })
+
+    -- 標題文字
+    if frame.TitleText then
+        LunarUI:SetFontLight(frame.TitleText)
+    elseif _G.GossipFrameTitleText then
+        LunarUI:SetFontLight(_G.GossipFrameTitleText)
+    end
 
     -- 關閉按鈕
     if frame.CloseButton then
@@ -24,6 +31,7 @@ local function SkinGossip()
     -- Greeting 面板
     if frame.GreetingPanel then
         LunarUI.StripTextures(frame.GreetingPanel)
+        LunarUI:SkinFrameText(frame.GreetingPanel, 3)
 
         -- 再見按鈕
         if frame.GreetingPanel.GoodbyeButton then
@@ -39,6 +47,29 @@ local function SkinGossip()
     -- NPC 模型區域背景
     if frame.FriendshipStatusBar then
         LunarUI.StripTextures(frame.FriendshipStatusBar)
+    end
+
+    -- 對話文字（重要！NPC 說的話）
+    if _G.GossipGreetingText then
+        LunarUI:SetFontLight(_G.GossipGreetingText)
+    end
+
+    -- 對話選項按鈕（WoW 12.0 使用 ScrollFrame）
+    if frame.GreetingPanel and frame.GreetingPanel.ScrollBox then
+        -- 對於每個對話選項，需要 hook 來處理動態內容
+        hooksecurefunc(frame.GreetingPanel.ScrollBox, "Update", function(self)
+            local n = select("#", self:GetChildren())
+            if n > 0 then
+                local children = { self:GetChildren() }
+                for i = 1, n do
+                    local child = children[i]
+                    if child then
+                        -- 確保選項文字可讀
+                        LunarUI:SkinFrameText(child, 1)
+                    end
+                end
+            end
+        end)
     end
 end
 

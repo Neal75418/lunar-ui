@@ -11,8 +11,15 @@ local function SkinMail()
     local frame = MailFrame
     if not frame then return end
 
-    -- 主框架背景
-    LunarUI:SkinFrame(frame)
+    -- 主框架背景（啟用文字修復）
+    LunarUI:SkinFrame(frame, { textDepth = 3 })
+
+    -- 標題文字
+    if frame.TitleText then
+        LunarUI:SetFontLight(frame.TitleText)
+    elseif _G.MailFrameTitleText then
+        LunarUI:SetFontLight(_G.MailFrameTitleText)
+    end
 
     -- 關閉按鈕
     if frame.CloseButton then
@@ -26,12 +33,16 @@ local function SkinMail()
         local tab = _G["MailFrameTab" .. i]
         if tab then
             LunarUI:SkinTab(tab)
+            if tab.Text then
+                LunarUI:SetFontLight(tab.Text)
+            end
         end
     end
 
     -- 收件匣面板
     if _G.InboxFrame then
         LunarUI.StripTextures(_G.InboxFrame)
+        LunarUI:SkinFrameText(_G.InboxFrame, 2)
     end
 
     -- 信件按鈕
@@ -40,6 +51,11 @@ local function SkinMail()
         if btn then
             LunarUI.StripTextures(btn)
         end
+        -- 信件標題/寄件人文字
+        local sender = _G["MailItem" .. i .. "Sender"]
+        local subject = _G["MailItem" .. i .. "Subject"]
+        if sender then LunarUI:SetFontLight(sender) end
+        if subject then LunarUI:SetFontLight(subject) end
     end
 
     -- 翻頁按鈕

@@ -13,7 +13,12 @@ local function SkinSpellbook()
     local frame = PlayerSpellsFrame or SpellBookFrame
     if not frame then return end
 
-    LunarUI:SkinFrame(frame)
+    LunarUI:SkinFrame(frame, { textDepth = 3 })
+
+    -- 標題文字
+    if frame.TitleText then
+        LunarUI:SetFontLight(frame.TitleText)
+    end
 
     -- 關閉按鈕
     if frame.CloseButton then

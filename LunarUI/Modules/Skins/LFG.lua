@@ -11,8 +11,13 @@ local function SkinLFG()
     local frame = PVEFrame
     if not frame then return end
 
-    -- 主框架背景
-    LunarUI:SkinFrame(frame)
+    -- 主框架背景（啟用文字修復）
+    LunarUI:SkinFrame(frame, { textDepth = 3 })
+
+    -- 標題文字
+    if frame.TitleText then
+        LunarUI:SetFontLight(frame.TitleText)
+    end
 
     -- 關閉按鈕
     if frame.CloseButton then
@@ -26,6 +31,9 @@ local function SkinLFG()
         local tab = _G["PVEFrameTab" .. i]
         if tab then
             LunarUI:SkinTab(tab)
+            if tab.Text then
+                LunarUI:SetFontLight(tab.Text)
+            end
         end
     end
 

@@ -11,8 +11,13 @@ local function SkinAuctionHouse()
     local frame = _G.AuctionHouseFrame
     if not frame then return end
 
-    -- Main frame
-    LunarUI:SkinFrame(frame)
+    -- Main frame（啟用文字修復）
+    LunarUI:SkinFrame(frame, { textDepth = 3 })
+
+    -- 標題文字
+    if frame.TitleText then
+        LunarUI:SetFontLight(frame.TitleText)
+    end
 
     -- Close button
     if frame.CloseButton then
@@ -23,6 +28,9 @@ local function SkinAuctionHouse()
     if frame.Tabs then
         for _, tab in ipairs(frame.Tabs) do
             LunarUI:SkinTab(tab)
+            if tab.Text then
+                LunarUI:SetFontLight(tab.Text)
+            end
         end
     else
         -- Legacy tab naming

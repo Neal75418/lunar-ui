@@ -11,8 +11,8 @@ local function SkinCharacterFrame()
     local frame = CharacterFrame
     if not frame then return end
 
-    -- 主框架背景
-    LunarUI:SkinFrame(frame)
+    -- 主框架背景（啟用文字修復，深度 3 以覆蓋屬性面板）
+    LunarUI:SkinFrame(frame, { textDepth = 3 })
 
     -- 關閉按鈕
     if frame.CloseButton then
@@ -26,7 +26,18 @@ local function SkinCharacterFrame()
         local tab = _G["CharacterFrameTab" .. i]
         if tab then
             LunarUI:SkinTab(tab)
+            -- 修復分頁文字顏色
+            if tab.Text then
+                LunarUI:SetFontLight(tab.Text)
+            end
         end
+    end
+
+    -- 角色名稱文字
+    if frame.TitleText then
+        LunarUI:SetFontLight(frame.TitleText)
+    elseif _G.CharacterFrameTitleText then
+        LunarUI:SetFontLight(_G.CharacterFrameTitleText)
     end
 
     -- CharacterModelScene 背景（角色模型區域）
@@ -68,14 +79,26 @@ local function SkinCharacterFrame()
         end
     end
 
-    -- PaperDollFrame 內頁裝飾移除
+    -- PaperDollFrame 內頁裝飾移除並修復文字
     if PaperDollFrame then
         LunarUI.StripTextures(PaperDollFrame)
+        LunarUI:SkinFrameText(PaperDollFrame, 2)
     end
 
-    -- CharacterStatsPane 屬性面板
+    -- CharacterStatsPane 屬性面板（重要：屬性文字需要修復）
     if CharacterStatsPane then
         LunarUI.StripTextures(CharacterStatsPane)
+        LunarUI:SkinFrameText(CharacterStatsPane, 3)
+
+        -- 特別處理屬性分類標題
+        if CharacterStatsPane.ClassBackground then
+            CharacterStatsPane.ClassBackground:SetAlpha(0)
+        end
+    end
+
+    -- 裝備等級文字（WoW 12.0）
+    if PaperDollFrame and PaperDollFrame.EquipmentManagerPane then
+        LunarUI:SkinFrameText(PaperDollFrame.EquipmentManagerPane, 2)
     end
 end
 

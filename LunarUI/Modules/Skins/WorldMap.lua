@@ -11,8 +11,8 @@ local function SkinWorldMap()
     local frame = WorldMapFrame
     if not frame then return end
 
-    -- 主框架背景
-    LunarUI:SkinFrame(frame)
+    -- 主框架背景（啟用文字修復）
+    LunarUI:SkinFrame(frame, { textDepth = 3 })
 
     -- 邊框容器
     if frame.BorderFrame then
