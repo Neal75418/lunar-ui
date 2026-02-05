@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned
 - Configuration import/export (string serialization)
-- Installation wizard for first-time setup
 - Custom moon phase textures (hand-drawn)
 - Custom fonts
 
@@ -18,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.0] - 2026-01-28
 
 ### Added
+- **Installation Wizard** (`Core/InstallWizard.lua`)
+  - 4-step setup guide (UI Scale, Layout, ActionBar, Summary)
+  - Layout presets (DPS/Tank/Healer)
+  - Triggered via `/lunar install`
+
 - **LunarUI_Options**: Complete configuration GUI
   - General settings (enable/debug/Phase system)
   - Phase token adjustments (alpha/scale per phase)
