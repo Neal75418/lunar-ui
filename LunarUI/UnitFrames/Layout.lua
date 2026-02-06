@@ -742,6 +742,7 @@ end
 -- 死亡指示器：使用單一全域事件框架防止記憶體洩漏
 -- 使用弱引用表追蹤需要死亡狀態更新的框架
 local deathIndicatorFrames = setmetatable({}, { __mode = "k" })
+local deathUnitMap = {}  -- unit → frame 反向映射（O(1) 事件查詢）
 local deathIndicatorEventFrame
 
 local function UpdateDeathStateForFrame(frame)
@@ -768,12 +769,34 @@ local function UpdateDeathStateForFrame(frame)
     end
 end
 
-local function UpdateAllDeathStates(eventUnit)
+local function RebuildDeathUnitMap()
+    wipe(deathUnitMap)
     for frame in pairs(deathIndicatorFrames) do
         if frame and frame.unit then
-            if not eventUnit or eventUnit == frame.unit then
+            deathUnitMap[frame.unit] = frame
+        end
+    end
+end
+
+local function UpdateAllDeathStates(eventUnit)
+    if not eventUnit then
+        -- 全量刷新（PLAYER_ENTERING_WORLD / GROUP_ROSTER_UPDATE）
+        RebuildDeathUnitMap()
+        for frame in pairs(deathIndicatorFrames) do
+            if frame and frame.unit then
                 UpdateDeathStateForFrame(frame)
             end
+        end
+    else
+        -- O(1) 查詢取代 O(n) 迭代
+        local frame = deathUnitMap[eventUnit]
+        if not frame or frame.unit ~= eventUnit then
+            -- 映射表過時（新框架或單位變更），惰性重建
+            RebuildDeathUnitMap()
+            frame = deathUnitMap[eventUnit]
+        end
+        if frame then
+            UpdateDeathStateForFrame(frame)
         end
     end
 end
@@ -787,8 +810,9 @@ local function EnsureDeathIndicatorEventFrame()
     deathIndicatorEventFrame:RegisterEvent("UNIT_CONNECTION")
     deathIndicatorEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     deathIndicatorEventFrame:RegisterEvent("UNIT_FLAGS")
-    deathIndicatorEventFrame:SetScript("OnEvent", function(_self, event, eventUnit, ...)
-        if event == "PLAYER_ENTERING_WORLD" then
+    deathIndicatorEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+    deathIndicatorEventFrame:SetScript("OnEvent", function(_self, event, eventUnit)
+        if event == "PLAYER_ENTERING_WORLD" or event == "GROUP_ROSTER_UPDATE" then
             UpdateAllDeathStates()
         elseif eventUnit then
             UpdateAllDeathStates(eventUnit)
@@ -1198,6 +1222,7 @@ end
 local function CleanupUnitFrames()
     -- 清除死亡指示器弱引用表項目
     wipe(deathIndicatorFrames)
+    wipe(deathUnitMap)
 end
 
 -- 匯出

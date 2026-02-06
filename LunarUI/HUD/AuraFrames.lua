@@ -64,7 +64,7 @@ local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS
 
 -- 計時條顏色（依剩餘時間）
 local function GetTimerBarColor(remaining, duration)
-    if duration <= 0 then return 0.5, 0.5, 0.5 end
+    if not remaining or not duration or duration <= 0 then return 0.5, 0.5, 0.5 end
     local pct = remaining / duration
     if pct > 0.5 then
         return 0.2, 0.7, 0.2  -- 綠色

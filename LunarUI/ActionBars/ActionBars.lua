@@ -689,10 +689,11 @@ end
 -- 平滑動畫框架
 local fadeAnimFrame = CreateFrame("Frame")
 local fadeAnimActive = false
+local cachedFadeDuration = 0.4  -- 由 StartFadeAnimation 快取，動畫期間設定不會變
 
 local function UpdateFadeAnimations(_self, elapsed)
     local anyActive = false
-    local _, _, _, fadeDuration = GetFadeSettings()
+    local fadeDuration = cachedFadeDuration
 
     for barKey, state in pairs(fadeState) do
         if state.alpha ~= state.targetAlpha then
@@ -719,6 +720,8 @@ end
 local function StartFadeAnimation()
     if fadeAnimActive then return end
     fadeAnimActive = true
+    local _, _, _, dur = GetFadeSettings()
+    cachedFadeDuration = dur or 0.4
     fadeAnimFrame:SetScript("OnUpdate", UpdateFadeAnimations)
 end
 

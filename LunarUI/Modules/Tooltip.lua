@@ -114,15 +114,13 @@ local function CacheInspectData(guid, ilvl, spec)
         spec = spec,
         time = GetTime(),
     }
-    -- 過多快取時清除過期條目
+    -- 單次迭代：計數 + 清理過期條目
     local count = 0
-    for _ in pairs(inspectCache) do count = count + 1 end
-    if count > INSPECT_CACHE_MAX then
-        local now = GetTime()
-        for k, v in pairs(inspectCache) do
-            if (now - v.time) >= INSPECT_CACHE_TTL then
-                inspectCache[k] = nil
-            end
+    local now = GetTime()
+    for k, v in pairs(inspectCache) do
+        count = count + 1
+        if count > INSPECT_CACHE_MAX and (now - v.time) >= INSPECT_CACHE_TTL then
+            inspectCache[k] = nil
         end
     end
 end
