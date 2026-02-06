@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: Auction House
     Reskin AuctionHouseFrame with LunarUI theme
@@ -8,34 +8,13 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local function SkinAuctionHouse()
-    local frame = _G.AuctionHouseFrame
+    local frame = LunarUI:SkinStandardFrame("AuctionHouseFrame", {
+        tabProperty = "Tabs",
+    })
     if not frame then return end
 
-    -- Main frame（啟用文字修復）
-    LunarUI:SkinFrame(frame, { textDepth = 3 })
-
-    -- 標題文字
-    if frame.TitleText then
-        LunarUI:SetFontLight(frame.TitleText)
-    end
-
-    -- Close button
-    if frame.CloseButton then
-        LunarUI:SkinCloseButton(frame.CloseButton)
-    end
-
-    -- Tabs (使用 pairs 避免 nil gap 問題)
-    if frame.Tabs then
-        for _, tab in pairs(frame.Tabs) do
-            if tab then
-                LunarUI:SkinTab(tab)
-                if tab.Text then
-                    LunarUI:SetFontLight(tab.Text)
-                end
-            end
-        end
-    else
-        -- Legacy tab naming
+    -- Legacy tab naming fallback
+    if not frame.Tabs then
         for i = 1, 4 do
             local tab = _G["AuctionHouseFrameTab" .. i]
             if tab then

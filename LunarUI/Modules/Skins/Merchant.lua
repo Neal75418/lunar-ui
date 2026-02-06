@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: Merchant Frame
     Reskin MerchantFrame (商人介面) with LunarUI theme
@@ -33,36 +33,19 @@ local function SkinMerchantItem(btn, index)
 end
 
 local function SkinMerchant()
-    local frame = MerchantFrame
+    local frame = LunarUI:SkinStandardFrame("MerchantFrame", {
+        tabPrefix = "MerchantFrameTab", tabCount = 2,
+    })
     if not frame then return end
 
-    -- 主框架背景（啟用文字修復）
-    LunarUI:SkinFrame(frame, { textDepth = 3 })
-
-    -- 標題文字
-    if frame.TitleText then
-        LunarUI:SetFontLight(frame.TitleText)
-    elseif _G.MerchantFrameTitleText then
+    -- 標題文字 fallback
+    if not frame.TitleText and _G.MerchantFrameTitleText then
         LunarUI:SetFontLight(_G.MerchantFrameTitleText)
     end
 
-    -- 關閉按鈕
-    if frame.CloseButton then
-        LunarUI:SkinCloseButton(frame.CloseButton)
-    elseif _G.MerchantFrameCloseButton then
+    -- 關閉按鈕 fallback
+    if not frame.CloseButton and _G.MerchantFrameCloseButton then
         LunarUI:SkinCloseButton(_G.MerchantFrameCloseButton)
-    end
-
-    -- 分頁（商人/回購）
-    for i = 1, 2 do
-        local tab = _G["MerchantFrameTab" .. i]
-        if tab then
-            LunarUI:SkinTab(tab)
-            -- 修復分頁文字
-            if tab.Text then
-                LunarUI:SetFontLight(tab.Text)
-            end
-        end
     end
 
     -- 翻頁按鈕

@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, redundant-value
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, redundant-value
 --[[
     LunarUI - oUF 佈局
     定義所有單位框架的視覺風格
@@ -50,16 +50,7 @@ local SIZES = {
 -- 輔助函數
 --------------------------------------------------------------------------------
 
-local function CreateBackdrop(frame)
-    local backdrop = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    backdrop:SetAllPoints()
-    backdrop:SetFrameLevel(math.max(frame:GetFrameLevel() - 1, 0))
-    backdrop:SetBackdrop(backdropTemplate)
-    backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
-    backdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
-    frame.Backdrop = backdrop
-    return backdrop
-end
+local CreateBackdrop = LunarUI.CreateBackdrop
 
 --------------------------------------------------------------------------------
 -- 核心元素
@@ -86,7 +77,7 @@ local function CreateHealthBar(frame, unit)
     health.bg = health:CreateTexture(nil, "BACKGROUND")
     health.bg:SetAllPoints()
     health.bg:SetTexture(GetStatusBarTexture())
-    health.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
+    health.bg:SetVertexColor(unpack(C.bgIcon))
     health.bg.multiplier = 0.3
 
     -- 頻繁更新以確保動畫流暢
@@ -139,7 +130,7 @@ local function CreateHealthBar(frame, unit)
 end
 
 --[[ 能量條 ]]
-local function CreatePowerBar(frame, _unit)
+local function CreatePowerBar(frame)
     local power = CreateFrame("StatusBar", nil, frame)
     power:SetStatusBarTexture(GetStatusBarTexture())
     power:SetPoint("TOPLEFT", frame.Health, "BOTTOMLEFT", 0, -1)
@@ -152,7 +143,7 @@ local function CreatePowerBar(frame, _unit)
     power.bg = power:CreateTexture(nil, "BACKGROUND")
     power.bg:SetAllPoints()
     power.bg:SetTexture(GetStatusBarTexture())
-    power.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
+    power.bg:SetVertexColor(unpack(C.bgIcon))
     power.bg.multiplier = 0.3
 
     frame.Power = power
@@ -199,7 +190,7 @@ local function CreateHealthText(frame, unit)
 end
 
 --[[ 施法條 ]]
-local function CreateCastbar(frame, _unit)
+local function CreateCastbar(frame)
     local castbar = CreateFrame("StatusBar", nil, frame)
     castbar:SetStatusBarTexture(GetStatusBarTexture())
     castbar:SetStatusBarColor(0.4, 0.6, 0.8, 1)
@@ -337,22 +328,16 @@ end
 
 --[[ 光環圖示樣式化鉤子 ]]
 local function PostCreateAuraIcon(_self, button)
-    if BackdropTemplateMixin then
-        Mixin(button, BackdropTemplateMixin)
-        button:OnBackdropLoaded()
-        button:SetBackdrop(backdropTemplate)
+    LunarUI.StyleAuraButton(button)
+
+    if button.SetBackdropColor then
         button:SetBackdropColor(0, 0, 0, 0.5)
         button:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
     end
 
-    button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     button.Icon:SetDrawLayer("ARTWORK")
-
-    -- 層數文字（右下角）
-    button.Count:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
     button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
 
-    -- 冷卻
     if button.Cooldown then
         button.Cooldown:SetDrawEdge(false)
         button.Cooldown:SetHideCountdownNumbers(true)
@@ -475,7 +460,7 @@ local function CreateClassPower(frame)
         bar.bg = bar:CreateTexture(nil, "BACKGROUND")
         bar.bg:SetAllPoints()
         bar.bg:SetTexture(GetStatusBarTexture())
-        bar.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
+        bar.bg:SetVertexColor(unpack(C.bgIcon))
 
         classPower[i] = bar
     end
@@ -625,7 +610,7 @@ local function CreateExperienceBar(frame)
     exp.bg = exp:CreateTexture(nil, "BACKGROUND")
     exp.bg:SetAllPoints()
     exp.bg:SetTexture(GetStatusBarTexture())
-    exp.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
+    exp.bg:SetVertexColor(unpack(C.bgIcon))
 
     -- 精力條覆蓋
     exp.Rested = CreateFrame("StatusBar", nil, exp)
@@ -1222,9 +1207,7 @@ LunarUI.CleanupUnitFrames = CleanupUnitFrames
 
 -- 在 PLAYER_ENTERING_WORLD 時強制更新玩家框架
 -- 確保玩家資料在更新元素前可用
-local playerUpdateFrame = CreateFrame("Frame")
-playerUpdateFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-playerUpdateFrame:SetScript("OnEvent", function(_self, _event)
+LunarUI.CreateEventHandler({"PLAYER_ENTERING_WORLD"}, function(_self, _event)
     C_Timer.After(0.3, function()
         if spawnedFrames.player then
             spawnedFrames.player:Show()

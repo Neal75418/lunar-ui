@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter
 --[[
     LunarUI - 聊天模組
     Lunar 主題風格的聊天框架
@@ -158,6 +158,8 @@ local KEYWORD_ALERT_FALLBACK_SOUND = SOUNDKIT and SOUNDKIT.TELL_MESSAGE or 3081
 local styledFrames = {}
 local copyFrame
 local copyEditBox
+local chatTempWindowHooked = false  -- 私有狀態（不暴露到 LunarUI 物件）
+local savedChannelFormats = {}       -- 用於 Cleanup 還原 CHAT_*_GET 格式字串
 -- Emoji 觸發字元 character class（匹配所有可能的 2-char emoji 序列）
 local EMOJI_PATTERN = "[%:%;<B][%)%(DPO3]"
 local escapedKeywordCache = {} -- Fix 3b: 預快取 keyword escaped pattern
@@ -593,15 +595,14 @@ local function RegisterURLFilter()
         ChatFrame_AddMessageEventFilter(event, AddURLsToMessage)
     end
 
-    -- 掛鉤所有聊天框架的超連結處理器
-    local originalHandler = ChatFrame_OnHyperlinkShow
-    ---@diagnostic disable-next-line: lowercase-global
-    ChatFrame_OnHyperlinkShow = function(self, link, text, button)
-        if HandleURLClick(self, link, text, button) then
-            return
-        end
-        if originalHandler then
-            return originalHandler(self, link, text, button)
+    -- 逐框架掛鉤超連結處理器（避免覆寫全域 ChatFrame_OnHyperlinkShow 導致 taint）
+    for _, frameName in ipairs(CHAT_FRAMES) do
+        local frame = _G[frameName]
+        if frame and not frame._lunarHyperlinkHooked then
+            frame._lunarHyperlinkHooked = true
+            frame:HookScript("OnHyperlinkClick", function(self, link, text, button)
+                HandleURLClick(self, link, text, button)
+            end)
         end
     end
 end
@@ -666,10 +667,11 @@ local function ShortenChannelNames()
         "CHAT_EMOTE_GET",
     }
 
-    -- 替換格式字串中的括號標頭
+    -- 替換格式字串中的括號標頭（保留原始值以便 Cleanup 還原）
     for _, chatType in ipairs(channelTypes) do
         local original = _G[chatType]
         if original then
+            savedChannelFormats[chatType] = original
             -- 從格式字串中提取方括號內的頻道名稱
             for longName, shortName in pairs(SHORT_CHANNEL_TYPES) do
                 if original:find(longName, 1, true) then
@@ -916,24 +918,14 @@ local function SetupLinkTooltipPreview()
                 if linkType == "item" then
                     local itemID = linkData and linkData:match("^(%d+)")
                     if itemID then
-                        GameTooltip:SetItemByID(tonumber(itemID))
+                        pcall(GameTooltip.SetItemByID, GameTooltip, tonumber(itemID))
                     end
                 elseif linkType == "spell" then
                     local spellID = linkData and linkData:match("^(%d+)")
                     if spellID then
-                        GameTooltip:SetSpellByID(tonumber(spellID))
+                        pcall(GameTooltip.SetSpellByID, GameTooltip, tonumber(spellID))
                     end
-                elseif linkType == "achievement" then
-                    local achieveID = linkData and linkData:match("^(%d+)")
-                    if achieveID then
-                        GameTooltip:SetHyperlink(link)
-                    end
-                elseif linkType == "quest" then
-                    GameTooltip:SetHyperlink(link)
-                elseif linkType == "currency" then
-                    GameTooltip:SetHyperlink(link)
                 else
-                    -- 其他類型嘗試通用方式
                     pcall(GameTooltip.SetHyperlink, GameTooltip, link)
                 end
 
@@ -1044,8 +1036,8 @@ local function InitializeChat()
     end
 
     -- 掛鉤臨時聊天框架（防止重複掛鉤）
-    if not LunarUI._chatTempWindowHooked then
-        LunarUI._chatTempWindowHooked = true
+    if not chatTempWindowHooked then
+        chatTempWindowHooked = true
         hooksecurefunc("FCF_OpenTemporaryWindow", function()
             for _, frameName in ipairs(CHAT_FRAMES) do
                 local frame = _G[frameName]
@@ -1086,11 +1078,26 @@ local function InitializeChat()
     if QuickJoinToastButton then QuickJoinToastButton:Hide() end
 end
 
+--------------------------------------------------------------------------------
+-- Cleanup（還原全域函數，避免模組停用後汙染）
+--------------------------------------------------------------------------------
+
+local function CleanupChat()
+    -- HookScript 無法還原，但 LunarURL 是自訂 link type，不影響原始處理器
+
+    -- 還原頻道格式字串
+    for chatType, original in pairs(savedChannelFormats) do
+        _G[chatType] = original
+    end
+    wipe(savedChannelFormats)
+end
+
 -- 匯出
 LunarUI.InitializeChat = InitializeChat
 LunarUI.ShowChatCopy = ShowCopyFrame
 
 LunarUI:RegisterModule("Chat", {
     onEnable = InitializeChat,
+    onDisable = CleanupChat,
     delay = 0.8,
 })

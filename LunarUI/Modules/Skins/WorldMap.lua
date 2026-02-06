@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: World Map
     Reskin WorldMapFrame (世界地圖) with LunarUI theme
@@ -8,11 +8,8 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local function SkinWorldMap()
-    local frame = WorldMapFrame
+    local frame = LunarUI:SkinStandardFrame("WorldMapFrame")
     if not frame then return end
-
-    -- 主框架背景（啟用文字修復）
-    LunarUI:SkinFrame(frame, { textDepth = 3 })
 
     -- 邊框容器
     if frame.BorderFrame then

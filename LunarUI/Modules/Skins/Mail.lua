@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: Mail Frame
     Reskin MailFrame (郵件介面) with LunarUI theme
@@ -8,35 +8,19 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local function SkinMail()
-    local frame = MailFrame
+    local frame = LunarUI:SkinStandardFrame("MailFrame", {
+        tabPrefix = "MailFrameTab", tabCount = 2,
+    })
     if not frame then return end
 
-    -- 主框架背景（啟用文字修復）
-    LunarUI:SkinFrame(frame, { textDepth = 3 })
-
-    -- 標題文字
-    if frame.TitleText then
-        LunarUI:SetFontLight(frame.TitleText)
-    elseif _G.MailFrameTitleText then
+    -- 標題文字 fallback
+    if not frame.TitleText and _G.MailFrameTitleText then
         LunarUI:SetFontLight(_G.MailFrameTitleText)
     end
 
-    -- 關閉按鈕
-    if frame.CloseButton then
-        LunarUI:SkinCloseButton(frame.CloseButton)
-    elseif _G.MailFrameCloseButton then
+    -- 關閉按鈕 fallback
+    if not frame.CloseButton and _G.MailFrameCloseButton then
         LunarUI:SkinCloseButton(_G.MailFrameCloseButton)
-    end
-
-    -- 分頁（收件匣/撰寫）
-    for i = 1, 2 do
-        local tab = _G["MailFrameTab" .. i]
-        if tab then
-            LunarUI:SkinTab(tab)
-            if tab.Text then
-                LunarUI:SetFontLight(tab.Text)
-            end
-        end
     end
 
     -- 收件匣面板

@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 色彩與工具函數
     共用色彩定義與緩動函數
@@ -21,6 +21,12 @@ LunarUI.Colors = {
     border       = { 0.15, 0.12, 0.08, 1 },
     borderSubtle = { 0.1, 0.1, 0.1, 1 },
     borderGold   = { 0.4, 0.35, 0.2, 1 },
+
+    -- 圖示/按鈕
+    bgIcon        = { 0.1, 0.1, 0.1, 0.8 },
+    bgButton      = { 0.15, 0.15, 0.15, 0.8 },
+    bgButtonHover = { 0.2, 0.2, 0.2, 0.8 },
+    borderIcon    = { 0.2, 0.2, 0.2, 1 },
 
     -- 文字
     textPrimary   = { 1, 1, 1, 1 },

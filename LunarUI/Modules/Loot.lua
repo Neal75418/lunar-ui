@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter
 --[[
     LunarUI - Loot Module
     Custom loot frame with Lunar theme styling
@@ -29,17 +29,8 @@ local FRAME_PADDING = 8
 local TITLE_HEIGHT = 24
 local BUTTON_HEIGHT = 22
 
-local QUALITY_COLORS = {
-    [0] = { 0.62, 0.62, 0.62 },  -- Poor (grey)
-    [1] = { 1.00, 1.00, 1.00 },  -- Common (white)
-    [2] = { 0.12, 1.00, 0.00 },  -- Uncommon (green)
-    [3] = { 0.00, 0.44, 0.87 },  -- Rare (blue)
-    [4] = { 0.64, 0.21, 0.93 },  -- Epic (purple)
-    [5] = { 1.00, 0.50, 0.00 },  -- Legendary (orange)
-    [6] = { 0.90, 0.80, 0.50 },  -- Artifact (light gold)
-    [7] = { 0.00, 0.80, 1.00 },  -- Heirloom (cyan)
-    [8] = { 0.00, 0.80, 1.00 },  -- WoW Token (cyan)
-}
+-- 使用集中定義的品質顏色
+local QUALITY_COLORS = LunarUI.QUALITY_COLORS
 
 local backdropTemplate = LunarUI.backdropTemplate
 

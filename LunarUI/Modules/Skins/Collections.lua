@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: Collections Journal
     Reskin CollectionsJournal (收藏介面) with LunarUI theme
@@ -9,32 +9,10 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local function SkinCollections()
-    local frame = CollectionsJournal
+    local frame = LunarUI:SkinStandardFrame("CollectionsJournal", {
+        tabPrefix = "CollectionsJournalTab", tabCount = 5,
+    })
     if not frame then return end
-
-    -- 主框架背景（啟用文字修復）
-    LunarUI:SkinFrame(frame, { textDepth = 3 })
-
-    -- 標題文字
-    if frame.TitleText then
-        LunarUI:SetFontLight(frame.TitleText)
-    end
-
-    -- 關閉按鈕
-    if frame.CloseButton then
-        LunarUI:SkinCloseButton(frame.CloseButton)
-    end
-
-    -- 分頁（坐騎/寵物/玩具/傳家寶/外觀）
-    for i = 1, 5 do
-        local tab = _G["CollectionsJournalTab" .. i]
-        if tab then
-            LunarUI:SkinTab(tab)
-            if tab.Text then
-                LunarUI:SetFontLight(tab.Text)
-            end
-        end
-    end
 
     -- 坐騎日誌
     if _G.MountJournal then

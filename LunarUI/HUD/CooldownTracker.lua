@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 冷卻追蹤器
     監控重要技能冷卻並顯示於螢幕
@@ -11,6 +11,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
 -- 效能：快取全域變數
@@ -26,7 +27,6 @@ local type = type
 local wipe = wipe
 local GetTime = GetTime
 local UnitClass = UnitClass
-local _GetSpecialization = GetSpecialization
 local C_Spell = C_Spell
 local IsPlayerSpell = IsPlayerSpell
 
@@ -39,15 +39,11 @@ local ICON_SIZE = 36
 local ICON_SPACING = 4
 local MAX_ICONS = 8
 local UPDATE_INTERVAL = 0.1  -- 更新頻率（秒）
-local _FLASH_DURATION = 0.5   -- 閃光持續時間（保留供未來使用）
 
 local function LoadSettings()
-    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
-    if db then
-        ICON_SIZE = db.cdIconSize or 36
-        ICON_SPACING = db.cdIconSpacing or 4
-        MAX_ICONS = db.cdMaxIcons or 8
-    end
+    ICON_SIZE = LunarUI.GetHUDSetting("cdIconSize", 36)
+    ICON_SPACING = LunarUI.GetHUDSetting("cdIconSpacing", 4)
+    MAX_ICONS = LunarUI.GetHUDSetting("cdMaxIcons", 8)
 end
 
 -- 預設追蹤的重要技能（按職業）
@@ -273,14 +269,14 @@ end
 -- 圖示建立
 --------------------------------------------------------------------------------
 
-local function CreateCooldownIcon(parent, _index)
+local function CreateCooldownIcon(parent)
     local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     icon:SetSize(ICON_SIZE, ICON_SIZE)
 
     -- 背景（使用共用模板）
     icon:SetBackdrop(LunarUI.iconBackdropTemplate)
-    icon:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-    icon:SetBackdropBorderColor(0.2, 0.2, 0.2, 1)
+    icon:SetBackdropColor(unpack(C.bgIcon))
+    icon:SetBackdropBorderColor(unpack(C.borderIcon))
 
     -- 技能圖示
     local texture = icon:CreateTexture(nil, "ARTWORK")
@@ -305,7 +301,7 @@ local function CreateCooldownIcon(parent, _index)
 
     -- 閃光效果
     local flash = icon:CreateTexture(nil, "OVERLAY")
-    flash:SetTexture("Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64")
+    flash:SetTexture(LunarUI.textures.glow)
     flash:SetBlendMode("ADD")
     flash:SetPoint("TOPLEFT", -8, 8)
     flash:SetPoint("BOTTOMRIGHT", 8, -8)
@@ -344,6 +340,7 @@ local function CreateCooldownFrame()
     else
         cooldownFrame = CreateFrame("Frame", "LunarUI_CooldownTracker", UIParent)
     end
+    LunarUI:RegisterHUDFrame("LunarUI_CooldownTracker")
 
     cooldownFrame:SetSize(MAX_ICONS * (ICON_SIZE + ICON_SPACING) - ICON_SPACING, ICON_SIZE + 10)
     cooldownFrame:SetPoint("CENTER", UIParent, "CENTER", 0, -250)
@@ -483,18 +480,16 @@ end
 -- 事件處理
 --------------------------------------------------------------------------------
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-eventFrame:RegisterEvent("SPELLS_CHANGED")
-
-eventFrame:SetScript("OnEvent", function(_self, event)
-    if event == "PLAYER_ENTERING_WORLD" then
-        C_Timer.After(1.0, Initialize)
-    elseif event == "PLAYER_SPECIALIZATION_CHANGED" or event == "SPELLS_CHANGED" then
-        SetupTrackedSpells()
+local eventFrame = LunarUI.CreateEventHandler(
+    {"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "SPELLS_CHANGED"},
+    function(_self, event)
+        if event == "PLAYER_ENTERING_WORLD" then
+            C_Timer.After(1.0, Initialize)
+        elseif event == "PLAYER_SPECIALIZATION_CHANGED" or event == "SPELLS_CHANGED" then
+            SetupTrackedSpells()
+        end
     end
-end)
+)
 
 -- OnUpdate 處理（節流）
 eventFrame:SetScript("OnUpdate", function(_self, elapsed)

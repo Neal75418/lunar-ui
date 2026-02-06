@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skins Engine
     Unified Blizzard UI frame restyling system
@@ -13,6 +13,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local _L = Engine.L or {}
+local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
 -- State
@@ -20,6 +21,7 @@ local _L = Engine.L or {}
 
 local skins = {}       -- 已註冊的 skin 函數 { name = { event, func } }
 local skinned = {}     -- 已套用的框架名稱（避免重複）
+local skinsEventFrame  -- 私有事件框架（不暴露到 LunarUI 物件）
 
 --------------------------------------------------------------------------------
 -- Strip Textures Helper
@@ -64,11 +66,9 @@ function LunarUI:SkinFrame(frame, options)
         frame._lunarSkinBG:SetFrameLevel(math.max(frame:GetFrameLevel() - 1, 0))
     end
 
-    local bg = self.backdropColors.background
-    local border = self.backdropColors.border
     frame._lunarSkinBG:SetBackdrop(self.backdropTemplate)
-    frame._lunarSkinBG:SetBackdropColor(bg[1], bg[2], bg[3], bg[4] or 1)
-    frame._lunarSkinBG:SetBackdropBorderColor(border[1], border[2], border[3], border[4] or 1)
+    frame._lunarSkinBG:SetBackdropColor(unpack(C.bg))
+    frame._lunarSkinBG:SetBackdropBorderColor(unpack(C.border))
 
     -- 修復文字顏色（暗黑風格：白色文字）
     if options.fixText ~= false then
@@ -154,7 +154,7 @@ function LunarUI:SkinButton(btn)
     if not btn._lunarSkinBG then
         btn._lunarSkinBG = btn:CreateTexture(nil, "BACKGROUND")
         btn._lunarSkinBG:SetAllPoints()
-        btn._lunarSkinBG:SetColorTexture(0.15, 0.15, 0.15, 0.8)
+        btn._lunarSkinBG:SetColorTexture(unpack(C.bgButton))
     end
 
     -- 懸停高亮
@@ -214,9 +214,60 @@ function LunarUI:SkinTab(tab)
         tab._lunarIndicator:SetHeight(2)
         tab._lunarIndicator:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 4, 0)
         tab._lunarIndicator:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -4, 0)
-        local gold = self.backdropColors.borderGold
-        tab._lunarIndicator:SetColorTexture(gold[1], gold[2], gold[3], gold[4] or 1)
+        tab._lunarIndicator:SetColorTexture(unpack(C.borderGold))
     end
+end
+
+--- 標準框架 Skin 工廠：處理共用的 SkinFrame + TitleText + CloseButton + Tabs 流程
+--- @param frameName string|Frame - 全域框架名稱或框架引用
+--- @param options table|nil - 可選設定
+---   textDepth number: SkinFrame 文字遞迴深度（預設 3）
+---   tabPrefix string: 索引式分頁前綴（如 "CharacterFrameTab"）
+---   tabCount number: 分頁數量上限（預設 10，搭配 tabPrefix 使用）
+---   tabProperty string: 框架屬性式分頁（如 "Tabs"）
+---   useTabSystem boolean: 使用 frame.TabSystem.tabs
+--- @return Frame|nil - 框架引用（供自訂邏輯使用）；找不到框架時回傳 nil
+function LunarUI:SkinStandardFrame(frameName, options)
+    local frame = type(frameName) == "string" and _G[frameName] or frameName
+    if not frame then return nil end
+    options = options or {}
+
+    self:SkinFrame(frame, { textDepth = options.textDepth or 3 })
+
+    if frame.TitleText then
+        self:SetFontLight(frame.TitleText)
+    end
+
+    if frame.CloseButton then
+        self:SkinCloseButton(frame.CloseButton)
+    end
+
+    if options.tabPrefix then
+        for i = 1, (options.tabCount or 10) do
+            local tab = _G[options.tabPrefix .. i]
+            if tab then
+                self:SkinTab(tab)
+                if tab.Text then self:SetFontLight(tab.Text) end
+            end
+        end
+    elseif options.tabProperty then
+        local tabs = frame[options.tabProperty]
+        if tabs then
+            for _, tab in pairs(tabs) do
+                self:SkinTab(tab)
+                if tab.Text then self:SetFontLight(tab.Text) end
+            end
+        end
+    elseif options.useTabSystem then
+        if frame.TabSystem and frame.TabSystem.tabs then
+            for _, tab in ipairs(frame.TabSystem.tabs) do
+                self:SkinTab(tab)
+                if tab.Text then self:SetFontLight(tab.Text) end
+            end
+        end
+    end
+
+    return frame
 end
 
 --- 替換捲軸條
@@ -235,7 +286,7 @@ function LunarUI:SkinEditBox(editBox)
     if not editBox._lunarSkinBG then
         editBox._lunarSkinBG = editBox:CreateTexture(nil, "BACKGROUND")
         editBox._lunarSkinBG:SetAllPoints()
-        editBox._lunarSkinBG:SetColorTexture(0.1, 0.1, 0.1, 0.8)
+        editBox._lunarSkinBG:SetColorTexture(unpack(C.bgIcon))
     end
 
     -- 修復文字顏色
@@ -306,10 +357,10 @@ local function InitializeSkins()
     LoadAllSkins()
 
     -- 監聽延遲載入的 addon
-    if not LunarUI._skinsEventFrame then
-        LunarUI._skinsEventFrame = CreateFrame("Frame")
-        LunarUI._skinsEventFrame:RegisterEvent("ADDON_LOADED")
-        LunarUI._skinsEventFrame:SetScript("OnEvent", function(_self, event, ...)
+    if not skinsEventFrame then
+        skinsEventFrame = CreateFrame("Frame")
+        skinsEventFrame:RegisterEvent("ADDON_LOADED")
+        skinsEventFrame:SetScript("OnEvent", function(_self, event, ...)
             OnAddonLoaded(event, ...)
         end)
     end
@@ -328,9 +379,9 @@ end
 
 -- 清理
 function LunarUI:CleanupSkins()
-    if self._skinsEventFrame then
-        self._skinsEventFrame:UnregisterAllEvents()
-        self._skinsEventFrame:SetScript("OnEvent", nil)
+    if skinsEventFrame then
+        skinsEventFrame:UnregisterAllEvents()
+        skinsEventFrame:SetScript("OnEvent", nil)
     end
 end
 

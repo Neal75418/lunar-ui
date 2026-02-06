@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 設定模組（AceDB）
     資料庫初始化與設定檔管理
@@ -17,7 +17,7 @@ local LunarUI = Engine.LunarUI
     從 Init.lua 的 OnInitialize 呼叫
 ]]
 function LunarUI:InitDB()
-    self.db = LibStub("AceDB-3.0"):New("LunarUIDB", self._defaults, "Default")
+    self.db = LibStub("AceDB-3.0"):New("LunarUIDB", Engine._defaults, "Default")
 
     -- 註冊設定檔變更回呼（使用正確的 Ace3 回呼語法）
     self.db:RegisterCallback("OnProfileChanged", function()
@@ -33,7 +33,8 @@ function LunarUI:InitDB()
     -- 儲存版本
     self.db.global.version = self.version
 
-    -- 延遲套用 HUD 縮放（等待所有 HUD 模組完成初始化）
+    -- 延遲套用 HUD 縮放：HUD 模組最大 delay 為 1.5s（CooldownTracker/AuraFrames），
+    -- 2.0s 確保所有 HUD 框架已建立並註冊
     C_Timer.After(2, function()
         if self.ApplyHUDScale then
             self:ApplyHUDScale()
@@ -65,4 +66,43 @@ function LunarUI:OnProfileChanged()
     end
 
     self:Print(L["ProfileChanged"] or "設定檔已變更，UI 已重新整理")
+end
+
+--------------------------------------------------------------------------------
+-- 統一設定存取 API
+--------------------------------------------------------------------------------
+
+--[[
+    取得模組設定
+    @param moduleName string - 模組名稱（如 "unitframes", "nameplates", "hud"）
+    @return table|nil - 模組設定表，若不存在則返回 nil
+
+    使用範例：
+        local db = LunarUI:GetModuleConfig("unitframes")
+        if not db or not db.enabled then return end
+]]
+function LunarUI:GetModuleConfig(moduleName)
+    if not self.db or not self.db.profile then return nil end
+    return self.db.profile[moduleName]
+end
+
+--[[
+    取得嵌套設定路徑
+    @param ... string - 路徑層級（如 "hud", "scale"）
+    @return any - 設定值，若路徑不存在則返回 nil
+
+    使用範例：
+        local scale = LunarUI:GetConfigValue("hud", "scale")
+        local enabled = LunarUI:GetConfigValue("unitframes", "player", "enabled")
+]]
+function LunarUI:GetConfigValue(...)
+    if not self.db or not self.db.profile then return nil end
+    local config = self.db.profile
+    for i = 1, select("#", ...) do
+        local key = select(i, ...)
+        if type(config) ~= "table" then return nil end
+        config = config[key]
+        if config == nil then return nil end
+    end
+    return config
 end

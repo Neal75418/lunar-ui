@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 媒體資源
     共用視覺資源與輔助函數
@@ -26,13 +26,7 @@ LunarUI.iconBackdropTemplate = {
     edgeSize = 1,
 }
 
--- 預設背景顏色（引用 Design Token）
 local C = LunarUI.Colors
-LunarUI.backdropColors = {
-    background = C.bg,
-    border = C.border,
-    borderGold = C.borderGold,
-}
 
 --------------------------------------------------------------------------------
 -- 共用減益類型顏色（WoW 12.0 中 DebuffTypeColor 可能不存在）
@@ -54,67 +48,21 @@ LunarUI.DEBUFF_TYPE_COLORS = _G.DebuffTypeColor or {
 LunarUI.textures = {
     statusBar = "Interface\\TargetingFrame\\UI-StatusBar",
     blank = "Interface\\Buttons\\WHITE8x8",
+    glow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
 }
+
+--- 取得使用者選定的狀態條材質（若未配置則回傳預設值）
+function LunarUI.GetSelectedStatusBarTexture()
+    local db = LunarUI.db and LunarUI.db.profile
+    if db and db.statusBarTexture then
+        return db.statusBarTexture
+    end
+    return LunarUI.textures.statusBar
+end
 
 --------------------------------------------------------------------------------
 -- 輔助函數
 --------------------------------------------------------------------------------
-
---[[
-    建立風格化背景框架
-    @param parent 父框架
-    @param options 覆蓋預設選項（可選）
-        - bgColor 背景顏色 {r, g, b, a}
-        - borderColor 邊框顏色 {r, g, b, a}
-        - frameLevel 框架層級偏移（預設：父框架 - 1）
-    @return Frame 背景框架
-]]
-function LunarUI:CreateStyledBackdrop(parent, options)
-    options = options or {}
-
-    local backdrop = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    backdrop:SetAllPoints()
-
-    -- 設定框架層級
-    local level = options.frameLevel or math.max(parent:GetFrameLevel() - 1, 0)
-    backdrop:SetFrameLevel(level)
-
-    -- 套用背景模板
-    backdrop:SetBackdrop(self.backdropTemplate)
-
-    -- 套用顏色
-    local bgColor = options.bgColor or self.backdropColors.background
-    local borderColor = options.borderColor or self.backdropColors.border
-
-    backdrop:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], bgColor[4] or 1)
-    backdrop:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1)
-
-    return backdrop
-end
-
---[[
-    為按鈕或物品格建立風格化邊框
-    @param parent 父框架（通常是按鈕）
-    @param options 覆蓋預設選項（可選）
-    @return Frame 邊框框架
-]]
-function LunarUI:CreateStyledBorder(parent, options)
-    options = options or {}
-
-    local border = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    border:SetAllPoints()
-    border:SetBackdrop(self.backdropTemplate)
-    border:SetBackdropColor(0, 0, 0, 0)
-
-    local borderColor = options.borderColor or self.backdropColors.border
-    border:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1)
-
-    -- 設定框架層級在父框架之上
-    local levelOffset = options.levelOffset or 1
-    border:SetFrameLevel(parent:GetFrameLevel() + levelOffset)
-
-    return border
-end
 
 --[[
     風格化圖示（裁切邊緣、設定繪製層）
@@ -134,22 +82,82 @@ function LunarUI.StyleIcon(icon, inset)
 end
 
 --[[
+    物品品質顏色（集中定義，避免重複）
+    Usage: local color = LunarUI.QUALITY_COLORS[quality]
+           local color = LunarUI.GetQualityColor(quality)
+]]
+LunarUI.QUALITY_COLORS = {
+    [0] = { 0.62, 0.62, 0.62 },  -- 粗糙（Poor）
+    [1] = { 1.00, 1.00, 1.00 },  -- 普通（Common）
+    [2] = { 0.12, 1.00, 0.00 },  -- 優秀（Uncommon）
+    [3] = { 0.00, 0.44, 0.87 },  -- 精良（Rare）
+    [4] = { 0.64, 0.21, 0.93 },  -- 史詩（Epic）
+    [5] = { 1.00, 0.50, 0.00 },  -- 傳說（Legendary）
+    [6] = { 0.90, 0.80, 0.50 },  -- 神器（Artifact）
+    [7] = { 0.00, 0.80, 0.98 },  -- 傳家寶（Heirloom）
+    [8] = { 0.00, 0.80, 1.00 },  -- WoW 代幣（Token）
+}
+
+--[[
     取得物品品質顏色
     @param quality 物品品質（0-8）
     @return table 顏色值 {r, g, b}
 ]]
 function LunarUI.GetQualityColor(quality)
-    local colors = {
-        [0] = { 0.62, 0.62, 0.62 },  -- 粗糙
-        [1] = { 1.00, 1.00, 1.00 },  -- 普通
-        [2] = { 0.12, 1.00, 0.00 },  -- 優秀
-        [3] = { 0.00, 0.44, 0.87 },  -- 精良
-        [4] = { 0.64, 0.21, 0.93 },  -- 史詩
-        [5] = { 1.00, 0.50, 0.00 },  -- 傳說
-        [6] = { 0.90, 0.80, 0.50 },  -- 神器
-        [7] = { 0.00, 0.80, 0.98 },  -- 傳家寶
-        [8] = { 0.00, 0.80, 1.00 },  -- WoW 代幣
-    }
+    return LunarUI.QUALITY_COLORS[quality] or LunarUI.QUALITY_COLORS[1]
+end
 
-    return colors[quality] or colors[1]
+--------------------------------------------------------------------------------
+-- 光環按鈕風格化
+--------------------------------------------------------------------------------
+
+--[[
+    統一風格化光環按鈕（背景、圖示裁切、計數字型）
+    @param button Frame - 光環按鈕框架
+
+    Usage:
+        LunarUI.StyleAuraButton(auraButton)
+]]
+--[[
+    建立共用背景框架（backdrop）
+    @param frame Frame - 父框架
+    @param options table|nil - 可選設定
+        - inset number: 邊框外擴像素（預設 0，使用 SetAllPoints）
+        - borderColor table: {r, g, b, a} 邊框顏色（預設 Colors.border）
+    @return Frame - 背景框架
+
+    Usage:
+        LunarUI.CreateBackdrop(healthBar)
+        LunarUI.CreateBackdrop(nameplate, { inset = 1, borderColor = C.borderSubtle })
+]]
+function LunarUI.CreateBackdrop(frame, options)
+    options = options or {}
+    local backdrop = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    if options.inset then
+        backdrop:SetPoint("TOPLEFT", -options.inset, options.inset)
+        backdrop:SetPoint("BOTTOMRIGHT", options.inset, -options.inset)
+    else
+        backdrop:SetAllPoints()
+    end
+    backdrop:SetFrameLevel(math.max(frame:GetFrameLevel() - 1, 0))
+    backdrop:SetBackdrop(LunarUI.backdropTemplate)
+    backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
+    local border = options.borderColor or C.border
+    backdrop:SetBackdropBorderColor(border[1], border[2], border[3], border[4])
+    frame.Backdrop = backdrop
+    return backdrop
+end
+
+function LunarUI.StyleAuraButton(button)
+    if BackdropTemplateMixin then
+        Mixin(button, BackdropTemplateMixin)
+        button:OnBackdropLoaded()
+        button:SetBackdrop(LunarUI.backdropTemplate)
+    end
+    if button.Icon then
+        button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    end
+    if button.Count then
+        button.Count:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    end
 end

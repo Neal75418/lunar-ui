@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 職業資源條
     顯示職業特定資源（連擊點、符文、碎片等）
@@ -16,12 +16,12 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
 -- 效能：快取全域變數
 --------------------------------------------------------------------------------
 
-local _math_floor = math.floor
 local ipairs = ipairs
 local UnitClass = UnitClass
 local UnitPower = UnitPower
@@ -76,12 +76,9 @@ local ICON_SPACING = 4
 local BAR_HEIGHT = 10
 
 local function LoadSettings()
-    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
-    if db then
-        ICON_SIZE = db.crIconSize or 26
-        ICON_SPACING = db.crIconSpacing or 4
-        BAR_HEIGHT = db.crBarHeight or 10
-    end
+    ICON_SIZE = LunarUI.GetHUDSetting("crIconSize", 26)
+    ICON_SPACING = LunarUI.GetHUDSetting("crIconSpacing", 4)
+    BAR_HEIGHT = LunarUI.GetHUDSetting("crBarHeight", 10)
 end
 
 --------------------------------------------------------------------------------
@@ -100,61 +97,74 @@ local useBar = false  -- 是否使用進度條而非圖示
 -- 輔助函數
 --------------------------------------------------------------------------------
 
-local function GetClassResourceInfo()
-    local _, _, classID = UnitClass("player")
+-- 職業資源查詢表（取代 elseif 鏈，提高可維護性）
+-- 格式：[classID] = { powerType, maxValue, useBar, color }
+-- 或 [classID] = function(specID) return powerType, maxValue, useBar, color end
+local CLASS_RESOURCE_CONFIG = {
+    [CLASS_ROGUE] = { POWER_TYPE_COMBO_POINTS, 5, false, RESOURCE_COLORS.comboPoints },
+    [CLASS_DRUID] = { POWER_TYPE_COMBO_POINTS, 5, false, RESOURCE_COLORS.comboPoints },
+    [CLASS_DEATHKNIGHT] = { POWER_TYPE_RUNES, 6, false, RESOURCE_COLORS.runes },
+    [CLASS_WARLOCK] = { POWER_TYPE_SOUL_SHARDS, 5, false, RESOURCE_COLORS.soulShards },
+    [CLASS_PALADIN] = { POWER_TYPE_HOLY_POWER, 5, false, RESOURCE_COLORS.holyPower },
+    [CLASS_EVOKER] = { POWER_TYPE_ESSENCE, 5, false, RESOURCE_COLORS.essence },
 
-    if classID == CLASS_ROGUE or classID == CLASS_DRUID then
-        return POWER_TYPE_COMBO_POINTS, 5, false, RESOURCE_COLORS.comboPoints
-    elseif classID == CLASS_MONK then
-        local specID = GetSpecialization()
+    -- 專精依賴的職業
+    [CLASS_MONK] = function(specID)
         if specID == 3 then  -- 風行
             return POWER_TYPE_COMBO_POINTS, 5, false, RESOURCE_COLORS.comboPoints
         end
         return nil, 0, false, nil
-    elseif classID == CLASS_DEATHKNIGHT then
-        return POWER_TYPE_RUNES, 6, false, RESOURCE_COLORS.runes
-    elseif classID == CLASS_WARLOCK then
-        return POWER_TYPE_SOUL_SHARDS, 5, false, RESOURCE_COLORS.soulShards
-    elseif classID == CLASS_MAGE then
-        local specID = GetSpecialization()
+    end,
+    [CLASS_MAGE] = function(specID)
         if specID == 1 then  -- 秘法
             return POWER_TYPE_ARCANE_CHARGES, 4, false, RESOURCE_COLORS.arcaneCharges
         end
         return nil, 0, false, nil
-    elseif classID == CLASS_PRIEST then
-        local specID = GetSpecialization()
+    end,
+    [CLASS_PRIEST] = function(specID)
         if specID == 3 then  -- 暗影
             return POWER_TYPE_INSANITY, 100, true, RESOURCE_COLORS.insanity
         end
         return nil, 0, false, nil
-    elseif classID == CLASS_PALADIN then
-        return POWER_TYPE_HOLY_POWER, 5, false, RESOURCE_COLORS.holyPower
-    elseif classID == CLASS_DEMONHUNTER then
-        local specID = GetSpecialization()
+    end,
+    [CLASS_DEMONHUNTER] = function(specID)
         if specID == 1 then  -- 浩劫
             return POWER_TYPE_FURY, 100, true, RESOURCE_COLORS.fury
         else  -- 乘禦
             return POWER_TYPE_PAIN, 100, true, RESOURCE_COLORS.pain
         end
-    elseif classID == CLASS_EVOKER then
-        return POWER_TYPE_ESSENCE, 5, false, RESOURCE_COLORS.essence
+    end,
+}
+
+local function GetClassResourceInfo()
+    local _, _, classID = UnitClass("player")
+    local config = CLASS_RESOURCE_CONFIG[classID]
+
+    if not config then
+        return nil, 0, false, nil
     end
 
-    return nil, 0, false, nil
+    -- 如果是函數，傳入專精 ID 並執行
+    if type(config) == "function" then
+        return config(GetSpecialization())
+    end
+
+    -- 直接返回配置值
+    return config[1], config[2], config[3], config[4]
 end
 
 --------------------------------------------------------------------------------
 -- 框架建立
 --------------------------------------------------------------------------------
 
-local function CreateResourceIcon(parent, _index)
+local function CreateResourceIcon(parent)
     local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     icon:SetSize(ICON_SIZE, ICON_SIZE)
 
     -- 背景（使用共用模板）
     icon:SetBackdrop(LunarUI.iconBackdropTemplate)
-    icon:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-    icon:SetBackdropBorderColor(0.2, 0.2, 0.2, 1)
+    icon:SetBackdropColor(unpack(C.bgIcon))
+    icon:SetBackdropBorderColor(unpack(C.borderIcon))
 
     -- 填充
     local fill = icon:CreateTexture(nil, "ARTWORK")
@@ -167,7 +177,7 @@ local function CreateResourceIcon(parent, _index)
 
     -- 光暈（活躍時）
     local glow = icon:CreateTexture(nil, "OVERLAY")
-    glow:SetTexture("Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64")
+    glow:SetTexture(LunarUI.textures.glow)
     glow:SetBlendMode("ADD")
     glow:SetPoint("TOPLEFT", -8, 8)
     glow:SetPoint("BOTTOMRIGHT", 8, -8)
@@ -189,7 +199,7 @@ local function CreateResourceBar(parent)
     local bg = bar:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
     bg:SetTexture("Interface\\Buttons\\WHITE8x8")
-    bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
+    bg:SetVertexColor(unpack(C.bgIcon))
     bar.bg = bg
 
     -- 邊框
@@ -200,7 +210,7 @@ local function CreateResourceBar(parent)
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    border:SetBackdropBorderColor(0.2, 0.2, 0.2, 1)
+    border:SetBackdropBorderColor(unpack(C.borderIcon))
     bar.border = border
 
     -- 文字
@@ -223,6 +233,7 @@ local function CreateResourceFrame()
     else
         resourceFrame = CreateFrame("Frame", "LunarUI_ClassResources", UIParent)
     end
+    LunarUI:RegisterHUDFrame("LunarUI_ClassResources")
 
     resourceFrame:SetSize(ICON_SIZE * 6 + ICON_SPACING * 5, ICON_SIZE + 10)
     resourceFrame:SetPoint("CENTER", UIParent, "CENTER", 0, -180)
@@ -391,24 +402,20 @@ end
 -- 事件處理
 --------------------------------------------------------------------------------
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-eventFrame:RegisterEvent("UNIT_POWER_UPDATE")
-eventFrame:RegisterEvent("UNIT_MAXPOWER")
-eventFrame:RegisterEvent("RUNE_POWER_UPDATE")
-
-eventFrame:SetScript("OnEvent", function(_self, event, arg1)
-    if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_SPECIALIZATION_CHANGED" then
-        C_Timer.After(0.5, SetupResourceDisplay)
-    elseif event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER" then
-        if arg1 == "player" then
+local eventFrame = LunarUI.CreateEventHandler(
+    {"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "UNIT_POWER_UPDATE", "UNIT_MAXPOWER", "RUNE_POWER_UPDATE"},
+    function(_self, event, arg1)
+        if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_SPECIALIZATION_CHANGED" then
+            C_Timer.After(0.5, SetupResourceDisplay)
+        elseif event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER" then
+            if arg1 == "player" then
+                UpdateResources()
+            end
+        elseif event == "RUNE_POWER_UPDATE" then
             UpdateResources()
         end
-    elseif event == "RUNE_POWER_UPDATE" then
-        UpdateResources()
     end
-end)
+)
 
 --------------------------------------------------------------------------------
 -- 初始化

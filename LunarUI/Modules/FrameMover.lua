@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local, deprecated
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local, deprecated
 --[[
     LunarUI - 框架移動器
     統一的 UI 框架位置管理系統
@@ -57,7 +57,7 @@ local function GetSavedPositions()
     return LunarUI.db.profile.framePositions
 end
 
-local function SavePosition(name, point, _relativeTo, relativePoint, x, y)
+local function SavePosition(name, point, relativePoint, x, y)
     local positions = GetSavedPositions()
     positions[name] = {
         point = point,
@@ -212,7 +212,7 @@ local function CreateMover(name, targetFrame, label)
         targetFrame:SetPoint(point, UIParent, relativePoint, x, y)
 
         -- 儲存位置
-        SavePosition(name, point, nil, relativePoint, x, y)
+        SavePosition(name, point, relativePoint, x, y)
     end)
 
     -- 右鍵重設
@@ -280,6 +280,8 @@ end
 -- 移動模式控制
 --------------------------------------------------------------------------------
 
+local UpdateEscHandler  -- forward declaration（定義於 ESC 退出支援區段）
+
 local function EnterMoveMode()
     if InCombatLockdown() then
         LunarUI:Print(L["MoverCombatLocked"] or "Cannot enter move mode during combat")
@@ -309,6 +311,7 @@ local function EnterMoveMode()
     end
 
     LunarUI:Print(L["MoverEnterMode"] or "Move mode — drag blue frames | Ctrl+drag snap | Right-click reset | ESC exit")
+    UpdateEscHandler()
 end
 
 local function ExitMoveMode()
@@ -323,6 +326,7 @@ local function ExitMoveMode()
     end
 
     LunarUI:Print(L["MoverExitMode"] or "Exited move mode")
+    UpdateEscHandler()
 end
 
 local function ToggleMoveMode()
@@ -348,21 +352,8 @@ escFrame:SetScript("OnKeyDown", function(_self, key)
 end)
 escFrame:EnableKeyboard(false)
 
-local function UpdateEscHandler()
+UpdateEscHandler = function()
     escFrame:EnableKeyboard(isMoving)
-end
-
--- 覆寫 EnterMoveMode/ExitMoveMode 以更新 ESC handler
-local originalEnter = EnterMoveMode
-EnterMoveMode = function()
-    originalEnter()
-    UpdateEscHandler()
-end
-
-local originalExit = ExitMoveMode
-ExitMoveMode = function()
-    originalExit()
-    UpdateEscHandler()
 end
 
 --------------------------------------------------------------------------------

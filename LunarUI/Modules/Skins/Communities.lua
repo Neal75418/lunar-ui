@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: Communities (Guild & Communities)
     Reskin CommunitiesFrame with LunarUI theme
@@ -8,21 +8,10 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local function SkinCommunities()
-    local frame = _G.CommunitiesFrame
+    local frame = LunarUI:SkinStandardFrame("CommunitiesFrame", {
+        tabProperty = "Tabs",
+    })
     if not frame then return end
-
-    -- Main frame（啟用文字修復）
-    LunarUI:SkinFrame(frame, { textDepth = 3 })
-
-    -- 標題文字
-    if frame.TitleText then
-        LunarUI:SetFontLight(frame.TitleText)
-    end
-
-    -- Close button
-    if frame.CloseButton then
-        LunarUI:SkinCloseButton(frame.CloseButton)
-    end
 
     -- Portrait and top-level decorations
     if frame.PortraitOverlay then
@@ -41,8 +30,13 @@ local function SkinCommunities()
     if frame.Chat then
         LunarUI.StripTextures(frame.Chat)
         local messageFrame = frame.Chat.MessageFrame
-        if messageFrame and messageFrame.ScrollBar then
-            LunarUI.StripTextures(messageFrame.ScrollBar)
+        if messageFrame then
+            if messageFrame.ScrollBar then
+                LunarUI.StripTextures(messageFrame.ScrollBar)
+            end
+            if messageFrame.ScrollBox then
+                LunarUI.StripTextures(messageFrame.ScrollBox)
+            end
         end
     end
 
@@ -91,14 +85,6 @@ local function SkinCommunities()
         LunarUI.StripTextures(frame.GuildDetailsFrame)
     end
 
-    -- Tabs within the frame (使用 pairs 避免 nil gap 問題)
-    if frame.Tabs then
-        for _, tab in pairs(frame.Tabs) do
-            if tab then
-                LunarUI:SkinTab(tab)
-            end
-        end
-    end
 end
 
 -- Communities is loaded on demand

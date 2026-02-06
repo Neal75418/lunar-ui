@@ -54,10 +54,10 @@ externals:
     url: https://github.com/WoWUIDev/LibSharedMedia-3.0.git
   LunarUI/Libs/LibActionButton-1.0:
     url: https://github.com/Nevcairiel/LibActionButton-1.0.git
-    tag: main
+    tag: 0.57
   LunarUI/Libs/oUF:
     url: https://github.com/oUF-wow/oUF.git
-    tag: main
+    tag: 13.1.1
 
 ignore:
   - README.md

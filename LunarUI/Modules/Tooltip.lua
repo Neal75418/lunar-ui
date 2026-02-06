@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter, undefined-global, unused-local
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter, undefined-global, unused-local
 --[[
     LunarUI - 滑鼠提示模組（增強版）
     Lunar 主題風格的統一滑鼠提示
@@ -183,10 +183,8 @@ local function RequestInspect(unit)
     NotifyInspect(unit)
 end
 
--- Inspect 回應事件
-local inspectFrame = CreateFrame("Frame")
-inspectFrame:RegisterEvent("INSPECT_READY")
-inspectFrame:SetScript("OnEvent", function(_self, event, inspectGUID)
+-- Inspect 回應事件（保留引用以便 Cleanup 解除註冊）
+local inspectEventFrame = LunarUI.CreateEventHandler({"INSPECT_READY"}, function(_self, event, inspectGUID)
     if event ~= "INSPECT_READY" then return end
 
     -- 確認是我們請求的
@@ -331,15 +329,30 @@ local function OnTooltipSetUnit(tooltip)
     -- === 新增：等級著色 ===
     local level = UnitLevel(unit)
     if level and level > 0 then
-        -- 尋找等級行並著色
-        for i = 2, tooltip:NumLines() do
-            local line = _G[tooltip:GetName() .. "TextLeft" .. i]
-            if line then
-                local text = line:GetText()
-                if text and (text:find("Level") or text:find("等級")) then
-                    local lr, lg, lb = GetLevelDifficultyColor(level)
-                    line:SetTextColor(lr, lg, lb)
+        -- 尋找等級行並著色（優先使用 GetTooltipData 結構化 API）
+        local tooltipData = tooltip.GetTooltipData and tooltip:GetTooltipData()
+        if tooltipData and tooltipData.lines then
+            for i = 2, #tooltipData.lines do
+                local lineData = tooltipData.lines[i]
+                if lineData and lineData.leftText and
+                   (lineData.leftText:find("Level") or lineData.leftText:find("等級")) then
+                    local fontStr = _G[tooltip:GetName() .. "TextLeft" .. i]
+                    if fontStr then
+                        fontStr:SetTextColor(GetLevelDifficultyColor(level))
+                    end
                     break
+                end
+            end
+        else
+            -- fallback: 舊版 _G 掃描
+            for i = 2, tooltip:NumLines() do
+                local line = _G[tooltip:GetName() .. "TextLeft" .. i]
+                if line then
+                    local text = line:GetText()
+                    if text and (text:find("Level") or text:find("等級")) then
+                        line:SetTextColor(GetLevelDifficultyColor(level))
+                        break
+                    end
                 end
             end
         end
@@ -424,13 +437,25 @@ local function OnTooltipSetItem(tooltip)
         local itemLevel = GetItemLevel(itemLink)
         if itemLevel and itemLevel > 1 then
             local found = false
-            for i = 2, tooltip:NumLines() do
-                local line = _G[tooltip:GetName() .. "TextLeft" .. i]
-                if line then
-                    local text = line:GetText()
-                    if text and (text:find("Item Level") or text:find("物品等級")) then
+            local tooltipData = tooltip.GetTooltipData and tooltip:GetTooltipData()
+            if tooltipData and tooltipData.lines then
+                for i = 2, #tooltipData.lines do
+                    local lineData = tooltipData.lines[i]
+                    if lineData and lineData.leftText and
+                       (lineData.leftText:find("Item Level") or lineData.leftText:find("物品等級")) then
                         found = true
                         break
+                    end
+                end
+            else
+                for i = 2, tooltip:NumLines() do
+                    local line = _G[tooltip:GetName() .. "TextLeft" .. i]
+                    if line then
+                        local text = line:GetText()
+                        if text and (text:find("Item Level") or text:find("物品等級")) then
+                            found = true
+                            break
+                        end
                     end
                 end
             end
@@ -636,10 +661,19 @@ local function InitializeTooltip()
     SetTooltipPosition()
 end
 
+-- Cleanup（解除 Inspect 事件監聽）
+local function CleanupTooltip()
+    if inspectEventFrame then
+        inspectEventFrame:UnregisterAllEvents()
+        inspectEventFrame:SetScript("OnEvent", nil)
+    end
+end
+
 -- 匯出
 LunarUI.InitializeTooltip = InitializeTooltip
 
 LunarUI:RegisterModule("Tooltip", {
     onEnable = InitializeTooltip,
+    onDisable = CleanupTooltip,
     delay = 0.3,
 })

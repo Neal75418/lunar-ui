@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 資料庫預設值
     AceDB defaults 表定義
@@ -495,5 +495,5 @@ local defaults = {
     },
 }
 
--- 掛載到 LunarUI 供 Config.lua 使用
-LunarUI._defaults = defaults
+-- 掛載到 Engine 供 Config.lua 使用（避免暴露到公開的 LunarUI 物件）
+Engine._defaults = defaults

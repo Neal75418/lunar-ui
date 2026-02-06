@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: Encounter Journal
     Reskin EncounterJournal (冒險指南) with LunarUI theme
@@ -8,21 +8,11 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local function SkinEncounterJournal()
-    local frame = EncounterJournal
+    local frame = LunarUI:SkinStandardFrame("EncounterJournal")
     if not frame then return end
 
-    -- 主框架背景（啟用文字修復）
-    LunarUI:SkinFrame(frame, { textDepth = 3 })
-
-    -- 標題文字
-    if frame.TitleText then
-        LunarUI:SetFontLight(frame.TitleText)
-    end
-
-    -- 關閉按鈕
-    if frame.CloseButton then
-        LunarUI:SkinCloseButton(frame.CloseButton)
-    elseif _G.EncounterJournalCloseButton then
+    -- 關閉按鈕 fallback
+    if not frame.CloseButton and _G.EncounterJournalCloseButton then
         LunarUI:SkinCloseButton(_G.EncounterJournalCloseButton)
     end
 

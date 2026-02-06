@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 現代化戰鬥 UI 系統
     使用 Ace3 框架的核心初始化模組
@@ -55,19 +55,7 @@ local function ExecuteModuleCallback(entry)
     end
 end
 
---[[
-    SafeCall - 安全呼叫函數，在 debug 模式下記錄錯誤
-    @param func    function  要呼叫的函數
-    @param context string    錯誤訊息前綴（可選）
-    @return boolean          pcall 是否成功
-]]
-function LunarUI.SafeCall(func, context)
-    local ok, err = pcall(func)
-    if not ok and LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
-        LunarUI:Print("|cffff0000" .. (context or "Error") .. ":|r " .. tostring(err))
-    end
-    return ok
-end
+-- SafeCall 定義在 Core/Utils.lua（統一版本）
 
 --[[
     RegisterModule - 註冊模組至中央管理表
@@ -119,19 +107,13 @@ function LunarUI:OnEnable()
     self.oUF = Engine.oUF or _G.LunarUF or _G.oUF
 
     -- 註冊斜線命令
-    -- if self.RegisterCommands then
-        self:RegisterCommands()
-    -- end
+    self:RegisterCommands()
 
     -- 設置 ESC 選項面板
-    -- if self.SetupOptions then
-        self:SetupOptions()
-    -- end
+    self:SetupOptions()
 
     -- 設置 ESC 主選單按鈕
-    -- if self.SetupGameMenuButton then
-        self:SetupGameMenuButton()
-    -- end
+    self:SetupGameMenuButton()
 
     -- 啟用所有已註冊的模組
     self._modulesEnabled = true

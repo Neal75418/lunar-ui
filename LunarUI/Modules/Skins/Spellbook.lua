@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: Spellbook / Player Spells Frame
     Reskin SpellBookFrame / PlayerSpellsFrame with LunarUI theme
@@ -10,29 +10,10 @@ local LunarUI = Engine.LunarUI
 
 local function SkinSpellbook()
     -- WoW 12.0: PlayerSpellsFrame（合併法術書+天賦）
-    local frame = PlayerSpellsFrame or SpellBookFrame
+    local frame = LunarUI:SkinStandardFrame("PlayerSpellsFrame", {
+        useTabSystem = true,
+    }) or LunarUI:SkinStandardFrame("SpellBookFrame")
     if not frame then return end
-
-    LunarUI:SkinFrame(frame, { textDepth = 3 })
-
-    -- 標題文字
-    if frame.TitleText then
-        LunarUI:SetFontLight(frame.TitleText)
-    end
-
-    -- 關閉按鈕
-    if frame.CloseButton then
-        LunarUI:SkinCloseButton(frame.CloseButton)
-    end
-
-    -- 分頁
-    if frame.TabSystem and frame.TabSystem.tabs then
-        for _, tab in ipairs(frame.TabSystem.tabs) do
-            if tab then
-                LunarUI:SkinTab(tab)
-            end
-        end
-    end
 
     -- 舊版法術書分頁（WoW < 12.0 備用）
     for i = 1, 8 do

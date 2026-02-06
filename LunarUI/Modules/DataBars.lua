@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - DataBars 模組
     經驗值、聲望、榮譽進度條
@@ -77,7 +77,7 @@ local function CreateDataBar(name, db)
     bar.bg = bar:CreateTexture(nil, "BACKGROUND")
     bar.bg:SetAllPoints()
     bar.bg:SetTexture(GetStatusBarTexture())
-    bar.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
+    bar.bg:SetVertexColor(unpack(C.bgIcon))
 
     -- Text overlay
     bar.text = bar:CreateFontString(nil, "OVERLAY")
@@ -452,6 +452,9 @@ end
 
 -- Cleanup
 function LunarUI.CleanupDataBars()
+    -- 清除材質快取（使用者切換材質後重新初始化時會重新取得）
+    statusBarTexture = nil
+
     if eventFrame then
         eventFrame:UnregisterAllEvents()
         eventFrame:SetScript("OnEvent", nil)

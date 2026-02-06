@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: Gossip Frame
     Reskin GossipFrame (NPC 對話介面) with LunarUI theme
@@ -8,23 +8,18 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local function SkinGossip()
-    local frame = GossipFrame
+    local frame = LunarUI:SkinStandardFrame("GossipFrame", {
+        textDepth = 4,
+    })
     if not frame then return end
 
-    -- 主框架背景（啟用文字修復，深度 4 以覆蓋對話選項）
-    LunarUI:SkinFrame(frame, { textDepth = 4 })
-
-    -- 標題文字
-    if frame.TitleText then
-        LunarUI:SetFontLight(frame.TitleText)
-    elseif _G.GossipFrameTitleText then
+    -- 標題文字 fallback
+    if not frame.TitleText and _G.GossipFrameTitleText then
         LunarUI:SetFontLight(_G.GossipFrameTitleText)
     end
 
-    -- 關閉按鈕
-    if frame.CloseButton then
-        LunarUI:SkinCloseButton(frame.CloseButton)
-    elseif _G.GossipFrameCloseButton then
+    -- 關閉按鈕 fallback
+    if not frame.CloseButton and _G.GossipFrameCloseButton then
         LunarUI:SkinCloseButton(_G.GossipFrameCloseButton)
     end
 

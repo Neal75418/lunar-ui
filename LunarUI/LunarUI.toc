@@ -34,6 +34,9 @@ Core\Init.lua
 Core\Tokens.lua
 Core\Defaults.lua
 Core\Config.lua
+Core\Utils.lua
+Core\Presets.lua
+Core\Serialization.lua
 Core\Options.lua
 Core\InstallWizard.lua
 Core\Commands.lua
@@ -50,6 +53,7 @@ UnitFrames\Layout.lua
 Nameplates\Nameplates.lua
 
 # ActionBars
+ActionBars\HideBlizzardBars.lua
 ActionBars\ActionBars.lua
 
 # HUD

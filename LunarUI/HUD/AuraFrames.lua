@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local
 --[[
     LunarUI - Buff/Debuff 框架（重新設計）
     在螢幕上顯示玩家的增益和減益效果
@@ -42,15 +42,12 @@ local BAR_HEIGHT = 4
 local BAR_OFFSET = 1  -- 圖示與計時條間距
 
 local function LoadSettings()
-    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
-    if db then
-        ICON_SIZE = db.auraIconSize or 30
-        ICON_SPACING = db.auraIconSpacing or 4
-        ICONS_PER_ROW = db.auraIconsPerRow or 8
-        MAX_BUFFS = db.maxBuffs or 16
-        MAX_DEBUFFS = db.maxDebuffs or 8
-        BAR_HEIGHT = db.auraBarHeight or 4
-    end
+    ICON_SIZE = LunarUI.GetHUDSetting("auraIconSize", 30)
+    ICON_SPACING = LunarUI.GetHUDSetting("auraIconSpacing", 4)
+    ICONS_PER_ROW = LunarUI.GetHUDSetting("auraIconsPerRow", 8)
+    MAX_BUFFS = LunarUI.GetHUDSetting("maxBuffs", 16)
+    MAX_DEBUFFS = LunarUI.GetHUDSetting("maxDebuffs", 8)
+    BAR_HEIGHT = LunarUI.GetHUDSetting("auraBarHeight", 4)
 end
 
 -- 過濾的 Buff 名稱（瑣碎增益）
@@ -97,18 +94,6 @@ local AURA_THROTTLE = 0.1
 --------------------------------------------------------------------------------
 -- 輔助函數
 --------------------------------------------------------------------------------
-
-local function _FormatDuration(seconds)
-    if seconds >= 3600 then
-        return string_format("%dh", math_floor(seconds / 3600))
-    elseif seconds >= 60 then
-        return string_format("%dm", math_floor(seconds / 60))
-    elseif seconds >= 10 then
-        return string_format("%d", math_floor(seconds))
-    else
-        return string_format("%.1f", seconds)
-    end
-end
 
 local function ShouldShowBuff(name, _duration)
     -- WoW secret value 不能當 table index，用 pcall 保護
@@ -208,14 +193,12 @@ local function SetupAuraIconInteraction(icon)
         if button == "RightButton" and self.auraData and self.auraData.filter == "HELPFUL" then
             if C_UnitAuras and C_UnitAuras.CancelAuraByIndex then
                 pcall(C_UnitAuras.CancelAuraByIndex, "player", self.auraData.index)
-            elseif _G.CancelUnitBuff then
-                pcall(_G.CancelUnitBuff, "player", self.auraData.index, self.auraData.filter)
             end
         end
     end)
 end
 
-local function CreateAuraIcon(parent, _index)
+local function CreateAuraIcon(parent)
     local totalHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
 
     local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
@@ -252,6 +235,7 @@ local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY)
     else
         frame = CreateFrame("Frame", name, UIParent)
     end
+    LunarUI:RegisterHUDFrame(name)
 
     local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
     frame:SetSize(
@@ -538,12 +522,6 @@ end
 -- 事件處理
 --------------------------------------------------------------------------------
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-eventFrame:RegisterEvent("UNIT_AURA")
-eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
-eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-
 -- 光環資料節流更新（用 C_Timer 取代 OnUpdate 輪詢）
 local auraUpdateScheduled = false
 local function ScheduleAuraUpdate()
@@ -557,22 +535,25 @@ local function ScheduleAuraUpdate()
     end)
 end
 
-eventFrame:SetScript("OnEvent", function(_self, event, arg1)
-    if event == "PLAYER_ENTERING_WORLD" then
-        C_Timer.After(1.0, Initialize)
-    elseif event == "UNIT_AURA" then
-        if arg1 == "player" and isInitialized then
-            ScheduleAuraUpdate()
-        end
-    elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
-        -- 戰鬥狀態切換時，確保框架可見並強制更新
-        if isInitialized then
-            if buffFrame and not buffFrame:IsShown() then buffFrame:Show() end
-            if debuffFrame and not debuffFrame:IsShown() then debuffFrame:Show() end
-            ScheduleAuraUpdate()
+local eventFrame = LunarUI.CreateEventHandler(
+    {"PLAYER_ENTERING_WORLD", "UNIT_AURA", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED"},
+    function(_self, event, arg1)
+        if event == "PLAYER_ENTERING_WORLD" then
+            C_Timer.After(1.0, Initialize)
+        elseif event == "UNIT_AURA" then
+            if arg1 == "player" and isInitialized then
+                ScheduleAuraUpdate()
+            end
+        elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
+            -- 戰鬥狀態切換時，確保框架可見並強制更新
+            if isInitialized then
+                if buffFrame and not buffFrame:IsShown() then buffFrame:Show() end
+                if debuffFrame and not debuffFrame:IsShown() then debuffFrame:Show() end
+                ScheduleAuraUpdate()
+            end
         end
     end
-end)
+)
 
 -- 計時條平滑更新（OnUpdate 僅負責計時條，不再輪詢 auraDirty）
 local timerElapsed = 0

@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter
 --[[
     LunarUI - 背包模組
     整合式背包系統，Lunar 主題風格
@@ -18,6 +18,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local L = Engine.L or {}
+local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
 -- 常數
@@ -32,25 +33,15 @@ local HEADER_HEIGHT = 30
 local FOOTER_HEIGHT = 30
 local SEARCH_DEBOUNCE = 0.2       -- 搜尋防抖延遲（秒）
 local SEARCH_DIM_ALPHA = 0.3      -- 搜尋不符合時的透明度
-local BORDER_COLOR_DEFAULT = { 0.15, 0.12, 0.08 }
-local BORDER_COLOR_BANK = { 0.4, 0.35, 0.2 }
+local BORDER_COLOR_DEFAULT = C.border      -- { 0.15, 0.12, 0.08, 1 }
+local BORDER_COLOR_BANK = C.borderGold     -- { 0.4, 0.35, 0.2, 1 }
 local JUNK_SELL_DELAY = 0.3       -- 商人開啟後延遲販賣垃圾（秒）
 local INIT_DELAY = 0.5            -- 插件初始化延遲（秒）
 local FRAME_ALPHA = 0.95          -- 框架背景透明度
 local backdropTemplate = LunarUI.backdropTemplate
 
--- 物品品質顏色
-local ITEM_QUALITY_COLORS = {
-    [0] = { 0.62, 0.62, 0.62 },  -- 粗糙（灰）
-    [1] = { 1.00, 1.00, 1.00 },  -- 普通（白）
-    [2] = { 0.12, 1.00, 0.00 },  -- 優秀（綠）
-    [3] = { 0.00, 0.44, 0.87 },  -- 精良（藍）
-    [4] = { 0.64, 0.21, 0.93 },  -- 史詩（紫）
-    [5] = { 1.00, 0.50, 0.00 },  -- 傳說（橙）
-    [6] = { 0.90, 0.80, 0.50 },  -- 神器（金）
-    [7] = { 0.00, 0.80, 0.98 },  -- 傳家寶（淺藍）
-    [8] = { 0.00, 0.80, 1.00 },  -- WoW 代幣
-}
+-- 使用集中定義的品質顏色
+local ITEM_QUALITY_COLORS = LunarUI.QUALITY_COLORS
 
 -- 專業容器背景著色
 -- 透過 C_Container.GetContainerNumFreeSlots 的第二個返回值 bagType 判斷
@@ -108,7 +99,6 @@ local slots = {}
 local bankSlots = {}
 local searchBox
 local bankSearchBox
--- moneyFrame: reserved for future currency display feature
 local sortButton
 local closeButton
 local isOpen = false
@@ -162,19 +152,6 @@ end
 local itemLevelCache = {}
 local equipmentTypeCache = {}
 local CACHE_MAX_SIZE = 1000
-
---[[
-    計算字典表大小
-    Lua 的 # 運算子僅適用於連續整數鍵，字典需要手動計數
-    保留供未來使用
-]]
-local function _GetTableSize(t)
-    local count = 0
-    for _ in pairs(t) do
-        count = count + 1
-    end
-    return count
-end
 
 -- 在新增項目前檢查快取大小，超過上限時整體清除
 local function MaybeEvictCache(cache, sizeRef)
@@ -348,13 +325,27 @@ local function ShowSlotTooltip(self)
     local ok = pcall(GameTooltip.SetBagItem, GameTooltip, self.bag, self.slot)
     if not ok then
         local link = C_Container.GetContainerItemLink(self.bag, self.slot)
-        if link then GameTooltip:SetHyperlink(link) end
+        if link then pcall(GameTooltip.SetHyperlink, GameTooltip, link) end
     end
     GameTooltip:Show()
 end
 
 local function HideSlotTooltip()
     GameTooltip:Hide()
+end
+
+-- 隱藏格子上的所有指示器（重構：避免重複代碼）
+local function HideAllSlotIndicators(button)
+    if button.ilvlText then button.ilvlText:Hide() end
+    if button.junkIcon then button.junkIcon:Hide() end
+    if button.questIcon then button.questIcon:Hide() end
+    if button.qualityGlow then button.qualityGlow:Hide() end
+    if button.upgradeArrow then button.upgradeArrow:Hide() end
+    if button.bindText then button.bindText:Hide() end
+    if button.newGlow then
+        if button.newGlowAnim then button.newGlowAnim:Stop() end
+        button.newGlow:Hide()
+    end
 end
 
 -- 設定格子按鈕的共用基礎（圖示、邊框、物品等級、tooltip）
@@ -489,7 +480,7 @@ local function CreateItemSlot(parent, slotID, bag, slot)
     -- 品質發光（史詩以上）
     if not button.qualityGlow then
         local glow = button:CreateTexture(nil, "BACKGROUND")
-        glow:SetTexture("Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64")
+        glow:SetTexture(LunarUI.textures.glow)
         glow:SetBlendMode("ADD")
         glow:SetPoint("TOPLEFT", -6, 6)
         glow:SetPoint("BOTTOMRIGHT", 6, -6)
@@ -702,30 +693,8 @@ local function UpdateSlot(button)
         if button.LunarBorder then
             button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 0.5)
         end
-        if button.ilvlText then
-            button.ilvlText:Hide()
-        end
-        if button.junkIcon then
-            button.junkIcon:Hide()
-        end
-        if button.questIcon then
-            button.questIcon:Hide()
-        end
-        if button.qualityGlow then
-            button.qualityGlow:Hide()
-        end
-        if button.upgradeArrow then
-            button.upgradeArrow:Hide()
-        end
-        if button.bindText then
-            button.bindText:Hide()
-        end
-        if button.newGlow then
-            if button.newGlowAnim then
-                button.newGlowAnim:Stop()
-            end
-            button.newGlow:Hide()
-        end
+        -- 使用輔助函數隱藏所有指示器
+        HideAllSlotIndicators(button)
         -- 隱藏冷卻
         local cooldown = button.Cooldown or button.cooldown
         if cooldown then
@@ -898,7 +867,7 @@ local function CreateBagFrame()
     sortButton:SetSize(60, 20)
     sortButton:SetPoint("TOPLEFT", title, "TOPRIGHT", 10, 2)
     sortButton:SetBackdrop(backdropTemplate)
-    sortButton:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+    sortButton:SetBackdropColor(unpack(C.bgIcon))
     sortButton:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
 
     local sortText = sortButton:CreateFontString(nil, "OVERLAY")
@@ -913,11 +882,11 @@ local function CreateBagFrame()
     end)
 
     sortButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.2, 0.2, 0.2, 0.8)
+        self:SetBackdropColor(unpack(C.bgButtonHover))
     end)
 
     sortButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+        self:SetBackdropColor(unpack(C.bgIcon))
     end)
 
     -- 格子容器
@@ -1092,12 +1061,8 @@ local function UpdateBankSlot(button)
         if button.LunarBorder then
             button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 0.5)
         end
-        if button.ilvlText then
-            button.ilvlText:Hide()
-        end
-        if button.bindText then
-            button.bindText:Hide()
-        end
+        -- 使用輔助函數隱藏所有指示器
+        HideAllSlotIndicators(button)
     end
 end
 
@@ -1224,7 +1189,7 @@ local function CreateBankFrame()
     bankSortButton:SetSize(60, 20)
     bankSortButton:SetPoint("TOPLEFT", title, "TOPRIGHT", 10, 2)
     bankSortButton:SetBackdrop(backdropTemplate)
-    bankSortButton:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+    bankSortButton:SetBackdropColor(unpack(C.bgIcon))
     bankSortButton:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1)
 
     local sortText = bankSortButton:CreateFontString(nil, "OVERLAY")
@@ -1239,11 +1204,11 @@ local function CreateBankFrame()
     end)
 
     bankSortButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.2, 0.2, 0.2, 0.8)
+        self:SetBackdropColor(unpack(C.bgButtonHover))
     end)
 
     bankSortButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+        self:SetBackdropColor(unpack(C.bgIcon))
     end)
 
     -- 頁籤按鈕（銀行 / 材料銀行）
@@ -1256,7 +1221,7 @@ local function CreateBankFrame()
         local tab = CreateFrame("Button", nil, tabContainer, "BackdropTemplate")
         tab:SetSize(80, tabHeight)
         tab:SetBackdrop(backdropTemplate)
-        tab:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+        tab:SetBackdropColor(unpack(C.bgIcon))
         tab:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 0.6)
         if order == 1 then
             tab:SetPoint("LEFT", tabContainer, "LEFT", 0, 0)

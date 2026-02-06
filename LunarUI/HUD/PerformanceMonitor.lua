@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 效能監控
     顯示 FPS 與延遲資訊
@@ -35,32 +35,17 @@ local LATENCY_THRESHOLDS = {
 -- 輔助函數
 --------------------------------------------------------------------------------
 
--- 通用門檻色彩：ascending=true 值越大越好（FPS），false 值越小越好（延遲）
-local function GetThresholdColor(value, thresholds, ascending)
-    if ascending then
-        if value >= thresholds[1] then return 0.2, 0.8, 0.2
-        elseif value >= thresholds[2] then return 0.9, 0.9, 0.2
-        elseif value >= thresholds[3] then return 0.9, 0.5, 0.1
-        else return 0.9, 0.2, 0.2 end
-    else
-        if value <= thresholds[1] then return 0.2, 0.8, 0.2
-        elseif value <= thresholds[2] then return 0.9, 0.9, 0.2
-        elseif value <= thresholds[3] then return 0.9, 0.5, 0.1
-        else return 0.9, 0.2, 0.2 end
-    end
-end
-
 local FPS_THRESHOLDS = { 60, 30, 15 }
 local LATENCY_THRESHOLDS_LIST = {
     LATENCY_THRESHOLDS.good, LATENCY_THRESHOLDS.medium, LATENCY_THRESHOLDS.bad
 }
 
 local function GetFPSColor(fps)
-    return GetThresholdColor(fps, FPS_THRESHOLDS, true)
+    return LunarUI.ThresholdColor(fps, FPS_THRESHOLDS, true)
 end
 
 local function GetLatencyColor(ms)
-    return GetThresholdColor(ms, LATENCY_THRESHOLDS_LIST, false)
+    return LunarUI.ThresholdColor(ms, LATENCY_THRESHOLDS_LIST, false)
 end
 
 --------------------------------------------------------------------------------
@@ -78,6 +63,7 @@ local function CreatePerfFrame()
     else
         perfFrame = CreateFrame("Frame", "LunarUI_PerformanceMonitor", UIParent, "BackdropTemplate")
     end
+    LunarUI:RegisterHUDFrame("LunarUI_PerformanceMonitor")
 
     perfFrame:SetSize(120, 40)
     perfFrame:ClearAllPoints()

@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Skin: Quest Log / Quest Map
     Reskin QuestMapFrame (任務日誌) with LunarUI theme
@@ -38,29 +38,20 @@ local function SkinQuest()
     end
 
     -- QuestLogFrame（獨立任務日誌，若存在）
-    local questLog = QuestLogFrame
-    if questLog then
-        LunarUI:SkinFrame(questLog, { textDepth = 3 })
-        if questLog.CloseButton then
-            LunarUI:SkinCloseButton(questLog.CloseButton)
-        end
-    end
+    LunarUI:SkinStandardFrame("QuestLogFrame")
 
     -- QuestFrame（NPC 任務對話框）— 這是最重要的任務框架
-    local questFrame = QuestFrame
+    local questFrame = LunarUI:SkinStandardFrame("QuestFrame", {
+        textDepth = 4,
+    })
     if questFrame then
-        LunarUI:SkinFrame(questFrame, { textDepth = 4 })
-
-        -- 標題文字
-        if questFrame.TitleText then
-            LunarUI:SetFontLight(questFrame.TitleText)
-        elseif _G.QuestFrameTitleText then
+        -- 標題文字 fallback
+        if not questFrame.TitleText and _G.QuestFrameTitleText then
             LunarUI:SetFontLight(_G.QuestFrameTitleText)
         end
 
-        if questFrame.CloseButton then
-            LunarUI:SkinCloseButton(questFrame.CloseButton)
-        elseif _G.QuestFrameCloseButton then
+        -- 關閉按鈕 fallback
+        if not questFrame.CloseButton and _G.QuestFrameCloseButton then
             LunarUI:SkinCloseButton(_G.QuestFrameCloseButton)
         end
 

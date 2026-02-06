@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - Nameplates
     oUF-based nameplate system with Phase awareness
@@ -47,20 +47,19 @@ local CLASSIFICATION_COLORS = {
 
 local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS
 
+-- 私有事件框架（不暴露到 LunarUI 物件）
+local nameplateTargetFrame
+local nameplateQuestFrame
+
+-- 前向宣告：堆疊偵測髒旗標函數
+local MarkStackingDirty
+
 --------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------
 
 local function CreateBackdrop(frame)
-    local backdrop = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    backdrop:SetPoint("TOPLEFT", -1, 1)
-    backdrop:SetPoint("BOTTOMRIGHT", 1, -1)
-    backdrop:SetFrameLevel(math.max(frame:GetFrameLevel() - 1, 0))
-    backdrop:SetBackdrop(backdropTemplate)
-    backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
-    backdrop:SetBackdropBorderColor(C.borderSubtle[1], C.borderSubtle[2], C.borderSubtle[3], C.borderSubtle[4])
-    frame.Backdrop = backdrop
-    return backdrop
+    return LunarUI.CreateBackdrop(frame, { inset = 1, borderColor = C.borderSubtle })
 end
 
 local function GetUnitClassification(unit)
@@ -97,7 +96,7 @@ local function CreateHealthBar(frame)
     health.bg = health:CreateTexture(nil, "BACKGROUND")
     health.bg:SetAllPoints()
     health.bg:SetTexture(GetStatusBarTexture())
-    health.bg:SetVertexColor(0.1, 0.1, 0.1, 0.8)
+    health.bg:SetVertexColor(unpack(C.bgIcon))
     health.bg.multiplier = 0.3
 
     -- Frequent updates
@@ -269,16 +268,12 @@ local function CreateDebuffs(frame)
 
     -- Post-create styling
     debuffs.PostCreateButton = function(_self, button)
-        button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        LunarUI.StyleAuraButton(button)
         button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
-
-        -- Fix #49: Apply BackdropTemplateMixin before calling SetBackdrop
-        -- oUF aura buttons don't inherit from BackdropTemplate
-        Mixin(button, BackdropTemplateMixin)
-        button:OnBackdropLoaded()
-        button:SetBackdrop(backdropTemplate)
-        button:SetBackdropColor(0, 0, 0, 0.5)
+        if button.SetBackdropColor then
+            button:SetBackdropColor(0, 0, 0, 0.5)
+        end
     end
 
     -- Post-update for debuff type colors
@@ -298,8 +293,9 @@ end
 --[[ Buffs (enemy nameplates — stealable/important buffs) ]]
 local function CreateNameplateBuffs(frame)
     local db = LunarUI.db and LunarUI.db.profile.nameplates
-    local buffSize = db and db.enemy and db.enemy.buffSize or 14
-    local maxBuffs = db and db.enemy and db.enemy.maxBuffs or 4
+    local enemyDb = db and db.enemy
+    local buffSize = enemyDb and enemyDb.buffSize or 14
+    local maxBuffs = enemyDb and enemyDb.maxBuffs or 4
 
     local buffs = CreateFrame("Frame", nil, frame)
     -- Position above debuffs if they exist, otherwise above health
@@ -324,14 +320,12 @@ local function CreateNameplateBuffs(frame)
 
     -- Post-create styling (shared with debuffs)
     buffs.PostCreateButton = function(_self, button)
-        button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        LunarUI.StyleAuraButton(button)
         button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
-
-        Mixin(button, BackdropTemplateMixin)
-        button:OnBackdropLoaded()
-        button:SetBackdrop(backdropTemplate)
-        button:SetBackdropColor(0, 0, 0, 0.5)
+        if button.SetBackdropColor then
+            button:SetBackdropColor(0, 0, 0, 0.5)
+        end
     end
 
     -- Stealable buffs get a bright border
@@ -382,7 +376,7 @@ end
 --[[ Classification Glow (elite/rare/boss subtle outer glow) ]]
 local function CreateClassificationGlow(frame)
     local glow = frame:CreateTexture(nil, "BACKGROUND", nil, -2)
-    glow:SetTexture("Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64")
+    glow:SetTexture(LunarUI.textures.glow)
     glow:SetBlendMode("ADD")
     glow:SetPoint("TOPLEFT", -8, 8)
     glow:SetPoint("BOTTOMRIGHT", 8, -8)
@@ -555,6 +549,9 @@ local function Nameplate_OnShow(frame)
     -- Re-register frame for tracking (removed on hide)
     nameplateFrames[frame] = true
 
+    -- Performance: 標記堆疊偵測需要重新計算
+    MarkStackingDirty()
+
     -- Update target indicator
     UpdateTargetIndicator(frame)
 
@@ -605,6 +602,9 @@ local function Nameplate_OnHide(frame)
     end
     -- Fix #4: Remove frame reference when hidden
     nameplateFrames[frame] = nil
+
+    -- Performance: 標記堆疊偵測需要重新計算
+    MarkStackingDirty()
 end
 
 --------------------------------------------------------------------------------
@@ -620,10 +620,17 @@ local stackFrames = {}
 local stackYs = {}
 local stackOffsets = {}
 
+-- Performance: 髒旗標驅動 - 只有名牌數量變化時才重新計算
+local stackingDirty = false
+MarkStackingDirty = function()
+    stackingDirty = true
+end
+
 -- Fix 8: 記錄上一個目標名牌，切換時只更新前/後兩個
 local lastTargetNameplate = nil
 
 local function UpdateNameplateStacking()
+    if InCombatLockdown() then return end  -- 12.0: 戰鬥中避免操作名牌子框架
     local db = LunarUI.db and LunarUI.db.profile.nameplates
     if not db or not db.stackingDetection then return end
 
@@ -729,9 +736,15 @@ local function StartStackingDetection()
         elapsed = elapsed + dt
         if elapsed >= STACKING_INTERVAL then
             elapsed = 0
-            UpdateNameplateStacking()
+            -- Performance: 只在髒旗標為 true 時才重新計算
+            if stackingDirty then
+                stackingDirty = false
+                UpdateNameplateStacking()
+            end
         end
     end)
+    -- 初次標記為髒，確保立即執行第一次計算
+    stackingDirty = true
 end
 
 local function StopStackingDetection()
@@ -796,10 +809,10 @@ local function SpawnNameplates()
     StartStackingDetection()
 
     -- Fix #5: Use singleton pattern to prevent duplicate event handlers
-    if not LunarUI._nameplateTargetFrame then
-        LunarUI._nameplateTargetFrame = CreateFrame("Frame")
-        LunarUI._nameplateTargetFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-        LunarUI._nameplateTargetFrame:SetScript("OnEvent", function()
+    if not nameplateTargetFrame then
+        nameplateTargetFrame = CreateFrame("Frame")
+        nameplateTargetFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+        nameplateTargetFrame:SetScript("OnEvent", function()
             -- Fix 8: 只更新前一個和當前目標名牌，而非遍歷全部
             -- 清除舊目標
             if lastTargetNameplate and lastTargetNameplate:IsShown() then
@@ -824,10 +837,10 @@ local function SpawnNameplates()
     end
 
     -- 任務狀態變更時更新任務圖示
-    if not LunarUI._nameplateQuestFrame then
-        LunarUI._nameplateQuestFrame = CreateFrame("Frame")
-        LunarUI._nameplateQuestFrame:RegisterEvent("QUEST_LOG_UPDATE")
-        LunarUI._nameplateQuestFrame:SetScript("OnEvent", function()
+    if not nameplateQuestFrame then
+        nameplateQuestFrame = CreateFrame("Frame")
+        nameplateQuestFrame:RegisterEvent("QUEST_LOG_UPDATE")
+        nameplateQuestFrame:SetScript("OnEvent", function()
             for np in pairs(nameplateFrames) do
                 if np and np:IsShown() then
                     UpdateQuestIndicator(np)
@@ -843,14 +856,14 @@ LunarUI.SpawnNameplates = SpawnNameplates
 -- Fix #35: Cleanup function to prevent memory leaks on disable/reload
 function LunarUI:CleanupNameplates()
     -- Unregister target change event handler
-    if self._nameplateTargetFrame then
-        self._nameplateTargetFrame:UnregisterAllEvents()
-        self._nameplateTargetFrame:SetScript("OnEvent", nil)
+    if nameplateTargetFrame then
+        nameplateTargetFrame:UnregisterAllEvents()
+        nameplateTargetFrame:SetScript("OnEvent", nil)
     end
     -- Unregister quest update event handler
-    if self._nameplateQuestFrame then
-        self._nameplateQuestFrame:UnregisterAllEvents()
-        self._nameplateQuestFrame:SetScript("OnEvent", nil)
+    if nameplateQuestFrame then
+        nameplateQuestFrame:UnregisterAllEvents()
+        nameplateQuestFrame:SetScript("OnEvent", nil)
     end
     -- 停止堆疊偵測
     StopStackingDetection()

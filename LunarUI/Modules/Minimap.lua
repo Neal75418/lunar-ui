@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
 --[[
     LunarUI - 小地圖模組
     Lunar 主題風格的統一小地圖
@@ -100,8 +100,9 @@ local function UpdateZoneText()
         zoneText:SetText(zone)
     end
 
-    -- 依 PvP 狀態著色
-    local pvpType = C_PvP.GetZonePVPInfo()
+    -- 依 PvP 狀態著色（WoW 12.0 可能回傳 secret value，需 pcall）
+    local ok, pvpType = pcall(C_PvP.GetZonePVPInfo)
+    if not ok then pvpType = nil end
     if pvpType == "sanctuary" then
         zoneText:SetTextColor(0.41, 0.8, 0.94)  -- 淺藍
     elseif pvpType == "friendly" then
@@ -1093,7 +1094,6 @@ end
 
 -- 匯出
 LunarUI.InitializeMinimap = InitializeMinimap
-LunarUI.minimapFrame = minimapFrame
 -- RefreshMinimap 已在上方定義為 LunarUI:RefreshMinimap()
 
 LunarUI:RegisterModule("Minimap", {
