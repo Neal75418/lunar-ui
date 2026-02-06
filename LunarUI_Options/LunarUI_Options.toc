@@ -3,7 +3,7 @@
 ## Notes: Configuration interface for LunarUI
 ## Notes-zhTW: LunarUI 設定介面
 ## Author: NealChen
-## Version: 0.7.0
+## Version: 0.8.0
 ## Dependencies: LunarUI
 ## LoadOnDemand: 1
 ## IconTexture: 136057

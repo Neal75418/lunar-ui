@@ -95,6 +95,7 @@ cp -r LunarUI LunarUI_Options "/path/to/World of Warcraft/_retail_/Interface/Add
 | v0.5 | 非戰鬥介面                | 完成  |
 | v0.6 | 視覺主題                 | 完成  |
 | v0.7 | 設定系統                 | 完成  |
+| v0.8 | 穩定性與 12.0 相容性          | 完成  |
 | v1.0 | 完整風格套件               | 進行中 |
 
 ---
