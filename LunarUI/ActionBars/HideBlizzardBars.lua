@@ -222,6 +222,7 @@ local function HideBlizzardBars()
                 hookedFrames[bar] = true
                 hooksecurefunc(bar, "SetScale", function(self, scale)
                     if self._lunarFixingScale then return end
+                    if InCombatLockdown() then return end
                     if not scale or scale <= 0 then
                         self._lunarFixingScale = true
                         self:SetScale(0.001)

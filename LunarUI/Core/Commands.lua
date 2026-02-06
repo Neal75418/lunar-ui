@@ -291,7 +291,7 @@ function LunarUI:DebugVigorFrames()
             local children = { frame:GetChildren() }
             if #children > 0 then
                 for i, child in ipairs(children) do
-                    if i > 8 then
+                    if i > 8 and #children > 8 then
                         add(string.format("  ... +%d more children", #children - 8))
                         break
                     end
