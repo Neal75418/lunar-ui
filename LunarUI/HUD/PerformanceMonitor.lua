@@ -186,6 +186,7 @@ local function StopUpdating()
     if perfFrame then
         perfFrame:SetScript("OnUpdate", nil)
     end
+    elapsed = 0
 end
 
 --------------------------------------------------------------------------------

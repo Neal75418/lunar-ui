@@ -655,6 +655,7 @@ end
 
 local isInCombat = false
 local isBarsUnlocked = false  -- 解鎖時完全停用淡出
+local fadeInitialized = false
 local fadeState = {}  -- { [barKey] = { alpha, targetAlpha, hovered, timer } }
 
 local function GetFadeSettings()
@@ -838,6 +839,7 @@ local combatFrame = LunarUI.CreateEventHandler(
             isInCombat = false
             local _, _, fadeDelay = GetFadeSettings()
             C_Timer.After(fadeDelay, function()
+                if not fadeInitialized then return end
                 if not isInCombat then
                     FadeAllBarsOut()
                 end
@@ -848,8 +850,10 @@ local combatFrame = LunarUI.CreateEventHandler(
 
 -- 初始化淡出狀態（非戰鬥時啟動淡出）
 local function InitializeFade()
+    if not combatFrame then return end  -- 模組已 cleanup
     local enabled = GetFadeSettings()
     if not enabled then return end
+    fadeInitialized = true
 
     -- 為每條 bar 設定懸停偵測
     for barKey, bar in pairs(bars) do
@@ -861,6 +865,7 @@ local function InitializeFade()
         isInCombat = false
         local _, _, fadeDelay = GetFadeSettings()
         C_Timer.After(fadeDelay, function()
+            if not fadeInitialized then return end
             if not isInCombat then
                 FadeAllBarsOut()
             end
@@ -1197,6 +1202,7 @@ end
 -- 清理函數
 local function CleanupActionBars()
     -- 停止淡出動畫
+    fadeInitialized = false
     fadeAnimFrame:SetScript("OnUpdate", nil)
     fadeAnimActive = false
 
@@ -1208,10 +1214,13 @@ local function CleanupActionBars()
         end
     end
     wipe(fadeState)
+    wipe(pendingNormalClear)
+    wipe(pendingDesaturate)
 
     -- 解除戰鬥事件監聽
     if combatFrame then
         combatFrame:UnregisterAllEvents()
+        combatFrame = nil
     end
 
     -- 還原 ExtraActionBarFrame

@@ -602,6 +602,7 @@ function LunarUI.CleanupCooldownTracker()
     eventFrame:SetScript("OnUpdate", nil)
     wipe(spellTextureCache)  -- 清理圖示快取
     cacheSize = 0
+    eventFrame = nil
 end
 
 LunarUI:RegisterModule("CooldownTracker", {

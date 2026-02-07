@@ -645,6 +645,8 @@ function LunarUI.CleanupDataTexts()
 
     wipe(onUpdateElapsed)
     wipe(slotsByProvider)
+    eventFrame = nil
+    onUpdateFrame = nil
 end
 
 -- Export

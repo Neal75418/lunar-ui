@@ -473,6 +473,7 @@ function LunarUI.CleanupClassResources()
         resourceFrame:Hide()
     end
     eventFrame:UnregisterAllEvents()
+    eventFrame = nil
 end
 
 LunarUI:RegisterModule("ClassResources", {

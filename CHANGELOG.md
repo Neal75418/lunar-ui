@@ -14,6 +14,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) &middot; Versio
 
 ---
 
+## [0.9.2] &mdash; 2026-02-07
+
+### Fixed
+
+- **Cleanup 引用清理** &mdash; 8 處 cleanup 函數加入框架引用 nil 化
+  - ClassResources / CooldownTracker / AuraFrames / DataTexts / ActionBars 的 `eventFrame`、`blizzHider`、`onUpdateFrame`、`combatFrame`
+- **ActionBars** &mdash; `CleanupActionBars()` 加入 `wipe(pendingNormalClear)` / `wipe(pendingDesaturate)` 釋放按鈕引用
+- **ActionBars** &mdash; `C_Timer.After` 回呼加入 `fadeInitialized` 守衛，防止模組 disable 後競態觸發淡出邏輯
+- **PerformanceMonitor** &mdash; `StopUpdating()` 重置 `elapsed = 0`，避免重新啟用時立即觸發更新
+
+---
+
 ## [0.9.1] &mdash; 2026-02-07
 
 ### Fixed

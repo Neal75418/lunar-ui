@@ -689,6 +689,8 @@ function LunarUI.CleanupAuraFrames()
     if debuffFrame then debuffFrame:Hide() end
     eventFrame:UnregisterAllEvents()
     eventFrame:SetScript("OnUpdate", nil)
+    eventFrame = nil
+    blizzHider = nil
 end
 
 LunarUI:RegisterModule("AuraFrames", {
