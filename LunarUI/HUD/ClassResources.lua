@@ -406,6 +406,13 @@ local eventFrame = LunarUI.CreateEventHandler(
     {"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "UNIT_POWER_UPDATE", "UNIT_MAXPOWER", "RUNE_POWER_UPDATE"},
     function(_self, event, arg1)
         if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_SPECIALIZATION_CHANGED" then
+            -- 立即隱藏舊資源，避免專精切換時短暫顯示過期資訊
+            for _, icon in ipairs(resourceIcons) do
+                icon:Hide()
+            end
+            if resourceBar then
+                resourceBar:Hide()
+            end
             C_Timer.After(0.5, SetupResourceDisplay)
         elseif event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER" then
             if arg1 == "player" then

@@ -204,7 +204,7 @@ local function CreateAuraIcon(parent)
     local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     icon:SetSize(ICON_SIZE, totalHeight)
     icon:SetBackdrop(backdropTemplate)
-    icon:SetBackdropColor(0.08, 0.08, 0.08, 0.85)
+    icon:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], 0.85)
     icon:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.8)
 
     CreateAuraIconVisuals(icon)
@@ -389,8 +389,8 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
     local visibleIndex = 0
 
     for i = 1, 40 do
-        local auraData = getDataFn("player", i)
-        if not auraData then break end
+        local auraOk, auraData = pcall(getDataFn, "player", i)
+        if not auraOk or not auraData then break end
 
         -- Fix 10: 合併 pcall — 同時取 name 和 duration，減少每個 aura 開銷
         local ok, nameStr, durNum = pcall(function()

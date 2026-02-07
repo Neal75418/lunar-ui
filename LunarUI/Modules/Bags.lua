@@ -595,11 +595,11 @@ local function UpdateSlot(button)
                 local bindType = select(14, C_Item.GetItemInfo(itemLink))
                 -- bindType: 1=BoP, 2=BoE, 3=BoU, 4=Quest（可能為 nil 若物品未載入）
                 if bindType and bindType == 2 then
-                    button.bindText:SetText("BoE")
+                    button.bindText:SetText(L["BoE"] or "BoE")
                     button.bindText:SetTextColor(0.1, 1, 0.1)
                     button.bindText:Show()
                 elseif bindType == 3 then
-                    button.bindText:SetText("BoU")
+                    button.bindText:SetText(L["BoU"] or "BoU")
                     button.bindText:SetTextColor(0.9, 0.6, 0.2)
                     button.bindText:Show()
                 else
@@ -770,7 +770,7 @@ local function CreateBagFrame()
     end
 
     bagFrame:SetBackdrop(backdropTemplate)
-    bagFrame:SetBackdropColor(0.05, 0.05, 0.05, FRAME_ALPHA)
+    bagFrame:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], FRAME_ALPHA)
     bagFrame:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
     bagFrame:SetFrameStrata("HIGH")
     bagFrame:SetMovable(true)
@@ -1035,11 +1035,11 @@ local function UpdateBankSlot(button)
                 local bindType = select(14, C_Item.GetItemInfo(itemLink))
                 -- bindType 可能為 nil 若物品未載入
                 if bindType and bindType == 2 then
-                    button.bindText:SetText("BoE")
+                    button.bindText:SetText(L["BoE"] or "BoE")
                     button.bindText:SetTextColor(0.1, 1, 0.1)
                     button.bindText:Show()
                 elseif bindType and bindType == 3 then
-                    button.bindText:SetText("BoU")
+                    button.bindText:SetText(L["BoU"] or "BoU")
                     button.bindText:SetTextColor(0.9, 0.6, 0.2)
                     button.bindText:Show()
                 else
@@ -1095,7 +1095,7 @@ local function CreateBankFrame()
     end
 
     bankFrame:SetBackdrop(backdropTemplate)
-    bankFrame:SetBackdropColor(0.05, 0.05, 0.05, FRAME_ALPHA)
+    bankFrame:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], FRAME_ALPHA)
     bankFrame:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1)  -- 銀行用金色邊框
     bankFrame:SetFrameStrata("HIGH")
     bankFrame:SetMovable(true)

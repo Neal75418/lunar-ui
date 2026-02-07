@@ -272,7 +272,7 @@ local function CreateDebuffs(frame)
         LunarUI.SetFont(button.Count, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
         if button.SetBackdropColor then
-            button:SetBackdropColor(0, 0, 0, 0.5)
+            button:SetBackdropColor(unpack(C.bgOverlay))
         end
     end
 
@@ -324,14 +324,14 @@ local function CreateNameplateBuffs(frame)
         LunarUI.SetFont(button.Count, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
         if button.SetBackdropColor then
-            button:SetBackdropColor(0, 0, 0, 0.5)
+            button:SetBackdropColor(unpack(C.bgOverlay))
         end
     end
 
     -- Stealable buffs get a bright border
     buffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
         if button.SetBackdropBorderColor then
-            button:SetBackdropBorderColor(0.2, 0.6, 1.0, 1)  -- Blue for stealable
+            button:SetBackdropBorderColor(unpack(C.stealableBorder))
         end
     end
 
@@ -859,11 +859,13 @@ function LunarUI:CleanupNameplates()
     if nameplateTargetFrame then
         nameplateTargetFrame:UnregisterAllEvents()
         nameplateTargetFrame:SetScript("OnEvent", nil)
+        nameplateTargetFrame = nil
     end
     -- Unregister quest update event handler
     if nameplateQuestFrame then
         nameplateQuestFrame:UnregisterAllEvents()
         nameplateQuestFrame:SetScript("OnEvent", nil)
+        nameplateQuestFrame = nil
     end
     -- 停止堆疊偵測
     StopStackingDetection()

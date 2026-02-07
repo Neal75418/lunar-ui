@@ -14,6 +14,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) &middot; Versio
 
 ---
 
+## [0.9.1] &mdash; 2026-02-07
+
+### Fixed
+
+- **本地化** &mdash; 7 處硬編碼字串改為 `L[]` 引用（PerformanceMonitor 中文提示、Bags BoE/BoU）
+- **記憶體清理** &mdash; 4 處 cleanup 缺陷修復
+  - Nameplates：cleanup 後 nil 化 `nameplateTargetFrame` / `nameplateQuestFrame`
+  - CooldownTracker：`spellTextureCache` 加入 2000 筆上限防止無限增長
+  - FrameMover：`wipe(movers)` 釋放框架引用
+  - ClassResources：專精切換時立即隱藏舊資源，避免 0.5s 延遲內顯示過期資訊
+- **AuraFrames** &mdash; `C_UnitAuras` 迴圈加入 `pcall` 保護，防止 WoW 12.0 secret value 例外
+
+### Changed
+
+- **Design Tokens** &mdash; 12 處硬編碼色彩替換為 `LunarUI.Colors` token 引用
+  - 新增 6 個 token：`bgOverlay`、`bgHUD`、`borderHUD`、`borderWarm`、`highlightBlue`、`stealableBorder`
+  - 涵蓋 ActionBars、Nameplates、UnitFrames、AuraFrames、PerformanceMonitor、Loot、Bags
+- TOC 版本號 `0.8.0` → `0.9.0`（對齊 CHANGELOG）
+
+---
+
 ## [0.9.0] &mdash; 2026-02-07
 
 ### Added

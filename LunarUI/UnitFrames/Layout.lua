@@ -331,7 +331,7 @@ local function PostCreateAuraIcon(_self, button)
     LunarUI.StyleAuraButton(button)
 
     if button.SetBackdropColor then
-        button:SetBackdropColor(0, 0, 0, 0.5)
+        button:SetBackdropColor(unpack(C.bgOverlay))
         button:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
     end
 

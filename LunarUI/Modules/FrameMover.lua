@@ -417,6 +417,7 @@ end
 -- 清理函數
 function LunarUI.CleanupFrameMover()
     ExitMoveMode()
+    wipe(movers)
 end
 
 LunarUI:RegisterModule("FrameMover", {

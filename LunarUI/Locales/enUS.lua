@@ -293,6 +293,16 @@ L["statusBarTextureDesc"] = "Texture used for health, power, and other status ba
 L["borderStyle"] = "Border Style"
 L["borderStyleDesc"] = "Border style for LunarUI frames"
 
+-- Performance Monitor
+L["HomeLatency"] = "Home Latency"
+L["WorldLatency"] = "World Latency"
+L["ShiftDragToMove"] = "Shift+drag to reposition"
+L["PerfMonitorTitle"] = "|cff8882ffLunarUI|r Performance Monitor"
+
+-- Bind Type
+L["BoE"] = "BoE"
+L["BoU"] = "BoU"
+
 -- Errors
 L["ErrorOUFNotFound"] = "Error: oUF framework not found"
 L["ErrorAddonInit"] = "Error: Failed to initialize addon"

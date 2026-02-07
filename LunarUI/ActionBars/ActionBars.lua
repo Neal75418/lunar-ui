@@ -899,7 +899,7 @@ local function EnterKeybindMode()
         if button then
             -- 高亮按鈕
             if button.LunarBorder then
-                button.LunarBorder:SetBackdropBorderColor(0.4, 0.6, 0.8, 1)
+                button.LunarBorder:SetBackdropBorderColor(unpack(C.highlightBlue))
             end
 
             -- 顯示目前快捷鍵

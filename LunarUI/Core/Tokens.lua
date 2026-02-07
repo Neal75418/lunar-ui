@@ -20,6 +20,7 @@ LunarUI.Colors = {
     -- 邊框
     border       = { 0.15, 0.12, 0.08, 1 },
     borderSubtle = { 0.1, 0.1, 0.1, 1 },
+    borderWarm   = { 0.25, 0.22, 0.18, 1 },
     borderGold   = { 0.4, 0.35, 0.2, 1 },
 
     -- 圖示/按鈕
@@ -52,6 +53,17 @@ LunarUI.Colors = {
     energy = { 0.9, 0.8, 0.3, 1 },
     rage = { 0.8, 0.2, 0.2, 1 },
     focus = { 0.7, 0.5, 0.3, 1 },
+
+    -- 覆蓋層
+    bgOverlay       = { 0, 0, 0, 0.5 },
+
+    -- HUD 元件（略帶藍紫色調）
+    bgHUD           = { 0.05, 0.05, 0.08, 0.75 },
+    borderHUD       = { 0.20, 0.18, 0.30, 0.9 },
+
+    -- 互動/狀態
+    highlightBlue   = { 0.4, 0.6, 0.8, 1 },
+    stealableBorder = { 0.2, 0.6, 1.0, 1 },
 
     -- 月光主題
     moonSilver = { 0.75, 0.78, 0.85, 1 },

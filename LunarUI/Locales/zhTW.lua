@@ -296,6 +296,16 @@ L["statusBarTextureDesc"] = "血量、能量及其他狀態條使用的材質（
 L["borderStyle"] = "邊框風格"
 L["borderStyleDesc"] = "LunarUI 框架的邊框風格"
 
+-- 效能監控
+L["HomeLatency"] = "本地延遲"
+L["WorldLatency"] = "世界延遲"
+L["ShiftDragToMove"] = "Shift+拖曳 移動位置"
+L["PerfMonitorTitle"] = "|cff8882ffLunarUI|r 效能監控"
+
+-- 綁定類型
+L["BoE"] = "BoE"
+L["BoU"] = "BoU"
+
 -- 錯誤
 L["ErrorOUFNotFound"] = "錯誤：找不到 oUF 框架"
 L["ErrorAddonInit"] = "錯誤：插件初始化失敗"

@@ -11,6 +11,8 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
+local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -86,8 +88,8 @@ local function CreatePerfFrame()
 
     -- 背景樣式
     perfFrame:SetBackdrop(LunarUI.iconBackdropTemplate)
-    perfFrame:SetBackdropColor(0.05, 0.05, 0.08, 0.75)
-    perfFrame:SetBackdropBorderColor(0.20, 0.18, 0.30, 0.9)
+    perfFrame:SetBackdropColor(unpack(C.bgHUD))
+    perfFrame:SetBackdropBorderColor(unpack(C.borderHUD))
 
     -- FPS 文字（左側）
     local fpsText = perfFrame:CreateFontString(nil, "OVERLAY")
@@ -120,18 +122,18 @@ local function CreatePerfFrame()
     -- 提示
     perfFrame:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText("|cff8882ffLunarUI|r 效能監控")
+        GameTooltip:SetText(L["PerfMonitorTitle"] or "|cff8882ffLunarUI|r Performance Monitor")
         GameTooltip:AddLine(" ")
 
         local fps = GetFramerate()
         local _, _, homeMs, worldMs = GetNetStats()
 
         GameTooltip:AddDoubleLine("FPS", string.format("%.0f", fps), 0.7, 0.7, 0.7, 1, 1, 1)
-        GameTooltip:AddDoubleLine("本地延遲", string.format("%d ms", homeMs), 0.7, 0.7, 0.7, GetLatencyColor(homeMs))
-        GameTooltip:AddDoubleLine("世界延遲", string.format("%d ms", worldMs), 0.7, 0.7, 0.7, GetLatencyColor(worldMs))
+        GameTooltip:AddDoubleLine(L["HomeLatency"] or "Home Latency", string.format("%d ms", homeMs), 0.7, 0.7, 0.7, GetLatencyColor(homeMs))
+        GameTooltip:AddDoubleLine(L["WorldLatency"] or "World Latency", string.format("%d ms", worldMs), 0.7, 0.7, 0.7, GetLatencyColor(worldMs))
 
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("Shift+拖曳 移動位置", 0.5, 0.5, 0.5)
+        GameTooltip:AddLine(L["ShiftDragToMove"] or "Shift+drag to reposition", 0.5, 0.5, 0.5)
         GameTooltip:Show()
     end)
 

@@ -198,6 +198,8 @@ local trackedSpells = {}
 local updateTimer = 0
 local isInitialized = false
 local spellTextureCache = {}  -- 法術圖示快取，避免重複查詢 API
+local CACHE_MAX_SIZE = 2000   -- 快取上限，防止無限增長（每筆約 32 bytes，2000 筆 ≈ 64KB）
+local cacheSize = 0
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -237,6 +239,12 @@ local function GetSpellTexture(spellID)
         return cached
     end
 
+    -- 快取已滿時清空，防止無限增長
+    if cacheSize >= CACHE_MAX_SIZE then
+        wipe(spellTextureCache)
+        cacheSize = 0
+    end
+
     -- 查詢並快取
     local info = C_Spell.GetSpellInfo(spellID)
     local texture = info and info.iconID or nil
@@ -246,6 +254,7 @@ local function GetSpellTexture(spellID)
         -- 負面快取：避免重複查詢無效法術
         spellTextureCache[spellID] = INVALID_TEXTURE
     end
+    cacheSize = cacheSize + 1
     return texture
 end
 
@@ -592,6 +601,7 @@ function LunarUI.CleanupCooldownTracker()
     eventFrame:UnregisterAllEvents()
     eventFrame:SetScript("OnUpdate", nil)
     wipe(spellTextureCache)  -- 清理圖示快取
+    cacheSize = 0
 end
 
 LunarUI:RegisterModule("CooldownTracker", {

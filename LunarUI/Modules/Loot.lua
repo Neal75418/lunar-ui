@@ -177,8 +177,8 @@ local function CreateLootFrame()
     lootAllBtn:SetPoint("BOTTOM", frame, "BOTTOM", 0, FRAME_PADDING)
     if backdropTemplate then
         lootAllBtn:SetBackdrop(backdropTemplate)
-        lootAllBtn:SetBackdropColor(0.12, 0.10, 0.08, 0.9)
-        lootAllBtn:SetBackdropBorderColor(0.25, 0.22, 0.18, 1)
+        lootAllBtn:SetBackdropColor(C.inkDark[1], C.inkDark[2], C.inkDark[3], 0.9)
+        lootAllBtn:SetBackdropBorderColor(unpack(C.borderWarm))
     end
 
     local lootAllText = lootAllBtn:CreateFontString(nil, "OVERLAY")
