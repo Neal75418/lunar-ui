@@ -583,7 +583,7 @@ local function CreateMinimapFrame()
 
     -- 建立區域文字
     zoneText = minimapFrame:CreateFontString(nil, "OVERLAY")
-    zoneText:SetFont(STANDARD_TEXT_FONT, zoneFontSize, zoneFontOutline)
+    LunarUI.SetFont(zoneText, zoneFontSize, zoneFontOutline)
     zoneText:SetPoint("TOP", minimapFrame, "BOTTOM", 0, -4)
     zoneText:SetTextColor(0.9, 0.9, 0.9)
     zoneText:SetJustifyH("CENTER")
@@ -592,7 +592,7 @@ local function CreateMinimapFrame()
 
     -- 建立座標文字（掛在 Minimap 上，避免被 Minimap 的較高 frame level 遮住）
     coordText = Minimap:CreateFontString(nil, "OVERLAY")
-    coordText:SetFont(STANDARD_TEXT_FONT, coordFontSize, coordFontOutline)
+    LunarUI.SetFont(coordText, coordFontSize, coordFontOutline)
     coordText:SetPoint("BOTTOM", Minimap, "BOTTOM", 0, 4)
     coordText:SetTextColor(0.8, 0.8, 0.6)
     coordText:SetJustifyH("CENTER")
@@ -600,7 +600,7 @@ local function CreateMinimapFrame()
 
     -- 建立時鐘文字（掛在 Minimap 上，避免被遮住；左下角避免與右側圖示重疊）
     clockText = Minimap:CreateFontString(nil, "OVERLAY")
-    clockText:SetFont(STANDARD_TEXT_FONT, coordFontSize, coordFontOutline)
+    LunarUI.SetFont(clockText, coordFontSize, coordFontOutline)
     clockText:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", 4, 4)
     clockText:SetTextColor(0.7, 0.7, 0.7)
     clockText:SetJustifyH("LEFT")
@@ -733,7 +733,7 @@ local function CreateDifficultyIndicator()
     diff:SetPoint("TOPLEFT", minimapFrame, "TOPLEFT", 4, -4)
 
     local text = diff:CreateFontString(nil, "OVERLAY")
-    text:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(text, 10, "OUTLINE")
     text:SetAllPoints()
     text:SetJustifyH("LEFT")
     diff.text = text
@@ -953,7 +953,7 @@ function LunarUI.RefreshMinimap()
     if zoneText then
         local zoneFontSize = db.zoneFontSize or 12
         local zoneFontOutline = db.zoneFontOutline or "OUTLINE"
-        zoneText:SetFont(STANDARD_TEXT_FONT, zoneFontSize, zoneFontOutline)
+        zoneText:SetFont(LunarUI.GetSelectedFont(), zoneFontSize, zoneFontOutline)
         zoneText:SetWidth(size)
     end
     ApplyZoneTextDisplayMode(db.zoneTextDisplay or "SHOW")
@@ -962,7 +962,7 @@ function LunarUI.RefreshMinimap()
     if coordText then
         local coordFontSize = db.coordFontSize or 10
         local coordFontOutline = db.coordFontOutline or "OUTLINE"
-        coordText:SetFont(STANDARD_TEXT_FONT, coordFontSize, coordFontOutline)
+        coordText:SetFont(LunarUI.GetSelectedFont(), coordFontSize, coordFontOutline)
         if db.showCoords then
             coordText:Show()
         else
@@ -974,7 +974,7 @@ function LunarUI.RefreshMinimap()
     if clockText then
         local coordFontSize = db.coordFontSize or 10
         local coordFontOutline = db.coordFontOutline or "OUTLINE"
-        clockText:SetFont(STANDARD_TEXT_FONT, coordFontSize, coordFontOutline)
+        clockText:SetFont(LunarUI.GetSelectedFont(), coordFontSize, coordFontOutline)
         if db.showClock then
             clockText:Show()
             lastClockString = nil  -- 強制重繪（格式可能改變）

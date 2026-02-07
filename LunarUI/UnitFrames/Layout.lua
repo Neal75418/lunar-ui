@@ -153,7 +153,7 @@ end
 --[[ 名稱文字 ]]
 local function CreateNameText(frame, unit)
     local name = frame.Health:CreateFontString(nil, "OVERLAY")
-    name:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
+    LunarUI.SetFont(name, 12, "OUTLINE")
     name:SetPoint("LEFT", frame.Health, "LEFT", 5, 0)
     name:SetJustifyH("LEFT")
 
@@ -175,7 +175,7 @@ local function CreateHealthText(frame, unit)
     if unit == "raid" then return end
 
     local healthText = frame.Health:CreateFontString(nil, "OVERLAY")
-    healthText:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(healthText, 10, "OUTLINE")
     healthText:SetPoint("RIGHT", frame.Health, "RIGHT", -5, 0)
     healthText:SetJustifyH("RIGHT")
 
@@ -223,14 +223,14 @@ local function CreateCastbar(frame)
 
     -- 法術名稱
     local text = castbar:CreateFontString(nil, "OVERLAY")
-    text:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(text, 10, "OUTLINE")
     text:SetPoint("LEFT", icon, "RIGHT", 4, 0)
     text:SetJustifyH("LEFT")
     castbar.Text = text
 
     -- 施法時間
     local time = castbar:CreateFontString(nil, "OVERLAY")
-    time:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(time, 10, "OUTLINE")
     time:SetPoint("RIGHT", castbar, "RIGHT", -4, 0)
     time:SetJustifyH("RIGHT")
     castbar.Time = time
@@ -515,7 +515,7 @@ local function CreateAlternativePower(frame)
 
     -- 數值文字
     altPower.text = altPower:CreateFontString(nil, "OVERLAY")
-    altPower.text:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+    LunarUI.SetFont(altPower.text, 9, "OUTLINE")
     altPower.text:SetPoint("CENTER")
 
     altPower.PostUpdate = function(element, _unit, cur, _min, max)
@@ -625,7 +625,7 @@ end
 --[[ 目標：分類（菁英/稀有） ]]
 local function CreateClassification(frame)
     local class = frame.Health:CreateFontString(nil, "OVERLAY")
-    class:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(class, 10, "OUTLINE")
     class:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, 10)
     class:SetTextColor(1, 0.82, 0)
 
@@ -637,7 +637,7 @@ end
 --[[ 目標：等級文字 ]]
 local function CreateLevelText(frame, _unit)
     local level = frame.Health:CreateFontString(nil, "OVERLAY")
-    level:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
+    LunarUI.SetFont(level, 11, "OUTLINE")
     level:SetPoint("RIGHT", frame.Name, "LEFT", -4, 0)
 
     frame:Tag(level, "[difficulty][level]")

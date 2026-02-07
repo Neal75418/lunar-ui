@@ -182,7 +182,7 @@ function LunarUI:SkinCloseButton(btn)
     -- 「X」文字
     if not btn._lunarCloseText then
         btn._lunarCloseText = btn:CreateFontString(nil, "OVERLAY")
-        btn._lunarCloseText:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
+        LunarUI.SetFont(btn._lunarCloseText, 12, "OUTLINE")
         btn._lunarCloseText:SetPoint("CENTER", 0, 0)
         btn._lunarCloseText:SetText("×")
         btn._lunarCloseText:SetTextColor(1, 1, 1, 1)

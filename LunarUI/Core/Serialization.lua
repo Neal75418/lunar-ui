@@ -395,7 +395,7 @@ function LunarUI:ShowExportFrame()
 
         -- 標題
         local title = frame:CreateFontString(nil, "OVERLAY")
-        title:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+        LunarUI.SetFont(title, 14, "OUTLINE")
         title:SetPoint("TOP", 0, -10)
         title:SetText("|cff8882ffLunarUI|r " .. (L["SettingsExported"] and "匯出設定" or "匯出設定"))
 
@@ -405,7 +405,7 @@ function LunarUI:ShowExportFrame()
         closeBtn:SetPoint("TOPRIGHT", -4, -4)
         closeBtn:SetNormalFontObject(GameFontNormal)
         closeBtn:SetText("×")
-        closeBtn:GetFontString():SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
+        LunarUI.SetFont(closeBtn:GetFontString(), 16, "OUTLINE")
         closeBtn:SetScript("OnClick", function() frame:Hide() end)
 
         -- 捲動框架
@@ -416,7 +416,7 @@ function LunarUI:ShowExportFrame()
         -- 編輯框
         local editBox = CreateFrame("EditBox", nil, scrollFrame)
         editBox:SetMultiLine(true)
-        editBox:SetFont(STANDARD_TEXT_FONT, 11, "")
+        LunarUI.SetFont(editBox, 11, "")
         editBox:SetWidth(scrollFrame:GetWidth())
         editBox:SetAutoFocus(false)
         scrollFrame:SetScrollChild(editBox)
@@ -424,7 +424,7 @@ function LunarUI:ShowExportFrame()
 
         -- 說明
         local instructions = frame:CreateFontString(nil, "OVERLAY")
-        instructions:SetFont(STANDARD_TEXT_FONT, 10, "")
+        LunarUI.SetFont(instructions, 10, "")
         instructions:SetPoint("BOTTOM", 0, 10)
         instructions:SetText("Ctrl+A 全選，Ctrl+C 複製")
         instructions:SetTextColor(C.textDim[1], C.textDim[2], C.textDim[3])
@@ -464,7 +464,7 @@ function LunarUI:ShowImportFrame()
 
         -- 標題
         local title = frame:CreateFontString(nil, "OVERLAY")
-        title:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+        LunarUI.SetFont(title, 14, "OUTLINE")
         title:SetPoint("TOP", 0, -10)
         title:SetText("|cff8882ffLunarUI|r 匯入設定")
 
@@ -474,7 +474,7 @@ function LunarUI:ShowImportFrame()
         closeBtn:SetPoint("TOPRIGHT", -4, -4)
         closeBtn:SetNormalFontObject(GameFontNormal)
         closeBtn:SetText("×")
-        closeBtn:GetFontString():SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
+        LunarUI.SetFont(closeBtn:GetFontString(), 16, "OUTLINE")
         closeBtn:SetScript("OnClick", function() frame:Hide() end)
 
         -- 捲動框架
@@ -485,7 +485,7 @@ function LunarUI:ShowImportFrame()
         -- 編輯框
         local editBox = CreateFrame("EditBox", nil, scrollFrame)
         editBox:SetMultiLine(true)
-        editBox:SetFont(STANDARD_TEXT_FONT, 11, "")
+        LunarUI.SetFont(editBox, 11, "")
         editBox:SetWidth(scrollFrame:GetWidth())
         editBox:SetAutoFocus(false)
         scrollFrame:SetScrollChild(editBox)
@@ -504,7 +504,7 @@ function LunarUI:ShowImportFrame()
         importBtn:SetBackdropBorderColor(unpack(C.border))
 
         local btnText = importBtn:CreateFontString(nil, "OVERLAY")
-        btnText:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
+        LunarUI.SetFont(btnText, 12, "OUTLINE")
         btnText:SetPoint("CENTER")
         btnText:SetText("匯入")
 
@@ -528,7 +528,7 @@ function LunarUI:ShowImportFrame()
 
         -- 說明
         local instructions = frame:CreateFontString(nil, "OVERLAY")
-        instructions:SetFont(STANDARD_TEXT_FONT, 10, "")
+        LunarUI.SetFont(instructions, 10, "")
         instructions:SetPoint("BOTTOM", 0, 40)
         instructions:SetText("貼上匯出字串，然後點擊匯入")
         instructions:SetTextColor(C.textDim[1], C.textDim[2], C.textDim[3])

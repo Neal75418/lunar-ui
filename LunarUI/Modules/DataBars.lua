@@ -81,7 +81,7 @@ local function CreateDataBar(name, db)
 
     -- Text overlay
     bar.text = bar:CreateFontString(nil, "OVERLAY")
-    bar.text:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(bar.text, 10, "OUTLINE")
     bar.text:SetPoint("CENTER")
 
     if not db.showText then

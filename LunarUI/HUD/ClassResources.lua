@@ -215,7 +215,7 @@ local function CreateResourceBar(parent)
 
     -- 文字
     local text = bar:CreateFontString(nil, "OVERLAY")
-    text:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(text, 10, "OUTLINE")
     text:SetPoint("CENTER")
     text:SetTextColor(1, 1, 1)
     bar.text = text

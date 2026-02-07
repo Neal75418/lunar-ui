@@ -61,6 +61,7 @@ HUD\PerformanceMonitor.lua
 HUD\ClassResources.lua
 HUD\CooldownTracker.lua
 HUD\AuraFrames.lua
+HUD\FloatingCombatText.lua
 
 # Modules (Non-combat UI)
 Modules\Automation.lua

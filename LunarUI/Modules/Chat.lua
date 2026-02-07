@@ -196,7 +196,7 @@ local function StyleChatTab(chatFrame)
     -- 簡化標籤外觀
     local tabText = _G[chatFrame:GetName() .. "TabText"] or tab.Text
     if tabText then
-        tabText:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
+        LunarUI.SetFont(tabText, 12, "OUTLINE")
     end
 
     -- 隱藏標籤材質
@@ -258,7 +258,7 @@ local function StyleChatEditBox(chatFrame)
     editBox:SetHeight(22)
 
     -- 設定文字樣式
-    editBox:SetFont(STANDARD_TEXT_FONT, 12, "")
+    LunarUI.SetFont(editBox, 12, "")
 end
 
 local function StyleChatFrame(chatFrame)
@@ -343,7 +343,8 @@ local function StyleChatFrame(chatFrame)
 
     -- 設定字型
     local font, _, flags = chatFrame:GetFont()
-    chatFrame:SetFont(font or STANDARD_TEXT_FONT, 13, flags or "")
+    chatFrame:SetFont(font or LunarUI.GetSelectedFont(), 13, flags or "")
+    LunarUI:RegisterFontString(chatFrame)
 
     -- 啟用滑鼠滾輪捲動（使用 HookScript 避免覆蓋原有腳本）
     chatFrame:EnableMouseWheel(true)
@@ -404,7 +405,7 @@ local function CreateCopyFrame()
     titleBar:SetScript("OnDragStop", function() copyFrame:StopMovingOrSizing() end)
 
     local titleText = titleBar:CreateFontString(nil, "OVERLAY")
-    titleText:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
+    LunarUI.SetFont(titleText, 12, "OUTLINE")
     titleText:SetPoint("LEFT", 8, 0)
     titleText:SetText("Copy Chat")
     titleText:SetTextColor(0.9, 0.9, 0.9)
@@ -415,7 +416,7 @@ local function CreateCopyFrame()
     closeBtn:SetPoint("TOPRIGHT", -4, -2)
     closeBtn:SetNormalFontObject(GameFontNormal)
     closeBtn:SetText("×")
-    closeBtn:GetFontString():SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
+    LunarUI.SetFont(closeBtn:GetFontString(), 16, "OUTLINE")
     closeBtn:SetScript("OnClick", function() copyFrame:Hide() end)
 
     -- 捲動框架
@@ -427,7 +428,7 @@ local function CreateCopyFrame()
     copyEditBox = CreateFrame("EditBox", "LunarUI_ChatCopyEdit", scrollFrame)
     copyEditBox:SetMultiLine(true)
     copyEditBox:SetMaxLetters(99999)
-    copyEditBox:SetFont(STANDARD_TEXT_FONT, 12, "")
+    LunarUI.SetFont(copyEditBox, 12, "")
     copyEditBox:SetWidth(scrollFrame:GetWidth())
     copyEditBox:SetAutoFocus(false)
     copyEditBox:SetScript("OnEscapePressed", function() copyFrame:Hide() end)

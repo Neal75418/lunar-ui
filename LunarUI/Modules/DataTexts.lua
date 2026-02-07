@@ -420,7 +420,7 @@ local function CreateDataPanel(name, db)
 
         -- Text
         slot.text = slot:CreateFontString(nil, "OVERLAY")
-        slot.text:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
+        LunarUI.SetFont(slot.text, 11, "OUTLINE")
         slot.text:SetPoint("CENTER")
         slot.text:SetTextColor(0.9, 0.9, 0.9)
 

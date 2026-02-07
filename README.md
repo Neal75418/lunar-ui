@@ -1,43 +1,146 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/WoW-12.0-blue?style=flat-square" alt="WoW 12.0" />
+  <img src="https://img.shields.io/badge/Lua-5.1-2C2D72?style=flat-square&logo=lua" alt="Lua 5.1" />
+  <img src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square" alt="GPL-3.0" />
+</p>
+
 # LunarUI
 
-**World of Warcraft 12.0 完整 UI 替換插件**
+> 低存在感、不干擾、長時間遊玩不累。以 **Phase（月相）** 狀態機驅動所有 UI 行為。
 
-低存在感、不干擾、長時間遊玩不累。以 Phase（月相）狀態機驅動所有 UI 行為。
+World of Warcraft 12.0 完整 UI 替換插件。
 
 ---
 
-## 模組
+## 架構總覽
 
-| 類別 | 模組 | 說明 |
-|------|------|------|
-| **戰鬥核心** | UnitFrames | Player / Target / Focus / Pet / Party / Raid / Boss（oUF） |
-| | Nameplates | 敵方 / 友方名牌（oUF） |
-| | ActionBars | 動作條 1-6 + 寵物 + 姿態（LibActionButton） |
-| | AuraFrames | Buff / Debuff 框架（含計時條） |
-| | ClassResources | 職業資源條（連擊點、聖能等） |
-| | CooldownTracker | 冷卻追蹤 |
-| **HUD** | PerformanceMonitor | FPS / 延遲 / 記憶體 |
-| **非戰鬥** | Minimap | 座標、區域文字、按鈕整理 |
-| | Bags | 整合背包、裝等顯示、搜尋、自動賣灰 |
-| | Chat | 頻道色、職業色、滑鼠滾輪、懸浮背景 |
-| | Tooltip | 裝等、職業色邊框、目標的目標、ID 顯示 |
-| | DataBars | 經驗 / 榮譽 / 休息 進度條 |
-| | DataTexts | 可自訂的文字資訊覆蓋層 |
-| | Loot | 拾取框架美化 |
-| | Automation | 自動賣灰、自動郵件 |
-| | Skins | 14 個 Blizzard 介面換膚 |
-| **設定** | LunarUI_Options | AceConfig 設定介面（LoadOnDemand） |
+```mermaid
+graph TB
+    subgraph Core["Core 核心"]
+        Init["Init.lua<br/>Engine + Module Loader"]
+        Tokens["Tokens.lua<br/>Design Tokens + Easing"]
+        Config["Config.lua<br/>AceDB Defaults"]
+        Utils["Utils.lua<br/>SafeCall / StripTextures"]
+        Media["Media.lua<br/>LSM + Font Registry"]
+        Serial["Serialization.lua<br/>Import / Export"]
+        Presets["Presets.lua<br/>Layout Presets"]
+    end
+
+    subgraph Combat["戰鬥核心"]
+        UF["UnitFrames<br/>oUF Layout"]
+        NP["Nameplates<br/>oUF Nameplates"]
+        AB["ActionBars<br/>LibActionButton"]
+        Aura["AuraFrames"]
+        CR["ClassResources"]
+        CD["CooldownTracker"]
+        FCT["FloatingCombatText"]
+    end
+
+    subgraph HUD
+        Perf["PerformanceMonitor<br/>FPS / Latency / Memory"]
+    end
+
+    subgraph Modules["非戰鬥模組"]
+        MM["Minimap"]
+        Bags["Bags"]
+        Chat["Chat"]
+        TT["Tooltip"]
+        DB["DataBars"]
+        DT["DataTexts"]
+        Loot["Loot"]
+        Auto["Automation"]
+        Skins["Skins ×14"]
+    end
+
+    subgraph Options["LunarUI_Options<br/>LoadOnDemand"]
+        Opt["AceConfig GUI"]
+        Wiz["InstallWizard"]
+    end
+
+    Init --> Core
+    Core --> Combat
+    Core --> HUD
+    Core --> Modules
+    Core --> Options
+
+    style Core fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
+    style Combat fill:#2d1b36,stroke:#6c7a89,color:#e0e0e0
+    style HUD fill:#1b2d36,stroke:#6c7a89,color:#e0e0e0
+    style Modules fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
+    style Options fill:#36331b,stroke:#6c7a89,color:#e0e0e0
+```
+
+---
+
+## Phase 狀態機
+
+所有 UI 行為由 Phase 狀態機驅動 — 控制「誰有顯示權」，不是切換畫面。
+
+```mermaid
+stateDiagram-v2
+    [*] --> NEW
+    NEW --> WAXING : 進入戰鬥準備
+    WAXING --> FULL : PLAYER_REGEN_DISABLED
+    FULL --> WANING : PLAYER_REGEN_ENABLED
+    WANING --> NEW : 10s 延遲
+
+    NEW : 非戰鬥 / 探索
+    NEW : 低存在感、退到背景
+
+    WAXING : 準備進入戰鬥
+    WAXING : 注意力收斂、關鍵資訊浮出
+
+    FULL : 戰鬥中
+    FULL : 高可讀性、穩定、聚焦
+
+    WANING : 戰後過渡
+    WANING : 緩慢退場、回顧、收尾
+```
+
+> Phase 架構已完成，視覺過渡尚未啟用，目前固定運行於 FULL。
+
+---
+
+## 模組一覽
+
+| 類別       | 模組                 | 說明                                                       |
+|:---------|:-------------------|:---------------------------------------------------------|
+| **戰鬥核心** | UnitFrames         | Player / Target / Focus / Pet / Party / Raid / Boss（oUF） |
+|          | Nameplates         | 敵方 / 友方名牌（oUF）                                           |
+|          | ActionBars         | 動作條 1-6 + 寵物 + 姿態（LibActionButton）                       |
+|          | AuraFrames         | Buff / Debuff 框架（含計時條）                                   |
+|          | ClassResources     | 職業資源條（連擊點、聖能等）                                           |
+|          | CooldownTracker    | 冷卻追蹤                                                     |
+|          | FloatingCombatText | 浮動戰鬥數字（傷害、治療、暴擊）                                         |
+| **HUD**  | PerformanceMonitor | FPS / 延遲 / 記憶體                                           |
+| **非戰鬥**  | Minimap            | 座標、區域文字、按鈕整理                                             |
+|          | Bags               | 整合背包、裝等顯示、搜尋、自動賣灰                                        |
+|          | Chat               | 頻道色、職業色、滑鼠滾輪、懸浮背景                                        |
+|          | Tooltip            | 裝等、職業色邊框、目標的目標、ID 顯示                                     |
+|          | DataBars           | 經驗 / 榮譽 / 休息進度條                                          |
+|          | DataTexts          | 可自訂的文字資訊覆蓋層                                              |
+|          | Loot               | 拾取框架美化                                                   |
+|          | Automation         | 自動賣灰、自動郵件                                                |
+|          | Skins              | 14 個 Blizzard 介面換膚                                       |
+| **設定**   | LunarUI_Options    | AceConfig 設定介面（LoadOnDemand）                             |
 
 ---
 
 ## 技術棧
 
-| 依賴 | 用途 |
-|------|------|
-| Ace3 | Addon 框架、事件、計時器、資料庫、設定 |
-| oUF | UnitFrames / Nameplates 引擎 |
-| LibActionButton-1.0 | 動作條按鈕 |
-| LibSharedMedia-3.0 | 字體 / 材質註冊 |
+```mermaid
+graph LR
+    Ace3["Ace3<br/>框架 / 事件 / DB / 設定"] --> LunarUI
+    oUF["oUF<br/>UnitFrames 引擎"] --> LunarUI
+    LAB["LibActionButton-1.0<br/>動作條按鈕"] --> LunarUI
+    LSM["LibSharedMedia-3.0<br/>字體 / 材質註冊"] --> LunarUI
+
+    style Ace3 fill:#2d2d44,stroke:#6c7a89,color:#e0e0e0
+    style oUF fill:#2d2d44,stroke:#6c7a89,color:#e0e0e0
+    style LAB fill:#2d2d44,stroke:#6c7a89,color:#e0e0e0
+    style LSM fill:#2d2d44,stroke:#6c7a89,color:#e0e0e0
+    style LunarUI fill:#1a1a2e,stroke:#a0a0c0,color:#e0e0e0
+```
 
 ---
 
@@ -55,56 +158,54 @@ cp -r LunarUI LunarUI_Options "/path/to/World of Warcraft/_retail_/Interface/Add
 
 `/lunar` 或 `/lui`
 
-| 指令 | 說明 |
-|------|------|
-| `config` | 開啟設定面板 |
-| `install` | 重新執行安裝精靈 |
-| `status` | 版本、Phase、Tokens |
-| `move` | 框架拖曳模式 |
-| `keybind` | 按鍵綁定模式 |
-| `reset [all]` | 重置框架位置 |
-| `on` / `off` | 啟用 / 停用 |
-| `export` / `import` | 匯出 / 匯入設定 |
-| `debug` | 除錯模式 |
-| `phase [名稱]` | 查看 / 切換 Phase |
-| `test combat\|phases` | 模擬測試 |
-
----
-
-## Phase 狀態模型
-
-所有 UI 行為由 Phase 狀態機驅動 — 控制「誰有顯示權」，不是切換畫面。
-
-| Phase | 情境 | UI 行為 |
-|-------|------|---------|
-| NEW | 非戰鬥 / 探索 | 低存在感、退到背景 |
-| WAXING | 準備進入戰鬥 | 注意力收斂、關鍵資訊浮出 |
-| FULL | 戰鬥中 | 高可讀性、穩定、聚焦 |
-| WANING | 戰後過渡 | 緩慢退場、回顧、收尾 |
-
-> Phase 架構已完成，視覺過渡尚未啟用，目前固定運行於 FULL。
+| 指令                    | 說明              |
+|:----------------------|:----------------|
+| `config`              | 開啟設定面板          |
+| `install`             | 重新執行安裝精靈        |
+| `status`              | 版本、Phase、Tokens |
+| `move`                | 框架拖曳模式          |
+| `keybind`             | 按鍵綁定模式          |
+| `reset [all]`         | 重置框架位置          |
+| `on` / `off`          | 啟用 / 停用         |
+| `export` / `import`   | 匯出 / 匯入設定       |
+| `debug`               | 除錯模式            |
+| `phase [名稱]`          | 查看 / 切換 Phase   |
+| `test combat\|phases` | 模擬測試            |
 
 ---
 
 ## 里程碑
 
-| 版本 | 內容 | 狀態 |
-|------|------|------|
-| 0.1 | LunarCore + Phase 系統 | 完成 |
-| 0.2 | UnitFrames | 完成 |
-| 0.3 | Nameplates | 完成 |
-| 0.4 | ActionBars | 完成 |
-| 0.5 | 非戰鬥介面 | 完成 |
-| 0.6 | 視覺主題 | 完成 |
-| 0.7 | 設定系統 | 完成 |
-| 0.8 | 穩定性與 12.0 相容性 | 完成 |
-| 1.0 | 完整風格套件 | 進行中 |
+```mermaid
+gantt
+    title LunarUI 開發時程
+    dateFormat YYYY-MM-DD
+    axisFormat %m/%d
+
+    section Core
+    M1 LunarCore + Phase     :done, m1, 2026-01-27, 1d
+
+    section UI
+    M2 UnitFrames            :done, m2, 2026-01-27, 1d
+    M3 Nameplates            :done, m3, 2026-01-27, 1d
+    M4 ActionBars            :done, m4, 2026-01-27, 1d
+    M5 非戰鬥介面            :done, m5, 2026-01-28, 1d
+    M6 視覺主題              :done, m6, 2026-01-28, 1d
+    M7 設定系統              :done, m7, 2026-01-28, 1d
+
+    section Stability
+    M8 穩定性 + WoW 12.0     :done, m8, 2026-02-07, 1d
+    M9 字體 + FCT            :done, m9, 2026-02-07, 1d
+
+    section Polish
+    M10 完整風格套件          :active, m10, 2026-02-07, 14d
+```
 
 ---
 
 ## License
 
-GPL-3.0 — [LICENSE](LICENSE)
+[GPL-3.0](LICENSE)
 
 ## Author
 

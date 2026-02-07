@@ -210,7 +210,7 @@ local function StyleButton(button)
 
     -- 樣式化數量文字
     if count then
-        count:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
+        LunarUI.SetFont(count, 12, "OUTLINE")
         count:ClearAllPoints()
         count:SetPoint("BOTTOMRIGHT", -2, 2)
     end
@@ -221,7 +221,7 @@ local function StyleButton(button)
         if showHotkeys == false then
             hotkey:Hide()
         else
-            hotkey:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+            LunarUI.SetFont(hotkey, 10, "OUTLINE")
             hotkey:ClearAllPoints()
             hotkey:SetPoint("TOPRIGHT", -2, -2)
             hotkey:SetTextColor(0.8, 0.8, 0.8)

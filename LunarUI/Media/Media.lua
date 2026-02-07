@@ -183,6 +183,42 @@ function LunarUI.GetSelectedFontSize()
     return db and db.style and db.style.fontSize or 12
 end
 
+--------------------------------------------------------------------------------
+-- Font Registry — 統一字體管理
+--------------------------------------------------------------------------------
+
+local fontRegistry = setmetatable({}, { __mode = "k" })  -- weak keys：框架銷毀時自動回收
+
+--- 設定 FontString 字體並自動註冊到 registry（供 ApplyFontSettings 批次更新）
+---@param fs FontString|table
+---@param size number
+---@param flags string|nil
+function LunarUI.SetFont(fs, size, flags)
+    if not fs or not fs.SetFont then return end
+    fs:SetFont(LunarUI.GetSelectedFont(), size, flags or "")
+    fontRegistry[fs] = true
+end
+
+--- 手動註冊已存在的 FontString（不重新設定字體）
+function LunarUI:RegisterFontString(fs)
+    if fs and fs.SetFont then
+        fontRegistry[fs] = true
+    end
+end
+
+--- 批次更新所有已註冊 FontString 的字體路徑（保留各自的 size 和 flags）
+function LunarUI:ApplyFontSettings()
+    local font = self.GetSelectedFont()
+    for fs in pairs(fontRegistry) do
+        if fs and fs.GetFont and fs.SetFont then
+            local _, size, flags = fs:GetFont()
+            if size then
+                fs:SetFont(font, size, flags)
+            end
+        end
+    end
+end
+
 -- Get user-selected statusbar texture from LSM (reads db.profile.style.statusBarTexture)
 function LunarUI.GetSelectedStatusBarTexture()
     local db = LunarUI.db and LunarUI.db.profile

@@ -158,6 +158,6 @@ function LunarUI.StyleAuraButton(button)
         button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     end
     if button.Count then
-        button.Count:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+        LunarUI.SetFont(button.Count, 10, "OUTLINE")
     end
 end

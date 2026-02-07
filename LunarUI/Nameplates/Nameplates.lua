@@ -105,7 +105,7 @@ local function CreateHealthBar(frame)
     -- Health text overlay
     if db and db.showHealthText then
         local healthText = health:CreateFontString(nil, "OVERLAY")
-        healthText:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
+        LunarUI.SetFont(healthText, 8, "OUTLINE")
         healthText:SetPoint("CENTER", health, "CENTER", 0, 0)
         frame.HealthText = healthText
 
@@ -157,7 +157,7 @@ end
 --[[ Name Text ]]
 local function CreateNameText(frame)
     local name = frame:CreateFontString(nil, "OVERLAY")
-    name:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+    LunarUI.SetFont(name, 9, "OUTLINE")
     name:SetPoint("BOTTOM", frame, "TOP", 0, 2)
     name:SetJustifyH("CENTER")
     name:SetWidth(frame:GetWidth() * 1.5)
@@ -171,7 +171,7 @@ end
 --[[ Level Text ]]
 local function CreateLevelText(frame)
     local level = frame:CreateFontString(nil, "OVERLAY")
-    level:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
+    LunarUI.SetFont(level, 8, "OUTLINE")
     level:SetPoint("BOTTOMRIGHT", frame, "TOPLEFT", -2, 2)
     level:SetJustifyH("RIGHT")
 
@@ -213,7 +213,7 @@ local function CreateCastbar(frame)
 
     -- Text
     local text = castbar:CreateFontString(nil, "OVERLAY")
-    text:SetFont(STANDARD_TEXT_FONT, 7, "OUTLINE")
+    LunarUI.SetFont(text, 7, "OUTLINE")
     text:SetPoint("CENTER")
     text:SetJustifyH("CENTER")
     castbar.Text = text
@@ -269,7 +269,7 @@ local function CreateDebuffs(frame)
     -- Post-create styling
     debuffs.PostCreateButton = function(_self, button)
         LunarUI.StyleAuraButton(button)
-        button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
+        LunarUI.SetFont(button.Count, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
         if button.SetBackdropColor then
             button:SetBackdropColor(0, 0, 0, 0.5)
@@ -321,7 +321,7 @@ local function CreateNameplateBuffs(frame)
     -- Post-create styling (shared with debuffs)
     buffs.PostCreateButton = function(_self, button)
         LunarUI.StyleAuraButton(button)
-        button.Count:SetFont(STANDARD_TEXT_FONT, 8, "OUTLINE")
+        LunarUI.SetFont(button.Count, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
         if button.SetBackdropColor then
             button:SetBackdropColor(0, 0, 0, 0.5)

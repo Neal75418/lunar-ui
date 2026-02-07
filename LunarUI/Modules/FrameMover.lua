@@ -181,7 +181,7 @@ local function CreateMover(name, targetFrame, label)
 
     -- 名稱標籤
     local text = mover:CreateFontString(nil, "OVERLAY")
-    text:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(text, 10, "OUTLINE")
     text:SetPoint("CENTER")
     text:SetTextColor(MOVER_TEXT_COLOR[1], MOVER_TEXT_COLOR[2], MOVER_TEXT_COLOR[3], MOVER_TEXT_COLOR[4])
     text:SetText(label or name)

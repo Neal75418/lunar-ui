@@ -148,7 +148,7 @@ local function CreateAuraIconVisuals(icon)
 
     -- 持續時間文字（隱藏，只靠計時條和冷卻旋轉顯示）
     local durationText = icon:CreateFontString(nil, "OVERLAY")
-    durationText:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
+    LunarUI.SetFont(durationText, 11, "OUTLINE")
     durationText:SetPoint("BOTTOM", icon, "BOTTOM", 0, BAR_HEIGHT + BAR_OFFSET + 1)
     durationText:SetTextColor(1, 1, 1)
     durationText:SetShadowOffset(1, -1)
@@ -157,7 +157,7 @@ local function CreateAuraIconVisuals(icon)
 
     -- 堆疊數量
     local count = icon:CreateFontString(nil, "OVERLAY")
-    count:SetFont(STANDARD_TEXT_FONT, 13, "OUTLINE")
+    LunarUI.SetFont(count, 13, "OUTLINE")
     count:SetPoint("TOPRIGHT", -1, -1)
     count:SetTextColor(1, 0.9, 0.5)
     icon.count = count
@@ -256,7 +256,7 @@ local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY)
     -- 分類標籤（隱藏，只顯示圖示）
     if not frame.label then
         local labelText = frame:CreateFontString(nil, "OVERLAY")
-        labelText:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
+        LunarUI.SetFont(labelText, 11, "OUTLINE")
         labelText:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
         labelText:SetTextColor(0.7, 0.7, 0.7, 0.8)
         labelText:SetText(label)

@@ -294,7 +294,7 @@ local function CreateCooldownIcon(parent)
 
     -- 冷卻文字
     local text = icon:CreateFontString(nil, "OVERLAY")
-    text:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+    LunarUI.SetFont(text, 14, "OUTLINE")
     text:SetPoint("CENTER", 0, 0)
     text:SetTextColor(1, 1, 1)
     icon.text = text

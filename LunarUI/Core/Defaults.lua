@@ -439,6 +439,15 @@ local defaults = {
             crIconSize = 26,
             crIconSpacing = 4,
             crBarHeight = 10,
+
+            -- FloatingCombatText 設定
+            fctEnabled = true,
+            fctFontSize = 24,
+            fctCritScale = 1.5,
+            fctDuration = 1.5,
+            fctDamageOut = true,
+            fctDamageIn = true,
+            fctHealing = true,
         },
 
         -- 框架移動器

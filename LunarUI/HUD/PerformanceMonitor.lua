@@ -91,28 +91,28 @@ local function CreatePerfFrame()
 
     -- FPS 文字（左側）
     local fpsText = perfFrame:CreateFontString(nil, "OVERLAY")
-    fpsText:SetFont(STANDARD_TEXT_FONT, 13, "OUTLINE")
+    LunarUI.SetFont(fpsText, 13, "OUTLINE")
     fpsText:SetPoint("LEFT", 8, 5)
     fpsText:SetJustifyH("LEFT")
     perfFrame.fpsText = fpsText
 
     -- FPS 標籤
     local fpsLabel = perfFrame:CreateFontString(nil, "OVERLAY")
-    fpsLabel:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+    LunarUI.SetFont(fpsLabel, 9, "OUTLINE")
     fpsLabel:SetPoint("TOPLEFT", fpsText, "BOTTOMLEFT", 0, -1)
     fpsLabel:SetText("|cff666688FPS|r")
     perfFrame.fpsLabel = fpsLabel
 
     -- 延遲文字（右側）
     local latencyText = perfFrame:CreateFontString(nil, "OVERLAY")
-    latencyText:SetFont(STANDARD_TEXT_FONT, 13, "OUTLINE")
+    LunarUI.SetFont(latencyText, 13, "OUTLINE")
     latencyText:SetPoint("RIGHT", -8, 5)
     latencyText:SetJustifyH("RIGHT")
     perfFrame.latencyText = latencyText
 
     -- 延遲標籤
     local latencyLabel = perfFrame:CreateFontString(nil, "OVERLAY")
-    latencyLabel:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+    LunarUI.SetFont(latencyLabel, 9, "OUTLINE")
     latencyLabel:SetPoint("TOPRIGHT", latencyText, "BOTTOMRIGHT", 0, -1)
     latencyLabel:SetText("|cff666688MS|r")
     perfFrame.latencyLabel = latencyLabel

@@ -82,7 +82,7 @@ local function CreateLootSlot(parent, index)
 
     -- Item name
     local name = slot:CreateFontString(nil, "OVERLAY")
-    name:SetFont(STANDARD_TEXT_FONT, 11, "")
+    LunarUI.SetFont(name, 11, "")
     name:SetPoint("LEFT", icon, "RIGHT", 6, 0)
     name:SetPoint("RIGHT", slot, "RIGHT", -4, 0)
     name:SetJustifyH("LEFT")
@@ -91,7 +91,7 @@ local function CreateLootSlot(parent, index)
 
     -- Quantity text (on the icon)
     local count = slot:CreateFontString(nil, "OVERLAY")
-    count:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(count, 10, "OUTLINE")
     count:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", -1, 1)
     count:SetJustifyH("RIGHT")
     slot.count = count
@@ -154,7 +154,7 @@ local function CreateLootFrame()
 
     -- Title text
     local title = titleBar:CreateFontString(nil, "OVERLAY")
-    title:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
+    LunarUI.SetFont(title, 12, "OUTLINE")
     title:SetPoint("LEFT", titleBar, "LEFT", 0, 0)
     title:SetText(L["LootTitle"] or "Loot")
     title:SetTextColor(0.9, 0.85, 0.7, 1)
@@ -182,7 +182,7 @@ local function CreateLootFrame()
     end
 
     local lootAllText = lootAllBtn:CreateFontString(nil, "OVERLAY")
-    lootAllText:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(lootAllText, 10, "OUTLINE")
     lootAllText:SetPoint("CENTER")
     lootAllText:SetText(L["LootAll"] or "Loot All")
     lootAllText:SetTextColor(0.9, 0.85, 0.7, 1)

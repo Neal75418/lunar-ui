@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local LSM = LibStub("LibSharedMedia-3.0", true)
 
 --------------------------------------------------------------------------------
 -- HUD 全域縮放
@@ -932,6 +933,71 @@ local function GetOptionsTable()
                         get = function() return LunarUI.db.profile.hud.auraFrames end,
                         set = function(_, val) LunarUI.db.profile.hud.auraFrames = val end,
                     },
+                    fctHeader = {
+                        order = 10,
+                        type = "header",
+                        name = "浮動戰鬥數字",
+                    },
+                    fctEnabled = {
+                        order = 11,
+                        type = "toggle",
+                        name = "啟用浮動戰鬥數字",
+                        desc = "顯示傷害/治療浮動數字（需重載）",
+                        get = function() return LunarUI.db.profile.hud.fctEnabled end,
+                        set = function(_, val) LunarUI.db.profile.hud.fctEnabled = val end,
+                        width = "full",
+                    },
+                    fctDamageOut = {
+                        order = 12,
+                        type = "toggle",
+                        name = "輸出傷害",
+                        desc = "顯示你造成的傷害",
+                        get = function() return LunarUI.db.profile.hud.fctDamageOut end,
+                        set = function(_, val) LunarUI.db.profile.hud.fctDamageOut = val end,
+                    },
+                    fctDamageIn = {
+                        order = 13,
+                        type = "toggle",
+                        name = "受到傷害",
+                        desc = "顯示你受到的傷害",
+                        get = function() return LunarUI.db.profile.hud.fctDamageIn end,
+                        set = function(_, val) LunarUI.db.profile.hud.fctDamageIn = val end,
+                    },
+                    fctHealing = {
+                        order = 14,
+                        type = "toggle",
+                        name = "治療量",
+                        desc = "顯示你造成的治療",
+                        get = function() return LunarUI.db.profile.hud.fctHealing end,
+                        set = function(_, val) LunarUI.db.profile.hud.fctHealing = val end,
+                    },
+                    fctFontSize = {
+                        order = 15,
+                        type = "range",
+                        name = "字體大小",
+                        desc = "浮動數字的基礎字體大小",
+                        min = 14, max = 40, step = 1,
+                        get = function() return LunarUI.db.profile.hud.fctFontSize end,
+                        set = function(_, val) LunarUI.db.profile.hud.fctFontSize = val end,
+                    },
+                    fctCritScale = {
+                        order = 16,
+                        type = "range",
+                        name = "暴擊放大",
+                        desc = "暴擊數字的放大倍數",
+                        min = 1.0, max = 2.5, step = 0.1,
+                        get = function() return LunarUI.db.profile.hud.fctCritScale end,
+                        set = function(_, val) LunarUI.db.profile.hud.fctCritScale = val end,
+                    },
+                    fctDuration = {
+                        order = 17,
+                        type = "range",
+                        name = "動畫時長",
+                        desc = "數字飄動持續時間（秒）",
+                        min = 0.5, max = 3.0, step = 0.1,
+                        get = function() return LunarUI.db.profile.hud.fctDuration end,
+                        set = function(_, val) LunarUI.db.profile.hud.fctDuration = val end,
+                    },
                 },
             },
 
@@ -965,8 +1031,23 @@ local function GetOptionsTable()
                         get = function() return LunarUI.db.profile.style.borderStyle end,
                         set = function(_, val) LunarUI.db.profile.style.borderStyle = val end,
                     },
-                    fontSize = {
+                    font = {
                         order = 3,
+                        type = "select",
+                        name = "字體",
+                        desc = "選擇 UI 使用的字體（即時生效）",
+                        dialogControl = "LSM30_Font",
+                        values = function()
+                            return LSM:HashTable("font")
+                        end,
+                        get = function() return LunarUI.db.profile.style.font end,
+                        set = function(_, val)
+                            LunarUI.db.profile.style.font = val
+                            LunarUI:ApplyFontSettings()
+                        end,
+                    },
+                    fontSize = {
+                        order = 4,
                         type = "range",
                         name = "字體大小",
                         min = 8, max = 18, step = 1,

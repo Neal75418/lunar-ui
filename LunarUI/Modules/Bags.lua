@@ -395,7 +395,7 @@ local function SetupSlotBase(button, bag, slot)
     -- 物品等級文字
     if not button.ilvlText then
         local ilvl = button:CreateFontString(nil, "OVERLAY")
-        ilvl:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+        LunarUI.SetFont(ilvl, 10, "OUTLINE")
         ilvl:SetPoint("BOTTOMRIGHT", -2, 2)
         ilvl:SetTextColor(1, 1, 0.6)
         button.ilvlText = ilvl
@@ -404,7 +404,7 @@ local function SetupSlotBase(button, bag, slot)
     -- 綁定類型文字（BoE/BoP）
     if not button.bindText then
         local bind = button:CreateFontString(nil, "OVERLAY")
-        bind:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+        LunarUI.SetFont(bind, 9, "OUTLINE")
         bind:SetPoint("TOPLEFT", 2, -2)
         bind:SetTextColor(0.1, 1, 0.1)
         bind:Hide()
@@ -795,7 +795,7 @@ local function CreateBagFrame()
 
     -- 標題
     local title = bagFrame:CreateFontString(nil, "OVERLAY")
-    title:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+    LunarUI.SetFont(title, 14, "OUTLINE")
     title:SetPoint("TOPLEFT", PADDING, -8)
     title:SetText(L["BagTitle"] or "Bags")
     title:SetTextColor(0.9, 0.9, 0.9)
@@ -807,7 +807,7 @@ local function CreateBagFrame()
     closeButton:SetPoint("TOPRIGHT", -4, -4)
     closeButton:SetNormalFontObject(GameFontNormal)
     closeButton:SetText("×")
-    closeButton:GetFontString():SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
+    LunarUI.SetFont(closeButton:GetFontString(), 16, "OUTLINE")
     closeButton:SetScript("OnClick", function()
         CloseAllBags()
     end)
@@ -871,7 +871,7 @@ local function CreateBagFrame()
     sortButton:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
 
     local sortText = sortButton:CreateFontString(nil, "OVERLAY")
-    sortText:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
+    LunarUI.SetFont(sortText, 11, "OUTLINE")
     sortText:SetPoint("CENTER")
     sortText:SetText(L["Sort"] or "Sort")
     sortText:SetTextColor(0.8, 0.8, 0.8)
@@ -946,14 +946,14 @@ local function CreateBagFrame()
 
     -- 金錢顯示
     local money = bagFrame:CreateFontString(nil, "OVERLAY")
-    money:SetFont(STANDARD_TEXT_FONT, 12, "OUTLINE")
+    LunarUI.SetFont(money, 12, "OUTLINE")
     money:SetPoint("BOTTOMLEFT", PADDING, 8)
     money:SetTextColor(1, 0.82, 0)
     bagFrame.money = money
 
     -- 空格指示器
     local freeSlots = bagFrame:CreateFontString(nil, "OVERLAY")
-    freeSlots:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(freeSlots, 10, "OUTLINE")
     freeSlots:SetPoint("BOTTOMRIGHT", -PADDING, 8)
     freeSlots:SetTextColor(0.7, 0.7, 0.7)
     bagFrame.freeSlots = freeSlots
@@ -1120,7 +1120,7 @@ local function CreateBankFrame()
 
     -- 標題
     local title = bankFrame:CreateFontString(nil, "OVERLAY")
-    title:SetFont(STANDARD_TEXT_FONT, 14, "OUTLINE")
+    LunarUI.SetFont(title, 14, "OUTLINE")
     title:SetPoint("TOPLEFT", PADDING, -8)
     title:SetText(L["BankTitle"] or "Bank")
     title:SetTextColor(1, 0.82, 0)  -- 金色
@@ -1132,7 +1132,7 @@ local function CreateBankFrame()
     bankCloseButton:SetPoint("TOPRIGHT", -4, -4)
     bankCloseButton:SetNormalFontObject(GameFontNormal)
     bankCloseButton:SetText("×")
-    bankCloseButton:GetFontString():SetFont(STANDARD_TEXT_FONT, 16, "OUTLINE")
+    LunarUI.SetFont(bankCloseButton:GetFontString(), 16, "OUTLINE")
     bankCloseButton:SetScript("OnClick", function()
         if LunarUI.CloseBank then
             LunarUI.CloseBank()
@@ -1193,7 +1193,7 @@ local function CreateBankFrame()
     bankSortButton:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1)
 
     local sortText = bankSortButton:CreateFontString(nil, "OVERLAY")
-    sortText:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
+    LunarUI.SetFont(sortText, 11, "OUTLINE")
     sortText:SetPoint("CENTER")
     sortText:SetText(L["Sort"] or "Sort")
     sortText:SetTextColor(0.8, 0.8, 0.8)
@@ -1229,7 +1229,7 @@ local function CreateBankFrame()
             tab:SetPoint("LEFT", tabContainer, "LEFT", (order - 1) * 84, 0)
         end
         local tabText = tab:CreateFontString(nil, "OVERLAY")
-        tabText:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+        LunarUI.SetFont(tabText, 9, "OUTLINE")
         tabText:SetPoint("CENTER")
         tabText:SetText(text)
         tabText:SetTextColor(0.7, 0.7, 0.7)
@@ -1354,7 +1354,7 @@ local function CreateBankFrame()
 
     -- 空格指示器
     local freeSlots = bankFrame:CreateFontString(nil, "OVERLAY")
-    freeSlots:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
+    LunarUI.SetFont(freeSlots, 10, "OUTLINE")
     freeSlots:SetPoint("BOTTOMRIGHT", -PADDING, 8)
     freeSlots:SetTextColor(1, 0.82, 0)
     bankFrame.freeSlots = freeSlots
