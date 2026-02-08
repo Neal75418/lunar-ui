@@ -322,10 +322,24 @@ end
 --- 載入所有已註冊的 skin
 local function LoadAllSkins()
     local db = LunarUI.db and LunarUI.db.profile.skins
+    local retryList = {}
     for name, skin in pairs(skins) do
         if IsSkinEnabled(db, name) and skin.event == "PLAYER_ENTERING_WORLD" then
             ApplySkin(name)
+            if not skinned[name] then
+                retryList[#retryList + 1] = name
+            end
         end
+    end
+    -- 延遲重試失敗的 skins（等待 frame 建立完成）
+    if #retryList > 0 then
+        C_Timer.After(3.0, function()
+            for _, name in ipairs(retryList) do
+                if not skinned[name] then
+                    ApplySkin(name)
+                end
+            end
+        end)
     end
 end
 

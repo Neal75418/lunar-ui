@@ -1154,6 +1154,9 @@ local function CreateBankFrame()
     bankSearchBox:SetSize(120, 20)
     bankSearchBox:SetPoint("TOPRIGHT", bankCloseButton, "TOPLEFT", -8, -2)
 
+    -- 搜尋過濾函數（forward declare，實際定義在 reagentSlots 建立後）
+    local ApplyBankSearch
+
     -- 搜尋防抖動：使用 HookScript 保留 SearchBoxTemplate 內建的佔位文字隱藏行為
     bankSearchBox:HookScript("OnTextChanged", function(self)
         if bankSearchTimer then
@@ -1161,37 +1164,7 @@ local function CreateBankFrame()
             bankSearchTimer = nil
         end
         bankSearchTimer = C_Timer.NewTimer(SEARCH_DEBOUNCE, function()
-            local text = self:GetText():lower()
-            local searchSlots = bankFrame.activeTab == "reagent" and bankFrame.reagentSlots or bankSlots
-            for _, button in pairs(searchSlots) do
-                if button and button:IsShown() then
-                    local success, err = pcall(function()
-                        local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
-                        if itemLink then
-                            local itemName = C_Item.GetItemInfo(itemLink)
-                            if itemName then
-                                -- 使用純文字搜尋避免 Lua 模式注入
-                                if text == "" or itemName:lower():find(text, 1, true) then
-                                    button:SetAlpha(1)
-                                else
-                                    button:SetAlpha(SEARCH_DIM_ALPHA)
-                                end
-                            else
-                                -- 物品尚未載入快取，保持顯示避免誤判
-                                button:SetAlpha(1)
-                            end
-                        else
-                            button:SetAlpha(text == "" and 1 or SEARCH_DIM_ALPHA)
-                        end
-                    end)
-                    if not success then
-                        button:SetAlpha(1)
-                        if LunarUI:IsDebugMode() then
-                            LunarUI:Debug((L["BankSearchError"] or "Bank search error: ") .. tostring(err))
-                        end
-                    end
-                end
-            end
+            ApplyBankSearch()
         end)
     end)
 
@@ -1330,6 +1303,40 @@ local function CreateBankFrame()
         reagentSlots[slot] = button
     end
 
+    -- 定義銀行搜尋過濾函數（供 OnTextChanged 與 SetActiveTab 共用）
+    ApplyBankSearch = function()
+        if not bankSearchBox then return end
+        local text = bankSearchBox:GetText():lower()
+        local searchSlots = bankFrame.activeTab == "reagent" and bankFrame.reagentSlots or bankSlots
+        for _, button in pairs(searchSlots) do
+            if button and button:IsShown() then
+                local success, err = pcall(function()
+                    local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
+                    if itemLink then
+                        local itemName = C_Item.GetItemInfo(itemLink)
+                        if itemName then
+                            if text == "" or itemName:lower():find(text, 1, true) then
+                                button:SetAlpha(1)
+                            else
+                                button:SetAlpha(SEARCH_DIM_ALPHA)
+                            end
+                        else
+                            button:SetAlpha(1)
+                        end
+                    else
+                        button:SetAlpha(text == "" and 1 or SEARCH_DIM_ALPHA)
+                    end
+                end)
+                if not success then
+                    button:SetAlpha(1)
+                    if LunarUI:IsDebugMode() then
+                        LunarUI:Debug((L["BankSearchError"] or "Bank search error: ") .. tostring(err))
+                    end
+                end
+            end
+        end
+    end
+
     -- 頁籤切換邏輯
     local activeTab = "bank"
     bankFrame.activeTab = activeTab
@@ -1355,6 +1362,8 @@ local function CreateBankFrame()
                 if button then UpdateBankSlot(button) end
             end
         end
+        -- 切換頁籤後重新套用搜尋過濾
+        ApplyBankSearch()
     end
 
     -- 預設啟用銀行頁籤

@@ -95,6 +95,7 @@ local playerClass
 ---@type integer?
 local resourceType
 local maxResources = 0
+local isInitialized = false
 local useBar = false  -- 是否使用進度條而非圖示
 
 --------------------------------------------------------------------------------
@@ -412,6 +413,7 @@ local eventFrame = LunarUI.CreateEventHandler(
     {"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "UNIT_POWER_UPDATE", "UNIT_MAXPOWER", "RUNE_POWER_UPDATE"},
     function(_self, event, arg1)
         if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_SPECIALIZATION_CHANGED" then
+            if LunarUI.GetHUDSetting("classResources", true) == false then return end
             -- 立即隱藏舊資源，避免專精切換時短暫顯示過期資訊
             for _, icon in ipairs(resourceIcons) do
                 icon:Hide()
@@ -421,11 +423,11 @@ local eventFrame = LunarUI.CreateEventHandler(
             end
             C_Timer.After(0.5, SetupResourceDisplay)
         elseif event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER" then
-            if arg1 == "player" then
+            if arg1 == "player" and isInitialized then
                 UpdateResources()
             end
         elseif event == "RUNE_POWER_UPDATE" then
-            UpdateResources()
+            if isInitialized then UpdateResources() end
         end
     end
 )
@@ -435,6 +437,8 @@ local eventFrame = LunarUI.CreateEventHandler(
 --------------------------------------------------------------------------------
 
 local function Initialize()
+    if isInitialized then return end
+    if LunarUI.GetHUDSetting("classResources", true) == false then return end
     LoadSettings()
 
     -- 取得玩家職業
@@ -448,7 +452,11 @@ local function Initialize()
         LunarUI:RegisterMovableFrame("ClassResources", resourceFrame, "職業資源")
     end
 
+    isInitialized = true
 end
+
+-- 暴露 Initialize 供 Options toggle 即時切換
+LunarUI.InitClassResources = Initialize
 
 -- 匯出函數
 function LunarUI.ShowClassResources()
@@ -478,8 +486,9 @@ function LunarUI.CleanupClassResources()
     if resourceFrame then
         resourceFrame:Hide()
     end
-    eventFrame:UnregisterAllEvents()
-    eventFrame = nil
+    isInitialized = false
+    -- 不取消事件註冊：OnEvent handler 已有 isInitialized guard，
+    -- 保留事件以便 toggle 重新啟用時 Initialize 能被正確呼叫
 end
 
 LunarUI:RegisterModule("ClassResources", {

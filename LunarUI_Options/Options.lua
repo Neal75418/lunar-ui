@@ -112,6 +112,8 @@ local L = {
     skinCollections = "Collections",
     skinLFG = "Group Finder",
     skinEncounterJournal = "Encounter Journal",
+    skinAuctionHouse = "Auction House",
+    skinCommunities = "Communities",
 
     -- Profiles
     profiles = "Profiles",
@@ -458,7 +460,11 @@ local options = {
                             get = function() return GetDB().hud.performanceMonitor end,
                             set = function(_, v)
                                 GetDB().hud.performanceMonitor = v
-                                RefreshUI()
+                                if v then
+                                    if LunarUI.InitPerformanceMonitor then LunarUI.InitPerformanceMonitor() end
+                                else
+                                    if LunarUI.CleanupPerformanceMonitor then LunarUI.CleanupPerformanceMonitor() end
+                                end
                             end,
                             width = "full",
                         },
@@ -470,7 +476,11 @@ local options = {
                             get = function() return GetDB().hud.classResources end,
                             set = function(_, v)
                                 GetDB().hud.classResources = v
-                                RefreshUI()
+                                if v then
+                                    if LunarUI.InitClassResources then LunarUI.InitClassResources() end
+                                else
+                                    if LunarUI.CleanupClassResources then LunarUI.CleanupClassResources() end
+                                end
                             end,
                             width = "full",
                         },
@@ -482,7 +492,11 @@ local options = {
                             get = function() return GetDB().hud.cooldownTracker end,
                             set = function(_, v)
                                 GetDB().hud.cooldownTracker = v
-                                RefreshUI()
+                                if v then
+                                    if LunarUI.InitCooldownTracker then LunarUI.InitCooldownTracker() end
+                                else
+                                    if LunarUI.CleanupCooldownTracker then LunarUI.CleanupCooldownTracker() end
+                                end
                             end,
                             width = "full",
                         },
@@ -494,7 +508,11 @@ local options = {
                             get = function() return GetDB().hud.auraFrames end,
                             set = function(_, v)
                                 GetDB().hud.auraFrames = v
-                                RefreshUI()
+                                if v then
+                                    if LunarUI.InitAuraFrames then LunarUI.InitAuraFrames() end
+                                else
+                                    if LunarUI.CleanupAuraFrames then LunarUI.CleanupAuraFrames() end
+                                end
                             end,
                             width = "full",
                         },
@@ -1655,6 +1673,20 @@ local options = {
                     name = L.skinEncounterJournal,
                     get = function() return GetDB().skins.blizzard.encounterjournal end,
                     set = function(_, v) GetDB().skins.blizzard.encounterjournal = v end,
+                },
+                auctionhouse = {
+                    order = 14,
+                    type = "toggle",
+                    name = L.skinAuctionHouse,
+                    get = function() return GetDB().skins.blizzard.auctionhouse end,
+                    set = function(_, v) GetDB().skins.blizzard.auctionhouse = v end,
+                },
+                communities = {
+                    order = 15,
+                    type = "toggle",
+                    name = L.skinCommunities,
+                    get = function() return GetDB().skins.blizzard.communities end,
+                    set = function(_, v) GetDB().skins.blizzard.communities = v end,
                 },
             },
         },

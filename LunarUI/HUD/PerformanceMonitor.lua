@@ -21,6 +21,7 @@ local C = LunarUI.Colors
 local perfFrame = nil
 local updateInterval = 0.5  -- 更新間隔（秒）
 local elapsed = 0
+local isInitialized = false
 
 --------------------------------------------------------------------------------
 -- 常數
@@ -193,6 +194,8 @@ end
 --------------------------------------------------------------------------------
 
 local function Initialize()
+    if isInitialized then return end
+    if LunarUI.GetHUDSetting("performanceMonitor", true) == false then return end
     CreatePerfFrame()
 
     -- 註冊至框架移動器
@@ -200,7 +203,11 @@ local function Initialize()
 
     -- 啟動更新
     StartUpdating()
+    isInitialized = true
 end
+
+-- 暴露 Initialize 供 Options toggle 即時切換
+LunarUI.InitPerformanceMonitor = Initialize
 
 -- 匯出函數
 function LunarUI.ShowPerformanceMonitor()
@@ -232,6 +239,7 @@ function LunarUI.CleanupPerformanceMonitor()
     if perfFrame then
         perfFrame:Hide()
     end
+    isInitialized = false
 end
 
 LunarUI:RegisterModule("PerformanceMonitor", {

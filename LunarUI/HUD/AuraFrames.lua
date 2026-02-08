@@ -496,6 +496,7 @@ end
 
 local function Initialize()
     if isInitialized then return end
+    if LunarUI.GetHUDSetting("auraFrames", true) == false then return end
 
     LoadSettings()
     HideBlizzardBuffFrames()
@@ -516,6 +517,9 @@ local function Initialize()
     if debuffFrame then debuffFrame:Show() end
     UpdateAuras()
 end
+
+-- 暴露 Initialize 供 Options toggle 即時切換
+LunarUI.InitAuraFrames = Initialize
 
 --------------------------------------------------------------------------------
 -- 事件處理
@@ -538,6 +542,7 @@ local eventFrame = LunarUI.CreateEventHandler(
     {"PLAYER_ENTERING_WORLD", "UNIT_AURA", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED"},
     function(_self, event, arg1)
         if event == "PLAYER_ENTERING_WORLD" then
+            if LunarUI.GetHUDSetting("auraFrames", true) == false then return end
             C_Timer.After(1.0, Initialize)
         elseif event == "UNIT_AURA" then
             if arg1 == "player" and isInitialized then
@@ -686,10 +691,10 @@ end
 function LunarUI.CleanupAuraFrames()
     if buffFrame then buffFrame:Hide() end
     if debuffFrame then debuffFrame:Hide() end
-    eventFrame:UnregisterAllEvents()
-    eventFrame:SetScript("OnUpdate", nil)
-    eventFrame = nil
+    isInitialized = false
     blizzHider = nil
+    -- 不取消事件註冊：OnUpdate/OnEvent 已有 isInitialized guard，
+    -- 保留事件以便 toggle 重新啟用時 Initialize 能被正確呼叫
 end
 
 LunarUI:RegisterModule("AuraFrames", {

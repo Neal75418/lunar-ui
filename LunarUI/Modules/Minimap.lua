@@ -14,9 +14,8 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local C = LunarUI.Colors
 
--- 覆寫形狀函數（備份原始版本以便清理時還原）
+-- 備份原始形狀函數（覆寫移入 InitializeMinimap，避免未啟用時污染全域）
 local originalGetMinimapShape = GetMinimapShape
-function GetMinimapShape() return "SQUARE" end
 
 --------------------------------------------------------------------------------
 -- 常數
@@ -1005,6 +1004,9 @@ end
 local function InitializeMinimap()
     local db = LunarUI.db and LunarUI.db.profile.minimap
     if not db or not db.enabled then return end
+
+    -- 只在模組啟用時覆寫形狀函數
+    function GetMinimapShape() return "SQUARE" end
 
     CreateMinimapFrame()           -- 先建立框架、reparent Minimap
     HideBlizzardMinimapElements()  -- 再隱藏裝飾

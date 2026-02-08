@@ -470,6 +470,7 @@ end
 
 local function Initialize()
     if isInitialized then return end
+    if LunarUI.GetHUDSetting("cooldownTracker", true) == false then return end
 
     LoadSettings()
     CreateCooldownFrame()
@@ -483,6 +484,9 @@ local function Initialize()
     isInitialized = true
 end
 
+-- 暴露 Initialize 供 Options toggle 即時切換
+LunarUI.InitCooldownTracker = Initialize
+
 --------------------------------------------------------------------------------
 -- 事件處理
 --------------------------------------------------------------------------------
@@ -491,6 +495,7 @@ local eventFrame = LunarUI.CreateEventHandler(
     {"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "SPELLS_CHANGED"},
     function(_self, event)
         if event == "PLAYER_ENTERING_WORLD" then
+            if LunarUI.GetHUDSetting("cooldownTracker", true) == false then return end
             C_Timer.After(1.0, Initialize)
         elseif event == "PLAYER_SPECIALIZATION_CHANGED" or event == "SPELLS_CHANGED" then
             SetupTrackedSpells()
@@ -596,11 +601,11 @@ function LunarUI.CleanupCooldownTracker()
     if cooldownFrame then
         cooldownFrame:Hide()
     end
-    eventFrame:UnregisterAllEvents()
-    eventFrame:SetScript("OnUpdate", nil)
     wipe(spellTextureCache)  -- 清理圖示快取
     cacheSize = 0
-    eventFrame = nil
+    isInitialized = false
+    -- 不取消事件註冊：OnUpdate/OnEvent 已有 isInitialized guard，
+    -- 保留事件以便 toggle 重新啟用時 Initialize 能被正確呼叫
 end
 
 LunarUI:RegisterModule("CooldownTracker", {

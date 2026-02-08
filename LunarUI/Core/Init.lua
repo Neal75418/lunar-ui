@@ -126,6 +126,13 @@ function LunarUI:OnEnable()
     -- 設置 ESC 主選單按鈕
     self:SetupGameMenuButton()
 
+    -- 全域開關檢查：若停用則跳過模組啟用（保留命令與選項面板以便重新啟用）
+    if self.db and self.db.profile and self.db.profile.enabled == false then
+        local L = Engine.L or {}
+        self:Print(L["AddonDisabled"] or "|cffff6666LunarUI 已停用|r（輸入 /lunar on 啟用）")
+        return
+    end
+
     -- 啟用所有已註冊的模組
     self._modulesEnabled = true
     for _, mod in ipairs(moduleRegistry) do

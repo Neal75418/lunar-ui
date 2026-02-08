@@ -315,6 +315,12 @@ function LunarUI:ImportSettings(importString)
         return false, L["InvalidSettings"] or "未提供匯入字串"
     end
 
+    -- 輸入大小限制（100KB，防止記憶體膨脹）
+    local MAX_IMPORT_SIZE = 102400
+    if #importString > MAX_IMPORT_SIZE then
+        return false, L["ImportTooLarge"] or "匯入字串過長（上限 100KB）"
+    end
+
     -- 檢查標頭
     local header = "LUNARUI"
     if not importString:find("^" .. header) then
@@ -340,13 +346,36 @@ function LunarUI:ImportSettings(importString)
         return false, "資料庫未初始化"
     end
 
-    -- 合併匯入的設定檔與目前設定檔
-    local function MergeTable(target, source)
+    -- 合併匯入的設定檔與目前設定檔（基於 defaults 白名單，忽略未知 key）
+    local defaultProfile = Engine._defaults and Engine._defaults.profile
+
+    -- Lua table 無法儲存 nil value，因此 defaults 中 `key = nil` 的 key 在 template 裡不存在。
+    -- 這裡補充這些合法的 nil-default key，確保匯入時不會被靜默丟棄。
+    local nilDefaultKeys = {
+        bags = { bagPosition = true, bankPosition = true },
+        actionbars = {
+            bar1 = { fadeEnabled = true },
+            bar2 = { fadeEnabled = true },
+            bar3 = { fadeEnabled = true },
+            bar4 = { fadeEnabled = true },
+            bar5 = { fadeEnabled = true },
+            bar6 = { fadeEnabled = true },
+            petbar = { fadeEnabled = true },
+            stancebar = { fadeEnabled = true },
+        },
+    }
+
+    local function MergeTable(target, source, template, extra)
+        if not template then return end
         for k, v in pairs(source) do
-            if type(v) == "table" and type(target[k]) == "table" then
-                MergeTable(target[k], v)
-            else
-                target[k] = v
+            local tval = template[k]
+            local extraVal = extra and extra[k]
+            if tval ~= nil or extraVal then
+                if type(v) == "table" and type(target[k]) == "table" and type(tval) == "table" then
+                    MergeTable(target[k], v, tval, type(extraVal) == "table" and extraVal or nil)
+                else
+                    target[k] = v
+                end
             end
         end
     end
@@ -373,7 +402,7 @@ function LunarUI:ImportSettings(importString)
     if data.profile then
         ClampImportedValues(data.profile)
     end
-    MergeTable(self.db.profile, data.profile)
+    MergeTable(self.db.profile, data.profile, defaultProfile, nilDefaultKeys)
 
     -- 觸發設定檔變更以重新整理 UI
     self:OnProfileChanged()
