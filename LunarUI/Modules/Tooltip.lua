@@ -223,9 +223,7 @@ local function StyleTooltip(tooltip)
 
     -- 套用背景
     if tooltip.SetBackdrop then
-        tooltip:SetBackdrop(backdropTemplate)
-        tooltip:SetBackdropColor(C.bgSolid[1], C.bgSolid[2], C.bgSolid[3], C.bgSolid[4])
-        tooltip:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
+        LunarUI.ApplyBackdrop(tooltip, nil, C.bgSolid)
     elseif tooltip.NineSlice then
         -- 正式服滑鼠提示使用 NineSlice
         tooltip.NineSlice:SetAlpha(0)
@@ -234,9 +232,7 @@ local function StyleTooltip(tooltip)
             local backdrop = CreateFrame("Frame", nil, tooltip, "BackdropTemplate")
             backdrop:SetAllPoints()
             backdrop:SetFrameLevel(tooltip:GetFrameLevel())
-            backdrop:SetBackdrop(backdropTemplate)
-            backdrop:SetBackdropColor(C.bgSolid[1], C.bgSolid[2], C.bgSolid[3], C.bgSolid[4])
-            backdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
+            LunarUI.ApplyBackdrop(backdrop, nil, C.bgSolid)
             tooltip.LunarBackdrop = backdrop
         end
     end

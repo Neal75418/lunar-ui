@@ -398,9 +398,7 @@ local function CreateDataPanel(name, db)
 
     -- Backdrop
     if backdropTemplate then
-        panel:SetBackdrop(backdropTemplate)
-        panel:SetBackdropColor(C.bgLight[1], C.bgLight[2], C.bgLight[3], C.bgLight[4])
-        panel:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
+        LunarUI.ApplyBackdrop(panel, nil, C.bgLight)
     else
         -- Fallback: simple background
         panel.bg = panel:CreateTexture(nil, "BACKGROUND")

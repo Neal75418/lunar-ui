@@ -162,9 +162,7 @@ local function CreateResourceIcon(parent)
     icon:SetSize(ICON_SIZE, ICON_SIZE)
 
     -- 背景（使用共用模板）
-    icon:SetBackdrop(LunarUI.iconBackdropTemplate)
-    icon:SetBackdropColor(unpack(C.bgIcon))
-    icon:SetBackdropBorderColor(unpack(C.borderIcon))
+    LunarUI.ApplyBackdrop(icon, LunarUI.iconBackdropTemplate, C.bgIcon, C.borderIcon)
 
     -- 填充
     local fill = icon:CreateTexture(nil, "ARTWORK")

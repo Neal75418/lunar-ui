@@ -400,14 +400,7 @@ function LunarUI:ShowExportFrame()
         local frame = CreateFrame("Frame", "LunarUI_ExportFrame", UIParent, "BackdropTemplate")
         frame:SetSize(500, 200)
         frame:SetPoint("CENTER")
-        frame:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-            insets = { left = 1, right = 1, top = 1, bottom = 1 },
-        })
-        frame:SetBackdropColor(unpack(C.bgSolid))
-        frame:SetBackdropBorderColor(unpack(C.border))
+        LunarUI.ApplyBackdrop(frame, nil, C.bgSolid)
         frame:SetFrameStrata("DIALOG")
         frame:SetMovable(true)
         frame:EnableMouse(true)
@@ -469,14 +462,7 @@ function LunarUI:ShowImportFrame()
         local frame = CreateFrame("Frame", "LunarUI_ImportFrame", UIParent, "BackdropTemplate")
         frame:SetSize(500, 200)
         frame:SetPoint("CENTER")
-        frame:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-            insets = { left = 1, right = 1, top = 1, bottom = 1 },
-        })
-        frame:SetBackdropColor(unpack(C.bgSolid))
-        frame:SetBackdropBorderColor(unpack(C.border))
+        LunarUI.ApplyBackdrop(frame, nil, C.bgSolid)
         frame:SetFrameStrata("DIALOG")
         frame:SetMovable(true)
         frame:EnableMouse(true)

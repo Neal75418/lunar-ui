@@ -52,7 +52,7 @@ local function GetButtonSpacing()
     return LunarUI.db.profile.actionbars.buttonSpacing or DEFAULT_BUTTON_SPACING
 end
 
-local backdropTemplate = LunarUI.backdropTemplate
+
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -310,9 +310,7 @@ local function StyleButton(button)
     if not button.LunarBorder then
         local borderFrame = CreateFrame("Frame", nil, button, "BackdropTemplate")
         borderFrame:SetAllPoints()
-        borderFrame:SetBackdrop(backdropTemplate)
-        borderFrame:SetBackdropColor(0, 0, 0, 0)
-        borderFrame:SetBackdropBorderColor(unpack(C.border))
+        LunarUI.ApplyBackdrop(borderFrame, nil, C.transparent)
         borderFrame:SetFrameLevel(button:GetFrameLevel() + 3)
         button.LunarBorder = borderFrame
     end

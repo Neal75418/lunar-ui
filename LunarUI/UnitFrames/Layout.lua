@@ -31,7 +31,6 @@ local function GetStatusBarTexture()
     end
     return statusBarTexture
 end
-local backdropTemplate = LunarUI.backdropTemplate
 local C = LunarUI.Colors
 
 -- 框架尺寸
@@ -210,9 +209,7 @@ local function CreateCastbar(frame)
     -- 邊框
     local border = CreateFrame("Frame", nil, castbar, "BackdropTemplate")
     border:SetAllPoints()
-    border:SetBackdrop(backdropTemplate)
-    border:SetBackdropColor(0, 0, 0, 0)
-    border:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
+    LunarUI.ApplyBackdrop(border, nil, C.transparent)
 
     -- 法術圖示
     local icon = castbar:CreateTexture(nil, "OVERLAY")
@@ -1067,39 +1064,13 @@ oUF:SetActiveStyle("LunarUI")
 local spawnRetries = 0
 local MAX_SPAWN_RETRIES = 15  -- 最多重試 15 次（3 秒）
 
-local function SpawnUnitFrames()
-    -- 使用事件驅動重試取代固定計時器（處理戰鬥鎖定）
-    if _G.InCombatLockdown() then
-        local waitFrame = CreateFrame("Frame")
-        waitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-        waitFrame:SetScript("OnEvent", function(self)
-            self:UnregisterAllEvents()
-            self:SetScript("OnEvent", nil)
-            SpawnUnitFrames()
-        end)
-        return
-    end
-
-    if not LunarUI.db or not LunarUI.db.profile then
-        spawnRetries = spawnRetries + 1
-        if spawnRetries < MAX_SPAWN_RETRIES then
-            C_Timer.After(0.2, SpawnUnitFrames)
-        end
-        return
-    end
-    local uf = LunarUI.db.profile.unitframes
-
-    -- 初始化光環過濾快取
-    RebuildAuraFilterCache()
-
-    -- 玩家
+-- 生成個人單位框架：player, target, focus, pet, targettarget
+local function SpawnPlayerFrames(uf)
     if uf.player.enabled then
         oUF:SetActiveStyle("LunarUI_Player")
         spawnedFrames.player = oUF:Spawn("player", "LunarUI_Player")
         spawnedFrames.player:SetPoint(uf.player.point, UIParent, "CENTER", uf.player.x, uf.player.y)
 
-        -- 生成後強制更新玩家框架以確保元素可見
-        -- 玩家單位立即存在，但元素可能在 PLAYER_ENTERING_WORLD 前不會更新
         C_Timer.After(0.2, function()
             if spawnedFrames.player then
                 spawnedFrames.player:Show()
@@ -1110,21 +1081,18 @@ local function SpawnUnitFrames()
         end)
     end
 
-    -- 目標
     if uf.target.enabled then
         oUF:SetActiveStyle("LunarUI_Target")
         spawnedFrames.target = oUF:Spawn("target", "LunarUI_Target")
         spawnedFrames.target:SetPoint(uf.target.point, UIParent, "CENTER", uf.target.x, uf.target.y)
     end
 
-    -- 焦點
     if uf.focus and uf.focus.enabled then
         oUF:SetActiveStyle("LunarUI_Focus")
         spawnedFrames.focus = oUF:Spawn("focus", "LunarUI_Focus")
         spawnedFrames.focus:SetPoint(uf.focus.point or "CENTER", UIParent, "CENTER", uf.focus.x or -350, uf.focus.y or 200)
     end
 
-    -- 寵物
     if uf.pet and uf.pet.enabled then
         oUF:SetActiveStyle("LunarUI_Pet")
         spawnedFrames.pet = oUF:Spawn("pet", "LunarUI_Pet")
@@ -1135,8 +1103,6 @@ local function SpawnUnitFrames()
         end
     end
 
-    -- 目標的目標
-    -- 定位在施法條下方避免重疊（施法條高 16px，偏移 -4）
     if uf.targettarget and uf.targettarget.enabled then
         oUF:SetActiveStyle("LunarUI_TargetTarget")
         spawnedFrames.targettarget = oUF:Spawn("targettarget", "LunarUI_TargetTarget")
@@ -1146,18 +1112,22 @@ local function SpawnUnitFrames()
             spawnedFrames.targettarget:SetPoint("CENTER", UIParent, "CENTER", uf.targettarget.x or 280, uf.targettarget.y or -180)
         end
     end
+end
 
-    -- 首領框架
-    if uf.boss and uf.boss.enabled then
-        oUF:SetActiveStyle("LunarUI_Boss")
-        for i = 1, 8 do
-            local boss = oUF:Spawn("boss" .. i, "LunarUI_Boss" .. i)
-            boss:SetPoint("RIGHT", UIParent, "RIGHT", uf.boss.x or -50, uf.boss.y or (200 - (i - 1) * 55))
-            spawnedFrames["boss" .. i] = boss
-        end
+-- 生成首領框架
+local function SpawnBossFrames(uf)
+    if not (uf.boss and uf.boss.enabled) then return end
+
+    oUF:SetActiveStyle("LunarUI_Boss")
+    for i = 1, 8 do
+        local boss = oUF:Spawn("boss" .. i, "LunarUI_Boss" .. i)
+        boss:SetPoint("RIGHT", UIParent, "RIGHT", uf.boss.x or -50, uf.boss.y or (200 - (i - 1) * 55))
+        spawnedFrames["boss" .. i] = boss
     end
+end
 
-    -- 隊伍標頭（含可見性驅動器）
+-- 生成隊伍/團隊標頭框架
+local function SpawnGroupFrames(uf)
     if uf.party and uf.party.enabled then
         oUF:SetActiveStyle("LunarUI_Party")
         local partyHeader = oUF:SpawnHeader(
@@ -1173,12 +1143,10 @@ local function SpawnUnitFrames()
             ]]):format(uf.party.height or 35, uf.party.width or 160)
         )
         partyHeader:SetPoint("TOPLEFT", UIParent, "TOPLEFT", uf.party.x or 20, uf.party.y or -200)
-        -- 可見性驅動器：團隊中隱藏，隊伍中顯示
         _G.RegisterStateDriver(partyHeader, "visibility", "[@raid6,exists] hide; [group:party,nogroup:raid] show; hide")
         spawnedFrames.party = partyHeader
     end
 
-    -- 團隊標頭（含可見性驅動器）
     if uf.raid and uf.raid.enabled then
         oUF:SetActiveStyle("LunarUI_Raid")
         local raidHeader = oUF:SpawnHeader(
@@ -1203,10 +1171,36 @@ local function SpawnUnitFrames()
             ]]):format(uf.raid.height or 30, uf.raid.width or 80)
         )
         raidHeader:SetPoint("TOPLEFT", UIParent, "TOPLEFT", uf.raid.x or 20, uf.raid.y or -200)
-        -- 可見性驅動器：團隊中顯示團隊框架
         _G.RegisterStateDriver(raidHeader, "visibility", "[group:raid] show; hide")
         spawnedFrames.raid = raidHeader
     end
+end
+
+local function SpawnUnitFrames()
+    if _G.InCombatLockdown() then
+        local waitFrame = CreateFrame("Frame")
+        waitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        waitFrame:SetScript("OnEvent", function(self)
+            self:UnregisterAllEvents()
+            self:SetScript("OnEvent", nil)
+            SpawnUnitFrames()
+        end)
+        return
+    end
+
+    if not LunarUI.db or not LunarUI.db.profile then
+        spawnRetries = spawnRetries + 1
+        if spawnRetries < MAX_SPAWN_RETRIES then
+            C_Timer.After(0.2, SpawnUnitFrames)
+        end
+        return
+    end
+    local uf = LunarUI.db.profile.unitframes
+
+    RebuildAuraFilterCache()
+    SpawnPlayerFrames(uf)
+    SpawnBossFrames(uf)
+    SpawnGroupFrames(uf)
 end
 
 -- 編輯模式退出時清除 focus（暴雪編輯模式會將玩家設為 focus 用於預覽，退出時不清除）

@@ -33,8 +33,6 @@ local function GetStatusBarTexture()
     end
     return statusBarTexture
 end
-local backdropTemplate = LunarUI.backdropTemplate
-
 -- Classification colors
 local CLASSIFICATION_COLORS = {
     worldboss = { r = 1.0, g = 0.2, b = 0.2 },
@@ -200,9 +198,7 @@ local function CreateCastbar(frame)
     local border = CreateFrame("Frame", nil, castbar, "BackdropTemplate")
     border:SetPoint("TOPLEFT", -1, 1)
     border:SetPoint("BOTTOMRIGHT", 1, -1)
-    border:SetBackdrop(backdropTemplate)
-    border:SetBackdropColor(0, 0, 0, 0)
-    border:SetBackdropBorderColor(C.borderSubtle[1], C.borderSubtle[2], C.borderSubtle[3], C.borderSubtle[4])
+    LunarUI.ApplyBackdrop(border, nil, C.transparent, C.borderSubtle)
 
     -- Icon
     local icon = castbar:CreateTexture(nil, "OVERLAY")

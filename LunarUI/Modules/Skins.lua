@@ -66,9 +66,7 @@ function LunarUI:SkinFrame(frame, options)
         frame._lunarSkinBG:SetFrameLevel(math.max(frame:GetFrameLevel() - 1, 0))
     end
 
-    frame._lunarSkinBG:SetBackdrop(self.backdropTemplate)
-    frame._lunarSkinBG:SetBackdropColor(unpack(C.bg))
-    frame._lunarSkinBG:SetBackdropBorderColor(unpack(C.border))
+    LunarUI.ApplyBackdrop(frame._lunarSkinBG)
 
     -- 修復文字顏色（暗黑風格：白色文字）
     if options.fixText ~= false then

@@ -28,8 +28,6 @@ local function GetStatusBarTexture()
     end
     return statusBarTexture
 end
-local backdropTemplate = LunarUI.backdropTemplate
-
 local format = string.format
 local floor = math.floor
 
@@ -67,11 +65,7 @@ local function CreateDataBar(name, db)
     bar:SetFrameLevel(2)
 
     -- Backdrop
-    if backdropTemplate then
-        bar:SetBackdrop(backdropTemplate)
-        bar:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
-        bar:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
-    end
+    LunarUI.ApplyBackdrop(bar)
 
     -- Background
     bar.bg = bar:CreateTexture(nil, "BACKGROUND")

@@ -148,6 +148,27 @@ function LunarUI.CreateBackdrop(frame, options)
     return backdrop
 end
 
+--[[
+    在框架本身套用 backdrop（非建立子框架）
+    @param frame Frame - 目標框架（需已有 BackdropTemplate mixin）
+    @param template table|nil - backdrop 模板（預設 backdropTemplate）
+    @param bgColor table|nil - 背景色 {r, g, b, a}（預設 Colors.bg）
+    @param borderColor table|nil - 邊框色 {r, g, b, a}（預設 Colors.border）
+
+    Usage:
+        LunarUI.ApplyBackdrop(frame)
+        LunarUI.ApplyBackdrop(frame, nil, C.bgSolid, C.borderGold)
+]]
+function LunarUI.ApplyBackdrop(frame, template, bgColor, borderColor)
+    template = template or LunarUI.backdropTemplate
+    if not template then return end
+    bgColor = bgColor or C.bg
+    borderColor = borderColor or C.border
+    frame:SetBackdrop(template)
+    frame:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], bgColor[4] or 1)
+    frame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1)
+end
+
 function LunarUI.StyleAuraButton(button)
     if BackdropTemplateMixin then
         Mixin(button, BackdropTemplateMixin)

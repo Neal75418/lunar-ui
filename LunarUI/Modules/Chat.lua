@@ -23,6 +23,14 @@ local C = LunarUI.Colors
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
+-- DB 存取
+--------------------------------------------------------------------------------
+
+local function GetChatDB()
+    return LunarUI.db and LunarUI.db.profile.chat
+end
+
+--------------------------------------------------------------------------------
 -- 常數
 --------------------------------------------------------------------------------
 
@@ -151,6 +159,8 @@ local savedChannelFormats = {}       -- 用於 Cleanup 還原 CHAT_*_GET 格式�
 -- Emoji 觸發字元 character class（匹配所有可能的 2-char emoji 序列）
 local EMOJI_PATTERN = "[%:%;<B][%)%(DPO3]"
 local escapedKeywordCache = {} -- Fix 3b: 預快取 keyword escaped pattern
+local escapedKeywordCacheSize = 0
+local KEYWORD_CACHE_MAX = 100
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -202,9 +212,7 @@ local function StyleChatEditBox(chatFrame)
         local backdrop = CreateFrame("Frame", nil, editBox, "BackdropTemplate")
         backdrop:SetPoint("TOPLEFT", -4, 4)
         backdrop:SetPoint("BOTTOMRIGHT", 4, -4)
-        backdrop:SetBackdrop(backdropTemplate)
-        backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
-        backdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
+        LunarUI.ApplyBackdrop(backdrop)
         backdrop:SetFrameLevel(editBox:GetFrameLevel() - 1)
         editBox.LunarBackdrop = backdrop
     end
@@ -357,9 +365,7 @@ local function CreateCopyFrame()
     copyFrame = CreateFrame("Frame", "LunarUI_ChatCopy", UIParent, "BackdropTemplate")
     copyFrame:SetSize(500, 300)
     copyFrame:SetPoint("CENTER")
-    copyFrame:SetBackdrop(backdropTemplate)
-    copyFrame:SetBackdropColor(C.bgSolid[1], C.bgSolid[2], C.bgSolid[3], C.bgSolid[4])
-    copyFrame:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
+    LunarUI.ApplyBackdrop(copyFrame, nil, C.bgSolid)
     copyFrame:SetFrameStrata("DIALOG")
     copyFrame:SetMovable(true)
     copyFrame:EnableMouse(true)
@@ -444,7 +450,7 @@ end
 --------------------------------------------------------------------------------
 
 local function ApplyChannelColors()
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.improvedColors then return end
 
     for channel, color in pairs(CHANNEL_COLORS) do
@@ -457,7 +463,7 @@ end
 --------------------------------------------------------------------------------
 
 local function EnableClassColoredNames()
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.classColors then return end
 
     -- 由暴雪選項處理，我們只需啟用它
@@ -495,7 +501,7 @@ end
 local function AddURLsToMessage(_self, _event, msg, ...)
     if not msg then return false, msg, ... end
 
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.detectURLs then return false, msg, ... end
 
     local newMsg = msg
@@ -550,7 +556,7 @@ end
 
 -- 為所有聊天事件註冊網址過濾器
 local function RegisterURLFilter()
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.detectURLs then return end
 
     local chatEvents = {
@@ -585,7 +591,7 @@ end
 --------------------------------------------------------------------------------
 
 local function SetupTimestamps()
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.showTimestamps then return end
 
     local fmt = db.timestampFormat or "%H:%M"
@@ -611,7 +617,7 @@ end
 --------------------------------------------------------------------------------
 
 local function ShortenChannelNames()
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.shortChannelNames then return end
 
     -- 覆寫頻道標頭格式
@@ -698,7 +704,7 @@ local EMOJI_QUICK_CHECK = "[%:%;<B]"
 local function AddEmojisToMessage(_self, _event, msg, ...)
     if not msg then return false, msg, ... end
 
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.enableEmojis then return false, msg, ... end
 
     -- 效能優化：先快速檢查是否包含 emoji 起始字元
@@ -722,7 +728,7 @@ end
 local function AddRoleIconToMessage(_self, _event, msg, author, ...)
     if not msg or not author then return false, msg, author, ... end
 
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.showRoleIcons then return false, msg, author, ... end
 
     -- 只在隊伍/團隊頻道中顯示角色圖示
@@ -772,7 +778,7 @@ local lastKeywordAlert = 0
 local function CheckKeywordAlert(_self, _event, msg, author, ...)
     if not msg then return false, msg, author, ... end
 
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.keywordAlerts then return false, msg, author, ... end
 
     -- 不對自己的訊息觸發
@@ -832,6 +838,11 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
                     local escaped = escapedKeywordCache[keyword]
                     if not escaped then
                         escaped = keyword:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+                        escapedKeywordCacheSize = escapedKeywordCacheSize + 1
+                        if escapedKeywordCacheSize > KEYWORD_CACHE_MAX then
+                            wipe(escapedKeywordCache)
+                            escapedKeywordCacheSize = 1
+                        end
                         escapedKeywordCache[keyword] = escaped
                     end
                     msg = msg:gsub("(" .. escaped .. ")", "|cffff8800%1|r")
@@ -850,7 +861,7 @@ end
 local function FilterSpamMessage(_self, _event, msg, author, ...)
     if not msg then return false, msg, author, ... end
 
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.spamFilter then return false, msg, author, ... end
 
     local msgLower = msg:lower()
@@ -870,7 +881,7 @@ end
 --------------------------------------------------------------------------------
 
 local function SetupLinkTooltipPreview()
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.linkTooltipPreview then return end
 
     for _, frameName in ipairs(CHAT_FRAMES) do
@@ -926,7 +937,7 @@ local function RegisterChatEnhancementFilters()
         "CHAT_MSG_CHANNEL",
     }
 
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db then return end
 
     -- 表情符號替換
@@ -995,7 +1006,7 @@ end
 --------------------------------------------------------------------------------
 
 local function InitializeChat()
-    local db = LunarUI.db and LunarUI.db.profile.chat
+    local db = GetChatDB()
     if not db or not db.enabled then return end
 
     -- 樣式化所有聊天框架

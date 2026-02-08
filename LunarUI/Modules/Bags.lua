@@ -21,6 +21,14 @@ local L = Engine.L or {}
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
+-- DB 存取
+--------------------------------------------------------------------------------
+
+local function GetBagDB()
+    return LunarUI.db and LunarUI.db.profile.bags
+end
+
+--------------------------------------------------------------------------------
 -- 常數
 --------------------------------------------------------------------------------
 
@@ -119,7 +127,7 @@ local SellJunk
 
 -- 從 DB 載入背包設定（覆寫模組常數）
 local function LoadBagSettings()
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     if not db then return end
     SLOT_SIZE = db.slotSize or 37
     SLOT_SPACING = db.slotSpacing or 4
@@ -208,7 +216,7 @@ end
 local bagTypeCache = {}
 
 local function GetBagTypeColor(bag)
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     if not db or not db.showProfessionColors then return false end
 
     if bagTypeCache[bag] ~= nil then
@@ -251,7 +259,7 @@ end
 local function IsItemUpgrade(itemLink)
     if not itemLink then return false end
 
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     if not db or not db.showUpgradeArrow then return false end
 
     -- 取得物品裝備位置
@@ -524,197 +532,197 @@ local function CreateItemSlot(parent, slotID, bag, slot)
     return button
 end
 
+-- 更新格子視覺元素：圖示、數量、品質邊框與發光
+local function UpdateSlotVisuals(button, containerInfo, quality)
+    local icon = button.icon or _G[button:GetName() .. "IconTexture"]
+    if icon and containerInfo.iconFileID then
+        icon:SetTexture(containerInfo.iconFileID)
+        icon:Show()
+    end
+
+    local count = containerInfo.stackCount or 0
+    if count > 1 then
+        button.Count:SetText(count)
+        button.Count:Show()
+    else
+        button.Count:Hide()
+    end
+
+    if button.LunarBorder then
+        if quality and ITEM_QUALITY_COLORS[quality] then
+            local color = ITEM_QUALITY_COLORS[quality]
+            button.LunarBorder:SetBackdropBorderColor(color[1], color[2], color[3], 1)
+        else
+            button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
+        end
+    end
+
+    if button.qualityGlow then
+        if quality and quality >= 4 and ITEM_QUALITY_COLORS[quality] then
+            local color = ITEM_QUALITY_COLORS[quality]
+            button.qualityGlow:SetVertexColor(color[1], color[2], color[3], 0.4)
+            button.qualityGlow:SetAlpha(0.4)
+            button.qualityGlow:Show()
+        else
+            button.qualityGlow:Hide()
+        end
+    end
+end
+
+-- 更新格子文字覆蓋：裝等、綁定類型
+local function UpdateSlotText(button, db, itemLink)
+    if button.ilvlText then
+        if (not db or db.showItemLevel ~= false) and IsEquipment(itemLink) then
+            local ilvl = GetItemLevel(itemLink)
+            local threshold = (db and db.ilvlThreshold) or 1
+            if ilvl and ilvl >= threshold then
+                button.ilvlText:SetText(ilvl)
+                button.ilvlText:Show()
+            else
+                button.ilvlText:Hide()
+            end
+        else
+            button.ilvlText:Hide()
+        end
+    end
+
+    if button.bindText then
+        if db and db.showBindType and itemLink then
+            local bindType = select(14, C_Item.GetItemInfo(itemLink))
+            if bindType and bindType == 2 then
+                button.bindText:SetText(L["BoE"] or "BoE")
+                button.bindText:SetTextColor(0.1, 1, 0.1)
+                button.bindText:Show()
+            elseif bindType == 3 then
+                button.bindText:SetText(L["BoU"] or "BoU")
+                button.bindText:SetTextColor(0.9, 0.6, 0.2)
+                button.bindText:Show()
+            else
+                button.bindText:Hide()
+            end
+        else
+            button.bindText:Hide()
+        end
+    end
+end
+
+-- 更新格子效果：冷卻、新物品發光、垃圾/任務/升級指示、專業容器背景
+local function UpdateSlotEffects(button, db, bag, slot, containerInfo, itemLink, quality)
+    if db and db.showCooldown then
+        local cooldown = button.Cooldown or button.cooldown
+        if cooldown then
+            local start, duration, enable = C_Container.GetContainerItemCooldown(bag, slot)
+            if start and duration and enable == 1 and duration > 0 then
+                CooldownFrame_Set(cooldown, start, duration, enable)
+                cooldown:Show()
+            else
+                cooldown:Hide()
+            end
+        end
+    end
+
+    if button.newGlow then
+        if db and db.showNewGlow and C_NewItems.IsNewItem(bag, slot) then
+            button.newGlow:Show()
+            if button.newGlowAnim and not button.newGlowAnim:IsPlaying() then
+                button.newGlowAnim:Play()
+            end
+        else
+            if button.newGlowAnim then
+                button.newGlowAnim:Stop()
+            end
+            button.newGlow:Hide()
+        end
+    end
+
+    if button.junkIcon then
+        if quality == 0 and containerInfo.hasNoValue ~= true then
+            button.junkIcon:Show()
+        else
+            button.junkIcon:Hide()
+        end
+    end
+
+    if button.questIcon then
+        if db and db.showQuestItems ~= false and containerInfo.isQuestItem then
+            button.questIcon:Show()
+            button.junkIcon:Hide()
+        else
+            button.questIcon:Hide()
+        end
+    end
+
+    if button.upgradeArrow then
+        if IsItemUpgrade(itemLink) then
+            button.upgradeArrow:Show()
+        else
+            button.upgradeArrow:Hide()
+        end
+    end
+
+    if button.profBg then
+        if db and db.showProfessionColors ~= false then
+            local bagColor = GetBagTypeColor(bag)
+            if bagColor then
+                button.profBg:SetVertexColor(bagColor[1], bagColor[2], bagColor[3], bagColor[4])
+                button.profBg:Show()
+            else
+                button.profBg:Hide()
+            end
+        else
+            button.profBg:Hide()
+        end
+    end
+end
+
+-- 清空格子顯示
+local function ClearSlot(button, db, bag)
+    local icon = button.icon or _G[button:GetName() .. "IconTexture"]
+    if icon then
+        icon:SetTexture(nil)
+    end
+    if button.Count then
+        button.Count:Hide()
+    end
+    if button.LunarBorder then
+        button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 0.5)
+    end
+    HideAllSlotIndicators(button)
+    local cooldown = button.Cooldown or button.cooldown
+    if cooldown then
+        cooldown:Hide()
+    end
+
+    if button.profBg then
+        if db and db.showProfessionColors ~= false then
+            local bagColor = GetBagTypeColor(bag)
+            if bagColor then
+                button.profBg:SetVertexColor(bagColor[1], bagColor[2], bagColor[3], bagColor[4] * 0.5)
+                button.profBg:Show()
+            else
+                button.profBg:Hide()
+            end
+        else
+            button.profBg:Hide()
+        end
+    end
+end
+
 local function UpdateSlot(button)
     if not button or not button.bag or not button.slot then return end
 
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     local bag, slot = button.bag, button.slot
     local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
 
     if containerInfo then
         local itemLink = C_Container.GetContainerItemLink(bag, slot)
         local quality = containerInfo.quality or 0
-
-        -- 設定物品圖示
-        local icon = button.icon or _G[button:GetName() .. "IconTexture"]
-        if icon and containerInfo.iconFileID then
-            icon:SetTexture(containerInfo.iconFileID)
-            icon:Show()
-        end
-
-        -- 設定物品數量
-        local count = containerInfo.stackCount or 0
-        if count > 1 then
-            button.Count:SetText(count)
-            button.Count:Show()
-        else
-            button.Count:Hide()
-        end
-
-        -- 依品質設定邊框顏色
-        if button.LunarBorder then
-            if quality and ITEM_QUALITY_COLORS[quality] then
-                local color = ITEM_QUALITY_COLORS[quality]
-                button.LunarBorder:SetBackdropBorderColor(color[1], color[2], color[3], 1)
-            else
-                button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
-            end
-        end
-
-        -- 品質發光：史詩（4）以上顯示
-        if button.qualityGlow then
-            if quality and quality >= 4 and ITEM_QUALITY_COLORS[quality] then
-                local color = ITEM_QUALITY_COLORS[quality]
-                button.qualityGlow:SetVertexColor(color[1], color[2], color[3], 0.4)
-                button.qualityGlow:SetAlpha(0.4)
-                button.qualityGlow:Show()
-            else
-                button.qualityGlow:Hide()
-            end
-        end
-
-        -- 顯示裝備物品等級（支援門檻設定）
-        if button.ilvlText then
-            if (not db or db.showItemLevel ~= false) and IsEquipment(itemLink) then
-                local ilvl = GetItemLevel(itemLink)
-                local threshold = (db and db.ilvlThreshold) or 1
-                if ilvl and ilvl >= threshold then
-                    button.ilvlText:SetText(ilvl)
-                    button.ilvlText:Show()
-                else
-                    button.ilvlText:Hide()
-                end
-            else
-                button.ilvlText:Hide()
-            end
-        end
-
-        -- 綁定類型文字（BoE/BoP/BoU）
-        if button.bindText then
-            if db and db.showBindType and itemLink then
-                local bindType = select(14, C_Item.GetItemInfo(itemLink))
-                -- bindType: 1=BoP, 2=BoE, 3=BoU, 4=Quest（可能為 nil 若物品未載入）
-                if bindType and bindType == 2 then
-                    button.bindText:SetText(L["BoE"] or "BoE")
-                    button.bindText:SetTextColor(0.1, 1, 0.1)
-                    button.bindText:Show()
-                elseif bindType == 3 then
-                    button.bindText:SetText(L["BoU"] or "BoU")
-                    button.bindText:SetTextColor(0.9, 0.6, 0.2)
-                    button.bindText:Show()
-                else
-                    button.bindText:Hide()
-                end
-            else
-                button.bindText:Hide()
-            end
-        end
-
-        -- 物品冷卻顯示
-        if db and db.showCooldown then
-            local cooldown = button.Cooldown or button.cooldown
-            if cooldown then
-                local start, duration, enable = C_Container.GetContainerItemCooldown(bag, slot)
-                if start and duration and enable == 1 and duration > 0 then
-                    CooldownFrame_Set(cooldown, start, duration, enable)
-                    cooldown:Show()
-                else
-                    cooldown:Hide()
-                end
-            end
-        end
-
-        -- 新物品發光
-        if button.newGlow then
-            if db and db.showNewGlow and C_NewItems.IsNewItem(bag, slot) then
-                button.newGlow:Show()
-                if button.newGlowAnim and not button.newGlowAnim:IsPlaying() then
-                    button.newGlowAnim:Play()
-                end
-            else
-                if button.newGlowAnim then
-                    button.newGlowAnim:Stop()
-                end
-                button.newGlow:Hide()
-            end
-        end
-
-        -- 顯示垃圾指示器
-        if button.junkIcon then
-            if quality == 0 and containerInfo.hasNoValue ~= true then
-                button.junkIcon:Show()
-            else
-                button.junkIcon:Hide()
-            end
-        end
-
-        -- 顯示任務指示器
-        if button.questIcon then
-            if db and db.showQuestItems ~= false and containerInfo.isQuestItem then
-                button.questIcon:Show()
-                button.junkIcon:Hide()  -- 不同時顯示兩者
-            else
-                button.questIcon:Hide()
-            end
-        end
-
-        -- 裝等升級箭頭
-        if button.upgradeArrow then
-            if IsItemUpgrade(itemLink) then
-                button.upgradeArrow:Show()
-            else
-                button.upgradeArrow:Hide()
-            end
-        end
-
-        -- 專業容器背景著色
-        if button.profBg then
-            if db and db.showProfessionColors ~= false then
-                local bagColor = GetBagTypeColor(bag)
-                if bagColor then
-                    button.profBg:SetVertexColor(bagColor[1], bagColor[2], bagColor[3], bagColor[4])
-                    button.profBg:Show()
-                else
-                    button.profBg:Hide()
-                end
-            else
-                button.profBg:Hide()
-            end
-        end
+        UpdateSlotVisuals(button, containerInfo, quality)
+        UpdateSlotText(button, db, itemLink)
+        UpdateSlotEffects(button, db, bag, slot, containerInfo, itemLink, quality)
     else
-        -- 空格子
-        local icon = button.icon or _G[button:GetName() .. "IconTexture"]
-        if icon then
-            icon:SetTexture(nil)
-        end
-        if button.Count then
-            button.Count:Hide()
-        end
-        if button.LunarBorder then
-            button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 0.5)
-        end
-        -- 使用輔助函數隱藏所有指示器
-        HideAllSlotIndicators(button)
-        -- 隱藏冷卻
-        local cooldown = button.Cooldown or button.cooldown
-        if cooldown then
-            cooldown:Hide()
-        end
-
-        -- 空格子的專業容器背景著色（仍顯示底色）
-        if button.profBg then
-            if db and db.showProfessionColors ~= false then
-                local bagColor = GetBagTypeColor(bag)
-                if bagColor then
-                    button.profBg:SetVertexColor(bagColor[1], bagColor[2], bagColor[3], bagColor[4] * 0.5)
-                    button.profBg:Show()
-                else
-                    button.profBg:Hide()
-                end
-            else
-                button.profBg:Hide()
-            end
-        end
+        ClearSlot(button, db, bag)
     end
 end
 
@@ -723,7 +731,7 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateBagFrame()
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     if not db or not db.enabled then return end
 
     if bagFrame then return bagFrame end
@@ -787,7 +795,7 @@ local function CreateBagFrame()
         self:StopMovingOrSizing()
         -- 儲存位置到 DB（含 relativePoint 以確保跨解析度正確）
         local point, _, relPoint, x, y = self:GetPoint()
-        local bagDb = LunarUI.db and LunarUI.db.profile.bags
+        local bagDb = GetBagDB()
         if bagDb then
             bagDb.bagPosition = { point = point, relPoint = relPoint, x = x, y = y }
         end
@@ -979,7 +987,7 @@ end
 local function UpdateBankSlot(button)
     if not button or not button.bag or not button.slot then return end
 
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     local bag, slot = button.bag, button.slot
     local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
 
@@ -1067,7 +1075,7 @@ local function UpdateBankSlot(button)
 end
 
 local function CreateBankFrame()
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     if not db or not db.enabled then return end
 
     if bankFrame then return bankFrame end
@@ -1112,7 +1120,7 @@ local function CreateBankFrame()
         self:StopMovingOrSizing()
         -- 儲存位置到 DB
         local point, _, relPoint, x, y = self:GetPoint()
-        local bankDb = LunarUI.db and LunarUI.db.profile.bags
+        local bankDb = GetBagDB()
         if bankDb then
             bankDb.bankPosition = { point = point, relPoint = relPoint, x = x, y = y }
         end
@@ -1520,7 +1528,7 @@ local function CloseBank()
             bankSearchTimer = nil
         end
         -- 關閉時清除搜尋
-        local db = LunarUI.db and LunarUI.db.profile.bags
+        local db = GetBagDB()
         if db and db.clearSearchOnClose and bankSearchBox then
             bankSearchBox:SetText("")
             for _, button in pairs(bankSlots) do
@@ -1587,7 +1595,7 @@ end
 local function RefreshBagLayout()
     if not bagFrame then return end
 
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
 
     -- 收集所有格子的 bag/slot 資料（支援反轉順序）
     local slotList = {}
@@ -1713,7 +1721,7 @@ local function CloseBags()
             searchTimer = nil
         end
         -- 關閉時清除搜尋
-        local db = LunarUI.db and LunarUI.db.profile.bags
+        local db = GetBagDB()
         if db and db.clearSearchOnClose and searchBox then
             searchBox:SetText("")
             for _, button in pairs(slots) do
@@ -1804,7 +1812,7 @@ local hooksRegistered = false
 local function HookBagFunctions()
     if hooksRegistered then return end
 
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     if not db or not db.enabled then return end
 
     hooksRegistered = true
@@ -1885,7 +1893,7 @@ eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 eventFrame:SetScript("OnEvent", function(_self, event, ...)
     -- 商人開啟時自動販賣垃圾
     if event == "MERCHANT_SHOW" then
-        local db = LunarUI.db and LunarUI.db.profile.bags
+        local db = GetBagDB()
         if db and db.autoSellJunk then
             C_Timer.After(JUNK_SELL_DELAY, SellJunk)
         end
@@ -1894,7 +1902,7 @@ eventFrame:SetScript("OnEvent", function(_self, event, ...)
 
     -- 銀行事件處理
     if event == "BANKFRAME_OPENED" then
-        local db = LunarUI.db and LunarUI.db.profile.bags
+        local db = GetBagDB()
         if db and db.enabled then
             OpenBank()
             -- 開啟銀行時同時開啟背包
@@ -2010,7 +2018,7 @@ end)
     增強型自動販賣：包含安全檢查與統計資訊
 ]]
 SellJunk = function()
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     if not db or not db.autoSellJunk then return end
 
     -- 第一步：收集所有垃圾物品
@@ -2076,7 +2084,7 @@ end
 --------------------------------------------------------------------------------
 
 local function InitializeBags()
-    local db = LunarUI.db and LunarUI.db.profile.bags
+    local db = GetBagDB()
     if not db or not db.enabled then return end
 
     -- 掛鉤背包函數

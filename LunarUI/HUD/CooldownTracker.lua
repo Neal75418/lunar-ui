@@ -283,9 +283,7 @@ local function CreateCooldownIcon(parent)
     icon:SetSize(ICON_SIZE, ICON_SIZE)
 
     -- 背景（使用共用模板）
-    icon:SetBackdrop(LunarUI.iconBackdropTemplate)
-    icon:SetBackdropColor(unpack(C.bgIcon))
-    icon:SetBackdropBorderColor(unpack(C.borderIcon))
+    LunarUI.ApplyBackdrop(icon, LunarUI.iconBackdropTemplate, C.bgIcon, C.borderIcon)
 
     -- 技能圖示
     local texture = icon:CreateTexture(nil, "ARTWORK")

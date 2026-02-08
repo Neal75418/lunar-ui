@@ -87,9 +87,7 @@ local function CreatePerfFrame()
     end)
 
     -- 背景樣式
-    perfFrame:SetBackdrop(LunarUI.iconBackdropTemplate)
-    perfFrame:SetBackdropColor(unpack(C.bgHUD))
-    perfFrame:SetBackdropBorderColor(unpack(C.borderHUD))
+    LunarUI.ApplyBackdrop(perfFrame, LunarUI.iconBackdropTemplate, C.bgHUD, C.borderHUD)
 
     -- FPS 文字（左側）
     local fpsText = perfFrame:CreateFontString(nil, "OVERLAY")

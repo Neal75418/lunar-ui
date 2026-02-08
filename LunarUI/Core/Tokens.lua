@@ -54,6 +54,9 @@ LunarUI.Colors = {
     rage = { 0.8, 0.2, 0.2, 1 },
     focus = { 0.7, 0.5, 0.3, 1 },
 
+    -- 透明（backdrop 填充用）
+    transparent     = { 0, 0, 0, 0 },
+
     -- 覆蓋層
     bgOverlay       = { 0, 0, 0, 0.5 },
 
