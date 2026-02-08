@@ -83,6 +83,7 @@ local function SkinMail()
             LunarUI:SkinButton(_G.OpenMailCancelButton)
         end
     end
+    return true
 end
 
 -- MailFrame 在 PLAYER_ENTERING_WORLD 時已存在

@@ -99,6 +99,7 @@ local function SkinAuctionHouse()
     if frame.MoneyFrameInset then
         frame.MoneyFrameInset:SetAlpha(0)
     end
+    return true
 end
 
 -- AuctionHouse is loaded on demand

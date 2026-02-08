@@ -71,6 +71,7 @@ local function SkinLFG()
             LunarUI.StripTextures(_G.LFGListFrame.ApplicationViewer)
         end
     end
+    return true
 end
 
 -- PVEFrame 透過 Blizzard_GroupFinder 載入

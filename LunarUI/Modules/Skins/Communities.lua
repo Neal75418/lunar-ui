@@ -85,6 +85,7 @@ local function SkinCommunities()
         LunarUI.StripTextures(frame.GuildDetailsFrame)
     end
 
+    return true
 end
 
 -- Communities is loaded on demand

@@ -48,6 +48,7 @@ local function SkinAchievements()
     if frame.FilterButton then
         LunarUI:SkinButton(frame.FilterButton)
     end
+    return true
 end
 
 -- AchievementFrame 透過 Blizzard_AchievementUI 載入

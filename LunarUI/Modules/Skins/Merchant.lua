@@ -99,6 +99,7 @@ local function SkinMerchant()
     if _G.MerchantMoneyFrame then
         LunarUI:SkinFrameText(_G.MerchantMoneyFrame, 1)
     end
+    return true
 end
 
 -- MerchantFrame 在 PLAYER_ENTERING_WORLD 時已存在

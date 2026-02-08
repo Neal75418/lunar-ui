@@ -75,6 +75,7 @@ local function SkinEncounterJournal()
             end
         end
     end
+    return true
 end
 
 -- EncounterJournal 透過 Blizzard_EncounterJournal 載入

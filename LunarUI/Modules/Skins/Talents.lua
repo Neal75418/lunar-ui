@@ -24,6 +24,7 @@ local function SkinTalents()
     if frame.UndoButton then
         LunarUI:SkinButton(frame.UndoButton)
     end
+    return true
 end
 
 -- ClassTalentFrame 透過 ADDON_LOADED "Blizzard_ClassTalentUI" 載入

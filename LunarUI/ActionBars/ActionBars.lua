@@ -42,6 +42,16 @@ end
 local DEFAULT_BUTTON_SIZE = 36
 local DEFAULT_BUTTON_SPACING = 4
 
+-- WoW 綁定命令映射：bar ID → binding prefix（參照 Bartender4）
+-- bar2 是主動作條第二頁，不應獨立綁定（跳過）
+local BINDING_FORMATS = {
+    [1] = "ACTIONBUTTON%d",
+    [3] = "MULTIACTIONBAR3BUTTON%d",
+    [4] = "MULTIACTIONBAR4BUTTON%d",
+    [5] = "MULTIACTIONBAR2BUTTON%d",
+    [6] = "MULTIACTIONBAR1BUTTON%d",
+}
+
 -- 從設定讀取按鈕大小
 local function GetButtonSize()
     return LunarUI.db.profile.actionbars.buttonSize or DEFAULT_BUTTON_SIZE
@@ -899,13 +909,15 @@ local function EnterKeybindMode()
     keybindMode = true
 
     for _name, button in pairs(buttons) do
-        if button then
+        -- 跳過無法獨立綁定的 bar（如 bar2 主動作條第二頁）
+        local barId = button and button:GetParent() and button:GetParent().id
+        if button and (not barId or BINDING_FORMATS[barId]) then
             -- 高亮按鈕
             if button.LunarBorder then
                 button.LunarBorder:SetBackdropBorderColor(unpack(C.highlightBlue))
             end
 
-            -- 顯示目前快捷鍵
+            -- 啟用鍵盤綁定
             button:EnableKeyboard(true)
             button:SetScript("OnKeyDown", function(self, key)
                 if key == "ESCAPE" then
@@ -913,12 +925,16 @@ local function EnterKeybindMode()
                     return
                 end
 
-                -- 設定快捷鍵
-                local action = self._state_action
-                if action then
-                    local actionSlot = "ACTIONBUTTON" .. ((action - 1) % 12 + 1)
-                    SetBinding(key, actionSlot)
-                    SaveBindings(GetCurrentBindingSet())
+                -- 設定快捷鍵（根據 bar ID 選擇正確的綁定命令）
+                local btnBarId = self:GetParent() and self:GetParent().id
+                local bindFormat = btnBarId and BINDING_FORMATS[btnBarId]
+                if bindFormat then
+                    local action = self._state_action
+                    if action then
+                        local buttonIndex = ((action - 1) % 12 + 1)
+                        SetBinding(key, bindFormat:format(buttonIndex))
+                        SaveBindings(GetCurrentBindingSet())
+                    end
                 end
             end)
         end

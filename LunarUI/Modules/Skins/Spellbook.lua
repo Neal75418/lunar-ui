@@ -30,6 +30,7 @@ local function SkinSpellbook()
         if prev then LunarUI:SkinButton(prev) end
         if next then LunarUI:SkinButton(next) end
     end
+    return true
 end
 
 -- PlayerSpellsFrame 透過 ADDON_LOADED "Blizzard_PlayerSpells" 載入

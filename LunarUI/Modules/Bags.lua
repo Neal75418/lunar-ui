@@ -1160,7 +1160,8 @@ local function CreateBankFrame()
         end
         bankSearchTimer = C_Timer.NewTimer(SEARCH_DEBOUNCE, function()
             local text = self:GetText():lower()
-            for _, button in pairs(bankSlots) do
+            local searchSlots = bankFrame.activeTab == "reagent" and bankFrame.reagentSlots or bankSlots
+            for _, button in pairs(searchSlots) do
                 if button and button:IsShown() then
                     local success, err = pcall(function()
                         local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)

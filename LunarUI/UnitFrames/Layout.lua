@@ -595,29 +595,6 @@ local function CreateCombatIndicator(frame)
     return combat
 end
 
---[[ 玩家：經驗條 ]]
-local function CreateExperienceBar(frame)
-    local exp = CreateFrame("StatusBar", nil, frame)
-    exp:SetStatusBarTexture(GetStatusBarTexture())
-    exp:SetStatusBarColor(0.58, 0.0, 0.55, 1)
-    exp:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 0, -2)
-    exp:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, -2)
-    exp:SetHeight(4)
-
-    exp.bg = exp:CreateTexture(nil, "BACKGROUND")
-    exp.bg:SetAllPoints()
-    exp.bg:SetTexture(GetStatusBarTexture())
-    exp.bg:SetVertexColor(unpack(C.bgIcon))
-
-    -- 精力條覆蓋
-    exp.Rested = CreateFrame("StatusBar", nil, exp)
-    exp.Rested:SetStatusBarTexture(GetStatusBarTexture())
-    exp.Rested:SetStatusBarColor(0.0, 0.39, 0.88, 0.5)
-    exp.Rested:SetAllPoints()
-
-    frame.ExperienceBar = exp
-    return exp
-end
 
 --[[ 目標：分類（菁英/稀有） ]]
 local function CreateClassification(frame)
@@ -882,11 +859,6 @@ local function PlayerLayout(frame, unit)
     CreateAlternativePower(frame)
     CreateHealPrediction(frame, unit)
 
-    -- 經驗條（僅未滿級時）
-    if _G.UnitLevel("player") < _G.GetMaxPlayerLevel() then
-        CreateExperienceBar(frame)
-    end
-
     return frame
 end
 
@@ -1142,7 +1114,7 @@ local function SpawnGroupFrames(uf)
                 self:SetWidth(%d)
             ]]):format(uf.party.height or 35, uf.party.width or 160)
         )
-        partyHeader:SetPoint("TOPLEFT", UIParent, "TOPLEFT", uf.party.x or 20, uf.party.y or -200)
+        partyHeader:SetPoint(uf.party.point or "LEFT", UIParent, uf.party.point or "LEFT", uf.party.x or -500, uf.party.y or 0)
         _G.RegisterStateDriver(partyHeader, "visibility", "[@raid6,exists] hide; [group:party,nogroup:raid] show; hide")
         spawnedFrames.party = partyHeader
     end
@@ -1170,7 +1142,7 @@ local function SpawnGroupFrames(uf)
                 self:SetWidth(%d)
             ]]):format(uf.raid.height or 30, uf.raid.width or 80)
         )
-        raidHeader:SetPoint("TOPLEFT", UIParent, "TOPLEFT", uf.raid.x or 20, uf.raid.y or -200)
+        raidHeader:SetPoint(uf.raid.point or "TOPLEFT", UIParent, uf.raid.point or "TOPLEFT", uf.raid.x or 20, uf.raid.y or -20)
         _G.RegisterStateDriver(raidHeader, "visibility", "[group:raid] show; hide")
         spawnedFrames.raid = raidHeader
     end

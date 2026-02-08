@@ -105,6 +105,7 @@ local function SkinQuest()
             LunarUI:SetFontLight(_G.QuestProgressRequiredItemsText)
         end
     end
+    return true
 end
 
 -- QuestFrame 在 PLAYER_ENTERING_WORLD 時已存在

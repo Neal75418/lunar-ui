@@ -308,13 +308,14 @@ local function ApplySkin(name)
     local skin = skins[name]
     if not skin or not skin.func then return end
 
-    local ok, _err = pcall(skin.func)
-    if ok then
-        skinned[name] = true
-    else
+    local ok, result = pcall(skin.func)
+    if not ok then
+        -- result 此時為錯誤訊息
         -- if LunarUI.DebugPrint then
-        --     LunarUI:DebugPrint("Skin error [" .. name .. "]: " .. tostring(err))
+        --     LunarUI:DebugPrint("Skin error [" .. name .. "]: " .. tostring(result))
         -- end
+    elseif result then
+        skinned[name] = true
     end
 end
 

@@ -70,6 +70,7 @@ local function SkinGossip()
             end
         end)
     end
+    return true
 end
 
 -- GossipFrame 在 PLAYER_ENTERING_WORLD 時已存在

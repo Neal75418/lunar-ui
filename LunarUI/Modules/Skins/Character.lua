@@ -84,6 +84,7 @@ local function SkinCharacterFrame()
     if PaperDollFrame and PaperDollFrame.EquipmentManagerPane then
         LunarUI:SkinFrameText(PaperDollFrame.EquipmentManagerPane, 2)
     end
+    return true
 end
 
 -- 註冊 skin（角色面板在 PLAYER_ENTERING_WORLD 時可用）

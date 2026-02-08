@@ -47,6 +47,7 @@ local function SkinWorldMap()
     if frame.SidePanelToggle then
         LunarUI:SkinButton(frame.SidePanelToggle)
     end
+    return true
 end
 
 -- WorldMapFrame 透過 Blizzard_WorldMap 載入

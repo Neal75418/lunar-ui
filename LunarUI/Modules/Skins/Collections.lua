@@ -67,6 +67,7 @@ local function SkinCollections()
             LunarUI.StripTextures(_G.WardrobeCollectionFrame.SearchBox)
         end
     end
+    return true
 end
 
 -- CollectionsJournal 透過 Blizzard_Collections 載入
