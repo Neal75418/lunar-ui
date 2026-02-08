@@ -468,6 +468,17 @@ local function SetupTrackedSpells()
     trackedSpells = DEFAULT_TRACKED_SPELLS[classID] or {}
 end
 
+-- Forward declaration（實際定義在下方事件處理區段）
+local eventFrame
+
+local function CooldownOnUpdate(_self, elapsed)
+    updateTimer = updateTimer + elapsed
+    if updateTimer >= UPDATE_INTERVAL then
+        updateTimer = 0
+        UpdateCooldownIcons()
+    end
+end
+
 local function Initialize()
     if isInitialized then return end
     if LunarUI.GetHUDSetting("cooldownTracker", true) == false then return end
@@ -482,6 +493,9 @@ local function Initialize()
     end
 
     isInitialized = true
+
+    -- 啟動 OnUpdate
+    if eventFrame then eventFrame:SetScript("OnUpdate", CooldownOnUpdate) end
 end
 
 -- 暴露 Initialize 供 Options toggle 即時切換
@@ -491,7 +505,7 @@ LunarUI.InitCooldownTracker = Initialize
 -- 事件處理
 --------------------------------------------------------------------------------
 
-local eventFrame = LunarUI.CreateEventHandler(
+eventFrame = LunarUI.CreateEventHandler(
     {"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "SPELLS_CHANGED"},
     function(_self, event)
         if event == "PLAYER_ENTERING_WORLD" then
@@ -502,17 +516,6 @@ local eventFrame = LunarUI.CreateEventHandler(
         end
     end
 )
-
--- OnUpdate 處理（節流）
-eventFrame:SetScript("OnUpdate", function(_self, elapsed)
-    if not isInitialized then return end
-
-    updateTimer = updateTimer + elapsed
-    if updateTimer >= UPDATE_INTERVAL then
-        updateTimer = 0
-        UpdateCooldownIcons()
-    end
-end)
 
 --------------------------------------------------------------------------------
 -- 匯出函數
@@ -601,10 +604,13 @@ function LunarUI.CleanupCooldownTracker()
     if cooldownFrame then
         cooldownFrame:Hide()
     end
+    -- 停止 OnUpdate 避免空轉（Initialize 會重新設定）
+    if eventFrame then eventFrame:SetScript("OnUpdate", nil) end
+    updateTimer = 0
     wipe(spellTextureCache)  -- 清理圖示快取
     cacheSize = 0
     isInitialized = false
-    -- 不取消事件註冊：OnUpdate/OnEvent 已有 isInitialized guard，
+    -- 不取消事件註冊：OnEvent 已有開關 guard，
     -- 保留事件以便 toggle 重新啟用時 Initialize 能被正確呼叫
 end
 

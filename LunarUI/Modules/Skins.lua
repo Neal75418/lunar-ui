@@ -334,8 +334,9 @@ local function LoadAllSkins()
     -- 延遲重試失敗的 skins（等待 frame 建立完成）
     if #retryList > 0 then
         C_Timer.After(3.0, function()
+            local retryDb = LunarUI.db and LunarUI.db.profile.skins
             for _, name in ipairs(retryList) do
-                if not skinned[name] then
+                if not skinned[name] and IsSkinEnabled(retryDb, name) then
                     ApplySkin(name)
                 end
             end

@@ -472,6 +472,7 @@ local blizzHider = nil  -- 隱藏用父框架（全域保持引用避免 GC）
 
 local function HideBlizzardBuffFrames()
     -- 使用隱藏父框架取代 hooksecurefunc（避免戰鬥中 taint 汙染）
+    -- 不呼叫 UnregisterAllEvents：保留框架功能以便 toggle off 時能完整還原
     if not blizzHider then
         blizzHider = CreateFrame("Frame")
         blizzHider:Hide()
@@ -479,13 +480,11 @@ local function HideBlizzardBuffFrames()
 
     local blizzardBuffFrame = _G.BuffFrame
     if blizzardBuffFrame then
-        pcall(function() blizzardBuffFrame:UnregisterAllEvents() end)
         pcall(function() blizzardBuffFrame:SetParent(blizzHider) end)
     end
 
     local blizzardDebuffFrame = _G.DebuffFrame
     if blizzardDebuffFrame then
-        pcall(function() blizzardDebuffFrame:UnregisterAllEvents() end)
         pcall(function() blizzardDebuffFrame:SetParent(blizzHider) end)
     end
 end
@@ -493,6 +492,19 @@ end
 --------------------------------------------------------------------------------
 -- 初始化
 --------------------------------------------------------------------------------
+
+-- Forward declarations（實際定義在下方事件處理區段）
+local eventFrame
+local timerElapsed = 0
+local TIMER_UPDATE_INTERVAL = 0.05  -- 計時條 20 FPS
+
+local function AuraOnUpdate(_self, elapsed)
+    timerElapsed = timerElapsed + elapsed
+    if timerElapsed >= TIMER_UPDATE_INTERVAL then
+        timerElapsed = 0
+        UpdateTimerBars()
+    end
+end
 
 local function Initialize()
     if isInitialized then return end
@@ -511,6 +523,9 @@ local function Initialize()
     end
 
     isInitialized = true
+
+    -- 啟動計時條 OnUpdate
+    eventFrame:SetScript("OnUpdate", AuraOnUpdate)
 
     -- 位置已同步套用，可以立即顯示
     if buffFrame then buffFrame:Show() end
@@ -538,7 +553,7 @@ local function ScheduleAuraUpdate()
     end)
 end
 
-local eventFrame = LunarUI.CreateEventHandler(
+eventFrame = LunarUI.CreateEventHandler(
     {"PLAYER_ENTERING_WORLD", "UNIT_AURA", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED"},
     function(_self, event, arg1)
         if event == "PLAYER_ENTERING_WORLD" then
@@ -558,20 +573,6 @@ local eventFrame = LunarUI.CreateEventHandler(
         end
     end
 )
-
--- 計時條平滑更新（OnUpdate 僅負責計時條，不再輪詢 auraDirty）
-local timerElapsed = 0
-local TIMER_UPDATE_INTERVAL = 0.05  -- 計時條 20 FPS
-
-eventFrame:SetScript("OnUpdate", function(_self, elapsed)
-    if isInitialized then
-        timerElapsed = timerElapsed + elapsed
-        if timerElapsed >= TIMER_UPDATE_INTERVAL then
-            timerElapsed = 0
-            UpdateTimerBars()
-        end
-    end
-end)
 
 --------------------------------------------------------------------------------
 -- 匯出函數
@@ -691,9 +692,27 @@ end
 function LunarUI.CleanupAuraFrames()
     if buffFrame then buffFrame:Hide() end
     if debuffFrame then debuffFrame:Hide() end
+
+    -- 還原暴雪 Buff/Debuff 框架（reparent 回 UIParent 使其重新可見）
+    -- 注意：UnregisterAllEvents 無法還原，完整恢復需 /reload
+    if blizzHider then
+        local blizzardBuffFrame = _G.BuffFrame
+        if blizzardBuffFrame then
+            pcall(function() blizzardBuffFrame:SetParent(UIParent) end)
+        end
+        local blizzardDebuffFrame = _G.DebuffFrame
+        if blizzardDebuffFrame then
+            pcall(function() blizzardDebuffFrame:SetParent(UIParent) end)
+        end
+    end
+
+    -- 停止 OnUpdate 避免空轉（Initialize 會重新設定）
+    if eventFrame then eventFrame:SetScript("OnUpdate", nil) end
+    timerElapsed = 0
+
     isInitialized = false
     blizzHider = nil
-    -- 不取消事件註冊：OnUpdate/OnEvent 已有 isInitialized guard，
+    -- 不取消事件註冊：OnEvent 已有 isInitialized guard，
     -- 保留事件以便 toggle 重新啟用時 Initialize 能被正確呼叫
 end
 

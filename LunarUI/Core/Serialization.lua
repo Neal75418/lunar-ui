@@ -373,7 +373,9 @@ function LunarUI:ImportSettings(importString)
             if tval ~= nil or extraVal then
                 if type(v) == "table" and type(target[k]) == "table" and type(tval) == "table" then
                     MergeTable(target[k], v, tval, type(extraVal) == "table" and extraVal or nil)
-                else
+                elseif tval == nil or type(v) == type(tval) then
+                    -- tval == nil: extra key（無 template 型別資訊，允許任意型別）
+                    -- type(v) == type(tval): 確保匯入值的型別與 defaults 一致，防止型別污染
                     target[k] = v
                 end
             end

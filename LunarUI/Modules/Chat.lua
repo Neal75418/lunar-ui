@@ -324,7 +324,7 @@ local function StyleChatFrame(chatFrame)
     -- 設定字型
     local font, _, flags = chatFrame:GetFont()
     chatFrame:SetFont(font or LunarUI.GetSelectedFont(), 13, flags or "")
-    LunarUI:RegisterFontString(chatFrame)
+    LunarUI.RegisterFontString(chatFrame)
 
     -- 啟用滑鼠滾輪捲動（使用 HookScript 避免覆蓋原有腳本）
     chatFrame:EnableMouseWheel(true)
