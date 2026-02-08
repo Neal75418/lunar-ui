@@ -47,9 +47,20 @@ local moduleRegistry = {}
     ExecuteModuleCallback - 執行模組的 onEnable 回呼（含延遲支援）
     @param entry table  模組註冊表項目
 ]]
+local pendingDelayedModules = 0
+local modulesReadyFired = false
+
 local function ExecuteModuleCallback(entry)
     if entry.delay > 0 then
-        C_Timer.After(entry.delay, entry.onEnable)
+        pendingDelayedModules = pendingDelayedModules + 1
+        C_Timer.After(entry.delay, function()
+            entry.onEnable()
+            pendingDelayedModules = pendingDelayedModules - 1
+            if pendingDelayedModules == 0 and not modulesReadyFired then
+                modulesReadyFired = true
+                LunarUI:SendMessage("LUNARUI_MODULES_READY")
+            end
+        end)
     else
         entry.onEnable()
     end
@@ -119,6 +130,12 @@ function LunarUI:OnEnable()
     self._modulesEnabled = true
     for _, mod in ipairs(moduleRegistry) do
         ExecuteModuleCallback(mod)
+    end
+
+    -- 若無延遲模組，立即標記就緒
+    if pendingDelayedModules == 0 then
+        modulesReadyFired = true
+        self:SendMessage("LUNARUI_MODULES_READY")
     end
 
     local L = Engine.L or {}

@@ -307,5 +307,21 @@ L["BoU"] = "BoU"
 L["ErrorOUFNotFound"] = "Error: oUF framework not found"
 L["ErrorAddonInit"] = "Error: Failed to initialize addon"
 
+-- Options Panel
+L["OptionsDesc"] = "Modern combat UI replacement with Lunar theme"
+L["EnableLunarUI"] = "Enable LunarUI"
+L["DebugModeDesc"] = "Show debug overlay with FPS and memory info"
+L["RolePresets"] = "Role Presets"
+L["RolePresetsDesc"] = "Quickly adjust raid/party frame layout for your role."
+L["DPSLayout"] = "DPS Layout"
+L["DPSLayoutDesc"] = "Compact raid frames, optimized for damage dealers"
+L["TankLayout"] = "Tank Layout"
+L["TankLayoutDesc"] = "Wider frames with larger nameplates for threat awareness"
+L["HealerLayout"] = "Healer Layout"
+L["HealerLayoutDesc"] = "Large raid frames centered for heal targeting"
+
 -- Export
 Engine.L = L
+if Engine.LunarUI then
+    Engine.LunarUI.L = L
+end

@@ -29,6 +29,22 @@ function LunarUI:IsDebugMode()
     return self.db and self.db.profile and self.db.profile.debug
 end
 
+--[[
+    輸出警告訊息（始終輸出，不受 debug 開關影響）
+    @param msg 要輸出的警告訊息
+]]
+function LunarUI:Warn(msg)
+    self:Print("|cffff8800[警告]|r " .. tostring(msg))
+end
+
+--[[
+    輸出錯誤訊息（始終輸出，不受 debug 開關影響）
+    @param msg 要輸出的錯誤訊息
+]]
+function LunarUI:Error(msg)
+    self:Print("|cffff0000[錯誤]|r " .. tostring(msg))
+end
+
 --------------------------------------------------------------------------------
 -- 除錯面板
 --------------------------------------------------------------------------------

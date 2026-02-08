@@ -108,11 +108,17 @@ local function InitPool(parent)
     end
 end
 
+local poolExhaustedLogged = false
+
 local function AcquireText()
     if #textPool > 0 then
         return table.remove(textPool)
     end
-    -- 池耗盡，靜默丟棄（避免無限增長）
+    -- 池耗盡：首次記錄警告，後續靜默丟棄（避免刷屏）
+    if not poolExhaustedLogged then
+        poolExhaustedLogged = true
+        LunarUI:Debug("FCT: 框架池已耗盡，部分戰鬥數字將被跳過")
+    end
     return nil
 end
 

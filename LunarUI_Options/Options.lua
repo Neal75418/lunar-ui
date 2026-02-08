@@ -118,6 +118,11 @@ local L = {
     profilesDesc = "Profile management",
 }
 
+-- 從主 addon 的 locale 表繼承翻譯（支援 i18n）
+if LunarUI.L then
+    setmetatable(L, { __index = LunarUI.L })
+end
+
 --------------------------------------------------------------------------------
 -- Helper Functions
 --------------------------------------------------------------------------------
@@ -147,7 +152,7 @@ local options = {
         header = {
             order = 0,
             type = "description",
-            name = "|cff888888Modern combat UI replacement with Lunar theme|r\n\n",
+            name = "|cff888888" .. (L["OptionsDesc"] or "Modern combat UI replacement with Lunar theme") .. "|r\n\n",
             fontSize = "medium",
         },
 
@@ -162,7 +167,7 @@ local options = {
                     order = 1,
                     type = "toggle",
                     name = L.enable,
-                    desc = "Enable LunarUI",
+                    desc = L["EnableLunarUI"] or "Enable LunarUI",
                     get = function() return GetDB().enabled end,
                     set = function(_, v) GetDB().enabled = v end,
                     width = "full",
@@ -171,7 +176,7 @@ local options = {
                     order = 2,
                     type = "toggle",
                     name = "Debug Mode",
-                    desc = "Show debug overlay with FPS and memory info",
+                    desc = L["DebugModeDesc"] or "Show debug overlay with FPS and memory info",
                     get = function() return GetDB().debug end,
                     set = function(_, v)
                         GetDB().debug = v
@@ -239,35 +244,35 @@ local options = {
                     rolePresets = {
                         order = 0,
                         type = "group",
-                        name = "Role Presets",
+                        name = L["RolePresets"] or "Role Presets",
                         inline = true,
                         args = {
                             desc = {
                                 order = 0,
                                 type = "description",
-                                name = "Quickly adjust raid/party frame layout for your role.\n",
+                                name = (L["RolePresetsDesc"] or "Quickly adjust raid/party frame layout for your role.") .. "\n",
                             },
                             dps = {
                                 order = 1,
                                 type = "execute",
-                                name = "DPS Layout",
-                                desc = "Compact raid frames, optimized for damage dealers",
+                                name = L["DPSLayout"] or "DPS Layout",
+                                desc = L["DPSLayoutDesc"] or "Compact raid frames, optimized for damage dealers",
                                 func = function() LunarUI:ApplyRolePreset("DAMAGER"); RefreshUI() end,
                                 width = 0.8,
                             },
                             tank = {
                                 order = 2,
                                 type = "execute",
-                                name = "Tank Layout",
-                                desc = "Wider frames with larger nameplates for threat awareness",
+                                name = L["TankLayout"] or "Tank Layout",
+                                desc = L["TankLayoutDesc"] or "Wider frames with larger nameplates for threat awareness",
                                 func = function() LunarUI:ApplyRolePreset("TANK"); RefreshUI() end,
                                 width = 0.8,
                             },
                             healer = {
                                 order = 3,
                                 type = "execute",
-                                name = "Healer Layout",
-                                desc = "Large raid frames centered for heal targeting",
+                                name = L["HealerLayout"] or "Healer Layout",
+                                desc = L["HealerLayoutDesc"] or "Large raid frames centered for heal targeting",
                                 func = function() LunarUI:ApplyRolePreset("HEALER"); RefreshUI() end,
                                 width = 0.8,
                             },

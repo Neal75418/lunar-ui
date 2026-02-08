@@ -1693,6 +1693,7 @@ local function OpenBags()
     if bagFrame then
         -- 刷新裝備等級快取（用於升級箭頭判斷）
         equippedIlvlDirty = true
+        RefreshEquippedItemLevels()
         -- 清除背包類型快取（背包可能已更換）
         wipe(bagTypeCache)
 

@@ -350,6 +350,28 @@ function LunarUI:ImportSettings(importString)
         end
     end
 
+    -- 裁剪關鍵數值至安全範圍（防止惡意或損壞的匯入字串導致 UI 異常）
+    local function ClampImportedValues(profile)
+        if profile.style and type(profile.style.fontSize) == "number" then
+            profile.style.fontSize = math.max(8, math.min(24, profile.style.fontSize))
+        end
+        if profile.hud and type(profile.hud.scale) == "number" then
+            profile.hud.scale = math.max(0.5, math.min(2.0, profile.hud.scale))
+        end
+        -- 驗證每個動作條的 buttonSize（範圍與 Options 面板一致）
+        if profile.actionbars then
+            for i = 1, 6 do
+                local barKey = "bar" .. i
+                if profile.actionbars[barKey] and type(profile.actionbars[barKey].buttonSize) == "number" then
+                    profile.actionbars[barKey].buttonSize = math.max(24, math.min(48, profile.actionbars[barKey].buttonSize))
+                end
+            end
+        end
+    end
+
+    if data.profile then
+        ClampImportedValues(data.profile)
+    end
     MergeTable(self.db.profile, data.profile)
 
     -- 觸發設定檔變更以重新整理 UI

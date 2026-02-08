@@ -33,13 +33,8 @@ function LunarUI:InitDB()
     -- 儲存版本
     self.db.global.version = self.version
 
-    -- 延遲套用 HUD 縮放：HUD 模組最大 delay 為 1.5s（CooldownTracker/AuraFrames），
-    -- 2.0s 確保所有 HUD 框架已建立並註冊
-    C_Timer.After(2, function()
-        if self.ApplyHUDScale then
-            self:ApplyHUDScale()
-        end
-    end)
+    -- HUD 縮放由 RegisterHUDFrame() 在每次框架註冊時即時套用，
+    -- 不再依賴固定延遲（避免 magic number 與模組延遲的時序假設）
 
     -- 專精切換自動設定檔
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED", function()

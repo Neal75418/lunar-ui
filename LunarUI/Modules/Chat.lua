@@ -102,20 +102,8 @@ local SHORT_CHANNEL_TYPES = {
     ["悄悄話 給"]            = "密",
 }
 
--- 表情符號替換表（文字 → 遊戲圖示）
+-- 表情符號替換表（文字 → 遊戲內建圖示）
 local EMOJI_MAP = {
-    [":)"]   = "|TInterface\\AddOns\\LunarUI\\Media\\Textures\\emoji_smile:14:14|t",
-    [":D"]   = "|TInterface\\AddOns\\LunarUI\\Media\\Textures\\emoji_grin:14:14|t",
-    [":("]   = "|TInterface\\AddOns\\LunarUI\\Media\\Textures\\emoji_sad:14:14|t",
-    [";)"]   = "|TInterface\\AddOns\\LunarUI\\Media\\Textures\\emoji_wink:14:14|t",
-    [":P"]   = "|TInterface\\AddOns\\LunarUI\\Media\\Textures\\emoji_tongue:14:14|t",
-    ["<3"]   = "|TInterface\\AddOns\\LunarUI\\Media\\Textures\\emoji_heart:14:14|t",
-    [":O"]   = "|TInterface\\AddOns\\LunarUI\\Media\\Textures\\emoji_surprised:14:14|t",
-    ["B)"]   = "|TInterface\\AddOns\\LunarUI\\Media\\Textures\\emoji_cool:14:14|t",
-}
-
--- 若自訂材質不存在，改用遊戲內建圖示作為 fallback
-local EMOJI_FALLBACK = {
     [":)"]   = "|TInterface\\Icons\\INV_Misc_Food_11:14:14|t",
     [":D"]   = "|TInterface\\Icons\\Spell_Holy_HolyGuidance:14:14|t",
     [":("]   = "|TInterface\\Icons\\Ability_Hunter_MasterMarksman:14:14|t",
@@ -168,22 +156,6 @@ local escapedKeywordCache = {} -- Fix 3b: 預快取 keyword escaped pattern
 -- 輔助函數
 --------------------------------------------------------------------------------
 
--- 檢查 emoji 自訂材質是否存在（若不存在則用 fallback）
-local emojiChecked = false
-local useEmojiMap = EMOJI_MAP
-
-local function CheckEmojiTextures()
-    if emojiChecked then return end
-    emojiChecked = true
-    -- 嘗試載入第一個自訂材質；若失敗則使用 fallback
-    local testTexture = UIParent:CreateTexture()
-    testTexture:SetTexture("Interface\\AddOns\\LunarUI\\Media\\Textures\\emoji_smile")
-    if not testTexture:GetTexture() then
-        useEmojiMap = EMOJI_FALLBACK
-    end
-    testTexture:Hide()
-    testTexture:SetParent(nil)
-end
 
 --------------------------------------------------------------------------------
 -- 聊天框架樣式
@@ -408,7 +380,7 @@ local function CreateCopyFrame()
     LunarUI.SetFont(titleText, 12, "OUTLINE")
     titleText:SetPoint("LEFT", 8, 0)
     titleText:SetText("Copy Chat")
-    titleText:SetTextColor(0.9, 0.9, 0.9)
+    titleText:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
 
     -- 關閉按鈕
     local closeBtn = CreateFrame("Button", nil, copyFrame)
@@ -626,7 +598,7 @@ local function SetupTimestamps()
             frame.AddMessage = function(self, msg, ...)
                 if msg and type(msg) == "string" then
                     local timestamp = date(fmt)
-                    msg = "|cff999999[" .. timestamp .. "]|r " .. msg
+                    msg = "|cffb3b3b3[" .. timestamp .. "]|r " .. msg
                 end
                 return origAddMessage(self, msg, ...)
             end
@@ -734,10 +706,8 @@ local function AddEmojisToMessage(_self, _event, msg, ...)
         return false, msg, ...
     end
 
-    CheckEmojiTextures()
-
-    -- 單一 gsub + table lookup 取代逐一迴圈（useEmojiMap 以原始文字為 key）
-    local newMsg = msg:gsub(EMOJI_PATTERN, useEmojiMap)
+    -- 單一 gsub + table lookup 取代逐一迴圈
+    local newMsg = msg:gsub(EMOJI_PATTERN, EMOJI_MAP)
 
     if newMsg ~= msg then
         return false, newMsg, ...

@@ -15,9 +15,18 @@ local LSM = LibStub("LibSharedMedia-3.0", true)
 -- HUD 框架自動註冊表（各 HUD 模組初始化時呼叫 RegisterHUDFrame 註冊）
 local hudFrameNames = {}
 
---- 註冊 HUD 框架名稱（供 ApplyHUDScale 自動套用縮放）
+--- 註冊 HUD 框架名稱並立即套用縮放
+--- 取代舊的 C_Timer.After(2, ...) 機制，確保每個框架註冊時即時生效
 function LunarUI:RegisterHUDFrame(name)
     hudFrameNames[name] = true
+    -- 立即套用縮放至新註冊的框架
+    if self.db and self.db.profile and self.db.profile.hud then
+        local scale = self.db.profile.hud.scale or 1.0
+        local frame = _G[name]
+        if frame then
+            frame:SetScale(scale)
+        end
+    end
 end
 
 --[[

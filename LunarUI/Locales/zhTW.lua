@@ -309,3 +309,16 @@ L["BoU"] = "BoU"
 -- 錯誤
 L["ErrorOUFNotFound"] = "錯誤：找不到 oUF 框架"
 L["ErrorAddonInit"] = "錯誤：插件初始化失敗"
+
+-- 選項面板
+L["OptionsDesc"] = "月光主題現代化戰鬥 UI 替換"
+L["EnableLunarUI"] = "啟用 LunarUI"
+L["DebugModeDesc"] = "顯示除錯面板（FPS 和記憶體資訊）"
+L["RolePresets"] = "角色佈局預設"
+L["RolePresetsDesc"] = "根據你的角色快速調整團隊/隊伍框架佈局。"
+L["DPSLayout"] = "DPS 佈局"
+L["DPSLayoutDesc"] = "精簡的團隊框架，為輸出者優化"
+L["TankLayout"] = "坦克佈局"
+L["TankLayoutDesc"] = "較寬的框架與較大的名牌，便於仇恨感知"
+L["HealerLayout"] = "治療佈局"
+L["HealerLayoutDesc"] = "置中的大型團隊框架，便於治療選取"
