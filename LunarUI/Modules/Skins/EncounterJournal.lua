@@ -13,7 +13,7 @@ local function SkinEncounterJournal()
 
     -- 關閉按鈕 fallback
     if not frame.CloseButton and _G.EncounterJournalCloseButton then
-        LunarUI:SkinCloseButton(_G.EncounterJournalCloseButton)
+        LunarUI.SkinCloseButton(_G.EncounterJournalCloseButton)
     end
 
     -- 搜尋框
@@ -25,7 +25,7 @@ local function SkinEncounterJournal()
     if frame.NavBar then
         LunarUI.StripTextures(frame.NavBar)
         if frame.NavBar.homeButton then
-            LunarUI:SkinButton(frame.NavBar.homeButton)
+            LunarUI.SkinButton(frame.NavBar.homeButton)
         end
     end
 
@@ -35,16 +35,16 @@ local function SkinEncounterJournal()
 
         -- 分頁（地城/團隊）
         if frame.instanceSelect.dungeonsTab then
-            LunarUI:SkinTab(frame.instanceSelect.dungeonsTab)
+            LunarUI.SkinTab(frame.instanceSelect.dungeonsTab)
         end
         if frame.instanceSelect.raidsTab then
-            LunarUI:SkinTab(frame.instanceSelect.raidsTab)
+            LunarUI.SkinTab(frame.instanceSelect.raidsTab)
         end
         if frame.instanceSelect.suggestTab then
-            LunarUI:SkinTab(frame.instanceSelect.suggestTab)
+            LunarUI.SkinTab(frame.instanceSelect.suggestTab)
         end
         if frame.instanceSelect.LootJournalTab then
-            LunarUI:SkinTab(frame.instanceSelect.LootJournalTab)
+            LunarUI.SkinTab(frame.instanceSelect.LootJournalTab)
         end
     end
 
@@ -57,21 +57,21 @@ local function SkinEncounterJournal()
 
             -- 難度下拉選單
             if frame.encounter.info.difficulty then
-                LunarUI:SkinButton(frame.encounter.info.difficulty)
+                LunarUI.SkinButton(frame.encounter.info.difficulty)
             end
 
             -- 分頁（概覽/技能/戰利品）
             if frame.encounter.info.overviewTab then
-                LunarUI:SkinTab(frame.encounter.info.overviewTab)
+                LunarUI.SkinTab(frame.encounter.info.overviewTab)
             end
             if frame.encounter.info.bossTab then
-                LunarUI:SkinTab(frame.encounter.info.bossTab)
+                LunarUI.SkinTab(frame.encounter.info.bossTab)
             end
             if frame.encounter.info.lootTab then
-                LunarUI:SkinTab(frame.encounter.info.lootTab)
+                LunarUI.SkinTab(frame.encounter.info.lootTab)
             end
             if frame.encounter.info.modelTab then
-                LunarUI:SkinTab(frame.encounter.info.modelTab)
+                LunarUI.SkinTab(frame.encounter.info.modelTab)
             end
         end
     end
@@ -79,4 +79,4 @@ local function SkinEncounterJournal()
 end
 
 -- EncounterJournal 透過 Blizzard_EncounterJournal 載入
-LunarUI:RegisterSkin("encounterjournal", "Blizzard_EncounterJournal", SkinEncounterJournal)
+LunarUI.RegisterSkin("encounterjournal", "Blizzard_EncounterJournal", SkinEncounterJournal)

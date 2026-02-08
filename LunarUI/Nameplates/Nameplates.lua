@@ -50,6 +50,7 @@ local nameplateTargetFrame
 local nameplateQuestFrame
 
 -- 前向宣告：堆疊偵測髒旗標函數
+---@type function
 local MarkStackingDirty
 
 --------------------------------------------------------------------------------
@@ -94,7 +95,7 @@ local function CreateHealthBar(frame)
     health.bg = health:CreateTexture(nil, "BACKGROUND")
     health.bg:SetAllPoints()
     health.bg:SetTexture(GetStatusBarTexture())
-    health.bg:SetVertexColor(unpack(C.bgIcon))
+    health.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     health.bg.multiplier = 0.3
 
     -- Frequent updates
@@ -268,7 +269,7 @@ local function CreateDebuffs(frame)
         LunarUI.SetFont(button.Count, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
         if button.SetBackdropColor then
-            button:SetBackdropColor(unpack(C.bgOverlay))
+            button:SetBackdropColor(C.bgOverlay[1], C.bgOverlay[2], C.bgOverlay[3], C.bgOverlay[4])
         end
     end
 
@@ -320,14 +321,14 @@ local function CreateNameplateBuffs(frame)
         LunarUI.SetFont(button.Count, 8, "OUTLINE")
         button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
         if button.SetBackdropColor then
-            button:SetBackdropColor(unpack(C.bgOverlay))
+            button:SetBackdropColor(C.bgOverlay[1], C.bgOverlay[2], C.bgOverlay[3], C.bgOverlay[4])
         end
     end
 
     -- Stealable buffs get a bright border
     buffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
         if button.SetBackdropBorderColor then
-            button:SetBackdropBorderColor(unpack(C.stealableBorder))
+            button:SetBackdropBorderColor(C.stealableBorder[1], C.stealableBorder[2], C.stealableBorder[3], C.stealableBorder[4])
         end
     end
 
@@ -618,6 +619,7 @@ local stackOffsets = {}
 
 -- Performance: 髒旗標驅動 - 只有名牌數量變化時才重新計算
 local stackingDirty = false
+---@diagnostic disable-next-line
 MarkStackingDirty = function()
     stackingDirty = true
 end
@@ -637,7 +639,7 @@ local function UpdateNameplateStacking()
     local count = 0
     for k = 1, #stackFrames do stackFrames[k] = nil; stackYs[k] = nil; stackOffsets[k] = nil end
     for np in pairs(nameplateFrames) do
-        if np and np:IsShown() and np:GetParent() then
+        if np:IsShown() and np:GetParent() then
             local _, screenY = np:GetCenter()
             if screenY then
                 local appliedOffset = np._lunarStackOffset or 0
@@ -678,6 +680,7 @@ local function UpdateNameplateStacking()
     -- 套用偏移
     for i = 1, count do
         local np = stackFrames[i]
+        if not np then break end
         local offset = stackOffsets[i]
         if np._lunarStackOffset ~= offset then
             np._lunarStackOffset = offset
@@ -751,7 +754,7 @@ local function StopStackingDetection()
     end
     -- 重設所有名牌偏移
     for np in pairs(nameplateFrames) do
-        if np and np._lunarStackShift then
+        if np._lunarStackShift then
             np._lunarStackShift = nil
             np._lunarStackOffset = nil
             if np.Health then
@@ -838,7 +841,7 @@ local function SpawnNameplates()
         nameplateQuestFrame:RegisterEvent("QUEST_LOG_UPDATE")
         nameplateQuestFrame:SetScript("OnEvent", function()
             for np in pairs(nameplateFrames) do
-                if np and np:IsShown() then
+                if np:IsShown() then
                     UpdateQuestIndicator(np)
                 end
             end
@@ -850,7 +853,7 @@ end
 LunarUI.SpawnNameplates = SpawnNameplates
 
 -- Fix #35: Cleanup function to prevent memory leaks on disable/reload
-function LunarUI:CleanupNameplates()
+function LunarUI.CleanupNameplates()
     -- Unregister target change event handler
     if nameplateTargetFrame then
         nameplateTargetFrame:UnregisterAllEvents()
@@ -871,6 +874,6 @@ end
 
 LunarUI:RegisterModule("Nameplates", {
     onEnable = SpawnNameplates,
-    onDisable = function() LunarUI:CleanupNameplates() end,
+    onDisable = function() LunarUI.CleanupNameplates() end,
     delay = 0.2,
 })

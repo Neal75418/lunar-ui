@@ -280,6 +280,7 @@ end
 -- 移動模式控制
 --------------------------------------------------------------------------------
 
+---@type function
 local UpdateEscHandler  -- forward declaration（定義於 ESC 退出支援區段）
 
 local function EnterMoveMode()
@@ -352,6 +353,7 @@ escFrame:SetScript("OnKeyDown", function(_self, key)
 end)
 escFrame:EnableKeyboard(false)
 
+---@diagnostic disable-next-line: unused-local
 UpdateEscHandler = function()
     escFrame:EnableKeyboard(isMoving)
 end

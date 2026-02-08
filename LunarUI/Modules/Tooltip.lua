@@ -22,13 +22,6 @@ local C = LunarUI.Colors
 -- 常數
 --------------------------------------------------------------------------------
 
-local backdropTemplate = {
-    bgFile = "Interface\\Buttons\\WHITE8x8",
-    edgeFile = "Interface\\Buttons\\WHITE8x8",
-    edgeSize = 1,
-    insets = { left = 1, right = 1, top = 1, bottom = 1 },
-}
-
 local CLASS_COLORS = RAID_CLASS_COLORS
 
 -- 等級差異顏色

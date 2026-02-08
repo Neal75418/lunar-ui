@@ -20,6 +20,8 @@ local LunarUI = Engine.LunarUI
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
+local bit_band = bit.band  -- LuaJIT built-in（LLS 環境限制，快取為 local）
+
 --------------------------------------------------------------------------------
 -- DB 存取
 --------------------------------------------------------------------------------
@@ -227,7 +229,7 @@ local function GetBagTypeColor(bag)
     if bagType and bagType > 0 then
         -- 檢查每個專業 flag
         for flag, color in pairs(PROFESSION_BAG_COLORS) do
-            if bit.band(bagType, flag) > 0 then
+            if bit_band(bagType, flag) > 0 then
                 bagTypeCache[bag] = color
                 return color
             end
@@ -875,7 +877,7 @@ local function CreateBagFrame()
     sortButton:SetSize(60, 20)
     sortButton:SetPoint("TOPLEFT", title, "TOPRIGHT", 10, 2)
     sortButton:SetBackdrop(backdropTemplate)
-    sortButton:SetBackdropColor(unpack(C.bgIcon))
+    sortButton:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     sortButton:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
 
     local sortText = sortButton:CreateFontString(nil, "OVERLAY")
@@ -890,11 +892,11 @@ local function CreateBagFrame()
     end)
 
     sortButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(unpack(C.bgButtonHover))
+        self:SetBackdropColor(C.bgButtonHover[1], C.bgButtonHover[2], C.bgButtonHover[3], C.bgButtonHover[4])
     end)
 
     sortButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(unpack(C.bgIcon))
+        self:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     end)
 
     -- 格子容器
@@ -1198,7 +1200,7 @@ local function CreateBankFrame()
     bankSortButton:SetSize(60, 20)
     bankSortButton:SetPoint("TOPLEFT", title, "TOPRIGHT", 10, 2)
     bankSortButton:SetBackdrop(backdropTemplate)
-    bankSortButton:SetBackdropColor(unpack(C.bgIcon))
+    bankSortButton:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     bankSortButton:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1)
 
     local sortText = bankSortButton:CreateFontString(nil, "OVERLAY")
@@ -1213,11 +1215,11 @@ local function CreateBankFrame()
     end)
 
     bankSortButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(unpack(C.bgButtonHover))
+        self:SetBackdropColor(C.bgButtonHover[1], C.bgButtonHover[2], C.bgButtonHover[3], C.bgButtonHover[4])
     end)
 
     bankSortButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(unpack(C.bgIcon))
+        self:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     end)
 
     -- 頁籤按鈕（銀行 / 材料銀行）
@@ -1230,7 +1232,7 @@ local function CreateBankFrame()
         local tab = CreateFrame("Button", nil, tabContainer, "BackdropTemplate")
         tab:SetSize(80, tabHeight)
         tab:SetBackdrop(backdropTemplate)
-        tab:SetBackdropColor(unpack(C.bgIcon))
+        tab:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
         tab:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 0.6)
         if order == 1 then
             tab:SetPoint("LEFT", tabContainer, "LEFT", 0, 0)
@@ -1446,12 +1448,11 @@ local function RefreshBankLayout()
     for slot = 1, numMainBankSlots do
         slotID = slotID + 1
 
-        if not bankSlots[slotID] then
-            local button = CreateBankSlot(bankFrame.slotContainer, slotID, BANK_CONTAINER, slot)
+        local button = bankSlots[slotID]
+        if not button then
+            button = CreateBankSlot(bankFrame.slotContainer, slotID, BANK_CONTAINER, slot)
             bankSlots[slotID] = button
         end
-
-        local button = bankSlots[slotID]
         button.bag = BANK_CONTAINER
         button.slot = slot
 
@@ -1472,12 +1473,11 @@ local function RefreshBankLayout()
         for slot = 1, numSlots do
             slotID = slotID + 1
 
-            if not bankSlots[slotID] then
-                local button = CreateBankSlot(bankFrame.slotContainer, slotID, bag, slot)
+            local button = bankSlots[slotID]
+            if not button then
+                button = CreateBankSlot(bankFrame.slotContainer, slotID, bag, slot)
                 bankSlots[slotID] = button
             end
-
-            local button = bankSlots[slotID]
             button.bag = bag
             button.slot = slot
 
@@ -1647,12 +1647,11 @@ local function RefreshBagLayout()
     for _, slotInfo in ipairs(slotList) do
         slotID = slotID + 1
 
-        if not slots[slotID] then
-            local button = CreateItemSlot(bagFrame.slotContainer, slotID, slotInfo.bag, slotInfo.slot)
+        local button = slots[slotID]
+        if not button then
+            button = CreateItemSlot(bagFrame.slotContainer, slotID, slotInfo.bag, slotInfo.slot)
             slots[slotID] = button
         end
-
-        local button = slots[slotID]
         button.bag = slotInfo.bag
         button.slot = slotInfo.slot
 
@@ -2074,6 +2073,7 @@ SellJunk = function()
         end
 
         local item = junkItems[index]
+        if not item then return end
         C_Container.UseContainerItem(item.bag, item.slot)
         C_Timer.After(0.2, SellNext)
     end

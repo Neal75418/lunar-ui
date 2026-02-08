@@ -17,7 +17,7 @@ local function SkinWorldMap()
 
         -- 關閉按鈕
         if frame.BorderFrame.CloseButton then
-            LunarUI:SkinCloseButton(frame.BorderFrame.CloseButton)
+            LunarUI.SkinCloseButton(frame.BorderFrame.CloseButton)
         end
 
         -- 最大化/最小化按鈕
@@ -39,16 +39,16 @@ local function SkinWorldMap()
         LunarUI.StripTextures(frame.NavBar)
         -- 返回按鈕
         if frame.NavBar.homeButton then
-            LunarUI:SkinButton(frame.NavBar.homeButton)
+            LunarUI.SkinButton(frame.NavBar.homeButton)
         end
     end
 
     -- 側欄（任務追蹤）
     if frame.SidePanelToggle then
-        LunarUI:SkinButton(frame.SidePanelToggle)
+        LunarUI.SkinButton(frame.SidePanelToggle)
     end
     return true
 end
 
 -- WorldMapFrame 透過 Blizzard_WorldMap 載入
-LunarUI:RegisterSkin("worldmap", "Blizzard_WorldMap", SkinWorldMap)
+LunarUI.RegisterSkin("worldmap", "Blizzard_WorldMap", SkinWorldMap)

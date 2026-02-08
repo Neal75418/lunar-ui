@@ -85,11 +85,15 @@ end
 -- 模組狀態
 --------------------------------------------------------------------------------
 
-local resourceFrame = nil
+---@type Frame?
+local resourceFrame
 local resourceIcons = {}
-local resourceBar = nil
-local playerClass = nil
-local resourceType = nil
+---@type StatusBar?
+local resourceBar
+---@type integer?
+local playerClass
+---@type integer?
+local resourceType
 local maxResources = 0
 local useBar = false  -- 是否使用進度條而非圖示
 
@@ -136,6 +140,7 @@ local CLASS_RESOURCE_CONFIG = {
     end,
 }
 
+---@return integer?, integer, boolean, number[]?
 local function GetClassResourceInfo()
     local _, _, classID = UnitClass("player")
     local config = CLASS_RESOURCE_CONFIG[classID]
@@ -149,8 +154,9 @@ local function GetClassResourceInfo()
         return config(GetSpecialization())
     end
 
-    -- 直接返回配置值
-    return config[1], config[2], config[3], config[4]
+    -- 直接返回配置值（config 此時必為 table）
+    local tbl = config --[[@as table]]
+    return tbl[1], tbl[2], tbl[3], tbl[4]
 end
 
 --------------------------------------------------------------------------------
@@ -186,6 +192,7 @@ local function CreateResourceIcon(parent)
     return icon
 end
 
+---@return Frame
 local function CreateResourceBar(parent)
     local bar = CreateFrame("StatusBar", nil, parent)
     bar:SetSize(ICON_SIZE * 5 + ICON_SPACING * 4, BAR_HEIGHT)
@@ -197,7 +204,7 @@ local function CreateResourceBar(parent)
     local bg = bar:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
     bg:SetTexture("Interface\\Buttons\\WHITE8x8")
-    bg:SetVertexColor(unpack(C.bgIcon))
+    bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     bar.bg = bg
 
     -- 邊框
@@ -208,7 +215,7 @@ local function CreateResourceBar(parent)
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    border:SetBackdropBorderColor(unpack(C.borderIcon))
+    border:SetBackdropBorderColor(C.borderIcon[1], C.borderIcon[2], C.borderIcon[3], C.borderIcon[4])
     bar.border = border
 
     -- 文字
@@ -221,6 +228,7 @@ local function CreateResourceBar(parent)
     return bar
 end
 
+---@return Frame
 local function CreateResourceFrame()
     if resourceFrame then return resourceFrame end
 
@@ -337,7 +345,7 @@ end
 
 local function SetupResourceDisplay()
     if not resourceFrame then
-        CreateResourceFrame()
+        resourceFrame = CreateResourceFrame()
     end
 
     -- 清除現有元素
@@ -351,7 +359,7 @@ local function SetupResourceDisplay()
     -- 取得職業資源資訊
     local powerType, max, usesBar, color = GetClassResourceInfo()
 
-    if not powerType then
+    if not powerType or not color then
         resourceFrame:Hide()
         return
     end
@@ -459,7 +467,7 @@ function LunarUI.RefreshClassResources()
     SetupResourceDisplay()
 end
 
-function LunarUI:RebuildClassResources()
+function LunarUI.RebuildClassResources()
     if InCombatLockdown() then return end
     LoadSettings()
     SetupResourceDisplay()

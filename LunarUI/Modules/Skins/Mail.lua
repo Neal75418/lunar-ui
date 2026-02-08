@@ -15,12 +15,12 @@ local function SkinMail()
 
     -- 標題文字 fallback
     if not frame.TitleText and _G.MailFrameTitleText then
-        LunarUI:SetFontLight(_G.MailFrameTitleText)
+        LunarUI.SetFontLight(_G.MailFrameTitleText)
     end
 
     -- 關閉按鈕 fallback
     if not frame.CloseButton and _G.MailFrameCloseButton then
-        LunarUI:SkinCloseButton(_G.MailFrameCloseButton)
+        LunarUI.SkinCloseButton(_G.MailFrameCloseButton)
     end
 
     -- 收件匣面板
@@ -38,16 +38,16 @@ local function SkinMail()
         -- 信件標題/寄件人文字
         local sender = _G["MailItem" .. i .. "Sender"]
         local subject = _G["MailItem" .. i .. "Subject"]
-        if sender then LunarUI:SetFontLight(sender) end
-        if subject then LunarUI:SetFontLight(subject) end
+        if sender then LunarUI.SetFontLight(sender) end
+        if subject then LunarUI.SetFontLight(subject) end
     end
 
     -- 翻頁按鈕
     if _G.InboxPrevPageButton then
-        LunarUI:SkinButton(_G.InboxPrevPageButton)
+        LunarUI.SkinButton(_G.InboxPrevPageButton)
     end
     if _G.InboxNextPageButton then
-        LunarUI:SkinButton(_G.InboxNextPageButton)
+        LunarUI.SkinButton(_G.InboxNextPageButton)
     end
 
     -- 撰寫面板
@@ -57,10 +57,10 @@ local function SkinMail()
 
     -- 撰寫按鈕
     if _G.SendMailMailButton then
-        LunarUI:SkinButton(_G.SendMailMailButton)
+        LunarUI.SkinButton(_G.SendMailMailButton)
     end
     if _G.SendMailCancelButton then
-        LunarUI:SkinButton(_G.SendMailCancelButton)
+        LunarUI.SkinButton(_G.SendMailCancelButton)
     end
 
     -- 開信面板
@@ -68,23 +68,23 @@ local function SkinMail()
         LunarUI:SkinFrame(_G.OpenMailFrame)
 
         if _G.OpenMailFrameCloseButton then
-            LunarUI:SkinCloseButton(_G.OpenMailFrameCloseButton)
+            LunarUI.SkinCloseButton(_G.OpenMailFrameCloseButton)
         end
         if _G.OpenMailReplyButton then
-            LunarUI:SkinButton(_G.OpenMailReplyButton)
+            LunarUI.SkinButton(_G.OpenMailReplyButton)
         end
         if _G.OpenMailDeleteButton then
-            LunarUI:SkinButton(_G.OpenMailDeleteButton)
+            LunarUI.SkinButton(_G.OpenMailDeleteButton)
         end
         if _G.OpenMailReportSpamButton then
-            LunarUI:SkinButton(_G.OpenMailReportSpamButton)
+            LunarUI.SkinButton(_G.OpenMailReportSpamButton)
         end
         if _G.OpenMailCancelButton then
-            LunarUI:SkinButton(_G.OpenMailCancelButton)
+            LunarUI.SkinButton(_G.OpenMailCancelButton)
         end
     end
     return true
 end
 
 -- MailFrame 在 PLAYER_ENTERING_WORLD 時已存在
-LunarUI:RegisterSkin("mail", "PLAYER_ENTERING_WORLD", SkinMail)
+LunarUI.RegisterSkin("mail", "PLAYER_ENTERING_WORLD", SkinMail)

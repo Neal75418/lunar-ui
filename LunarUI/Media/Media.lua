@@ -200,7 +200,7 @@ function LunarUI.SetFont(fs, size, flags)
 end
 
 --- 手動註冊已存在的 FontString（不重新設定字體）
-function LunarUI:RegisterFontString(fs)
+function LunarUI.RegisterFontString(fs)
     if fs and fs.SetFont then
         fontRegistry[fs] = true
     end

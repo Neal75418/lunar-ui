@@ -19,7 +19,7 @@ local function SkinCollections()
         LunarUI.StripTextures(_G.MountJournal)
 
         if _G.MountJournalMountButton then
-            LunarUI:SkinButton(_G.MountJournalMountButton)
+            LunarUI.SkinButton(_G.MountJournalMountButton)
         end
         if _G.MountJournal.SearchBox then
             LunarUI.StripTextures(_G.MountJournal.SearchBox)
@@ -31,10 +31,10 @@ local function SkinCollections()
         LunarUI.StripTextures(_G.PetJournal)
 
         if _G.PetJournalSummonButton then
-            LunarUI:SkinButton(_G.PetJournalSummonButton)
+            LunarUI.SkinButton(_G.PetJournalSummonButton)
         end
         if _G.PetJournalFindBattleButton then
-            LunarUI:SkinButton(_G.PetJournalFindBattleButton)
+            LunarUI.SkinButton(_G.PetJournalFindBattleButton)
         end
         if _G.PetJournal.SearchBox then
             LunarUI.StripTextures(_G.PetJournal.SearchBox)
@@ -71,4 +71,4 @@ local function SkinCollections()
 end
 
 -- CollectionsJournal 透過 Blizzard_Collections 載入
-LunarUI:RegisterSkin("collections", "Blizzard_Collections", SkinCollections)
+LunarUI.RegisterSkin("collections", "Blizzard_Collections", SkinCollections)

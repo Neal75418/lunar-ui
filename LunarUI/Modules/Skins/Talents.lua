@@ -19,13 +19,13 @@ local function SkinTalents()
 
     -- 底部按鈕（套用/重設）
     if frame.ApplyButton then
-        LunarUI:SkinButton(frame.ApplyButton)
+        LunarUI.SkinButton(frame.ApplyButton)
     end
     if frame.UndoButton then
-        LunarUI:SkinButton(frame.UndoButton)
+        LunarUI.SkinButton(frame.UndoButton)
     end
     return true
 end
 
 -- ClassTalentFrame 透過 ADDON_LOADED "Blizzard_ClassTalentUI" 載入
-LunarUI:RegisterSkin("talents", "Blizzard_ClassTalentUI", SkinTalents)
+LunarUI.RegisterSkin("talents", "Blizzard_ClassTalentUI", SkinTalents)

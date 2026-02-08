@@ -56,6 +56,7 @@ local UPDATE_INTERVAL = 0.1  -- 更新間隔（秒）
     建立除錯面板
     重載時會重用現有框架以防止記憶體洩漏
 ]]
+---@return Frame
 local function CreateDebugFrame()
     if debugFrame then return debugFrame end
 
@@ -134,33 +135,29 @@ end
 --[[
     更新除錯面板可見性
 ]]
-function LunarUI:UpdateDebugOverlay()
-    if not debugFrame then
-        debugFrame = CreateDebugFrame()
-    end
+function LunarUI.UpdateDebugOverlay()
+    local frame = CreateDebugFrame()
 
-    if self.db and self.db.profile and self.db.profile.debug then
-        debugFrame:Show()
+    if LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
+        frame:Show()
     else
-        debugFrame:Hide()
+        frame:Hide()
     end
 end
 
 --[[
     顯示除錯面板
 ]]
-function LunarUI:ShowDebugOverlay()
-    if not debugFrame then
-        debugFrame = CreateDebugFrame()
-    end
-    debugFrame:Show()
+function LunarUI.ShowDebugOverlay()
+    local frame = CreateDebugFrame()
+    frame:Show()
 end
 
 --[[
     隱藏除錯面板
     清理 OnUpdate 腳本以節省資源
 ]]
-function LunarUI:HideDebugOverlay()
+function LunarUI.HideDebugOverlay()
     if debugFrame then
         debugFrame:SetScript("OnUpdate", nil)
         debugFrame:Hide()

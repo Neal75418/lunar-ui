@@ -163,11 +163,11 @@ function LunarUI.HexToRGB(hex)
     hex = hex:gsub("#", "")
     if #hex ~= 6 then return 1, 1, 1 end
 
-    local r = tonumber(hex:sub(1, 2), 16) / 255
-    local g = tonumber(hex:sub(3, 4), 16) / 255
-    local b = tonumber(hex:sub(5, 6), 16) / 255
+    local r = (tonumber(hex:sub(1, 2), 16) or 255) / 255
+    local g = (tonumber(hex:sub(3, 4), 16) or 255) / 255
+    local b = (tonumber(hex:sub(5, 6), 16) or 255) / 255
 
-    return r or 1, g or 1, b or 1
+    return r, g, b
 end
 
 --[[

@@ -159,7 +159,7 @@ function LunarUI:OnDisable()
     -- 停用所有已註冊的模組（反向迭代，後啟用的先清理）
     for i = #moduleRegistry, 1, -1 do
         local mod = moduleRegistry[i]
-        mod.onDisable()
+        if mod then mod.onDisable() end
     end
 end
 
@@ -170,7 +170,7 @@ end
 local gameMenuHooked = false
 local gameMenuButtonAdded = false
 
-function LunarUI:SetupGameMenuButton()
+function LunarUI.SetupGameMenuButton()
     if gameMenuHooked then return end
     if not _G.GameMenuFrame or not _G.GameMenuFrame.InitButtons then return end
     gameMenuHooked = true

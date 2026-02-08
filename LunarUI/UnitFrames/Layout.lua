@@ -76,7 +76,7 @@ local function CreateHealthBar(frame, unit)
     health.bg = health:CreateTexture(nil, "BACKGROUND")
     health.bg:SetAllPoints()
     health.bg:SetTexture(GetStatusBarTexture())
-    health.bg:SetVertexColor(unpack(C.bgIcon))
+    health.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     health.bg.multiplier = 0.3
 
     -- 頻繁更新以確保動畫流暢
@@ -142,7 +142,7 @@ local function CreatePowerBar(frame)
     power.bg = power:CreateTexture(nil, "BACKGROUND")
     power.bg:SetAllPoints()
     power.bg:SetTexture(GetStatusBarTexture())
-    power.bg:SetVertexColor(unpack(C.bgIcon))
+    power.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     power.bg.multiplier = 0.3
 
     frame.Power = power
@@ -328,7 +328,7 @@ local function PostCreateAuraIcon(_self, button)
     LunarUI.StyleAuraButton(button)
 
     if button.SetBackdropColor then
-        button:SetBackdropColor(unpack(C.bgOverlay))
+        button:SetBackdropColor(C.bgOverlay[1], C.bgOverlay[2], C.bgOverlay[3], C.bgOverlay[4])
         button:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
     end
 
@@ -457,7 +457,7 @@ local function CreateClassPower(frame)
         bar.bg = bar:CreateTexture(nil, "BACKGROUND")
         bar.bg:SetAllPoints()
         bar.bg:SetTexture(GetStatusBarTexture())
-        bar.bg:SetVertexColor(unpack(C.bgIcon))
+        bar.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
 
         classPower[i] = bar
     end

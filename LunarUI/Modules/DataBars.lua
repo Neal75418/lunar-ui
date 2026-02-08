@@ -71,7 +71,7 @@ local function CreateDataBar(name, db)
     bar.bg = bar:CreateTexture(nil, "BACKGROUND")
     bar.bg:SetAllPoints()
     bar.bg:SetTexture(GetStatusBarTexture())
-    bar.bg:SetVertexColor(unpack(C.bgIcon))
+    bar.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
 
     -- Text overlay
     bar.text = bar:CreateFontString(nil, "OVERLAY")

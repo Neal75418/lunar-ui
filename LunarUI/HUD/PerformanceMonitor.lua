@@ -54,6 +54,7 @@ end
 -- 框架建立
 --------------------------------------------------------------------------------
 
+---@return Frame
 local function CreatePerfFrame()
     if perfFrame then return perfFrame end
 
@@ -204,7 +205,7 @@ end
 -- 匯出函數
 function LunarUI.ShowPerformanceMonitor()
     if not perfFrame then
-        CreatePerfFrame()
+        perfFrame = CreatePerfFrame()
     end
     perfFrame:Show()
     StartUpdating()

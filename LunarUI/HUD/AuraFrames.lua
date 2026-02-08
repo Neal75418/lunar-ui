@@ -21,7 +21,6 @@ local C = LunarUI.Colors
 --------------------------------------------------------------------------------
 
 local math_floor = math.floor
-local string_format = string.format
 local GetTime = GetTime
 local C_UnitAuras = C_UnitAuras
 local ipairs = ipairs

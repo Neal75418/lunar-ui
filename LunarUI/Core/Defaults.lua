@@ -5,7 +5,7 @@
 ]]
 
 local _ADDON_NAME, Engine = ...
-local LunarUI = Engine.LunarUI
+local _LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
 -- 資料庫預設值

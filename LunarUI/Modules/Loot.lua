@@ -178,7 +178,7 @@ local function CreateLootFrame()
     if backdropTemplate then
         lootAllBtn:SetBackdrop(backdropTemplate)
         lootAllBtn:SetBackdropColor(C.inkDark[1], C.inkDark[2], C.inkDark[3], 0.9)
-        lootAllBtn:SetBackdropBorderColor(unpack(C.borderWarm))
+        lootAllBtn:SetBackdropBorderColor(C.borderWarm[1], C.borderWarm[2], C.borderWarm[3], C.borderWarm[4])
     end
 
     local lootAllText = lootAllBtn:CreateFontString(nil, "OVERLAY")
@@ -224,6 +224,7 @@ local function UpdateLootFrame()
     local visibleCount = 0
     for i = 1, numItems do
         local slot = lootSlots[i]
+        if not slot then break end
         local lootIcon, lootName, lootQuantity, _, lootQuality, _, _, _, _ = _G.GetLootSlotInfo(i)
 
         if lootName then
@@ -278,6 +279,7 @@ local function UpdateLootFrame()
     lootFrame:SetHeight(contentHeight + FRAME_PADDING * 2)
 
     -- Reposition loot all button
+    if not lootAllButton then return end
     lootAllButton:ClearAllPoints()
     lootAllButton:SetPoint("BOTTOM", lootFrame, "BOTTOM", 0, FRAME_PADDING)
 

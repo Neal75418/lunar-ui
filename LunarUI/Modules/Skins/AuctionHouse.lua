@@ -18,7 +18,7 @@ local function SkinAuctionHouse()
         for i = 1, 4 do
             local tab = _G["AuctionHouseFrameTab" .. i]
             if tab then
-                LunarUI:SkinTab(tab)
+                LunarUI.SkinTab(tab)
             end
         end
     end
@@ -27,13 +27,13 @@ local function SkinAuctionHouse()
     if frame.SearchBar then
         local searchBar = frame.SearchBar
         if searchBar.SearchBox then
-            LunarUI:SkinEditBox(searchBar.SearchBox)
+            LunarUI.SkinEditBox(searchBar.SearchBox)
         end
         if searchBar.SearchButton then
-            LunarUI:SkinButton(searchBar.SearchButton)
+            LunarUI.SkinButton(searchBar.SearchButton)
         end
         if searchBar.FavoritesSearchButton then
-            LunarUI:SkinButton(searchBar.FavoritesSearchButton)
+            LunarUI.SkinButton(searchBar.FavoritesSearchButton)
         end
     end
 
@@ -88,7 +88,7 @@ local function SkinAuctionHouse()
         end
         -- Cancel auction button
         if frame.AuctionsFrame.CancelAuctionButton then
-            LunarUI:SkinButton(frame.AuctionsFrame.CancelAuctionButton)
+            LunarUI.SkinButton(frame.AuctionsFrame.CancelAuctionButton)
         end
     end
 
@@ -103,4 +103,4 @@ local function SkinAuctionHouse()
 end
 
 -- AuctionHouse is loaded on demand
-LunarUI:RegisterSkin("auctionhouse", "Blizzard_AuctionHouseUI", SkinAuctionHouse)
+LunarUI.RegisterSkin("auctionhouse", "Blizzard_AuctionHouseUI", SkinAuctionHouse)

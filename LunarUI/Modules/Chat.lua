@@ -425,6 +425,7 @@ local function ShowCopyFrame(chatFrame)
     if not chatFrame then return end
 
     CreateCopyFrame()
+    if not copyEditBox or not copyFrame then return end
 
     -- 收集聊天訊息
     local lines = {}

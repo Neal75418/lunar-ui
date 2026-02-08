@@ -295,6 +295,7 @@ end
 -- 框架建立
 --------------------------------------------------------------------------------
 
+---@return Frame
 local function CreateFCTFrame()
     if fctFrame then return fctFrame end
 
@@ -346,7 +347,7 @@ LunarUI:RegisterModule("FloatingCombatText", {
         local enabled = GetSettings()
         if not enabled then return end
 
-        CreateFCTFrame()
+        fctFrame = CreateFCTFrame()
         fctFrame:Show()
         isEnabled = true
     end,

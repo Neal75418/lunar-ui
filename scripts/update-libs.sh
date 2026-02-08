@@ -11,7 +11,7 @@ echo "🌙 Updating LunarUI libraries..."
 
 # Create Libs directory if not exists
 mkdir -p "$LIBS_DIR"
-cd "$LIBS_DIR"
+cd "$LIBS_DIR" || exit 1
 
 # Function to clone or update a repo
 update_lib() {
@@ -21,20 +21,17 @@ update_lib() {
 
     echo "  📦 $name..."
     if [ -d "$name" ]; then
-        cd "$name"
-        if ! git fetch origin 2>&1; then
-            echo "  ❌ Failed to fetch $name"
-            cd ..
-            ERRORS=$((ERRORS + 1))
-            return 1
-        fi
-        if ! git reset --hard "origin/$branch" 2>/dev/null && ! git reset --hard origin/HEAD 2>/dev/null; then
-            echo "  ❌ Failed to reset $name to origin/$branch"
-            cd ..
-            ERRORS=$((ERRORS + 1))
-            return 1
-        fi
-        cd ..
+        (
+            cd "$name" || return 1
+            if ! git fetch origin 2>&1; then
+                echo "  ❌ Failed to fetch $name"
+                return 1
+            fi
+            if ! git reset --hard "origin/$branch" 2>/dev/null && ! git reset --hard origin/HEAD 2>/dev/null; then
+                echo "  ❌ Failed to reset $name to origin/$branch"
+                return 1
+            fi
+        ) || { ERRORS=$((ERRORS + 1)); return 1; }
     else
         if ! git clone --depth 1 -b "$branch" "$url" "$name" 2>&1 && \
            ! git clone --depth 1 "$url" "$name" 2>&1; then

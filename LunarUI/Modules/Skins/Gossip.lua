@@ -15,12 +15,12 @@ local function SkinGossip()
 
     -- 標題文字 fallback
     if not frame.TitleText and _G.GossipFrameTitleText then
-        LunarUI:SetFontLight(_G.GossipFrameTitleText)
+        LunarUI.SetFontLight(_G.GossipFrameTitleText)
     end
 
     -- 關閉按鈕 fallback
     if not frame.CloseButton and _G.GossipFrameCloseButton then
-        LunarUI:SkinCloseButton(_G.GossipFrameCloseButton)
+        LunarUI.SkinCloseButton(_G.GossipFrameCloseButton)
     end
 
     -- Greeting 面板
@@ -30,13 +30,13 @@ local function SkinGossip()
 
         -- 再見按鈕
         if frame.GreetingPanel.GoodbyeButton then
-            LunarUI:SkinButton(frame.GreetingPanel.GoodbyeButton)
+            LunarUI.SkinButton(frame.GreetingPanel.GoodbyeButton)
         end
     end
 
     -- 舊版再見按鈕
     if _G.GossipFrameGreetingGoodbyeButton then
-        LunarUI:SkinButton(_G.GossipFrameGreetingGoodbyeButton)
+        LunarUI.SkinButton(_G.GossipFrameGreetingGoodbyeButton)
     end
 
     -- NPC 模型區域背景
@@ -46,7 +46,7 @@ local function SkinGossip()
 
     -- 對話文字（重要！NPC 說的話）
     if _G.GossipGreetingText then
-        LunarUI:SetFontLight(_G.GossipGreetingText)
+        LunarUI.SetFontLight(_G.GossipGreetingText)
     end
 
     -- 對話選項按鈕（WoW 12.0 使用 ScrollFrame）
@@ -74,4 +74,4 @@ local function SkinGossip()
 end
 
 -- GossipFrame 在 PLAYER_ENTERING_WORLD 時已存在
-LunarUI:RegisterSkin("gossip", "PLAYER_ENTERING_WORLD", SkinGossip)
+LunarUI.RegisterSkin("gossip", "PLAYER_ENTERING_WORLD", SkinGossip)

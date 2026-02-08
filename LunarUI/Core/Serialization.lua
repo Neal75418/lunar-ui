@@ -129,6 +129,7 @@ local function DeserializeStringInner(str)
     end
 
     -- 前向宣告（用於相互遞迴）
+    ---@type function
     local parseValue
 
     -- 輔助函數：解析表格
@@ -509,7 +510,7 @@ function LunarUI:ShowImportFrame()
             edgeSize = 1,
         })
         importBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-        importBtn:SetBackdropBorderColor(unpack(C.border))
+        importBtn:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
 
         local btnText = importBtn:CreateFontString(nil, "OVERLAY")
         LunarUI.SetFont(btnText, 12, "OUTLINE")

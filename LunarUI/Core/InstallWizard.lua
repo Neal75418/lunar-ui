@@ -454,6 +454,7 @@ end
 -- 主框架建立
 --------------------------------------------------------------------------------
 
+---@return Frame
 local function CreateWizardFrame()
     if wizardFrame then return wizardFrame end
 
@@ -589,7 +590,7 @@ end
     顯示安裝精靈
     從 Init.lua 在首次安裝時呼叫
 ]]
-function LunarUI:ShowInstallWizard()
+function LunarUI.ShowInstallWizard()
     currentStep = 1
     local f = CreateWizardFrame()
     f:Show()
@@ -600,7 +601,7 @@ end
     檢查是否需要顯示安裝精靈
     在 OnEnable 時呼叫
 ]]
-function LunarUI:CleanupInstallWizard()
+function LunarUI.CleanupInstallWizard()
     -- 清理步驟框架
     for _, frame in pairs(stepFrames) do
         if frame and frame.Hide then

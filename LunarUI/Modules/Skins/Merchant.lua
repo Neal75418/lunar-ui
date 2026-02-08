@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, missing-parameter
 --[[
     LunarUI - Skin: Merchant Frame
     Reskin MerchantFrame (商人介面) with LunarUI theme
@@ -16,13 +16,13 @@ local function SkinMerchantItem(btn, index)
     -- 物品名稱
     local nameFrame = _G["MerchantItem" .. index .. "Name"]
     if nameFrame then
-        LunarUI:SetFontLight(nameFrame)
+        LunarUI.SetFontLight(nameFrame)
     end
 
     -- 物品數量文字
     local countFrame = _G["MerchantItem" .. index .. "Count"]
     if countFrame then
-        LunarUI:SetFontLight(countFrame)
+        LunarUI.SetFontLight(countFrame)
     end
 
     -- 金錢文字
@@ -40,30 +40,30 @@ local function SkinMerchant()
 
     -- 標題文字 fallback
     if not frame.TitleText and _G.MerchantFrameTitleText then
-        LunarUI:SetFontLight(_G.MerchantFrameTitleText)
+        LunarUI.SetFontLight(_G.MerchantFrameTitleText)
     end
 
     -- 關閉按鈕 fallback
     if not frame.CloseButton and _G.MerchantFrameCloseButton then
-        LunarUI:SkinCloseButton(_G.MerchantFrameCloseButton)
+        LunarUI.SkinCloseButton(_G.MerchantFrameCloseButton)
     end
 
     -- 翻頁按鈕
     if _G.MerchantNextPageButton then
-        LunarUI:SkinButton(_G.MerchantNextPageButton)
+        LunarUI.SkinButton(_G.MerchantNextPageButton)
     end
     if _G.MerchantPrevPageButton then
-        LunarUI:SkinButton(_G.MerchantPrevPageButton)
+        LunarUI.SkinButton(_G.MerchantPrevPageButton)
     end
 
     -- 商品按鈕（每次開啟商人可能會動態建立）
     if not merchantHookRegistered then
         merchantHookRegistered = true
         hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
-            for i = 1, MERCHANT_ITEMS_PER_PAGE or 12 do
+            for i = 1, _G.MERCHANT_ITEMS_PER_PAGE or 12 do
                 local btn = _G["MerchantItem" .. i]
                 if btn then
-                    if LunarUI:MarkSkinned(btn) then
+                    if LunarUI.MarkSkinned(btn) then
                         LunarUI.StripTextures(btn)
                     end
                     -- 每次更新都修復文字顏色（物品可能改變）
@@ -75,10 +75,10 @@ local function SkinMerchant()
 
     -- 修理按鈕
     if _G.MerchantRepairAllButton then
-        LunarUI:SkinButton(_G.MerchantRepairAllButton)
+        LunarUI.SkinButton(_G.MerchantRepairAllButton)
     end
     if _G.MerchantRepairItemButton then
-        LunarUI:SkinButton(_G.MerchantRepairItemButton)
+        LunarUI.SkinButton(_G.MerchantRepairItemButton)
     end
 
     -- 購買堆疊框架
@@ -86,13 +86,13 @@ local function SkinMerchant()
         LunarUI.StripTextures(_G.MerchantBuyBackItem)
         -- 回購物品名稱
         if _G.MerchantBuyBackItemName then
-            LunarUI:SetFontLight(_G.MerchantBuyBackItemName)
+            LunarUI.SetFontLight(_G.MerchantBuyBackItemName)
         end
     end
 
     -- 頁碼文字
     if _G.MerchantPageText then
-        LunarUI:SetFontLight(_G.MerchantPageText)
+        LunarUI.SetFontLight(_G.MerchantPageText)
     end
 
     -- 金錢框架
@@ -103,4 +103,4 @@ local function SkinMerchant()
 end
 
 -- MerchantFrame 在 PLAYER_ENTERING_WORLD 時已存在
-LunarUI:RegisterSkin("merchant", "PLAYER_ENTERING_WORLD", SkinMerchant)
+LunarUI.RegisterSkin("merchant", "PLAYER_ENTERING_WORLD", SkinMerchant)

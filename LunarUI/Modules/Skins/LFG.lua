@@ -15,7 +15,7 @@ local function SkinLFG()
 
     -- 關閉按鈕 fallback
     if not frame.CloseButton and _G.PVEFrameCloseButton then
-        LunarUI:SkinCloseButton(_G.PVEFrameCloseButton)
+        LunarUI.SkinCloseButton(_G.PVEFrameCloseButton)
     end
 
     -- LFDParentFrame（地城查找）
@@ -25,7 +25,7 @@ local function SkinLFG()
 
     -- 地城查找佇列按鈕
     if _G.LFDQueueFrameFindGroupButton then
-        LunarUI:SkinButton(_G.LFDQueueFrameFindGroupButton)
+        LunarUI.SkinButton(_G.LFDQueueFrameFindGroupButton)
     end
 
     -- LFRBrowseFrame（團隊查找）
@@ -38,7 +38,7 @@ local function SkinLFG()
         LunarUI.StripTextures(_G.RaidFinderFrame)
 
         if _G.RaidFinderFrameFindRaidButton then
-            LunarUI:SkinButton(_G.RaidFinderFrameFindRaidButton)
+            LunarUI.SkinButton(_G.RaidFinderFrameFindRaidButton)
         end
     end
 
@@ -59,10 +59,10 @@ local function SkinLFG()
                 LunarUI.StripTextures(_G.LFGListFrame.SearchPanel.SearchBox)
             end
             if _G.LFGListFrame.SearchPanel.SignUpButton then
-                LunarUI:SkinButton(_G.LFGListFrame.SearchPanel.SignUpButton)
+                LunarUI.SkinButton(_G.LFGListFrame.SearchPanel.SignUpButton)
             end
             if _G.LFGListFrame.SearchPanel.BackButton then
-                LunarUI:SkinButton(_G.LFGListFrame.SearchPanel.BackButton)
+                LunarUI.SkinButton(_G.LFGListFrame.SearchPanel.BackButton)
             end
         end
 
@@ -75,4 +75,4 @@ local function SkinLFG()
 end
 
 -- PVEFrame 透過 Blizzard_GroupFinder 載入
-LunarUI:RegisterSkin("lfg", "Blizzard_GroupFinder", SkinLFG)
+LunarUI.RegisterSkin("lfg", "Blizzard_GroupFinder", SkinLFG)

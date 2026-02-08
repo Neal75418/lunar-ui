@@ -42,12 +42,12 @@ local function SkinCommunities()
 
     -- Chat edit box
     if frame.ChatEditBox then
-        LunarUI:SkinEditBox(frame.ChatEditBox)
+        LunarUI.SkinEditBox(frame.ChatEditBox)
     end
 
     -- Invite button
     if frame.InviteButton then
-        LunarUI:SkinButton(frame.InviteButton)
+        LunarUI.SkinButton(frame.InviteButton)
     end
 
     -- Community list (left sidebar)
@@ -63,7 +63,7 @@ local function SkinCommunities()
     if frame.GuildMemberDetailFrame then
         LunarUI:SkinFrame(frame.GuildMemberDetailFrame)
         if frame.GuildMemberDetailFrame.CloseButton then
-            LunarUI:SkinCloseButton(frame.GuildMemberDetailFrame.CloseButton)
+            LunarUI.SkinCloseButton(frame.GuildMemberDetailFrame.CloseButton)
         end
     end
 
@@ -71,7 +71,7 @@ local function SkinCommunities()
     if frame.NotificationSettingsDialog then
         LunarUI:SkinFrame(frame.NotificationSettingsDialog)
         if frame.NotificationSettingsDialog.CloseButton then
-            LunarUI:SkinCloseButton(frame.NotificationSettingsDialog.CloseButton)
+            LunarUI.SkinCloseButton(frame.NotificationSettingsDialog.CloseButton)
         end
     end
 
@@ -89,4 +89,4 @@ local function SkinCommunities()
 end
 
 -- Communities is loaded on demand
-LunarUI:RegisterSkin("communities", "Blizzard_Communities", SkinCommunities)
+LunarUI.RegisterSkin("communities", "Blizzard_Communities", SkinCommunities)

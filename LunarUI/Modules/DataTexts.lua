@@ -64,6 +64,7 @@ end
 
 -- 門檻色彩：值越好越綠，越差越紅
 -- invert=true: 值越小越好（latency）; false: 值越大越好（fps）
+---@return number, number
 local function StatusColor(value, greenThreshold, yellowThreshold, invert)
     local good, warn
     if invert then
