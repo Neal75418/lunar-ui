@@ -3,7 +3,7 @@
 ## Notes: Modern combat UI replacement with Lunar theme
 ## Notes-zhTW: 現代化戰鬥 UI 替換，月光主題
 ## Author: NealChen
-## Version: 0.9.2
+## Version: 1.0.0
 ## SavedVariables: LunarUIDB
 ## IconTexture: 136057
 ## X-oUF: LunarUF

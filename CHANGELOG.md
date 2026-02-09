@@ -14,6 +14,35 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) &middot; Versio
 
 ---
 
+## [1.0.0] &mdash; 2026-02-09
+
+### 首個正式版
+
+LunarUI v1.0.0 — 現代化 WoW UI 替換系統，涵蓋 Unit Frames、Nameplates、Action Bars、Bags、Chat、Minimap、Tooltip、HUD 等完整模組。
+
+### Fixed
+
+- **Taint 防護** &mdash; 移除 ActionBars secure frame SetParent，停用 FloatingCombatText（CombatLogGetCurrentEventInfo taint）
+- **Init.lua** &mdash; ExecuteModuleCallback 加入 pcall 錯誤隔離 + IsEnabled() 延遲競態修復
+- **Chat.lua** &mdash; 加入 chatFiltersRegistered 防止 filter 重複註冊；修復全域字串 double-save
+- **Tooltip.lua** &mdash; 修復 re-enable 時 INSPECT_READY 事件不會重新註冊的 bug
+- **Minimap.lua** &mdash; 加入 isInitialized guard 防止重複建立 timer
+- **Bags.lua** &mdash; CloseBags() 補上 bankSearchTimer 取消
+- **AuraFrames** &mdash; 修復 SetParent taint
+- code review 修復 30+ 項問題（keybind、skin、dead code、銀行搜尋、錨點等）
+
+### Performance
+
+- Bags 搜尋邏輯提取為 named function 避免 closure GC
+- Minimap ClearStaleButtonReferences 改為原地壓縮
+- code smell 重構 &mdash; ApplyBackdrop 統一、DB 存取提取、快取上限
+
+### Changed
+
+- LLS linter 警告全面修復
+
+---
+
 ## [0.9.2] &mdash; 2026-02-07
 
 ### Fixed
