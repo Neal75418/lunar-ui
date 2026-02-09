@@ -3,55 +3,24 @@ package-as: LunarUI
 enable-nolib-creation: no
 
 externals:
-  # Core Ace3 Libraries (using GitHub mirrors for reliability)
-  LunarUI/Libs/LibStub:
-    url: https://github.com/WoWUIDev/LibStub.git
-    tag: 1.0
-  LunarUI/Libs/CallbackHandler-1.0:
-    url: https://github.com/WoWUIDev/CallbackHandler-1.0.git
-  LunarUI/Libs/AceAddon-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceAddon-3.0
-  LunarUI/Libs/AceDB-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceDB-3.0
-  LunarUI/Libs/AceDBOptions-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceDBOptions-3.0
-  LunarUI/Libs/AceEvent-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceEvent-3.0
-  LunarUI/Libs/AceTimer-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceTimer-3.0
-  LunarUI/Libs/AceConsole-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceConsole-3.0
-  LunarUI/Libs/AceHook-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceHook-3.0
-  LunarUI/Libs/AceLocale-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceLocale-3.0
-  # AceConfig Libraries (for Options)
-  LunarUI/Libs/AceConfig-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceConfig-3.0
-  LunarUI/Libs/AceConfigCmd-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceConfigCmd-3.0
-  LunarUI/Libs/AceConfigDialog-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceConfigDialog-3.0
-  LunarUI/Libs/AceConfigRegistry-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceConfigRegistry-3.0
-  LunarUI/Libs/AceGUI-3.0:
-    url: https://github.com/WoWUIDev/Ace3.git
-    tag: AceGUI-3.0
+  # Ace3 Libraries (subdirectory extraction from monorepo)
+  LunarUI/Libs/LibStub: https://github.com/WoWUIDev/Ace3.git/LibStub
+  LunarUI/Libs/CallbackHandler-1.0: https://github.com/WoWUIDev/Ace3.git/CallbackHandler-1.0
+  LunarUI/Libs/AceAddon-3.0: https://github.com/WoWUIDev/Ace3.git/AceAddon-3.0
+  LunarUI/Libs/AceDB-3.0: https://github.com/WoWUIDev/Ace3.git/AceDB-3.0
+  LunarUI/Libs/AceDBOptions-3.0: https://github.com/WoWUIDev/Ace3.git/AceDBOptions-3.0
+  LunarUI/Libs/AceEvent-3.0: https://github.com/WoWUIDev/Ace3.git/AceEvent-3.0
+  LunarUI/Libs/AceTimer-3.0: https://github.com/WoWUIDev/Ace3.git/AceTimer-3.0
+  LunarUI/Libs/AceConsole-3.0: https://github.com/WoWUIDev/Ace3.git/AceConsole-3.0
+  LunarUI/Libs/AceHook-3.0: https://github.com/WoWUIDev/Ace3.git/AceHook-3.0
+  LunarUI/Libs/AceLocale-3.0: https://github.com/WoWUIDev/Ace3.git/AceLocale-3.0
+  LunarUI/Libs/AceConfig-3.0: https://github.com/WoWUIDev/Ace3.git/AceConfig-3.0
+  LunarUI/Libs/AceConfigCmd-3.0: https://github.com/WoWUIDev/Ace3.git/AceConfig-3.0/AceConfigCmd-3.0
+  LunarUI/Libs/AceConfigDialog-3.0: https://github.com/WoWUIDev/Ace3.git/AceConfig-3.0/AceConfigDialog-3.0
+  LunarUI/Libs/AceConfigRegistry-3.0: https://github.com/WoWUIDev/Ace3.git/AceConfig-3.0/AceConfigRegistry-3.0
+  LunarUI/Libs/AceGUI-3.0: https://github.com/WoWUIDev/Ace3.git/AceGUI-3.0
   # Other Libraries
-  LunarUI/Libs/LibSharedMedia-3.0:
-    url: https://github.com/WoWUIDev/LibSharedMedia-3.0.git
+  LunarUI/Libs/LibSharedMedia-3.0: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
   LunarUI/Libs/LibActionButton-1.0:
     url: https://github.com/Nevcairiel/LibActionButton-1.0.git
     tag: 0.57

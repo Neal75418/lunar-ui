@@ -8,6 +8,9 @@ on:
     tags:
       - 'v*'  # Trigger on version tags (e.g., v0.7.0)
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
