@@ -145,15 +145,20 @@ end
 -- 使用雜湊表進行 O(1) 複查重複檢查
 local scannedButtonIDs = {}
 
--- 掃描前清理過期的按鈕參照
+-- 掃描前清理過期的按鈕參照（原地壓縮，保留原始順序，避免每次建立新 table）
 local function ClearStaleButtonReferences()
-    local validButtons = {}
-    for _, button in ipairs(collectedButtons) do
+    local writeIdx = 0
+    for i = 1, #collectedButtons do
+        local button = collectedButtons[i]
         if button and button:IsShown() then
-            validButtons[#validButtons + 1] = button
+            writeIdx = writeIdx + 1
+            collectedButtons[writeIdx] = button
         end
     end
-    collectedButtons = validButtons
+    -- 清除尾部殘留的舊參照
+    for i = writeIdx + 1, #collectedButtons do
+        collectedButtons[i] = nil
+    end
     wipe(scannedButtonIDs)
 end
 
@@ -1001,9 +1006,13 @@ end
 -- 初始化
 --------------------------------------------------------------------------------
 
+local isInitialized = false
+
 local function InitializeMinimap()
+    if isInitialized then return end
     local db = LunarUI.db and LunarUI.db.profile.minimap
     if not db or not db.enabled then return end
+    isInitialized = true
 
     -- 只在模組啟用時覆寫形狀函數
     function GetMinimapShape() return "SQUARE" end
@@ -1092,6 +1101,7 @@ function LunarUI.CleanupMinimap()
     if originalGetMinimapShape then
         GetMinimapShape = originalGetMinimapShape
     end
+    isInitialized = false
 end
 
 -- 匯出

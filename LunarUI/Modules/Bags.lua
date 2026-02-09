@@ -827,49 +827,47 @@ local function CreateBagFrame()
     searchBox:SetSize(120, 20)
     searchBox:SetPoint("TOPRIGHT", closeButton, "TOPLEFT", -8, -2)
 
+    -- 搜尋邏輯（提取為 named function 避免每次按鍵建立 closure）
+    local function PerformBagSearch()
+        if not searchBox then return end
+        local text = searchBox:GetText():lower()
+        for _, button in pairs(slots) do
+            if button and button:IsShown() and button.bag and button.slot then
+                local success, err = pcall(function()
+                    local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
+                    if itemLink then
+                        local itemName = C_Item.GetItemInfo(itemLink)
+                        if itemName then
+                            if text == "" or itemName:lower():find(text, 1, true) then
+                                button:SetAlpha(1)
+                            else
+                                button:SetAlpha(SEARCH_DIM_ALPHA)
+                            end
+                        else
+                            button:SetAlpha(1)
+                        end
+                    else
+                        button:SetAlpha(text == "" and 1 or SEARCH_DIM_ALPHA)
+                    end
+                end)
+
+                if not success then
+                    button:SetAlpha(1)
+                    if LunarUI:IsDebugMode() then
+                        LunarUI:Debug((L["BagSearchError"] or "Bag search error: ") .. tostring(err))
+                    end
+                end
+            end
+        end
+    end
+
     -- 搜尋防抖動：使用 HookScript 保留 SearchBoxTemplate 內建的佔位文字隱藏行為
-    searchBox:HookScript("OnTextChanged", function(self)
-        -- 取消前一個計時器避免累積
+    searchBox:HookScript("OnTextChanged", function()
         if searchTimer then
             searchTimer:Cancel()
             searchTimer = nil
         end
-
-        -- 延遲 0.2 秒後執行搜尋
-        searchTimer = C_Timer.NewTimer(SEARCH_DEBOUNCE, function()
-            local text = self:GetText():lower()
-            for _, button in pairs(slots) do
-                if button and button:IsShown() and button.bag and button.slot then
-                    -- 使用 pcall 保護搜尋邏輯（跳過隱藏的格子）
-                    local success, err = pcall(function()
-                        local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
-                        if itemLink then
-                            local itemName = C_Item.GetItemInfo(itemLink)
-                            if itemName then
-                                -- 使用純文字搜尋避免正規表達式錯誤
-                                if text == "" or itemName:lower():find(text, 1, true) then
-                                    button:SetAlpha(1)
-                                else
-                                    button:SetAlpha(SEARCH_DIM_ALPHA)
-                                end
-                            else
-                                -- 物品尚未載入快取，保持顯示避免誤判
-                                button:SetAlpha(1)
-                            end
-                        else
-                            button:SetAlpha(text == "" and 1 or SEARCH_DIM_ALPHA)
-                        end
-                    end)
-
-                    if not success then
-                        button:SetAlpha(1)  -- 發生錯誤時顯示按鈕
-                        if LunarUI:IsDebugMode() then
-                            LunarUI:Debug((L["BagSearchError"] or "Bag search error: ") .. tostring(err))
-                        end
-                    end
-                end
-            end
-        end)
+        searchTimer = C_Timer.NewTimer(SEARCH_DEBOUNCE, PerformBagSearch)
     end)
 
     -- 排序按鈕
@@ -1163,9 +1161,7 @@ local function CreateBankFrame()
             bankSearchTimer:Cancel()
             bankSearchTimer = nil
         end
-        bankSearchTimer = C_Timer.NewTimer(SEARCH_DEBOUNCE, function()
-            ApplyBankSearch()
-        end)
+        bankSearchTimer = C_Timer.NewTimer(SEARCH_DEBOUNCE, ApplyBankSearch)
     end)
 
     -- 排序按鈕
@@ -1728,6 +1724,10 @@ local function CloseBags()
         if searchTimer then
             searchTimer:Cancel()
             searchTimer = nil
+        end
+        if bankSearchTimer then
+            bankSearchTimer:Cancel()
+            bankSearchTimer = nil
         end
         -- 關閉時清除搜尋
         local db = GetBagDB()

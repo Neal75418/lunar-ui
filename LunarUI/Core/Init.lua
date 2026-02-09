@@ -54,7 +54,15 @@ local function ExecuteModuleCallback(entry)
     if entry.delay > 0 then
         pendingDelayedModules = pendingDelayedModules + 1
         C_Timer.After(entry.delay, function()
-            entry.onEnable()
+            -- 延遲期間若插件已停用，跳過初始化但仍遞減計數器
+            if not LunarUI:IsEnabled() then
+                pendingDelayedModules = pendingDelayedModules - 1
+                return
+            end
+            local ok, err = pcall(entry.onEnable)
+            if not ok then
+                print("|cffff6666[LunarUI]|r Module '" .. (entry.name or "?") .. "' failed: " .. tostring(err))
+            end
             pendingDelayedModules = pendingDelayedModules - 1
             if pendingDelayedModules == 0 and not modulesReadyFired then
                 modulesReadyFired = true
@@ -62,7 +70,10 @@ local function ExecuteModuleCallback(entry)
             end
         end)
     else
-        entry.onEnable()
+        local ok, err = pcall(entry.onEnable)
+        if not ok then
+            print("|cffff6666[LunarUI]|r Module '" .. (entry.name or "?") .. "' failed: " .. tostring(err))
+        end
     end
 end
 
@@ -166,7 +177,12 @@ function LunarUI:OnDisable()
     -- 停用所有已註冊的模組（反向迭代，後啟用的先清理）
     for i = #moduleRegistry, 1, -1 do
         local mod = moduleRegistry[i]
-        if mod then mod.onDisable() end
+        if mod then
+            local ok, err = pcall(mod.onDisable)
+            if not ok then
+                print("|cffff6666[LunarUI]|r Module '" .. (mod.name or "?") .. "' cleanup failed: " .. tostring(err))
+            end
+        end
     end
 end
 

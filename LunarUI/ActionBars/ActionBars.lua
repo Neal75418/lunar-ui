@@ -71,6 +71,7 @@ end
 local bars = {}
 local buttons = {}
 local keybindMode = false
+local microMenuLayoutHooked = false
 
 -- 清除按鈕 NormalTexture（提升到模組級供 hook 共用）
 local function ClearNormalTexture(self)
@@ -982,7 +983,7 @@ local function StyleExtraActionButton()
     if not extra then return end
 
     -- 重新定位至畫面中下方
-    extra:SetParent(UIParent)
+    -- 不使用 SetParent（會造成 taint），僅重新定位
     extra:ClearAllPoints()
     extra:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 300)
 
@@ -1031,7 +1032,7 @@ local function StyleZoneAbilityButton()
     if not zone then return end
 
     -- 重新定位
-    zone:SetParent(UIParent)
+    -- 不使用 SetParent（會造成 taint），僅重新定位
     zone:ClearAllPoints()
     zone:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 350)
 
@@ -1109,10 +1110,7 @@ local function CreateMicroBar()
 
     -- 重新排列微型按鈕
     for i, btn in ipairs(MICRO_BUTTONS) do
-        -- 儲存原始父框架以供清理還原
-        btn._lunarOriginalParent = btn:GetParent()
-
-        btn:SetParent(microBar)
+        -- 不使用 SetParent（會造成 taint），僅重新定位按鈕
         btn:ClearAllPoints()
         btn:SetPoint("LEFT", microBar, "LEFT", (i - 1) * (btnWidth + spacing), 0)
         btn:SetSize(btnWidth, btnHeight)
@@ -1130,13 +1128,21 @@ local function CreateMicroBar()
         end
     end
 
-    -- 隱藏原始 MicroMenu 容器，避免 Blizzard Layout 在按鈕被搬走後崩潰
+    -- 不使用 Hide()（會連帶隱藏子按鈕）也不用 SetParent（造成 taint）
+    -- 將 MicroMenu 移至螢幕外，按鈕仍以 SetPoint 錨定至 microBar 正常顯示
     if _G.MicroMenu then
-        _G.MicroMenu:Hide()
-        if _G.MicroMenu.Layout then
-            hooksecurefunc(_G.MicroMenu, "Show", function(self)
-                if bars.microBar then
-                    self:Hide()
+        _G.MicroMenu:ClearAllPoints()
+        _G.MicroMenu:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -9999, -9999)
+        _G.MicroMenu:EnableMouse(false)
+        -- Hook Layout 防止暴雪代碼重新排列按鈕位置
+        if _G.MicroMenu.Layout and not microMenuLayoutHooked then
+            microMenuLayoutHooked = true
+            hooksecurefunc(_G.MicroMenu, "Layout", function()
+                if bars.microBar and bars.microBar._buttons and not InCombatLockdown() then
+                    for idx, mbtn in ipairs(bars.microBar._buttons) do
+                        mbtn:ClearAllPoints()
+                        mbtn:SetPoint("LEFT", bars.microBar, "LEFT", (idx - 1) * (btnWidth + spacing), 0)
+                    end
                 end
             end)
         end
@@ -1148,19 +1154,12 @@ end
 -- 微型按鈕列清理
 local function CleanupMicroBar()
     if bars.microBar then
-        -- 還原按鈕至原始父框架
-        for _, btn in ipairs(bars.microBar._buttons or {}) do
-            if btn._lunarOriginalParent then
-                btn:SetParent(btn._lunarOriginalParent)
-                btn._lunarOriginalParent = nil
-            end
-        end
         bars.microBar:Hide()
         bars.microBar = nil
-
-        -- 還原原始 MicroMenu 容器
-        if _G.MicroMenu then
-            _G.MicroMenu:Show()
+        -- 還原 MicroMenu（Layout hook 因 bars.microBar=nil 自動停止介入）
+        if _G.MicroMenu and not InCombatLockdown() then
+            _G.MicroMenu:EnableMouse(true)
+            -- 完整恢復 MicroMenu 位置與按鈕佈局需 /reload
         end
     end
 end

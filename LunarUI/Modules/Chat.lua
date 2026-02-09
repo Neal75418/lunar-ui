@@ -156,6 +156,7 @@ local copyFrame
 local copyEditBox
 local chatTempWindowHooked = false  -- 私有狀態（不暴露到 LunarUI 物件）
 local savedChannelFormats = {}       -- 用於 Cleanup 還原 CHAT_*_GET 格式字串
+local chatFiltersRegistered = false  -- 防止 ChatFrame_AddMessageEventFilter 重複註冊
 -- Emoji 觸發字元 character class（匹配所有可能的 2-char emoji 序列）
 local EMOJI_PATTERN = "[%:%;<B][%)%(DPO3]"
 local escapedKeywordCache = {} -- Fix 3b: 預快取 keyword escaped pattern
@@ -601,6 +602,9 @@ local function SetupTimestamps()
         local frame = _G[frameName]
         if frame and not frame._lunarTimestampHooked then
             frame._lunarTimestampHooked = true
+            -- 必須用直接覆寫（非 hooksecurefunc）：需在 AddMessage 前修改 msg 參數
+            -- hooksecurefunc 是 post-hook，無法修改傳入參數
+            -- ChatFrame 非 secure frame，不會觸發 "action blocked"
             local origAddMessage = frame.AddMessage
             frame.AddMessage = function(self, msg, ...)
                 if msg and type(msg) == "string" then
@@ -650,8 +654,8 @@ local function ShortenChannelNames()
     -- 替換格式字串中的括號標頭（保留原始值以便 Cleanup 還原）
     for _, chatType in ipairs(channelTypes) do
         local original = _G[chatType]
-        if original then
-            savedChannelFormats[chatType] = original
+        if original and not savedChannelFormats[chatType] then
+            savedChannelFormats[chatType] = original  -- 只存首次原始值，防止 toggle off/on 時覆蓋
             -- 從格式字串中提取方括號內的頻道名稱
             for longName, shortName in pairs(SHORT_CHANNEL_TYPES) do
                 if original:find(longName, 1, true) then
@@ -665,18 +669,14 @@ local function ShortenChannelNames()
         end
     end
 
-    -- 數字頻道（綜合、交易等）：使用 ChatFrame_AddMessageEventFilter
-    ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", function(_self, _event, msg, ...)
-        -- 頻道名稱在第 9 個參數（channelName）
-        -- 但我們無法修改額外參數，改用 AddMessage hook
-        return false, msg, ...
-    end)
-
-    -- Hook ChatFrame.AddMessage 來替換頻道標頭
+    -- 數字頻道（綜合、交易等）：需在 AddMessage 層面替換
+    -- ChatFrame_AddMessageEventFilter 在格式化之前執行，此時 msg 尚無 [N. 頻道] 前綴
     for _, frameName in ipairs(CHAT_FRAMES) do
         local frame = _G[frameName]
         if frame and not frame._lunarShortChannelHooked then
             frame._lunarShortChannelHooked = true
+            -- 必須用直接覆寫（非 hooksecurefunc）：需在 AddMessage 前修改 msg 參數
+            -- ChatFrame 非 secure frame，不會觸發 "action blocked"
             local origAddMessage = frame.AddMessage
             frame.AddMessage = function(self, msg, ...)
                 if msg and type(msg) == "string" then
@@ -927,6 +927,11 @@ end
 --------------------------------------------------------------------------------
 
 local function RegisterChatEnhancementFilters()
+    -- WoW 不提供 RemoveMessageEventFilter API，重複呼叫會累積 filter
+    -- 用 flag 防止 toggle off/on 時重複註冊（filter 內部已有各自的 DB 開關判斷）
+    if chatFiltersRegistered then return end
+    chatFiltersRegistered = true
+
     local chatEvents = {
         "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_EMOTE",
         "CHAT_MSG_WHISPER", "CHAT_MSG_WHISPER_INFORM",

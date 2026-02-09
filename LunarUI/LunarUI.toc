@@ -61,7 +61,7 @@ HUD\PerformanceMonitor.lua
 HUD\ClassResources.lua
 HUD\CooldownTracker.lua
 HUD\AuraFrames.lua
-HUD\FloatingCombatText.lua
+# HUD\FloatingCombatText.lua  -- 暫時停用：CombatLogGetCurrentEventInfo 造成 taint（見 commit 48ebcae）
 
 # Modules (Non-combat UI)
 Modules\Automation.lua

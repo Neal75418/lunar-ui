@@ -603,7 +603,15 @@ local function InitializeTooltip()
     local db = LunarUI.db and LunarUI.db.profile.tooltip
     if not db or not db.enabled then return end
 
-    if tooltipStyled then return end
+    -- hooks（TooltipDataProcessor / HookScript）無法移除，只註冊一次
+    -- 各 callback 內部已有 db.enabled 檢查，toggle off 時自動停止工作
+    if tooltipStyled then
+        -- 重新啟用時恢復 inspect 事件（CleanupTooltip 會 UnregisterAllEvents）
+        if inspectEventFrame then
+            inspectEventFrame:RegisterEvent("INSPECT_READY")
+        end
+        return
+    end
     tooltipStyled = true
 
     -- 樣式化所有滑鼠提示
