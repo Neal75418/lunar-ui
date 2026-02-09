@@ -468,24 +468,28 @@ end
 -- 暴雪框架隱藏
 --------------------------------------------------------------------------------
 
-local blizzHider = nil  -- 隱藏用父框架（全域保持引用避免 GC）
+local blizzShowHooks = {}  -- 追蹤已 hook Show 的暴雪框架（避免重複 hook）
 
 local function HideBlizzardBuffFrames()
-    -- 使用隱藏父框架取代 hooksecurefunc（避免戰鬥中 taint 汙染）
-    -- 不呼叫 UnregisterAllEvents：保留框架功能以便 toggle off 時能完整還原
-    if not blizzHider then
-        blizzHider = CreateFrame("Frame")
-        blizzHider:Hide()
-    end
-
-    local blizzardBuffFrame = _G.BuffFrame
-    if blizzardBuffFrame then
-        pcall(function() blizzardBuffFrame:SetParent(blizzHider) end)
-    end
-
-    local blizzardDebuffFrame = _G.DebuffFrame
-    if blizzardDebuffFrame then
-        pcall(function() blizzardDebuffFrame:SetParent(blizzHider) end)
+    -- 不使用 SetParent（會造成 taint 汙染）
+    -- 改用 Hide + UnregisterAllEvents + SetAlpha(0) + Hook Show 防止重新顯示
+    local frames = { _G.BuffFrame, _G.DebuffFrame }
+    for _, frame in ipairs(frames) do
+        if frame then
+            pcall(function() frame:UnregisterAllEvents() end)
+            pcall(function() frame:Hide() end)
+            pcall(function() frame:SetAlpha(0) end)
+            -- Hook Show 防止暴雪代碼重新顯示（hooksecurefunc 不造成 taint）
+            if not blizzShowHooks[frame] then
+                blizzShowHooks[frame] = true
+                pcall(function()
+                    hooksecurefunc(frame, "Show", function(self)
+                        if self._lunarUIAllowShow then return end
+                        pcall(function() self:Hide() end)
+                    end)
+                end)
+            end
+        end
     end
 end
 
@@ -693,16 +697,14 @@ function LunarUI.CleanupAuraFrames()
     if buffFrame then buffFrame:Hide() end
     if debuffFrame then debuffFrame:Hide() end
 
-    -- 還原暴雪 Buff/Debuff 框架（reparent 回 UIParent 使其重新可見）
+    -- 還原暴雪框架（標記 _lunarUIAllowShow 繞過 Show hook）
     -- 注意：UnregisterAllEvents 無法還原，完整恢復需 /reload
-    if blizzHider then
-        local blizzardBuffFrame = _G.BuffFrame
-        if blizzardBuffFrame then
-            pcall(function() blizzardBuffFrame:SetParent(UIParent) end)
-        end
-        local blizzardDebuffFrame = _G.DebuffFrame
-        if blizzardDebuffFrame then
-            pcall(function() blizzardDebuffFrame:SetParent(UIParent) end)
+    for _, frame in ipairs({ _G.BuffFrame, _G.DebuffFrame }) do
+        if frame then
+            frame._lunarUIAllowShow = true
+            pcall(function() frame:SetAlpha(1) end)
+            pcall(function() frame:Show() end)
+            frame._lunarUIAllowShow = nil
         end
     end
 
@@ -711,7 +713,6 @@ function LunarUI.CleanupAuraFrames()
     timerElapsed = 0
 
     isInitialized = false
-    blizzHider = nil
     -- 不取消事件註冊：OnEvent 已有 isInitialized guard，
     -- 保留事件以便 toggle 重新啟用時 Initialize 能被正確呼叫
 end
