@@ -156,6 +156,7 @@ local copyFrame
 local copyEditBox
 local chatTempWindowHooked = false  -- 私有狀態（不暴露到 LunarUI 物件）
 local savedChannelFormats = {}       -- 用於 Cleanup 還原 CHAT_*_GET 格式字串
+local savedAddMessageFuncs = {}      -- 用於 Cleanup 還原 AddMessage 覆寫
 local chatFiltersRegistered = false  -- 防止 ChatFrame_AddMessageEventFilter 重複註冊
 -- Emoji 觸發字元 character class（匹配所有可能的 2-char emoji 序列）
 local EMOJI_PATTERN = "[%:%;<B][%)%(DPO3]"
@@ -601,11 +602,16 @@ local function SetupTimestamps()
     for _, frameName in ipairs(CHAT_FRAMES) do
         local frame = _G[frameName]
         if frame and not frame._lunarTimestampHooked then
+            -- 只在首次 hook 時保存原始函數（防止 toggle 時覆蓋）
+            if not savedAddMessageFuncs[frameName] then
+                savedAddMessageFuncs[frameName] = frame.AddMessage
+            end
+
             frame._lunarTimestampHooked = true
             -- 必須用直接覆寫（非 hooksecurefunc）：需在 AddMessage 前修改 msg 參數
             -- hooksecurefunc 是 post-hook，無法修改傳入參數
             -- ChatFrame 非 secure frame，不會觸發 "action blocked"
-            local origAddMessage = frame.AddMessage
+            local origAddMessage = savedAddMessageFuncs[frameName]
             frame.AddMessage = function(self, msg, ...)
                 if msg and type(msg) == "string" then
                     local timestamp = date(fmt)
@@ -674,10 +680,15 @@ local function ShortenChannelNames()
     for _, frameName in ipairs(CHAT_FRAMES) do
         local frame = _G[frameName]
         if frame and not frame._lunarShortChannelHooked then
+            -- 只在首次 hook 時保存原始函數（防止 toggle 時覆蓋）
+            if not savedAddMessageFuncs[frameName] then
+                savedAddMessageFuncs[frameName] = frame.AddMessage
+            end
+
             frame._lunarShortChannelHooked = true
             -- 必須用直接覆寫（非 hooksecurefunc）：需在 AddMessage 前修改 msg 參數
             -- ChatFrame 非 secure frame，不會觸發 "action blocked"
-            local origAddMessage = frame.AddMessage
+            local origAddMessage = savedAddMessageFuncs[frameName]
             frame.AddMessage = function(self, msg, ...)
                 if msg and type(msg) == "string" then
                     -- 替換數字頻道名稱：[2. 交易] → [2.交]
@@ -1078,6 +1089,21 @@ local function CleanupChat()
         _G[chatType] = original
     end
     wipe(savedChannelFormats)
+
+    -- 還原 AddMessage 覆寫並清除 hook 旗標
+    for _, frameName in ipairs(CHAT_FRAMES) do
+        local frame = _G[frameName]
+        if frame then
+            -- 還原原始 AddMessage 函數
+            if savedAddMessageFuncs[frameName] then
+                frame.AddMessage = savedAddMessageFuncs[frameName]
+            end
+            -- 清除 hook 旗標，允許重新 hook
+            frame._lunarTimestampHooked = nil
+            frame._lunarShortChannelHooked = nil
+        end
+    end
+    wipe(savedAddMessageFuncs)
 end
 
 -- 匯出

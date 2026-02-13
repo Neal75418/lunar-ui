@@ -48,6 +48,7 @@ end
 --------------------------------------------------------------------------------
 
 local tooltipStyled = false
+local tooltipsHooked = false  -- 防止重複 hook
 
 -- Inspect 快取（避免重複請求）
 local inspectCache = {}  -- { [guid] = { ilvl, spec, time } }
