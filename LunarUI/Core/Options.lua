@@ -1045,7 +1045,6 @@ local function GetOptionsTable()
                         type = "select",
                         name = "字體",
                         desc = "選擇 UI 使用的字體（即時生效）",
-                        dialogControl = "LSM30_Font",
                         values = function()
                             return LSM:HashTable("font")
                         end,
