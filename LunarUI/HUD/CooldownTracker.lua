@@ -239,22 +239,26 @@ local function GetSpellTexture(spellID)
         return cached
     end
 
-    -- 快取已滿時清空，防止無限增長
+    -- 查詢並快取
+    local info = C_Spell.GetSpellInfo(spellID)
+    local texture = info and info.iconID or nil
+
+    -- 快取已滿時清空（在插入前檢查）
     if cacheSize >= CACHE_MAX_SIZE then
         wipe(spellTextureCache)
         cacheSize = 0
     end
 
-    -- 查詢並快取
-    local info = C_Spell.GetSpellInfo(spellID)
-    local texture = info and info.iconID or nil
+    -- 插入快取並增加計數（只在實際插入時計數）
     if texture then
         spellTextureCache[spellID] = texture
+        cacheSize = cacheSize + 1
     else
         -- 負面快取：避免重複查詢無效法術
         spellTextureCache[spellID] = INVALID_TEXTURE
+        cacheSize = cacheSize + 1
     end
-    cacheSize = cacheSize + 1
+
     return texture
 end
 
