@@ -16,8 +16,10 @@ local C = LunarUI.Colors
     簡易表格序列化（無外部依賴）
     使用遞迴深度限制防止無限遞迴
 ]]
-local function SerializeValue(val, depth)
+local function SerializeValue(val, depth, visited)
     depth = depth or 0
+    visited = visited or {}
+
     if depth > 20 then
         -- 深度超限警告（避免無聲數據丟失）
         if LunarUI and LunarUI.Debug then
@@ -37,6 +39,15 @@ local function SerializeValue(val, depth)
         -- 跳脫特殊字元
         return string.format("%q", val)
     elseif valType == "table" then
+        -- 循環引用偵測
+        if visited[val] then
+            if LunarUI and LunarUI.Debug then
+                LunarUI:Debug("Warning: circular reference detected during serialization")
+            end
+            return "nil"
+        end
+        visited[val] = true
+
         local parts = {}
         for k, v in pairs(val) do
             local keyStr
@@ -45,8 +56,10 @@ local function SerializeValue(val, depth)
             else
                 keyStr = string.format("[%s]=", tostring(k))
             end
-            table.insert(parts, keyStr .. SerializeValue(v, depth + 1))
+            table.insert(parts, keyStr .. SerializeValue(v, depth + 1, visited))
         end
+
+        visited[val] = nil  -- 允許同一 table 出現在不同路徑
         return "{" .. table.concat(parts, ",") .. "}"
     else
         return "nil"

@@ -421,7 +421,8 @@ local function CreateTargetIndicator(frame)
 end
 
 -- Weak table for nameplate frame tracking (stacking detection, etc.)
-local nameplateFrames = setmetatable({}, { __mode = "v" })
+-- Weak table: key 為弱引用，當 nameplate frame 被 GC 時自動清理
+local nameplateFrames = setmetatable({}, { __mode = "k" })
 
 --------------------------------------------------------------------------------
 -- Layout Functions

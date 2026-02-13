@@ -1887,19 +1887,10 @@ end
 --------------------------------------------------------------------------------
 
 local eventFrame = CreateFrame("Frame")
+local eventHandlerSet = false  -- 防止重複設定 handler
 
-eventFrame:RegisterEvent("BAG_UPDATE")
-eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
-eventFrame:RegisterEvent("ITEM_LOCK_CHANGED")
-eventFrame:RegisterEvent("PLAYER_MONEY")
-eventFrame:RegisterEvent("BAG_SLOT_FLAGS_UPDATED")
-eventFrame:RegisterEvent("MERCHANT_SHOW")
-eventFrame:RegisterEvent("BANKFRAME_OPENED")
-eventFrame:RegisterEvent("BANKFRAME_CLOSED")
-eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
-eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
-
-eventFrame:SetScript("OnEvent", function(_self, event, ...)
+-- 事件處理函數 (提取到模組層級)
+local function OnBagEvent(_self, event, ...)
     -- 商人開啟時自動販賣垃圾
     if event == "MERCHANT_SHOW" then
         local db = GetBagDB()
@@ -2013,7 +2004,7 @@ eventFrame:SetScript("OnEvent", function(_self, event, ...)
             UpdateAllBankSlots()
         end
     end
-end)
+end
 
 --------------------------------------------------------------------------------
 -- 月相感知
@@ -2096,6 +2087,23 @@ end
 local function InitializeBags()
     local db = GetBagDB()
     if not db or not db.enabled then return end
+
+    -- 註冊事件 (移到 InitializeBags 中，確保 disable/enable 可正常工作)
+    if not eventHandlerSet then
+        eventFrame:SetScript("OnEvent", OnBagEvent)
+        eventHandlerSet = true
+    end
+
+    eventFrame:RegisterEvent("BAG_UPDATE")
+    eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+    eventFrame:RegisterEvent("ITEM_LOCK_CHANGED")
+    eventFrame:RegisterEvent("PLAYER_MONEY")
+    eventFrame:RegisterEvent("BAG_SLOT_FLAGS_UPDATED")
+    eventFrame:RegisterEvent("MERCHANT_SHOW")
+    eventFrame:RegisterEvent("BANKFRAME_OPENED")
+    eventFrame:RegisterEvent("BANKFRAME_CLOSED")
+    eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
+    eventFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 
     -- 掛鉤背包函數
     HookBagFunctions()

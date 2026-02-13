@@ -177,9 +177,10 @@ end
 local function SetupAuraIconInteraction(icon)
     icon:EnableMouse(true)
     icon:SetScript("OnEnter", function(self)
-        if self.auraData then
+        if self.auraData and self.auraData.auraInstanceID then
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetUnitAura("player", self.auraData.index, self.auraData.filter)
+            -- 使用 auraInstanceID 而非 index（WoW 12.0+ 支援）
+            pcall(GameTooltip.SetUnitBuffByAuraInstanceID, GameTooltip, "player", self.auraData.auraInstanceID, self.auraData.filter)
             GameTooltip:Show()
         end
     end)
@@ -187,11 +188,11 @@ local function SetupAuraIconInteraction(icon)
         GameTooltip:Hide()
     end)
 
-    -- 右鍵取消 Buff
+    -- 右鍵取消 Buff (使用 spellName 而非 index，避免取消錯誤的 buff)
     icon:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" and self.auraData and self.auraData.filter == "HELPFUL" then
-            if C_UnitAuras and C_UnitAuras.CancelAuraByIndex then
-                pcall(C_UnitAuras.CancelAuraByIndex, "player", self.auraData.index)
+            if self.auraData.spellName and self.auraData.spellName ~= "" then
+                pcall(CancelSpellByName, self.auraData.spellName)
             end
         end
     end)
@@ -365,11 +366,14 @@ local function UpdateAuraIcon(iconFrame, auraData, index, filter, isDebuff)
         iconFrame.cooldown:Clear()
     end
 
-    -- Tooltip 資料
-    iconFrame.auraData = {
-        index = index,
-        filter = filter,
-    }
+    -- Tooltip 資料 (使用 auraInstanceID 而非 index，避免 index 過期)
+    -- 重用現有 table 避免 GC 壓力
+    if not iconFrame.auraData then
+        iconFrame.auraData = {}
+    end
+    iconFrame.auraData.auraInstanceID = auraData.auraInstanceID
+    iconFrame.auraData.spellName = name
+    iconFrame.auraData.filter = filter
 
     -- 淡入動畫
     if iconFrame.currentAuraName ~= name then
