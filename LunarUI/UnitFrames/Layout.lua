@@ -873,14 +873,14 @@ local function CreateDeathIndicator(frame, _unit)
     deadOverlay:Hide()
     frame.DeadOverlay = deadOverlay
 
-    -- 向全域死亡指示器系統註冊框架（弱引用）
-    EnsureDeathIndicatorEventFrame()
-    deathIndicatorFrames[frame] = true
-
-    -- 初始更新
-    C_Timer.After(0.2, function()
-        UpdateDeathStateForFrame(frame)
-    end)
+    -- TEMPORARY DISABLE: 全域事件系統導致 taint
+    -- EnsureDeathIndicatorEventFrame()
+    -- deathIndicatorFrames[frame] = true
+    --
+    -- -- 初始更新
+    -- C_Timer.After(0.2, function()
+    --     UpdateDeathStateForFrame(frame)
+    -- end)
 
     return dead
 end
