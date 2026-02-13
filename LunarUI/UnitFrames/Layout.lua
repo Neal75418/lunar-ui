@@ -837,7 +837,10 @@ local function EnsureDeathIndicatorEventFrame()
     deathIndicatorEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
     deathIndicatorEventFrame:SetScript("OnEvent", function(_self, event, eventUnit)
         if event == "PLAYER_ENTERING_WORLD" or event == "GROUP_ROSTER_UPDATE" then
-            UpdateAllDeathStates()
+            -- 延遲執行避免在 protected context 中迭代 oUF frames
+            C_Timer.After(0, function()
+                UpdateAllDeathStates()
+            end)
         elseif eventUnit then
             UpdateAllDeathStates(eventUnit)
         end
