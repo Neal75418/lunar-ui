@@ -1,4 +1,4 @@
-## Interface: 120000
+## Interface: 120001
 ## Title: |cff8882ffLunar|r|cffffffffUI|r
 ## Notes: Modern combat UI replacement with Lunar theme
 ## Notes-zhTW: 現代化戰鬥 UI 替換，月光主題

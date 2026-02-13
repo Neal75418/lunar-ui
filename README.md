@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/WoW-12.0-blue?style=flat-square" alt="WoW 12.0" />
+  <img src="https://img.shields.io/badge/WoW-12.0.1-blue?style=flat-square" alt="WoW 12.0.1" />
   <img src="https://img.shields.io/badge/Lua-5.1-2C2D72?style=flat-square&logo=lua" alt="Lua 5.1" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square" alt="GPL-3.0" />
 </p>

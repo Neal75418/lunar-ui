@@ -8,6 +8,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) &middot; Versio
 
 ## [Unreleased]
 
+### Changed
+
+- 更新介面版本至 120001（支援 WoW Patch 12.0.1）
+
 ### Planned
 
 - Custom moon phase textures (hand-drawn)

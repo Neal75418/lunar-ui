@@ -2,7 +2,7 @@
 
 ## 專案概要
 
-- **平台**：WoW 12.0（Interface: 120000），Lua 5.1（LuaJIT）
+- **平台**：WoW 12.0.1（Interface: 120001），Lua 5.1（LuaJIT）
 - **架構**：Ace3 + oUF + LibActionButton + LibSharedMedia
 - **組成**：`LunarUI/`（主體）、`LunarUI_Options/`（LoadOnDemand 設定介面）
 - **進入點**：`Core/Init.lua` 最先執行，建立 `Engine.LunarUI`
