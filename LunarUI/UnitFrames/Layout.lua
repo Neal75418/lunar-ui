@@ -762,6 +762,8 @@ end
 
 -- 死亡指示器：使用單一全域事件框架防止記憶體洩漏
 -- 使用弱引用表追蹤需要死亡狀態更新的框架
+-- TEMPORARY DISABLE: 完全禁用以修復 taint
+local DEATH_INDICATOR_DISABLED = true
 local deathIndicatorFrames = setmetatable({}, { __mode = "k" })
 local deathUnitMap = {}  -- unit → frame 反向映射（O(1) 事件查詢）
 local deathMapNeedsRebuild = false  -- 延遲重建標記（避免 protected context 中迭代）
@@ -769,6 +771,7 @@ local deathIndicatorEventFrame
 local playerEnterWorldFrame  -- PLAYER_ENTERING_WORLD 事件框架
 
 local function UpdateDeathStateForFrame(frame)
+    if DEATH_INDICATOR_DISABLED then return end
     -- 使用 pcall 包裹並記錄除錯資訊，防止靜默失敗
     local success, err = pcall(function()
         local unit = frame.unit
@@ -793,6 +796,7 @@ local function UpdateDeathStateForFrame(frame)
 end
 
 local function RebuildDeathUnitMap()
+    if DEATH_INDICATOR_DISABLED then return end
     wipe(deathUnitMap)
     for frame in pairs(deathIndicatorFrames) do
         if frame and frame.unit then
@@ -805,6 +809,7 @@ local function RebuildDeathUnitMap()
 end
 
 local function UpdateAllDeathStates(eventUnit)
+    if DEATH_INDICATOR_DISABLED then return end
     if not eventUnit then
         -- 全量刷新（PLAYER_ENTERING_WORLD / GROUP_ROSTER_UPDATE）
         RebuildDeathUnitMap()
@@ -837,6 +842,7 @@ end
 
 -- 建立單一全域事件框架（延遲初始化）
 local function EnsureDeathIndicatorEventFrame()
+    if DEATH_INDICATOR_DISABLED then return end
     if deathIndicatorEventFrame then return end
 
     deathIndicatorEventFrame = CreateFrame("Frame")
