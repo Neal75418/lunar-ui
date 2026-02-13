@@ -764,6 +764,7 @@ end
 -- 使用弱引用表追蹤需要死亡狀態更新的框架
 local deathIndicatorFrames = setmetatable({}, { __mode = "k" })
 local deathUnitMap = {}  -- unit → frame 反向映射（O(1) 事件查詢）
+local deathMapNeedsRebuild = false  -- 延遲重建標記（避免 protected context 中迭代）
 local deathIndicatorEventFrame
 local playerEnterWorldFrame  -- PLAYER_ENTERING_WORLD 事件框架
 
@@ -800,6 +801,7 @@ local function RebuildDeathUnitMap()
             deathUnitMap[frame.unit] = frame
         end
     end
+    deathMapNeedsRebuild = false
 end
 
 local function UpdateAllDeathStates(eventUnit)
@@ -815,9 +817,17 @@ local function UpdateAllDeathStates(eventUnit)
         -- O(1) 查詢取代 O(n) 迭代
         local frame = deathUnitMap[eventUnit]
         if not frame or frame.unit ~= eventUnit then
-            -- 映射表過時（新框架或單位變更），惰性重建
-            RebuildDeathUnitMap()
-            frame = deathUnitMap[eventUnit]
+            -- 映射表過時，標記延遲重建（避免 protected context 中迭代）
+            if not deathMapNeedsRebuild then
+                deathMapNeedsRebuild = true
+                C_Timer.After(0, function()
+                    if deathMapNeedsRebuild then
+                        RebuildDeathUnitMap()
+                    end
+                end)
+            end
+            -- 暫時跳過此次更新，等待下次事件
+            return
         end
         if frame then
             UpdateDeathStateForFrame(frame)
