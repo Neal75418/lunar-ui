@@ -213,9 +213,16 @@ LunarUI 使用以下第三方庫（位於 `LunarUI/Libs/`，不納入版本控�
   - 官方倉庫：https://github.com/oUF-wow/oUF
 
 ### Ace3 系列
-- AceAddon-3.0, AceConfig-3.0, AceConsole-3.0
-- AceDB-3.0, AceEvent-3.0, AceGUI-3.0
-- AceHook-3.0, AceLocale-3.0, AceTimer-3.0
+- **[Ace3](https://github.com/WoWUIDev/Ace3)** - WoW 插件開發框架
+  - **當前版本**：Release-r1390 (2026-02-03)
+  - **支援版本**：WoW 12.0.1 (Retail, MoP Classic, Titan Reforged Classic, Classic)
+  - 包含模組：
+    - 核心：AceAddon-3.0, AceDB-3.0, AceDBOptions-3.0
+    - 事件/計時：AceEvent-3.0, AceTimer-3.0, AceBucket-3.0
+    - 設定系統：AceConfig-3.0, AceGUI-3.0, AceConsole-3.0
+    - 工具：AceHook-3.0, AceLocale-3.0, AceComm-3.0, AceSerializer-3.0, AceTab-3.0
+  - 官方倉庫：https://github.com/WoWUIDev/Ace3
+  - CurseForge：https://www.curseforge.com/wow/addons/ace3
 
 ### 其他
 - LibActionButton-1.0 - ActionBars 按鈕引擎
@@ -223,13 +230,41 @@ LunarUI 使用以下第三方庫（位於 `LunarUI/Libs/`，不納入版本控�
 - CallbackHandler-1.0, LibStub - 核心工具庫
 
 ### 更新方式
+
+#### 更新 oUF
 ```bash
-# 更新 oUF（範例）
 cd LunarUI/Libs
 mv oUF oUF.backup
 git clone https://github.com/oUF-wow/oUF.git
-rm -rf oUF/.git
+rm -rf oUF/.git .gitignore .github
 rm -rf oUF.backup
+```
+
+#### 更新 Ace3
+```bash
+cd /tmp
+curl -L -o Ace3.zip "https://github.com/WoWUIDev/Ace3/archive/refs/tags/Release-r1390.zip"
+unzip -q Ace3.zip
+cd /path/to/LunarUI/Libs
+
+# 備份舊版本
+mkdir -p ~/Desktop/Ace3_backup_$(date +%Y%m%d)
+cp -r Ace* CallbackHandler-1.0 LibStub ~/Desktop/Ace3_backup_$(date +%Y%m%d)/
+
+# 刪除舊版本
+rm -rf Ace* CallbackHandler-1.0 LibStub
+
+# 複製新版本
+cp -r /tmp/Ace3-Release-r1390/Ace* \
+      /tmp/Ace3-Release-r1390/CallbackHandler-1.0 \
+      /tmp/Ace3-Release-r1390/LibStub \
+      ./
+
+# 更新 LunarUI.toc 中的路徑（如果需要）
+# Line 16: Libs\AceDBOptions-3.0.lua → Libs\AceDBOptions-3.0\AceDBOptions-3.0.lua
+
+# 清理
+rm -rf /tmp/Ace3*
 ```
 
 ---
