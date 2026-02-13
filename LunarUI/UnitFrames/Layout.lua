@@ -795,11 +795,9 @@ local function RebuildDeathUnitMap()
     wipe(deathUnitMap)
     for frame in pairs(deathIndicatorFrames) do
         if frame and frame.unit then
-            local unit = frame.unit
-            if not deathUnitMap[unit] then
-                deathUnitMap[unit] = {}
-            end
-            table.insert(deathUnitMap[unit], frame)
+            -- 單一映射避免 taint：只保留最後一個框架
+            -- 同一 unit 的多個框架會在全量刷新時都被更新
+            deathUnitMap[frame.unit] = frame
         end
     end
 end
@@ -815,20 +813,14 @@ local function UpdateAllDeathStates(eventUnit)
         end
     else
         -- O(1) 查詢取代 O(n) 迭代
-        local frames = deathUnitMap[eventUnit]
-        if not frames or #frames == 0 then
+        local frame = deathUnitMap[eventUnit]
+        if not frame or frame.unit ~= eventUnit then
             -- 映射表過時（新框架或單位變更），惰性重建
             RebuildDeathUnitMap()
-            frames = deathUnitMap[eventUnit]
+            frame = deathUnitMap[eventUnit]
         end
-        -- 更新該 unit 的所有框架（處理 raid1 同時在 party 和 raid 的情況）
-        if frames then
-            for i = 1, #frames do
-                local frame = frames[i]
-                if frame and frame.unit == eventUnit then
-                    UpdateDeathStateForFrame(frame)
-                end
-            end
+        if frame then
+            UpdateDeathStateForFrame(frame)
         end
     end
 end
