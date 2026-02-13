@@ -62,6 +62,8 @@ local function ExecuteModuleCallback(entry)
             local ok, err = pcall(entry.onEnable)
             if not ok then
                 print("|cffff6666[LunarUI]|r Module '" .. (entry.name or "?") .. "' failed: " .. tostring(err))
+                print("|cffff6666[LunarUI]|r Stack trace:")
+                print(debugstack(2))
             end
             pendingDelayedModules = pendingDelayedModules - 1
             if pendingDelayedModules == 0 and not modulesReadyFired then
@@ -73,6 +75,8 @@ local function ExecuteModuleCallback(entry)
         local ok, err = pcall(entry.onEnable)
         if not ok then
             print("|cffff6666[LunarUI]|r Module '" .. (entry.name or "?") .. "' failed: " .. tostring(err))
+            print("|cffff6666[LunarUI]|r Stack trace:")
+            print(debugstack(2))
         end
     end
 end
