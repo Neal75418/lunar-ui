@@ -225,9 +225,13 @@ LunarUI 使用以下第三方庫（位於 `LunarUI/Libs/`，不納入版本控�
   - CurseForge：https://www.curseforge.com/wow/addons/ace3
 
 ### 其他
-- LibActionButton-1.0 - ActionBars 按鈕引擎
-- LibSharedMedia-3.0 - 材質/字體管理
-- CallbackHandler-1.0, LibStub - 核心工具庫
+- **[LibSharedMedia-3.0](https://www.curseforge.com/wow/addons/libsharedmedia-3-0)** - 材質/字體管理
+  - **當前版本**：v11.2.1 (Revision 164, 2026-01-19) ✅
+  - 官方頁面：https://www.curseforge.com/wow/addons/libsharedmedia-3-0
+- **[LibActionButton-1.0](https://www.curseforge.com/wow/addons/libactionbutton-1-0)** - ActionBars 按鈕引擎
+  - **當前版本**：version 143 (支援 WoW 12.0)
+  - 官方頁面：https://www.curseforge.com/wow/addons/libactionbutton-1-0
+- CallbackHandler-1.0 (version 8), LibStub (version 2) - 核心工具庫
 
 ### 更新方式
 
@@ -266,6 +270,31 @@ cp -r /tmp/Ace3-Release-r1390/Ace* \
 # 清理
 rm -rf /tmp/Ace3*
 ```
+
+#### 更新 LibSharedMedia-3.0（手動）
+由於 CurseForge 有下載保護，需要手動更新：
+
+1. **下載最新版本**：
+   - 訪問：https://www.curseforge.com/wow/addons/libsharedmedia-3-0/files
+   - 點擊 "v11.2.1" 或最新版本
+   - 點擊 "Download" 按鈕下載 ZIP 文件
+
+2. **安裝**：
+   ```bash
+   cd /path/to/LunarUI/Libs
+
+   # 備份舊版本
+   cp -r LibSharedMedia-3.0 ~/Desktop/LibSharedMedia-3.0.backup
+
+   # 刪除舊版本
+   rm -rf LibSharedMedia-3.0
+
+   # 解壓新版本（假設下載到 ~/Downloads）
+   unzip ~/Downloads/LibSharedMedia-3.0-*.zip -d .
+
+   # 驗證版本號（應該顯示 Revision: 165 或更高）
+   head -5 LibSharedMedia-3.0/LibSharedMedia-3.0.lua
+   ```
 
 ---
 
