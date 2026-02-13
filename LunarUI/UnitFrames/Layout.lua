@@ -586,28 +586,28 @@ local function CreateHealPrediction(frame, unit)
     local hp = frame.Health
     if not hp then return end
 
-    -- 自身治療預測（錨定到當前血量位置的右端）
+    -- 自身治療預測
     local healingPlayer = CreateFrame("StatusBar", nil, hp)
     healingPlayer:SetStatusBarTexture(GetStatusBarTexture())
     healingPlayer:SetStatusBarColor(0.0, 0.8, 0.0, 0.4)
-    healingPlayer:SetPoint("TOPLEFT", hp:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-    healingPlayer:SetPoint("BOTTOMLEFT", hp:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+    healingPlayer:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
+    healingPlayer:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
     healingPlayer:SetWidth(frame:GetWidth())
 
-    -- 他人治療預測（錨定到 healingPlayer 之後）
+    -- 他人治療預測
     local healingOther = CreateFrame("StatusBar", nil, hp)
     healingOther:SetStatusBarTexture(GetStatusBarTexture())
     healingOther:SetStatusBarColor(0.0, 0.6, 0.0, 0.3)
-    healingOther:SetPoint("TOPLEFT", healingPlayer:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-    healingOther:SetPoint("BOTTOMLEFT", healingPlayer:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+    healingOther:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
+    healingOther:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
     healingOther:SetWidth(frame:GetWidth())
 
-    -- 吸收盾（錨定到 healingOther 之後）
+    -- 吸收盾
     local damageAbsorb = CreateFrame("StatusBar", nil, hp)
     damageAbsorb:SetStatusBarTexture(GetStatusBarTexture())
     damageAbsorb:SetStatusBarColor(1.0, 1.0, 1.0, 0.3)
-    damageAbsorb:SetPoint("TOPLEFT", healingOther:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
-    damageAbsorb:SetPoint("BOTTOMLEFT", healingOther:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
+    damageAbsorb:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
+    damageAbsorb:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
     damageAbsorb:SetWidth(frame:GetWidth())
 
     frame.HealthPrediction = {
