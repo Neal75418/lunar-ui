@@ -203,6 +203,37 @@ gantt
 
 ---
 
+## Dependencies
+
+LunarUI 使用以下第三方庫（位於 `LunarUI/Libs/`，不納入版本控制）：
+
+### 核心依賴
+- **[oUF](https://github.com/oUF-wow/oUF)** - UnitFrames 和 Nameplates 框架引擎
+  - **重要**：請確保使用最新版本以支援 WoW 12.0
+  - 官方倉庫：https://github.com/oUF-wow/oUF
+
+### Ace3 系列
+- AceAddon-3.0, AceConfig-3.0, AceConsole-3.0
+- AceDB-3.0, AceEvent-3.0, AceGUI-3.0
+- AceHook-3.0, AceLocale-3.0, AceTimer-3.0
+
+### 其他
+- LibActionButton-1.0 - ActionBars 按鈕引擎
+- LibSharedMedia-3.0 - 材質/字體管理
+- CallbackHandler-1.0, LibStub - 核心工具庫
+
+### 更新方式
+```bash
+# 更新 oUF（範例）
+cd LunarUI/Libs
+mv oUF oUF.backup
+git clone https://github.com/oUF-wow/oUF.git
+rm -rf oUF/.git
+rm -rf oUF.backup
+```
+
+---
+
 ## License
 
 [GPL-3.0](LICENSE)

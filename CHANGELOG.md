@@ -8,6 +8,39 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) &middot; Versio
 
 ## [Unreleased]
 
+### Fixed
+
+- **UnitFrames Taint Error** &mdash; 更新 oUF 到最新版本修復 WoW 12.0 forbidden table 錯誤
+  - 問題：每次登入時出現 "attempted to iterate a forbidden table" 錯誤
+  - 根因：舊版 oUF 庫在 WoW 12.0 中存在兼容性 bug
+  - 解決：從 GitHub 官方倉庫更新 oUF 到最新版本
+  - 驗證：登入、重載、框架顯示均正常，無錯誤訊息
+
+- **代碼審查第二輪** &mdash; 修復 24 個效能與記憶體洩漏問題
+  - **UnitFrames/Layout.lua** (8 個修復)
+    - HealthPrediction 治療預測條錨點修正至 StatusBarTexture
+    - playerEnterWorldFrame 事件清理防止記憶體洩漏
+    - StatusBar 材質快取添加失效機制
+    - 戰鬥等待框架重用避免累積洩漏
+    - AuraFilter DB 設定快取避免高頻查詢
+    - deathUnitMap 支援同一 unit 多個框架（party+raid）
+    - 提取 CreateRaidDebuffs helper 避免代碼重複
+    - 過濾 duration==0 的永久 buff
+  - **HUD/CooldownTracker.lua** (4 個修復)
+    - SPELLS_CHANGED 事件添加 isInitialized 檢查
+    - SetupTrackedSpells 預過濾法術，移除高頻 IsSpellKnownByPlayer 檢查
+    - Cleanup 函數添加 trackedSpells wipe
+    - 修復 cacheSize 計數錯誤，確保快取失效機制正確運作
+  - **ActionBars/ActionBars.lua** (2 個修復)
+    - StanceBar 事件洩漏 - 5 個事件未在 cleanup 中取消註冊
+    - PetBar 事件洩漏 - 2 個事件未在 cleanup 中取消註冊
+  - **Modules/Minimap.lua** (3 個修復)
+    - minimapFrame 事件洩漏 - 缺少 UnregisterAllEvents
+    - mail 框架事件洩漏 - UPDATE_PENDING_MAIL 未取消註冊
+    - diff 框架事件洩漏 - 3 個難度相關事件未取消註冊
+  - **HUD/ClassResources.lua** (1 個修復)
+    - PLAYER_SPECIALIZATION_CHANGED 事件缺少 isInitialized guard
+
 ### Changed
 
 - 更新介面版本至 120001（支援 WoW Patch 12.0.1）
