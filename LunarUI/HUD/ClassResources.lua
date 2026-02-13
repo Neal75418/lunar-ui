@@ -414,6 +414,10 @@ local eventFrame = LunarUI.CreateEventHandler(
     function(_self, event, arg1)
         if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_SPECIALIZATION_CHANGED" then
             if LunarUI.GetHUDSetting("classResources", true) == false then return end
+            -- 僅在已初始化時處理（避免 disable 狀態下觸發）
+            if not isInitialized and event == "PLAYER_SPECIALIZATION_CHANGED" then
+                return
+            end
             -- 立即隱藏舊資源，避免專精切換時短暫顯示過期資訊
             for _, icon in ipairs(resourceIcons) do
                 icon:Hide()
