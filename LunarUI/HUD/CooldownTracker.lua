@@ -385,17 +385,17 @@ local function UpdateCooldownIcons()
     local visibleIndex = 0
     local currentTime = GetTime()
 
+    -- trackedSpells 已在 SetupTrackedSpells 過濾（僅包含已學法術）
     for _, spellID in ipairs(trackedSpells) do
-        if IsSpellKnownByPlayer(spellID) then
-            local start, duration = GetSpellCooldownInfo(spellID)
+        local start, duration = GetSpellCooldownInfo(spellID)
 
-            if duration > 1.5 then  -- 忽略 GCD
-                local remaining = start + duration - currentTime
+        if duration > 1.5 then  -- 忽略 GCD
+            local remaining = start + duration - currentTime
 
-                if remaining > 0 then
-                    visibleIndex = visibleIndex + 1
+            if remaining > 0 then
+                visibleIndex = visibleIndex + 1
 
-                    if visibleIndex <= MAX_ICONS then
+                if visibleIndex <= MAX_ICONS then
                         local icon = cooldownIcons[visibleIndex]
                         if icon then
                             -- 設定圖示
@@ -441,7 +441,6 @@ local function UpdateCooldownIcons()
                     end
                 end
             end
-        end
     end
 
     -- 隱藏多餘的圖示
@@ -465,7 +464,15 @@ end
 
 local function SetupTrackedSpells()
     local classID = GetPlayerClassID()
-    trackedSpells = DEFAULT_TRACKED_SPELLS[classID] or {}
+    local defaultSpells = DEFAULT_TRACKED_SPELLS[classID] or {}
+
+    -- 過濾出已學法術，避免高頻路徑中重複查詢 IsSpellKnownByPlayer
+    wipe(trackedSpells)
+    for _, spellID in ipairs(defaultSpells) do
+        if IsSpellKnownByPlayer(spellID) then
+            table_insert(trackedSpells, spellID)
+        end
+    end
 end
 
 -- Forward declaration（實際定義在下方事件處理區段）
@@ -512,7 +519,10 @@ eventFrame = LunarUI.CreateEventHandler(
             if LunarUI.GetHUDSetting("cooldownTracker", true) == false then return end
             C_Timer.After(1.0, Initialize)
         elseif event == "PLAYER_SPECIALIZATION_CHANGED" or event == "SPELLS_CHANGED" then
-            SetupTrackedSpells()
+            -- 僅在模組初始化後才更新追蹤法術（避免 disable 狀態下無意義的更新）
+            if isInitialized then
+                SetupTrackedSpells()
+            end
         end
     end
 )
@@ -604,14 +614,17 @@ function LunarUI.CleanupCooldownTracker()
     if cooldownFrame then
         cooldownFrame:Hide()
     end
-    -- 停止 OnUpdate 避免空轉（Initialize 會重新設定）
-    if eventFrame then eventFrame:SetScript("OnUpdate", nil) end
+    -- 停止 OnUpdate 避免空轉
+    if eventFrame then
+        eventFrame:SetScript("OnUpdate", nil)
+    end
     updateTimer = 0
     wipe(spellTextureCache)  -- 清理圖示快取
+    wipe(trackedSpells)      -- 清理追蹤列表
     cacheSize = 0
     isInitialized = false
-    -- 不取消事件註冊：OnEvent 已有開關 guard，
-    -- 保留事件以便 toggle 重新啟用時 Initialize 能被正確呼叫
+    -- 事件註冊保留：OnEvent 已有 isInitialized guard，
+    -- 保留事件以便 toggle 重新啟用時能正確初始化
 end
 
 LunarUI:RegisterModule("CooldownTracker", {

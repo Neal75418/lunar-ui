@@ -23,6 +23,7 @@ end
 
 -- 前向宣告（供後續函數使用）
 local spawnedFrames = {}
+local combatWaitFrame  -- 戰鬥等待框架（重用避免洩漏）
 
 local statusBarTexture  -- lazy: resolved after DB is ready
 local function GetStatusBarTexture()
@@ -31,6 +32,12 @@ local function GetStatusBarTexture()
     end
     return statusBarTexture
 end
+
+-- 提供快取失效函數供 Options 模組在材質變更時呼叫
+local function InvalidateStatusBarTexture()
+    statusBarTexture = nil
+end
+LunarUI.InvalidateStatusBarTextureCache = InvalidateStatusBarTexture
 local C = LunarUI.Colors
 
 -- 框架尺寸
@@ -260,9 +267,13 @@ local UNITFRAME_DEBUFF_COLORS = LunarUI.DEBUFF_TYPE_COLORS
 local auraWhitelistCache = {}
 local auraBlacklistCache = {}
 
+--[[ AuraFilter DB 設定快取（避免高頻 DB 查詢）]]
+local auraFilterDBCache = {}  -- [unitKey] = { onlyPlayerDebuffs = bool }
+
 local function RebuildAuraFilterCache()
     wipe(auraWhitelistCache)
     wipe(auraBlacklistCache)
+    wipe(auraFilterDBCache)  -- 清除 DB 設定快取，強制重新讀取
     local db = LunarUI.db.profile
     if not db then return end
 
@@ -286,8 +297,17 @@ LunarUI.RebuildAuraFilterCache = RebuildAuraFilterCache
 local function AuraFilter(_element, unit, data)
     -- 標準化單位 key（boss1 → boss, party1 → party）
     local unitKey = unit:gsub("%d+$", "")
-    local ufDB = LunarUI.db.profile.unitframes[unitKey]
-    if not ufDB then return true end
+
+    -- 使用快取避免高頻 DB 查詢
+    local cachedSettings = auraFilterDBCache[unitKey]
+    if not cachedSettings then
+        local ufDB = LunarUI.db.profile.unitframes[unitKey]
+        if not ufDB then return true end
+        cachedSettings = {
+            onlyPlayerDebuffs = ufDB.onlyPlayerDebuffs
+        }
+        auraFilterDBCache[unitKey] = cachedSettings
+    end
 
     -- Fix 9: 合併多次 pcall 為一次，減少每個 aura 的開銷
     -- data 的欄位可能是 WoW secret value，用單一 pcall 保護所有存取
@@ -305,12 +325,14 @@ local function AuraFilter(_element, unit, data)
         end
 
         -- 僅顯示玩家施放的 debuff
-        if ufDB.onlyPlayerDebuffs and data.isHarmfulAura and not data.isPlayerAura then
+        if cachedSettings.onlyPlayerDebuffs and data.isHarmfulAura and not data.isPlayerAura then
             return true
         end
-        -- 隱藏持續超過 5 分鐘的 buff（減少雜訊），0 表示永久
-        if not data.isHarmfulAura and data.duration and data.duration > 300 then
-            return true
+        -- 隱藏持續超過 5 分鐘的 buff 和永久 buff（減少雜訊）
+        if not data.isHarmfulAura and data.duration then
+            if data.duration == 0 or data.duration > 300 then
+                return true
+            end
         end
         return false
     end)
@@ -433,6 +455,31 @@ local function CreateDebuffs(frame, unit)
     return debuffs
 end
 
+--[[ 團隊減益（特殊佈局：較小、居中） ]]
+local function CreateRaidDebuffs(frame)
+    local raidDB = LunarUI.db.profile.unitframes.raid
+    if not raidDB or raidDB.showDebuffs == false then
+        return
+    end
+
+    local debuffSize = raidDB.debuffSize or 16
+    local maxDebuffs = raidDB.maxDebuffs or 2
+
+    local debuffs = CreateFrame("Frame", nil, frame)
+    debuffs:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    debuffs:SetSize(debuffSize * maxDebuffs + 2, debuffSize)
+    debuffs.size = debuffSize
+    debuffs.spacing = 2
+    debuffs.num = maxDebuffs
+    debuffs.initialAnchor = "CENTER"
+    debuffs["growth-x"] = "RIGHT"
+    debuffs.FilterAura = AuraFilter
+    debuffs.PostCreateButton = PostCreateAuraIcon
+    debuffs.PostUpdateButton = PostUpdateDebuffIcon
+    frame.Debuffs = debuffs
+    return debuffs
+end
+
 --------------------------------------------------------------------------------
 -- 單位專屬元素
 --------------------------------------------------------------------------------
@@ -539,28 +586,28 @@ local function CreateHealPrediction(frame, unit)
     local hp = frame.Health
     if not hp then return end
 
-    -- 自身治療預測（使用 TOPLEFT+BOTTOMRIGHT 確保正確的錨點參考）
+    -- 自身治療預測（錨定到當前血量位置的右端）
     local healingPlayer = CreateFrame("StatusBar", nil, hp)
     healingPlayer:SetStatusBarTexture(GetStatusBarTexture())
     healingPlayer:SetStatusBarColor(0.0, 0.8, 0.0, 0.4)
-    healingPlayer:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
-    healingPlayer:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
+    healingPlayer:SetPoint("TOPLEFT", hp:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+    healingPlayer:SetPoint("BOTTOMLEFT", hp:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
     healingPlayer:SetWidth(frame:GetWidth())
 
-    -- 他人治療預測
+    -- 他人治療預測（錨定到 healingPlayer 之後）
     local healingOther = CreateFrame("StatusBar", nil, hp)
     healingOther:SetStatusBarTexture(GetStatusBarTexture())
     healingOther:SetStatusBarColor(0.0, 0.6, 0.0, 0.3)
-    healingOther:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
-    healingOther:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
+    healingOther:SetPoint("TOPLEFT", healingPlayer:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+    healingOther:SetPoint("BOTTOMLEFT", healingPlayer:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
     healingOther:SetWidth(frame:GetWidth())
 
-    -- 吸收盾
+    -- 吸收盾（錨定到 healingOther 之後）
     local damageAbsorb = CreateFrame("StatusBar", nil, hp)
     damageAbsorb:SetStatusBarTexture(GetStatusBarTexture())
     damageAbsorb:SetStatusBarColor(1.0, 1.0, 1.0, 0.3)
-    damageAbsorb:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
-    damageAbsorb:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
+    damageAbsorb:SetPoint("TOPLEFT", healingOther:GetStatusBarTexture(), "TOPRIGHT", 0, 0)
+    damageAbsorb:SetPoint("BOTTOMLEFT", healingOther:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0)
     damageAbsorb:SetWidth(frame:GetWidth())
 
     frame.HealthPrediction = {
@@ -718,6 +765,7 @@ end
 local deathIndicatorFrames = setmetatable({}, { __mode = "k" })
 local deathUnitMap = {}  -- unit → frame 反向映射（O(1) 事件查詢）
 local deathIndicatorEventFrame
+local playerEnterWorldFrame  -- PLAYER_ENTERING_WORLD 事件框架
 
 local function UpdateDeathStateForFrame(frame)
     -- 使用 pcall 包裹並記錄除錯資訊，防止靜默失敗
@@ -747,7 +795,11 @@ local function RebuildDeathUnitMap()
     wipe(deathUnitMap)
     for frame in pairs(deathIndicatorFrames) do
         if frame and frame.unit then
-            deathUnitMap[frame.unit] = frame
+            local unit = frame.unit
+            if not deathUnitMap[unit] then
+                deathUnitMap[unit] = {}
+            end
+            table.insert(deathUnitMap[unit], frame)
         end
     end
 end
@@ -763,14 +815,20 @@ local function UpdateAllDeathStates(eventUnit)
         end
     else
         -- O(1) 查詢取代 O(n) 迭代
-        local frame = deathUnitMap[eventUnit]
-        if not frame or frame.unit ~= eventUnit then
+        local frames = deathUnitMap[eventUnit]
+        if not frames or #frames == 0 then
             -- 映射表過時（新框架或單位變更），惰性重建
             RebuildDeathUnitMap()
-            frame = deathUnitMap[eventUnit]
+            frames = deathUnitMap[eventUnit]
         end
-        if frame then
-            UpdateDeathStateForFrame(frame)
+        -- 更新該 unit 的所有框架（處理 raid1 同時在 party 和 raid 的情況）
+        if frames then
+            for i = 1, #frames do
+                local frame = frames[i]
+                if frame and frame.unit == eventUnit then
+                    UpdateDeathStateForFrame(frame)
+                end
+            end
         end
     end
 end
@@ -987,27 +1045,7 @@ local function RaidLayout(frame, unit)
     CreateReadyCheckIndicator(frame)
     CreateSummonIndicator(frame)
     CreateResurrectIndicator(frame)
-
-    -- 團隊減益（較小，居中顯示）
-    local raidDB = LunarUI.db.profile.unitframes.raid
-    if not raidDB or raidDB.showDebuffs ~= false then
-        local debuffSize = raidDB and raidDB.debuffSize or 16
-        local maxDebuffs = raidDB and raidDB.maxDebuffs or 2
-
-        local debuffs = CreateFrame("Frame", nil, frame)
-        debuffs:SetPoint("CENTER", frame, "CENTER", 0, 0)
-        debuffs:SetSize(debuffSize * maxDebuffs + 2, debuffSize)
-        debuffs.size = debuffSize
-        debuffs.spacing = 2
-        debuffs.num = maxDebuffs
-        debuffs.initialAnchor = "CENTER"
-        debuffs["growth-x"] = "RIGHT"  -- 添加水平成長方向
-        debuffs.FilterAura = AuraFilter
-        debuffs.PostCreateButton = PostCreateAuraIcon
-        debuffs.PostUpdateButton = PostUpdateDebuffIcon
-        frame.Debuffs = debuffs
-    end
-
+    CreateRaidDebuffs(frame)  -- 使用 helper 函數避免代碼重複
     CreateDeathIndicator(frame, unit)
 
     return frame
@@ -1149,12 +1187,14 @@ local function SpawnGroupFrames(uf)
 end
 
 local function SpawnUnitFrames()
+    -- 戰鬥中不能創建框架，等待脫離戰鬥（使用單一框架避免洩漏）
     if _G.InCombatLockdown() then
-        local waitFrame = CreateFrame("Frame")
-        waitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-        waitFrame:SetScript("OnEvent", function(self)
+        if not combatWaitFrame then
+            combatWaitFrame = CreateFrame("Frame")
+        end
+        combatWaitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        combatWaitFrame:SetScript("OnEvent", function(self)
             self:UnregisterAllEvents()
-            self:SetScript("OnEvent", nil)
             SpawnUnitFrames()
         end)
         return
@@ -1186,6 +1226,16 @@ end
 
 -- 清理函數
 local function CleanupUnitFrames()
+    -- 清除死亡指示器事件框架
+    if deathIndicatorEventFrame then
+        deathIndicatorEventFrame:UnregisterAllEvents()
+        deathIndicatorEventFrame:SetScript("OnEvent", nil)
+    end
+    -- 清除 PLAYER_ENTERING_WORLD 事件框架
+    if playerEnterWorldFrame then
+        playerEnterWorldFrame:UnregisterAllEvents()
+        playerEnterWorldFrame:SetScript("OnEvent", nil)
+    end
     -- 清除死亡指示器弱引用表項目
     wipe(deathIndicatorFrames)
     wipe(deathUnitMap)
@@ -1198,7 +1248,7 @@ LunarUI.CleanupUnitFrames = CleanupUnitFrames
 
 -- 在 PLAYER_ENTERING_WORLD 時強制更新玩家框架
 -- 確保玩家資料在更新元素前可用
-LunarUI.CreateEventHandler({"PLAYER_ENTERING_WORLD"}, function(_self, _event)
+playerEnterWorldFrame = LunarUI.CreateEventHandler({"PLAYER_ENTERING_WORLD"}, function(_self, _event)
     C_Timer.After(0.3, function()
         if spawnedFrames.player then
             spawnedFrames.player:Show()
