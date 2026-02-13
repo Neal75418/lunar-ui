@@ -1236,6 +1236,20 @@ local function CleanupActionBars()
         combatFrame = nil
     end
 
+    -- 清理姿態條事件
+    if bars.stancebar then
+        bars.stancebar:UnregisterAllEvents()
+        bars.stancebar:SetScript("OnEvent", nil)
+        bars.stancebar = nil
+    end
+
+    -- 清理寵物條事件
+    if bars.petbar then
+        bars.petbar:UnregisterAllEvents()
+        bars.petbar:SetScript("OnEvent", nil)
+        bars.petbar = nil
+    end
+
     -- 還原 ExtraActionBarFrame
     if _G.ExtraActionBarFrame and bars.extraActionButton then
         if _G.ExtraActionBarFrame.intro then

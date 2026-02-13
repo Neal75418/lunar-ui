@@ -1087,9 +1087,23 @@ function LunarUI.CleanupMinimap()
         end
         wipe(buttonScanTimers)
     end
+    -- 清理 minimap 框架事件
     if minimapFrame then
+        minimapFrame:UnregisterAllEvents()
         minimapFrame:SetScript("OnUpdate", nil)
         minimapFrame:SetScript("OnEvent", nil)
+    end
+    -- 清理郵件通知框架
+    if mail then
+        mail:UnregisterAllEvents()
+        mail:SetScript("OnEvent", nil)
+        mail = nil
+    end
+    -- 清理難度圖示框架
+    if diff then
+        diff:UnregisterAllEvents()
+        diff:SetScript("OnEvent", nil)
+        diff = nil
     end
     -- 清理 ADDON_LOADED 框架
     if addonLoadedFrame then
