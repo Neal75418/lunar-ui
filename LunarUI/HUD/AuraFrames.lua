@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local, undefined-global
 --[[
     LunarUI - Buff/Debuff 框架（重新設計）
     在螢幕上顯示玩家的增益和減益效果
@@ -188,11 +188,18 @@ local function SetupAuraIconInteraction(icon)
         GameTooltip:Hide()
     end)
 
-    -- 右鍵取消 Buff (使用 spellName 而非 index，避免取消錯誤的 buff)
+    -- 右鍵取消 Buff
+    -- WoW 12.0: CancelSpellByName 可能已移除，優先使用 auraInstanceID
     icon:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" and self.auraData and self.auraData.filter == "HELPFUL" then
-            if self.auraData.spellName and self.auraData.spellName ~= "" then
-                pcall(CancelSpellByName, self.auraData.spellName)
+            if InCombatLockdown() then return end  -- 戰鬥中不可取消
+
+            local auraData = self.auraData
+            -- 優先使用 auraInstanceID（12.0 推薦方式）
+            if auraData.auraInstanceID and C_UnitAuras and C_UnitAuras.CancelAuraByAuraInstanceID then
+                pcall(C_UnitAuras.CancelAuraByAuraInstanceID, "player", auraData.auraInstanceID)
+            elseif CancelSpellByName and auraData.spellName and auraData.spellName ~= "" then
+                pcall(CancelSpellByName, auraData.spellName)
             end
         end
     end)

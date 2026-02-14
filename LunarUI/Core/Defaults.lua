@@ -20,12 +20,18 @@ function Engine.GetLayoutPresets()
         dps = {
             unitframes = {
                 raid = { width = 72, height = 28, spacing = 3 },
+                raid1 = { width = 90, height = 32, spacing = 3 },
+                raid2 = { width = 72, height = 28, spacing = 3 },
+                raid3 = { width = 60, height = 24, spacing = 2 },
                 party = { width = 140, height = 32, spacing = 5 },
             },
         },
         tank = {
             unitframes = {
                 raid = { width = 85, height = 32, spacing = 3 },
+                raid1 = { width = 100, height = 36, spacing = 3 },
+                raid2 = { width = 85, height = 32, spacing = 3 },
+                raid3 = { width = 72, height = 28, spacing = 2 },
                 party = { width = 155, height = 38, spacing = 5 },
             },
             nameplates = { height = 10 },
@@ -33,6 +39,9 @@ function Engine.GetLayoutPresets()
         healer = {
             unitframes = {
                 raid = { width = 90, height = 38, spacing = 2 },
+                raid1 = { width = 110, height = 42, spacing = 2 },
+                raid2 = { width = 90, height = 38, spacing = 2 },
+                raid3 = { width = 75, height = 30, spacing = 2 },
                 party = { width = 165, height = 42, spacing = 4 },
             },
         },
@@ -75,6 +84,14 @@ local defaults = {
                 onlyPlayerDebuffs = false,
                 showClassPower = true,       -- 職業資源（連擊點/聖能/符文等）
                 showHealPrediction = true,   -- 治療預測條
+                showPortrait = false,        -- 角色肖像（預設關閉，保持簡潔風格）
+                portraitStyle = "class",     -- "class" / "3d" — 職業圖示或 3D 模型
+                castbar = {
+                    height = 16,
+                    showLatency = true,      -- 延遲指示區
+                    showTicks = true,        -- 引導法術 tick 標記
+                    showEmpowered = true,    -- Evoker 強化施法階段
+                },
             },
             target = {
                 enabled = true,
@@ -90,6 +107,8 @@ local defaults = {
                 debuffSize = 22,
                 maxDebuffs = 16,
                 onlyPlayerDebuffs = false,
+                showPortrait = false,
+                portraitStyle = "class",
             },
             focus = {
                 enabled = true,
@@ -105,6 +124,8 @@ local defaults = {
                 debuffSize = 20,
                 maxDebuffs = 8,
                 onlyPlayerDebuffs = false,
+                showPortrait = false,
+                portraitStyle = "class",
             },
             pet = {
                 enabled = true,
@@ -155,6 +176,23 @@ local defaults = {
                 maxDebuffs = 2,
                 onlyPlayerDebuffs = true,
                 showHealPrediction = true,   -- 治療預測條
+                autoSwitchSize = false,      -- 啟用多重 raid 尺寸自動切換
+            },
+            -- 多重 Raid 配置（autoSwitchSize 啟用時使用）
+            raid1 = {  -- ≤10 人小團（較大框架，類似隊伍）
+                width = 100,
+                height = 36,
+                spacing = 3,
+            },
+            raid2 = {  -- 11-25 人中團（標準大小）
+                width = 80,
+                height = 30,
+                spacing = 3,
+            },
+            raid3 = {  -- 26-40 人大團（緊湊排列）
+                width = 68,
+                height = 26,
+                spacing = 2,
             },
             boss = {
                 enabled = true,
@@ -218,6 +256,12 @@ local defaults = {
             classification = {
                 enabled = true,
             },
+            -- NPC 角色分類色（敵方名牌依角色類型上色）
+            npcColors = {
+                enabled = false,  -- 預設關閉
+                caster = { r = 0.55, g = 0.35, b = 0.85 },
+                miniboss = { r = 0.8, g = 0.6, b = 0.2 },
+            },
         },
 
         -- 動作條設定
@@ -256,6 +300,13 @@ local defaults = {
         -- 光環過濾
         auraWhitelist = "",   -- 逗號分隔的 spell ID，這些 aura 永遠顯示
         auraBlacklist = "",   -- 逗號分隔的 spell ID，這些 aura 永遠隱藏
+        auraFilters = {
+            hidePassive = true,           -- 隱藏被動效果（持續 > 5 分鐘或永久 buff）
+            showStealable = true,         -- 在敵方目標上顯示可竊取 buff
+            showDispellable = true,       -- 高亮可驅散的 debuff
+            sortMethod = "time",          -- "time" / "duration" / "name" / "player"
+            sortReverse = false,          -- 排序方向反轉
+        },
 
         -- 自動化 QoL
         automation = {
@@ -263,6 +314,8 @@ local defaults = {
             useGuildRepair = true,
             autoRelease = false,     -- 戰場自動釋放（預設關閉，避免意外）
             autoScreenshot = false,  -- 成就截圖（預設關閉）
+            autoAcceptQuest = false,   -- 自動接受/繳交任務（預設關閉）
+            autoAcceptQueue = false,   -- 自動接受副本/戰場佇列（預設關閉）
         },
 
         -- 小地圖設定
@@ -479,6 +532,11 @@ local defaults = {
                 encounterjournal = true,
                 auctionhouse = true,
                 communities = true,
+                housing = true,
+                professions = true,
+                pvp = true,
+                settings = true,
+                trade = true,
             },
         },
 

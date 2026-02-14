@@ -196,7 +196,111 @@ local function CreateHealthText(frame, unit)
 end
 
 --[[ 施法條 ]]
-local function CreateCastbar(frame)
+
+-- 引導法術 tick 數據表（spellID → tick 數量）
+-- 常見引導法術的 tick 數，用於在施法條上繪製 tick 分隔線
+local CHANNEL_TICKS = {
+    -- 牧師
+    [47540]  = 3,  -- 苦修
+    [64843]  = 4,  -- 神聖讚美詩
+    [15407]  = 6,  -- 精神鞭笞
+    -- 法師
+    [5143]   = 5,  -- 奧術飛彈
+    [12051]  = 3,  -- 喚醒
+    [205021] = 5,  -- 冰霜射線
+    -- 術士
+    [198590] = 6,  -- 吸取靈魂
+    [234153] = 5,  -- 吸取生命
+    -- 德魯伊
+    [740]    = 4,  -- 寧靜
+    -- 武僧
+    [117952] = 4,  -- 碎玉疾風
+    [191837] = 3,  -- 精華之泉
+}
+
+-- Evoker 強化施法階段數（spellID → 最大階段數）
+local EMPOWERED_STAGES = {
+    [382266] = 4,  -- Fire Breath
+    [357208] = 4,  -- Fire Breath (另一個 rank)
+    [367226] = 3,  -- Spiritbloom
+    [382614] = 3,  -- Dream Breath
+    [395152] = 3,  -- Ebon Might
+    [396286] = 3,  -- Upheaval
+}
+
+local MAX_TICKS = 10
+
+local function HideAllTicks(castbar)
+    if not castbar._ticks then return end
+    for i = 1, MAX_TICKS do
+        if castbar._ticks[i] then
+            castbar._ticks[i]:Hide()
+        end
+    end
+end
+
+local function ShowTickMarks(castbar, numTicks)
+    if not castbar._ticks then
+        castbar._ticks = {}
+    end
+    HideAllTicks(castbar)
+
+    if numTicks <= 1 then return end
+
+    for i = 1, numTicks - 1 do
+        local tick = castbar._ticks[i]
+        if not tick then
+            tick = castbar:CreateTexture(nil, "OVERLAY", nil, 7)
+            tick:SetWidth(1)
+            tick:SetColorTexture(1, 1, 1, 0.6)
+            castbar._ticks[i] = tick
+        end
+        tick:SetHeight(castbar:GetHeight())
+        local pct = i / numTicks
+        tick:ClearAllPoints()
+        tick:SetPoint("LEFT", castbar, "LEFT", castbar:GetWidth() * pct, 0)
+        tick:Show()
+    end
+end
+
+-- 強化施法階段標記
+local function ShowEmpoweredStages(castbar, numStages)
+    if not castbar._stages then
+        castbar._stages = {}
+    end
+
+    -- 隱藏舊的
+    for i = 1, MAX_TICKS do
+        if castbar._stages[i] then
+            castbar._stages[i]:Hide()
+        end
+    end
+
+    if not numStages or numStages <= 1 then return end
+
+    for i = 1, numStages do
+        local stage = castbar._stages[i]
+        if not stage then
+            stage = castbar:CreateTexture(nil, "OVERLAY", nil, 7)
+            stage:SetWidth(2)
+            stage:SetColorTexture(1, 0.82, 0, 0.8)
+            castbar._stages[i] = stage
+        end
+        stage:SetHeight(castbar:GetHeight())
+        local pct = i / (numStages + 1)
+        stage:ClearAllPoints()
+        stage:SetPoint("LEFT", castbar, "LEFT", castbar:GetWidth() * pct, 0)
+        stage:Show()
+    end
+end
+
+local function CreateCastbar(frame, unit)
+    local isPlayer = (unit == "player")
+    local unitKey = unit and unit:gsub("%d+$", "") or "player"
+    local ufDB = LunarUI.db and LunarUI.db.profile.unitframes[unitKey]
+    local cbDB = ufDB and ufDB.castbar or {}
+    local cbHeight = cbDB.height or 16
+
     local castbar = CreateFrame("StatusBar", nil, frame)
     castbar:SetStatusBarTexture(GetStatusBarTexture())
     castbar:SetStatusBarColor(0.4, 0.6, 0.8, 1)
@@ -204,7 +308,7 @@ local function CreateCastbar(frame)
     -- 位於主框架下方
     castbar:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 0, -4)
     castbar:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, -4)
-    castbar:SetHeight(16)
+    castbar:SetHeight(cbHeight)
 
     -- 背景
     local bg = castbar:CreateTexture(nil, "BACKGROUND")
@@ -239,15 +343,93 @@ local function CreateCastbar(frame)
     time:SetJustifyH("RIGHT")
     castbar.Time = time
 
+    -- 玩家施法條：延遲指示區
+    local showLatency = cbDB.showLatency ~= false
+    if isPlayer and showLatency then
+        local latency = castbar:CreateTexture(nil, "OVERLAY", nil, 6)
+        latency:SetColorTexture(0.8, 0.2, 0.2, 0.5)
+        latency:SetHeight(castbar:GetHeight())
+        latency:SetPoint("TOPRIGHT", castbar:GetStatusBarTexture(), "TOPRIGHT")
+        latency:SetPoint("BOTTOMRIGHT", castbar:GetStatusBarTexture(), "BOTTOMRIGHT")
+        latency:Hide()
+        castbar._latency = latency
+    end
+
     -- WoW 12.0 將 notInterruptible 設為隱藏值
     -- 暴雪故意限制插件存取此資訊
     -- 使用統一的施法條顏色（無法判斷是否可打斷）
     castbar.PostCastStart = function(self, _unit)
         self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
+        HideAllTicks(self)
+
+        -- 玩家施法條：顯示延遲
+        if self._latency then
+            local _, _, _, latencyWorld = GetNetStats()
+            if latencyWorld and latencyWorld > 0 then
+                local castTime = self.max or 0
+                if castTime > 0 then
+                    local latencyPct = (latencyWorld / 1000) / castTime
+                    latencyPct = math.min(latencyPct, 0.5)  -- 上限 50%
+                    self._latency:SetWidth(self:GetWidth() * latencyPct)
+                    self._latency:Show()
+                else
+                    self._latency:Hide()
+                end
+            else
+                self._latency:Hide()
+            end
+        end
     end
 
-    castbar.PostChannelStart = function(self, _unit)
+    local showTicks = cbDB.showTicks ~= false
+    castbar.PostChannelStart = function(self, _unit, spellID)
         self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
+
+        -- 引導法術 tick 標記
+        if showTicks then
+            local numTicks = spellID and CHANNEL_TICKS[spellID]
+            if numTicks then
+                ShowTickMarks(self, numTicks)
+            else
+                HideAllTicks(self)
+            end
+        end
+
+        -- 隱藏延遲（引導法術不顯示延遲）
+        if self._latency then
+            self._latency:Hide()
+        end
+    end
+
+    castbar.PostChannelStop = function(self)
+        HideAllTicks(self)
+    end
+
+    -- Evoker 強化施法支援
+    local showEmpowered = cbDB.showEmpowered ~= false
+    if isPlayer and showEmpowered then
+        castbar.PostEmpowerStart = function(self, _unit, spellID, oufNumStages)
+            self:SetStatusBarColor(0.6, 0.4, 0.9, 1)  -- 紫色標識強化施法
+            -- 優先使用 oUF 提供的 numStages，fallback 到查表
+            local numStages = oufNumStages or (spellID and EMPOWERED_STAGES[spellID])
+            if numStages and numStages > 1 then
+                ShowEmpoweredStages(self, numStages)
+            end
+            if self._latency then self._latency:Hide() end
+        end
+
+        castbar.PostEmpowerStop = function(self)
+            if self._stages then
+                for i = 1, MAX_TICKS do
+                    if self._stages[i] then self._stages[i]:Hide() end
+                end
+            end
+        end
+    end
+
+    castbar.PostCastStop = function(self)
+        HideAllTicks(self)
+        if self._latency then self._latency:Hide() end
     end
 
     -- 火花
@@ -269,11 +451,13 @@ local auraBlacklistCache = {}
 
 --[[ AuraFilter DB 設定快取（避免高頻 DB 查詢）]]
 local auraFilterDBCache = {}  -- [unitKey] = { onlyPlayerDebuffs = bool }
+local auraFilterGlobalCache = nil  -- 全域過濾器設定快取
 
 local function RebuildAuraFilterCache()
     wipe(auraWhitelistCache)
     wipe(auraBlacklistCache)
     wipe(auraFilterDBCache)  -- 清除 DB 設定快取，強制重新讀取
+    auraFilterGlobalCache = nil
     local db = LunarUI.db.profile
     if not db then return end
 
@@ -293,6 +477,20 @@ end
 -- 公開方法供 Options 呼叫
 LunarUI.RebuildAuraFilterCache = RebuildAuraFilterCache
 
+-- 取得全域過濾器設定（快取）
+local function GetAuraFilterSettings()
+    if not auraFilterGlobalCache then
+        local db = LunarUI.db.profile
+        local af = db and db.auraFilters or {}
+        auraFilterGlobalCache = {
+            hidePassive = af.hidePassive ~= false,
+            showStealable = af.showStealable ~= false,
+            showDispellable = af.showDispellable ~= false,
+        }
+    end
+    return auraFilterGlobalCache
+end
+
 --[[ 光環過濾器：根據 DB 設定過濾 ]]
 local function AuraFilter(_element, unit, data)
     -- 標準化單位 key（boss1 → boss, party1 → party）
@@ -309,7 +507,8 @@ local function AuraFilter(_element, unit, data)
         auraFilterDBCache[unitKey] = cachedSettings
     end
 
-    -- Fix 9: 合併多次 pcall 為一次，減少每個 aura 的開銷
+    local filters = GetAuraFilterSettings()
+
     -- data 的欄位可能是 WoW secret value，用單一 pcall 保護所有存取
     local ok, shouldFilter = pcall(function()
         local spellId = data.spellId
@@ -324,16 +523,23 @@ local function AuraFilter(_element, unit, data)
             return false
         end
 
+        -- 可竊取 buff 在敵方目標上永遠顯示
+        if filters.showStealable and data.isStealable and UnitIsEnemy("player", unit) then
+            return false
+        end
+
         -- 僅顯示玩家施放的 debuff
         if cachedSettings.onlyPlayerDebuffs and data.isHarmfulAura and not data.isPlayerAura then
             return true
         end
-        -- 隱藏持續超過 5 分鐘的 buff 和永久 buff（減少雜訊）
-        if not data.isHarmfulAura and data.duration then
+
+        -- 隱藏被動效果（持續超過 5 分鐘的 buff 和永久 buff）
+        if filters.hidePassive and not data.isHarmfulAura and data.duration then
             if data.duration == 0 or data.duration > 300 then
                 return true
             end
         end
+
         return false
     end)
 
@@ -344,6 +550,61 @@ local function AuraFilter(_element, unit, data)
 
     return true
 end
+
+--[[ 光環排序：根據 DB 設定排序 ]]
+local function GetAuraSortFunction()
+    local db = LunarUI.db.profile
+    local af = db and db.auraFilters or {}
+    local method = af.sortMethod or "time"
+    local reverse = af.sortReverse or false
+
+    if method == "time" then
+        -- 按剩餘時間排序（快到期的在前）
+        return function(a, b)
+            local aTime = a.expirationTime or 0
+            local bTime = b.expirationTime or 0
+            if aTime == 0 then aTime = math.huge end
+            if bTime == 0 then bTime = math.huge end
+            if reverse then return aTime > bTime end
+            return aTime < bTime
+        end
+    elseif method == "duration" then
+        -- 按總持續時間排序
+        return function(a, b)
+            local aDur = a.duration or 0
+            local bDur = b.duration or 0
+            if reverse then return aDur > bDur end
+            return aDur < bDur
+        end
+    elseif method == "name" then
+        -- 按名稱字母排序
+        return function(a, b)
+            local aName = a.name or ""
+            local bName = b.name or ""
+            if reverse then return aName > bName end
+            return aName < bName
+        end
+    elseif method == "player" then
+        -- 玩家施放的在前
+        return function(a, b)
+            local aPlayer = a.isPlayerAura and 1 or 0
+            local bPlayer = b.isPlayerAura and 1 or 0
+            if aPlayer ~= bPlayer then
+                if reverse then return aPlayer < bPlayer end
+                return aPlayer > bPlayer
+            end
+            -- 同類別按剩餘時間排序
+            local aTime = a.expirationTime or 0
+            local bTime = b.expirationTime or 0
+            return aTime < bTime
+        end
+    end
+
+    return nil
+end
+
+-- 公開排序函數供 oUF 使用
+LunarUI.GetAuraSortFunction = GetAuraSortFunction
 
 --[[ 光環圖示樣式化鉤子 ]]
 local function PostCreateAuraIcon(_self, button)
@@ -400,6 +661,8 @@ local function CreateAuraFrame(frame, unit, isDebuff)
     auras.num = auraNum
     auras.FilterAura = AuraFilter
     auras.PostCreateButton = PostCreateAuraIcon
+    auras.SortBuffs = GetAuraSortFunction()
+    auras.SortDebuffs = GetAuraSortFunction()
 
     if isDebuff then
         auras:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
@@ -618,6 +881,52 @@ local function CreateHealPrediction(frame, unit)
     }
 
     return frame.HealthPrediction
+end
+
+--[[ 角色肖像（2D 職業圖示 / 3D 模型）]]
+local function CreatePortrait(frame, unit)
+    local unitKey = unit and unit:gsub("%d+$", "") or "player"
+    local ufDB = LunarUI.db and LunarUI.db.profile.unitframes[unitKey]
+    if not ufDB or not ufDB.showPortrait then return end
+
+    local style = ufDB.portraitStyle or "class"
+    local size = frame:GetHeight() - 2  -- 與框架高度對齊（扣除邊框）
+
+    if style == "3d" then
+        -- 3D 角色模型：oUF 會自動設定 SetUnit / SetCamera
+        local portrait = CreateFrame("PlayerModel", nil, frame)
+        portrait:SetSize(size, size)
+        portrait:SetPoint("LEFT", frame, "LEFT", 1, 0)
+        portrait:SetFrameLevel(frame.Health:GetFrameLevel() + 1)
+
+        -- 背景（掛在 portrait 框架上確保正確層級）
+        local bg = portrait:CreateTexture(nil, "BACKGROUND", nil, -1)
+        bg:SetAllPoints(portrait)
+        bg:SetColorTexture(0, 0, 0, 0.6)
+        portrait._bg = bg
+
+        frame.Portrait = portrait
+    else
+        -- 2D 職業圖示：設定 showClass 讓 oUF 使用 classicon atlas
+        local portrait = frame.Health:CreateTexture(nil, "OVERLAY")
+        portrait:SetSize(size, size)
+        portrait:SetPoint("LEFT", frame, "LEFT", 1, 0)
+        portrait.showClass = true
+
+        frame.Portrait = portrait
+    end
+
+    -- 有 Portrait 時將血條右移，避免重疊
+    -- 需先清除錨點再重新設定，避免重複 TOPLEFT 造成不確定行為
+    if frame.Health and frame.Portrait then
+        frame.Health:ClearAllPoints()
+        frame.Health:SetPoint("TOPLEFT", frame, "TOPLEFT", size + 2, -1)
+        frame.Health:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
+        local heightPercent = (unit == "raid") and 0.85 or 0.65
+        frame.Health:SetHeight(frame:GetHeight() * heightPercent)
+    end
+
+    return frame.Portrait
 end
 
 --[[ 玩家：休息指示器 ]]
@@ -916,6 +1225,7 @@ local function PlayerLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
+    CreatePortrait(frame, unit)
     CreatePowerBar(frame, unit)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
@@ -938,6 +1248,7 @@ local function TargetLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
+    CreatePortrait(frame, unit)
     CreatePowerBar(frame, unit)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
@@ -969,6 +1280,7 @@ local function FocusLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
+    CreatePortrait(frame, unit)
     CreatePowerBar(frame, unit)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
@@ -1039,28 +1351,35 @@ local function PartyLayout(frame, unit)
     return frame
 end
 
---[[ 團隊佈局 ]]
-local function RaidLayout(frame, unit)
-    local db = LunarUI.db.profile.unitframes.raid
-    local size = db and { width = db.width, height = db.height } or SIZES.raid
-    frame:SetSize(size.width, size.height)
+--[[ 團隊佈局工廠（支援多重 raid 尺寸） ]]
+local function CreateRaidLayout(dbKey)
+    return function(frame, unit)
+        local db = LunarUI.db.profile.unitframes[dbKey]
+        local size = db and { width = db.width, height = db.height } or SIZES.raid
+        frame:SetSize(size.width, size.height)
 
-    Shared(frame, unit)
-    CreateThreatIndicator(frame)
-    CreateRangeIndicator(frame)
-    CreateHealPrediction(frame, unit)
-    CreateLeaderIndicator(frame)
-    CreateAssistantIndicator(frame)
-    CreateRaidRoleIndicator(frame)
-    CreateGroupRoleIndicator(frame)
-    CreateReadyCheckIndicator(frame)
-    CreateSummonIndicator(frame)
-    CreateResurrectIndicator(frame)
-    CreateRaidDebuffs(frame)  -- 使用 helper 函數避免代碼重複
-    CreateDeathIndicator(frame, unit)
+        Shared(frame, unit)
+        CreateThreatIndicator(frame)
+        CreateRangeIndicator(frame)
+        CreateHealPrediction(frame, unit)
+        CreateLeaderIndicator(frame)
+        CreateAssistantIndicator(frame)
+        CreateRaidRoleIndicator(frame)
+        CreateGroupRoleIndicator(frame)
+        CreateReadyCheckIndicator(frame)
+        CreateSummonIndicator(frame)
+        CreateResurrectIndicator(frame)
+        CreateRaidDebuffs(frame)
+        CreateDeathIndicator(frame, unit)
 
-    return frame
+        return frame
+    end
 end
+
+local RaidLayout = CreateRaidLayout("raid")
+local Raid1Layout = CreateRaidLayout("raid1")
+local Raid2Layout = CreateRaidLayout("raid2")
+local Raid3Layout = CreateRaidLayout("raid3")
 
 --------------------------------------------------------------------------------
 -- 註冊風格
@@ -1075,6 +1394,9 @@ oUF:RegisterStyle("LunarUI_TargetTarget", TargetTargetLayout)
 oUF:RegisterStyle("LunarUI_Boss", BossLayout)
 oUF:RegisterStyle("LunarUI_Party", PartyLayout)
 oUF:RegisterStyle("LunarUI_Raid", RaidLayout)
+oUF:RegisterStyle("LunarUI_Raid1", Raid1Layout)
+oUF:RegisterStyle("LunarUI_Raid2", Raid2Layout)
+oUF:RegisterStyle("LunarUI_Raid3", Raid3Layout)
 
 oUF:SetActiveStyle("LunarUI")
 
@@ -1169,31 +1491,85 @@ local function SpawnGroupFrames(uf)
     end
 
     if uf.raid and uf.raid.enabled then
-        oUF:SetActiveStyle("LunarUI_Raid")
-        local raidHeader = oUF:SpawnHeader(
-            "LunarUI_Raid",
-            nil,
-            "showRaid", true,
-            "showParty", false,
-            "showPlayer", true,
-            "showSolo", false,
-            "xOffset", 4,
-            "yOffset", -4,
-            "groupFilter", "1,2,3,4,5,6,7,8",
-            "groupBy", "GROUP",
-            "groupingOrder", "1,2,3,4,5,6,7,8",
-            "maxColumns", 8,
-            "unitsPerColumn", 5,
-            "columnSpacing", 4,
-            "columnAnchorPoint", "TOP",
-            "oUF-initialConfigFunction", ([[
-                self:SetHeight(%d)
-                self:SetWidth(%d)
-            ]]):format(uf.raid.height or 30, uf.raid.width or 80)
-        )
-        raidHeader:SetPoint(uf.raid.point or "TOPLEFT", UIParent, uf.raid.point or "TOPLEFT", uf.raid.x or 20, uf.raid.y or -20)
-        _G.RegisterStateDriver(raidHeader, "visibility", "[group:raid] show; hide")
-        spawnedFrames.raid = raidHeader
+        if uf.raid.autoSwitchSize then
+            -- 多重 Raid 尺寸：根據團隊人數自動切換 3 個 header
+            local raidPoint = uf.raid.point or "TOPLEFT"
+            local raidX = uf.raid.x or 20
+            local raidY = uf.raid.y or -20
+
+            -- 各 header 的 maxColumns/unitsPerColumn 根據實際最大人數限制
+            -- 避免 3 個 header 各建 40 個框架（共 120）浪費記憶體
+            local raidConfigs = {
+                { key = "raid1", style = "LunarUI_Raid1", name = "LunarUI_Raid1",
+                  maxCol = 2, perCol = 5,  -- 最多 10 人
+                  vis = "[@raid11,exists] hide; [group:raid] show; hide" },
+                { key = "raid2", style = "LunarUI_Raid2", name = "LunarUI_Raid2",
+                  maxCol = 5, perCol = 5,  -- 最多 25 人
+                  vis = "[@raid26,exists] hide; [@raid11,exists,group:raid] show; hide" },
+                { key = "raid3", style = "LunarUI_Raid3", name = "LunarUI_Raid3",
+                  maxCol = 8, perCol = 5,  -- 最多 40 人
+                  vis = "[@raid26,exists,group:raid] show; hide" },
+            }
+
+            for _, cfg in ipairs(raidConfigs) do
+                local raidDB = uf[cfg.key] or {}
+                local w = raidDB.width or uf.raid.width or 80
+                local h = raidDB.height or uf.raid.height or 30
+                local sp = raidDB.spacing or uf.raid.spacing or 3
+
+                oUF:SetActiveStyle(cfg.style)
+                local header = oUF:SpawnHeader(
+                    cfg.name, nil,
+                    "showRaid", true,
+                    "showParty", false,
+                    "showPlayer", true,
+                    "showSolo", false,
+                    "xOffset", sp,
+                    "yOffset", -sp,
+                    "groupFilter", "1,2,3,4,5,6,7,8",
+                    "groupBy", "GROUP",
+                    "groupingOrder", "1,2,3,4,5,6,7,8",
+                    "maxColumns", cfg.maxCol,
+                    "unitsPerColumn", cfg.perCol,
+                    "columnSpacing", sp,
+                    "columnAnchorPoint", "TOP",
+                    "oUF-initialConfigFunction", ([[
+                        self:SetHeight(%d)
+                        self:SetWidth(%d)
+                    ]]):format(h, w)
+                )
+                header:SetPoint(raidPoint, UIParent, raidPoint, raidX, raidY)
+                _G.RegisterStateDriver(header, "visibility", cfg.vis)
+                spawnedFrames[cfg.key] = header
+            end
+        else
+            -- 單一 Raid header（傳統模式）
+            oUF:SetActiveStyle("LunarUI_Raid")
+            local raidHeader = oUF:SpawnHeader(
+                "LunarUI_Raid",
+                nil,
+                "showRaid", true,
+                "showParty", false,
+                "showPlayer", true,
+                "showSolo", false,
+                "xOffset", 4,
+                "yOffset", -4,
+                "groupFilter", "1,2,3,4,5,6,7,8",
+                "groupBy", "GROUP",
+                "groupingOrder", "1,2,3,4,5,6,7,8",
+                "maxColumns", 8,
+                "unitsPerColumn", 5,
+                "columnSpacing", 4,
+                "columnAnchorPoint", "TOP",
+                "oUF-initialConfigFunction", ([[
+                    self:SetHeight(%d)
+                    self:SetWidth(%d)
+                ]]):format(uf.raid.height or 30, uf.raid.width or 80)
+            )
+            raidHeader:SetPoint(uf.raid.point or "TOPLEFT", UIParent, uf.raid.point or "TOPLEFT", uf.raid.x or 20, uf.raid.y or -20)
+            _G.RegisterStateDriver(raidHeader, "visibility", "[group:raid] show; hide")
+            spawnedFrames.raid = raidHeader
+        end
     end
 end
 

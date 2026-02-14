@@ -43,6 +43,30 @@ local CLASSIFICATION_COLORS = {
     trivial = { r = 0.3, g = 0.3, b = 0.3 },
 }
 
+-- NPC 角色分類色（Caster / Miniboss）
+local NPC_ROLE_COLORS = {
+    caster   = { r = 0.55, g = 0.35, b = 0.85 },  -- 紫色（施法者）
+    miniboss = { r = 0.8,  g = 0.6,  b = 0.2  },  -- 金色（精英/小Boss）
+}
+
+local function GetNPCRoleColor(unit, db)
+    if not unit or UnitIsPlayer(unit) then return nil end
+    local npcDb = db and db.npcColors
+    if not npcDb or not npcDb.enabled then return nil end
+
+    local classification = UnitClassification(unit)
+    if classification == "worldboss" or classification == "elite" or classification == "rareelite" then
+        return npcDb.miniboss or NPC_ROLE_COLORS.miniboss
+    end
+
+    local powerType = UnitPowerType(unit)
+    if powerType == 0 then  -- Mana = 施法者
+        return npcDb.caster or NPC_ROLE_COLORS.caster
+    end
+
+    return nil  -- 近戰：保持預設反應色
+end
+
 local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS
 
 -- 私有事件框架（不暴露到 LunarUI 物件）
@@ -102,18 +126,35 @@ local function CreateHealthBar(frame)
     health.frequentUpdates = true
 
     -- Health text overlay
+    local healthText
     if db and db.showHealthText then
-        local healthText = health:CreateFontString(nil, "OVERLAY")
+        healthText = health:CreateFontString(nil, "OVERLAY")
         LunarUI.SetFont(healthText, 8, "OUTLINE")
         healthText:SetPoint("CENTER", health, "CENTER", 0, 0)
         frame.HealthText = healthText
+    end
 
-        local fmt = db.healthTextFormat or "percent"
-        health.PostUpdate = function(_bar, _unit, cur, max)
+    local showNpcColors = db and db.npcColors and db.npcColors.enabled
+    local fmt = db and db.healthTextFormat or "percent"
+
+    if healthText or showNpcColors then
+        health.PostUpdate = function(bar, unit, cur, max)
+            -- NPC 角色分類上色（覆蓋 oUF 的 reaction 顏色）
+            if showNpcColors and unit then
+                local npcColor = GetNPCRoleColor(unit, db)
+                if npcColor then
+                    local reaction = UnitReaction(unit, "player")
+                    if (not reaction or reaction <= 4) and not UnitIsTapDenied(unit) then
+                        bar:SetStatusBarColor(npcColor.r, npcColor.g, npcColor.b)
+                        if bar.bg then
+                            bar.bg:SetVertexColor(npcColor.r * 0.3, npcColor.g * 0.3, npcColor.b * 0.3)
+                        end
+                    end
+                end
+            end
+
+            -- 生命值文字
             if not healthText then return end
-            -- WoW secret value: type()=="number", tonumber() 原樣回傳, 但算術會報錯
-            -- 唯一可靠的偵測方式是嘗試算術並 pcall
-            -- 額外檢查類型以提早過濾非數字值
             if type(cur) ~= "number" or type(max) ~= "number" then
                 healthText:SetText("")
                 return
@@ -129,7 +170,6 @@ local function CreateHealthBar(frame)
             if fmt == "percent" then
                 healthText:SetText(pct .. "%")
             elseif fmt == "current" then
-                -- cur 已通過 pcall 驗證，可安全使用
                 if cur >= 1e6 then
                     healthText:SetText(string.format("%.1fM", cur / 1e6))
                 elseif cur >= 1e3 then

@@ -97,6 +97,48 @@ local function OnAchievementEarned(_self, _event, ...)
 end
 
 --------------------------------------------------------------------------------
+-- 自動接受/繳交任務
+--------------------------------------------------------------------------------
+
+local autoQuestFrame = CreateFrame("Frame")
+
+local function OnQuestDetail()
+    local cfg = GetAutoConfig()
+    if not cfg or not cfg.autoAcceptQuest then return end
+    AcceptQuest()
+end
+
+local function OnQuestProgress()
+    local cfg = GetAutoConfig()
+    if not cfg or not cfg.autoAcceptQuest then return end
+    if IsQuestCompletable() then
+        CompleteQuest()
+    end
+end
+
+local function OnQuestComplete()
+    local cfg = GetAutoConfig()
+    if not cfg or not cfg.autoAcceptQuest then return end
+    -- 只有無獎勵選擇或僅一個獎勵時才自動繳交（避免選錯獎勵）
+    local numChoices = GetNumQuestChoices()
+    if numChoices <= 1 then
+        GetQuestReward(numChoices > 0 and 1 or nil)
+    end
+end
+
+--------------------------------------------------------------------------------
+-- 自動接受副本/戰場佇列
+--------------------------------------------------------------------------------
+
+local autoQueueFrame = CreateFrame("Frame")
+
+local function OnLFGProposalShow()
+    local cfg = GetAutoConfig()
+    if not cfg or not cfg.autoAcceptQueue then return end
+    AcceptProposal()
+end
+
+--------------------------------------------------------------------------------
 -- 初始化與清理
 --------------------------------------------------------------------------------
 
@@ -114,6 +156,24 @@ function LunarUI:InitAutomation()
     -- 成就截圖
     achievementFrame:RegisterEvent("ACHIEVEMENT_EARNED")
     achievementFrame:SetScript("OnEvent", OnAchievementEarned)
+
+    -- 自動接受/繳交任務
+    autoQuestFrame:RegisterEvent("QUEST_DETAIL")
+    autoQuestFrame:RegisterEvent("QUEST_PROGRESS")
+    autoQuestFrame:RegisterEvent("QUEST_COMPLETE")
+    autoQuestFrame:SetScript("OnEvent", function(_self, event)
+        if event == "QUEST_DETAIL" then
+            OnQuestDetail()
+        elseif event == "QUEST_PROGRESS" then
+            OnQuestProgress()
+        elseif event == "QUEST_COMPLETE" then
+            OnQuestComplete()
+        end
+    end)
+
+    -- 自動接受副本/戰場佇列
+    autoQueueFrame:RegisterEvent("LFG_PROPOSAL_SHOW")
+    autoQueueFrame:SetScript("OnEvent", OnLFGProposalShow)
 end
 
 function LunarUI.CleanupAutomation()
@@ -125,6 +185,12 @@ function LunarUI.CleanupAutomation()
 
     achievementFrame:UnregisterAllEvents()
     achievementFrame:SetScript("OnEvent", nil)
+
+    autoQuestFrame:UnregisterAllEvents()
+    autoQuestFrame:SetScript("OnEvent", nil)
+
+    autoQueueFrame:UnregisterAllEvents()
+    autoQueueFrame:SetScript("OnEvent", nil)
 end
 
 LunarUI:RegisterModule("Automation", {

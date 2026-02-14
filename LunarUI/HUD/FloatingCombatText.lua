@@ -20,8 +20,10 @@ local LunarUI = Engine.LunarUI
 --------------------------------------------------------------------------------
 
 local fctFrame = nil
+local queueFrame = nil       -- 佇列處理框架（在乾淨的執行環境中消化 CLEU 事件）
 local textPool = {}          -- 可用的 FontString 池
 local activeTexts = {}       -- 目前顯示中的 FontString
+local pendingTexts = {}      -- CLEU 事件佇列（避免在 tainted 環境中操作 UI）
 local POOL_SIZE = 20         -- 預建數量
 local isEnabled = false
 
@@ -244,10 +246,27 @@ end
 
 local playerGUID = nil
 
+-- taint 安全工具：使用 tostring/tonumber 斷開 CombatLogGetCurrentEventInfo 的 taint 鏈
+-- WoW 12.0 中 CLEU 回傳值帶有 taint，直接使用會污染後續安全操作
+local function Sanitize(val)
+    if val == nil then return nil end
+    local t = type(val)
+    if t == "number" then return tonumber(tostring(val)) end
+    if t == "string" then return tostring(val) end
+    if t == "boolean" then return val == true end
+    return val
+end
+
+-- CLEU handler：只做資料解析，不操作任何 UI
+-- 所有 UI 操作延遲到 queueFrame 的 OnUpdate（乾淨的執行環境）
 local function OnCombatLogEvent()
     if not isEnabled then return end
 
-    local _, event, _, sourceGUID, _, _, _, destGUID = CombatLogGetCurrentEventInfo()
+    -- 一次擷取所有值，透過 Sanitize 斷開 taint
+    local info = { CombatLogGetCurrentEventInfo() }
+    local event = Sanitize(info[2])
+    local sourceGUID = Sanitize(info[4])
+    local destGUID = Sanitize(info[8])
 
     if not playerGUID then
         playerGUID = UnitGUID("player")
@@ -259,35 +278,35 @@ local function OnCombatLogEvent()
     if DAMAGE_EVENTS[event] then
         local amount, critical
         if event == "SWING_DAMAGE" then
-            -- SWING_DAMAGE suffix (pos 12-21):
-            -- amount(12), overkill(13), school(14), resisted(15), blocked(16), absorbed(17), critical(18)
-            amount, _, _, _, _, _, critical = select(12, CombatLogGetCurrentEventInfo())
+            amount = Sanitize(info[12])
+            critical = Sanitize(info[18])
         else
-            -- SPELL_DAMAGE / RANGE_DAMAGE / SPELL_PERIODIC_DAMAGE suffix (pos 12-24):
-            -- spellID(12), spellName(13), spellSchool(14),
-            -- amount(15), overkill(16), school(17), resisted(18), blocked(19), absorbed(20), critical(21)
-            _, _, _, amount, _, _, _, _, _, critical = select(12, CombatLogGetCurrentEventInfo())
+            amount = Sanitize(info[15])
+            critical = Sanitize(info[21])
         end
 
         if type(amount) ~= "number" then return end
 
         if sourceGUID == playerGUID then
-            ShowText(amount, critical, "damage_out")
+            pendingTexts[#pendingTexts + 1] = { amount, critical, "damage_out" }
         elseif destGUID == playerGUID then
-            ShowText(amount, critical, "damage_in")
+            pendingTexts[#pendingTexts + 1] = { amount, critical, "damage_in" }
         end
 
     elseif HEAL_EVENTS[event] then
-        -- SPELL_HEAL / SPELL_PERIODIC_HEAL suffix (pos 12-21):
-        -- spellID(12), spellName(13), spellSchool(14),
-        -- amount(15), overhealing(16), absorbed(17), critical(18)
-        local _, _, _, amount, _, _, critical = select(12, CombatLogGetCurrentEventInfo())
+        local amount = Sanitize(info[15])
+        local critical = Sanitize(info[18])
 
         if type(amount) ~= "number" then return end
 
         if sourceGUID == playerGUID then
-            ShowText(amount, critical, "heal")
+            pendingTexts[#pendingTexts + 1] = { amount, critical, "heal" }
         end
+    end
+
+    -- 喚醒佇列處理框架（下一幀的 OnUpdate 將在乾淨環境中執行）
+    if #pendingTexts > 0 and queueFrame then
+        queueFrame:Show()
     end
 end
 
@@ -306,6 +325,19 @@ local function CreateFCTFrame()
 
     -- 初始化框架池
     InitPool(fctFrame)
+
+    -- 佇列處理框架：在乾淨的 OnUpdate 環境中消化 CLEU 事件
+    -- Show/Hide 控制：只在有待處理事件時才啟動 OnUpdate，避免空轉
+    queueFrame = CreateFrame("Frame", nil, fctFrame)
+    queueFrame:Hide()
+    queueFrame:SetScript("OnUpdate", function(self)
+        self:Hide()  -- 處理完立即停止，下次有事件時再 Show()
+        for i = 1, #pendingTexts do
+            local entry = pendingTexts[i]
+            ShowText(entry[1], entry[2], entry[3])
+        end
+        wipe(pendingTexts)
+    end)
 
     -- 註冊戰鬥日誌事件
     fctFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -326,6 +358,13 @@ local function CleanupFCT()
     if fctFrame then
         fctFrame:UnregisterAllEvents()
         fctFrame:SetScript("OnEvent", nil)
+
+        -- 停止佇列處理
+        if queueFrame then
+            queueFrame:SetScript("OnUpdate", nil)
+            queueFrame:Hide()
+        end
+        wipe(pendingTexts)
 
         -- 回收所有活動中的文字
         for i = #activeTexts, 1, -1 do

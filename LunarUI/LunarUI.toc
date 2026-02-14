@@ -41,6 +41,7 @@ Core\Options.lua
 Core\InstallWizard.lua
 Core\Commands.lua
 Core\Debug.lua
+Core\Tags.lua
 
 # Media & Visual Theme
 Core\Media.lua
@@ -61,7 +62,7 @@ HUD\PerformanceMonitor.lua
 HUD\ClassResources.lua
 HUD\CooldownTracker.lua
 HUD\AuraFrames.lua
-# HUD\FloatingCombatText.lua  -- 暫時停用：CombatLogGetCurrentEventInfo 造成 taint（見 commit 48ebcae）
+# HUD\FloatingCombatText.lua  -- 停用：CLEU 執行環境層級 taint，無 addon 層解法（程式碼已備 Sanitize+佇列機制，待 C_CombatLog API 啟用）
 
 # Modules (Non-combat UI)
 Modules\Automation.lua
@@ -88,3 +89,8 @@ Modules\Skins\LFG.lua
 Modules\Skins\EncounterJournal.lua
 Modules\Skins\AuctionHouse.lua
 Modules\Skins\Communities.lua
+Modules\Skins\Housing.lua
+Modules\Skins\Professions.lua
+Modules\Skins\PVP.lua
+Modules\Skins\Settings.lua
+Modules\Skins\Trade.lua
