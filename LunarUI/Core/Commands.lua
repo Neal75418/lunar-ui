@@ -98,7 +98,31 @@ function LunarUI:SlashCommand(input)
         end
 
     elseif cmd == "debugvigor" then
-        self:DebugVigorFrames()
+        local sub = args[2]
+        if not sub then
+            -- 無參數：執行一次性診斷 + 切換持續監控
+            self:DebugVigorFrames()
+            if not self.db.global then self.db.global = {} end
+            self.db.global._debugVigor = not self.db.global._debugVigor
+            if self.db.global._debugVigor then
+                self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r（VigorTrace/DeepDiag 訊息已啟用）")
+            else
+                self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
+            end
+        elseif sub == "on" then
+            if not self.db.global then self.db.global = {} end
+            self.db.global._debugVigor = true
+            self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r")
+        elseif sub == "off" then
+            if not self.db.global then self.db.global = {} end
+            self.db.global._debugVigor = false
+            self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
+        else
+            self:DebugVigorFrames()
+        end
+
+    elseif cmd == "testvigor" then
+        self:ToggleTestVigor()
 
     else
         self:Print(string.format(_L["UnknownCommand"] or "Unknown command: %s", cmd))
@@ -249,82 +273,160 @@ function LunarUI:DebugVigorFrames()
         lines[#lines + 1] = text
     end
 
-    add("=== Vigor Bar Debug ===")
+    -- 安全取值輔助（避免 secret taint）
+    local function safeNum(val) return tonumber(tostring(val or 0)) or 0 end
+    local function safeStr(val) return tostring(val or "?") end
 
-    -- 檢查所有可能的活力條相關框架
-    local frameNames = {
-        "PlayerPowerBarAlt",
-        "UIWidgetPowerBarContainerFrame",
-        "UIWidgetBelowMinimapContainerFrame",
-        "UIWidgetTopCenterContainerFrame",
-        "UIWidgetCenterScreenContainerFrame",
-        "EncounterBar",
-        "OverrideActionBar",
-        "MainMenuBar",
-        "MinimapCluster",
-        "MainStatusTrackingBarContainer",
-        "SecondaryStatusTrackingBarContainer",
-    }
-
-    for _, name in ipairs(frameNames) do
-        local frame = _G[name]
-        if frame then
+    -- 取得框架完整診斷資訊
+    local function describeFrame(frame, indent)
+        indent = indent or ""
+        local info = {}
+        pcall(function()
             local shown = frame:IsShown() and "shown" or "HIDDEN"
             local visible = frame:IsVisible() and "visible" or "INVISIBLE"
-            local alpha = string.format("%.2f", frame:GetAlpha())
+            info.shown = shown .. "/" .. visible
+        end)
+        pcall(function() info.alpha = string.format("%.2f", safeNum(frame:GetAlpha())) end)
+        pcall(function() info.effAlpha = string.format("%.2f", safeNum(frame:GetEffectiveAlpha())) end)
+        pcall(function() info.scale = string.format("%.2f", safeNum(frame:GetScale())) end)
+        pcall(function() info.effScale = string.format("%.3f", safeNum(frame:GetEffectiveScale())) end)
+        pcall(function()
+            local w, h = frame:GetSize()
+            info.size = string.format("%.0fx%.0f", safeNum(w), safeNum(h))
+        end)
+        pcall(function()
+            local p, rel, _, px, py = frame:GetPoint(1)
+            local relName = "?"
+            if rel then relName = safeStr(rel:GetName() or "unnamed") end
+            info.pos = safeStr(p) .. "(" .. string.format("%.0f", safeNum(px)) .. "," .. string.format("%.0f", safeNum(py)) .. ")@" .. relName
+        end)
+        pcall(function()
+            local l, b, w, h = frame:GetBoundsRect()
+            if l then
+                info.bounds = string.format("L=%.0f B=%.0f W=%.0f H=%.0f", safeNum(l), safeNum(b), safeNum(w), safeNum(h))
+            end
+        end)
+        pcall(function()
             local parent = frame:GetParent()
-            local parentName = parent and (parent:GetName() or "unnamed") or "nil"
-            local w, h = 0, 0
-            pcall(function() w, h = frame:GetSize() end)
-            local x, y = 0, 0
-            local point = "?"
-            pcall(function()
-                local p, _, _, px, py = frame:GetPoint(1)
-                point = p or "?"
-                x = px or 0
-                y = py or 0
-            end)
-            add(string.format("%s: %s/%s a=%s parent=%s size=%.0fx%.0f pos=%s(%.0f,%.0f)",
-                name, shown, visible, alpha, parentName, w, h, point, x, y))
+            info.parent = parent and safeStr(parent:GetName() or "unnamed") or "nil"
+        end)
+        pcall(function() info.strata = safeStr(frame:GetFrameStrata()) end)
+        pcall(function() info.level = safeNum(frame:GetFrameLevel()) end)
 
-            -- 列出子框架（僅第一層）
-            local children = { frame:GetChildren() }
-            if #children > 0 then
+        -- LunarUI 標記檢查
+        if frame._lunarUIForceHidden then info.flags = (info.flags or "") .. " FORCE_HIDDEN" end
+        if frame._lunarSkinBG then info.flags = (info.flags or "") .. " SKINNED" end
+
+        local line = indent .. (info.shown or "?") ..
+            " a=" .. (info.alpha or "?") ..
+            " eff=" .. (info.effAlpha or "?") ..
+            " sc=" .. (info.scale or "?") ..
+            " effSc=" .. (info.effScale or "?") ..
+            " sz=" .. (info.size or "?") ..
+            " " .. (info.pos or "?") ..
+            " parent=" .. (info.parent or "?") ..
+            " strata=" .. (info.strata or "?") .. "/" .. (info.level or "?")
+        if info.bounds then line = line .. " [" .. info.bounds .. "]" end
+        if info.flags then line = line .. " FLAGS:" .. info.flags end
+        return line
+    end
+
+    add("=== Vigor Bar Debug v5 ===")
+
+    -- 1) 核心 vigor 框架詳細診斷
+    add("--- Core Vigor Frames ---")
+    local coreFrames = {
+        "EncounterBar",
+        "UIWidgetPowerBarContainerFrame",
+        "PlayerPowerBarAlt",
+        "OverrideActionBar",
+        "UIParentBottomManagedFrameContainer",
+        "UIParentRightManagedFrameContainer",
+    }
+    for _, name in ipairs(coreFrames) do
+        local frame = _G[name]
+        if frame then
+            add(name .. ": " .. describeFrame(frame))
+            -- 子框架（含大小與位置）
+            local ok, children = pcall(function() return { frame:GetChildren() } end)
+            if ok and children then
                 for i, child in ipairs(children) do
-                    if i > 8 and #children > 8 then
-                        add(string.format("  ... +%d more children", #children - 8))
+                    if i > 10 then
+                        add("  ... +" .. (#children - 10) .. " more children")
                         break
                     end
-                    local cName = child:GetName() or ("child#" .. i)
-                    local cShown = child:IsShown() and "shown" or "hidden"
-                    local cAlpha = string.format("%.2f", child:GetAlpha())
-                    add(string.format("  -> %s: %s alpha=%s", cName, cShown, cAlpha))
+                    local cName = "child#" .. i
+                    pcall(function() cName = child:GetName() or cName end)
+                    add("  -> " .. cName .. ": " .. describeFrame(child, "     "))
+                end
+            end
+            -- Region（材質/文字）
+            local ok2, regions = pcall(function() return { frame:GetRegions() } end)
+            if ok2 and regions then
+                local texCount, visCount = 0, 0
+                for _, r in ipairs(regions) do
+                    texCount = texCount + 1
+                    pcall(function()
+                        if r:IsShown() and r:GetAlpha() > 0 then visCount = visCount + 1 end
+                    end)
+                end
+                if texCount > 0 then
+                    add("     regions: " .. texCount .. " total, " .. visCount .. " visible")
                 end
             end
         else
-            add(string.format("%s: NOT FOUND", name))
+            add(name .. ": NOT FOUND")
         end
     end
 
-    -- 搜尋全域框架（pcall 保護，WoW 12.0 部分值為 secret 不可讀取）
-    add("--- Global frame scan (Vigor/Skyriding/PowerBar) ---")
+    -- 2) Parent chain walk（從 EncounterBar 一路到 UIParent）
+    add("--- Parent Chain (EncounterBar -> UIParent) ---")
+    local eb = _G["EncounterBar"]
+    if eb then
+        local current = eb
+        local depth = 0
+        while current and depth < 15 do
+            local cName = "?"
+            pcall(function() cName = current:GetName() or "unnamed" end)
+            add("[" .. depth .. "] " .. safeStr(cName) .. ": " .. describeFrame(current))
+            pcall(function() current = current:GetParent() end)
+            depth = depth + 1
+            if current == nil then break end
+        end
+    else
+        add("EncounterBar not found, cannot walk parent chain")
+    end
+
+    -- 3) 其他可能相關的框架
+    add("--- Other Frames ---")
+    local otherFrames = {
+        "MainMenuBar",
+        "MainMenuBarArtFrame",
+        "StatusTrackingBarManager",
+        "MainStatusTrackingBarContainer",
+        "MinimapCluster",
+    }
+    for _, name in ipairs(otherFrames) do
+        local frame = _G[name]
+        if frame then
+            add(name .. ": " .. describeFrame(frame))
+        else
+            add(name .. ": NOT FOUND")
+        end
+    end
+
+    -- 4) 搜尋全域 Vigor/Skyriding/PowerBar 框架
+    add("--- Global scan (Vigor/Skyriding/PowerBar) ---")
     local found = 0
     for k, v in pairs(_G) do
         local ok, line = pcall(function()
             if type(k) ~= "string" or type(v) ~= "table" or not v.GetAlpha then return nil end
             local safeKey = tostring(k)
             if not (safeKey:match("[Vv]igor") or safeKey:match("[Ss]kyriding") or safeKey:match("PowerBar")) then return nil end
-            local _, shown = pcall(function() return v:IsShown() and "shown" or "hidden" end)
-            local _, alpha = pcall(function() return string.format("%.2f", v:GetAlpha()) end)
-            local _, parentName = pcall(function()
-                local parent = v:GetParent()
-                return parent and (parent:GetName() or "unnamed") or "nil"
-            end)
-            return string.format("[GLOBAL] %s: %s alpha=%s parent=%s",
-                safeKey, shown or "?", alpha or "?", parentName or "?")
+            return "[GLOBAL] " .. safeKey .. ": " .. describeFrame(v)
         end)
         if ok and line then
-            add(line)
+            add(tostring(line))
             found = found + 1
         end
     end
@@ -332,10 +434,257 @@ function LunarUI:DebugVigorFrames()
         add("(no global frames matching Vigor/Skyriding/PowerBar)")
     end
 
-    add("=== End Debug ===")
+    -- 5) UIWidgetPowerBarContainerFrame 深層遍歷（找出 vigor widget 內容）
+    add("--- Deep Widget Scan (UIWidgetPowerBarContainerFrame) ---")
+    local uwpbcf = _G["UIWidgetPowerBarContainerFrame"]
+    if uwpbcf then
+        local totalFrames, totalVisible, totalWithTex = 0, 0, 0
+        local function scanDeep(frame, depth, prefix)
+            if depth > 5 then return end  -- 最多 5 層
+            local ok, children = pcall(function() return { frame:GetChildren() } end)
+            if not ok or not children then return end
+            for i, child in ipairs(children) do
+                totalFrames = totalFrames + 1
+                local cName = "?"
+                pcall(function() cName = child:GetName() or ("child#" .. i) end)
+                local isVis = false
+                pcall(function() isVis = child:IsVisible() end)
+                if isVis then totalVisible = totalVisible + 1 end
+                -- 檢查是否有材質
+                local texCount = 0
+                pcall(function()
+                    local regions = { child:GetRegions() }
+                    for _, r in ipairs(regions) do
+                        if r and r.IsObjectType and r:IsObjectType("Texture") then
+                            texCount = texCount + 1
+                        end
+                    end
+                end)
+                if texCount > 0 then totalWithTex = totalWithTex + 1 end
+                -- 只輸出有內容或有名字的框架
+                if texCount > 0 or cName ~= ("child#" .. i) or depth <= 2 then
+                    add(prefix .. cName .. ": " .. describeFrame(child, prefix) .. " tex=" .. texCount)
+                end
+                scanDeep(child, depth + 1, prefix .. "  ")
+            end
+        end
+        scanDeep(uwpbcf, 0, "  ")
+        add(string.format("  TOTAL: %d frames, %d visible, %d with textures", totalFrames, totalVisible, totalWithTex))
+    else
+        add("UIWidgetPowerBarContainerFrame: NOT FOUND")
+    end
 
-    -- 顯示在可複製的 EditBox 彈窗
-    local text = table.concat(lines, "\n")
+    -- 6) LunarUI 動作條 bg 框架掃描（檢查是否遮擋 vigor bar）
+    add("--- LunarUI ActionBar BG Scan ---")
+    local bgCount = 0
+    for k, v in pairs(_G) do
+        local ok, line = pcall(function()
+            if type(k) ~= "string" or type(v) ~= "table" or not v.GetFrameStrata then return nil end
+            if not tostring(k):match("LunarUI.*[Bb]ar") then return nil end
+            local strata = v:GetFrameStrata()
+            if strata == "TOOLTIP" or strata == "FULLSCREEN_DIALOG" then
+                return "[WARNING] " .. tostring(k) .. " strata=" .. strata
+            end
+            return nil
+        end)
+        if ok and line then
+            add(tostring(line))
+            bgCount = bgCount + 1
+        end
+    end
+    if bgCount == 0 then
+        add("(no LunarUI bar frames at TOOLTIP/FULLSCREEN_DIALOG strata)")
+    end
+
+    -- 7) UIWidget API 診斷（直接查詢 WoW 的 widget 系統）
+    add("--- UIWidget API ---")
+    pcall(function()
+        if not C_UIWidgetManager then
+            add("C_UIWidgetManager: NOT AVAILABLE")
+        else
+            -- 查詢所有 widget set 的 power bar 類型 widget
+            local widgetSets = { 1, 2, 3, 283 }  -- 常見 widget set ID
+            for _, setID in ipairs(widgetSets) do
+                local ok, widgets = pcall(C_UIWidgetManager.GetAllWidgetsBySetID, setID)
+                if ok and widgets then
+                    local count = #widgets
+                    if count > 0 then
+                        add("WidgetSet " .. setID .. ": " .. count .. " widgets")
+                        for _, w in ipairs(widgets) do
+                            local wType = safeNum(w.widgetType)
+                            local wID = safeNum(w.widgetID)
+                            -- Type 3 = StatusBar (vigor is this type)
+                            -- Type 0 = IconAndText, Type 2 = CaptureBar, etc.
+                            add("  widgetID=" .. wID .. " type=" .. wType ..
+                                (wType == 3 and " (StatusBar/VIGOR?)" or ""))
+                            -- 嘗試獲取 StatusBar 詳細資訊
+                            if wType == 3 then
+                                local ok2, info = pcall(C_UIWidgetManager.GetStatusBarWidgetVisualizationInfo, wID)
+                                if ok2 and info then
+                                    add("    -> barValue=" .. safeNum(info.barValue) ..
+                                        " barMin=" .. safeNum(info.barMin) ..
+                                        " barMax=" .. safeNum(info.barMax) ..
+                                        " text=" .. safeStr(info.text))
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- 查詢所有 widget container 框架
+            add("--- Widget Container Frames ---")
+            local containerNames = {
+                "UIWidgetPowerBarContainerFrame",
+                "UIWidgetBelowMinimapContainerFrame",
+                "UIWidgetTopCenterContainerFrame",
+                "UIWidgetCenterDisplayFrame",
+                "UIWidgetAboveOverlayContainerFrame",
+            }
+            for _, cName in ipairs(containerNames) do
+                local cf = _G[cName]
+                if cf then
+                    local childCount = 0
+                    local texCount = 0
+                    pcall(function()
+                        childCount = select("#", cf:GetChildren())
+                        local regions = { cf:GetRegions() }
+                        for _, r in ipairs(regions) do
+                            if r and r.IsObjectType and r:IsObjectType("Texture") then
+                                texCount = texCount + 1
+                            end
+                        end
+                    end)
+                    add(cName .. ": children=" .. childCount .. " textures=" .. texCount)
+                else
+                    add(cName .. ": NOT FOUND")
+                end
+            end
+        end
+    end)
+
+    -- 8) UnitPowerBarAlt API（最重要！vigor 是透過此系統顯示）
+    add("--- UnitPowerBarAlt API ---")
+    pcall(function()
+        -- 檢查玩家是否有替代能量條（vigor = alternative power bar）
+        if UnitPowerBarAlt_GetCurrentPowerBar then
+            local barInfo = UnitPowerBarAlt_GetCurrentPowerBar("player")
+            add("UnitPowerBarAlt_GetCurrentPowerBar: " .. safeStr(barInfo))
+        else
+            add("UnitPowerBarAlt_GetCurrentPowerBar: API NOT FOUND")
+        end
+    end)
+    pcall(function()
+        if GetUnitPowerBarInfo then
+            local barID, minPower, startInset, endInset, smooth, hideFromOthers, showOnRaid = GetUnitPowerBarInfo("player")
+            add("GetUnitPowerBarInfo: barID=" .. safeStr(barID) ..
+                " minPower=" .. safeStr(minPower))
+        else
+            add("GetUnitPowerBarInfo: API NOT FOUND")
+        end
+    end)
+    pcall(function()
+        if GetUnitPowerBarInfoByID then
+            -- Vigor barID 通常是一個特定值
+            add("GetUnitPowerBarInfoByID: API EXISTS")
+        end
+    end)
+    pcall(function()
+        if UnitPowerBarAltStatus_GetPowerBarInfo then
+            local info = UnitPowerBarAltStatus_GetPowerBarInfo("player")
+            add("UnitPowerBarAltStatus: " .. safeStr(info))
+        end
+    end)
+    pcall(function()
+        -- 直接檢查 PlayerPowerBarAlt 內部狀態
+        local ppba = _G["PlayerPowerBarAlt"]
+        if ppba then
+            add("PlayerPowerBarAlt.barID=" .. safeStr(ppba.barID))
+            add("PlayerPowerBarAlt.isActive=" .. safeStr(ppba.isActive))
+            add("PlayerPowerBarAlt.barType=" .. safeStr(ppba.barType))
+            -- 檢查 OnEvent 腳本是否存在
+            local onEvent = ppba:GetScript("OnEvent")
+            add("PlayerPowerBarAlt OnEvent: " .. (onEvent and "SET" or "NIL!"))
+            -- 檢查事件註冊
+            local events = { "UNIT_POWER_BAR_SHOW", "UNIT_POWER_BAR_HIDE",
+                "UNIT_POWER_BAR_TIMER_UPDATE", "PLAYER_ENTERING_WORLD" }
+            for _, ev in ipairs(events) do
+                local registered = ppba:IsEventRegistered(ev)
+                if registered then
+                    add("  event " .. ev .. ": REGISTERED")
+                else
+                    add("  event " .. ev .. ": NOT registered")
+                end
+            end
+        end
+    end)
+    pcall(function()
+        -- EncounterBar 事件/腳本檢查
+        local eb = _G["EncounterBar"]
+        if eb then
+            local onEvent = eb:GetScript("OnEvent")
+            add("EncounterBar OnEvent: " .. (onEvent and "SET" or "NIL!"))
+            local onShow = eb:GetScript("OnShow")
+            add("EncounterBar OnShow: " .. (onShow and "SET" or "nil"))
+            -- 檢查重要事件
+            local ebEvents = { "UPDATE_ENCOUNTER_BAR", "PLAYER_ENTERING_WORLD",
+                "UPDATE_UI_WIDGET", "UNIT_POWER_BAR_SHOW", "UNIT_POWER_BAR_HIDE" }
+            for _, ev in ipairs(ebEvents) do
+                local ok, registered = pcall(function() return eb:IsEventRegistered(ev) end)
+                if ok then
+                    add("  event " .. ev .. ": " .. (registered and "REGISTERED" or "NOT registered"))
+                end
+            end
+        end
+    end)
+
+    -- 9) Skyriding / Mount 資訊
+    add("--- Mount Info ---")
+    pcall(function()
+        add("IsMounted=" .. tostring(IsMounted and IsMounted()))
+        add("IsFlying=" .. tostring(IsFlying and IsFlying()))
+        add("IsFalling=" .. tostring(IsFalling and IsFalling()))
+        -- Skyriding 相關 API（WoW 11.0+）
+        if C_PlayerInfo and C_PlayerInfo.GetGlidingInfo then
+            local isGliding, canGlide, forwardSpeed = C_PlayerInfo.GetGlidingInfo()
+            add("GlidingInfo: isGliding=" .. tostring(isGliding) ..
+                " canGlide=" .. tostring(canGlide) ..
+                " forwardSpeed=" .. safeStr(forwardSpeed))
+        else
+            add("C_PlayerInfo.GetGlidingInfo: NOT AVAILABLE")
+        end
+        if C_Spell and C_Spell.DoesSpellExist then
+            -- Skyriding 被動技能 spell ID
+            local skyridingSpells = { 404468, 404464, 404462 }  -- 常見 Skyriding 相關 spell
+            for _, spellID in ipairs(skyridingSpells) do
+                local exists = C_Spell.DoesSpellExist(spellID)
+                if exists then
+                    add("Spell " .. spellID .. ": EXISTS")
+                end
+            end
+        end
+    end)
+
+    -- 10) LunarUI 狀態
+    add("--- LunarUI State ---")
+    pcall(function()
+        local db = LunarUI.db and LunarUI.db.profile
+        if db then
+            add("enabled=" .. tostring(db.enabled))
+            add("actionbars.enabled=" .. tostring(db.actionbars and db.actionbars.enabled))
+        else
+            add("db.profile not available")
+        end
+    end)
+
+    add("=== End Debug v5 ===")
+
+    -- 顯示在可複製的 EditBox 彈窗（tostring 確保所有值都是純字串，避免 secret taint）
+    local safeLines = {}
+    for i = 1, #lines do
+        safeLines[i] = tostring(lines[i])
+    end
+    local text = table.concat(safeLines, "\n")
 
     -- 清理舊框架避免重複創建
     local oldFrame = _G["LunarUI_DebugVigorPopup"]
@@ -372,6 +721,27 @@ function LunarUI:DebugVigorFrames()
     closeBtn:SetPoint("TOPRIGHT", -2, -2)
 
     self:Print("Debug output shown in popup - Ctrl+A then Ctrl+C to copy")
+end
+
+--------------------------------------------------------------------------------
+-- Vigor 測試模式
+--------------------------------------------------------------------------------
+
+--- 切換 testvigor 模式：暫停所有暴雪動作條隱藏，用於診斷 vigor bar 問題
+function LunarUI:ToggleTestVigor()
+    if not self.db.global then self.db.global = {} end
+    self.db.global._testVigorMode = not self.db.global._testVigorMode
+
+    if self.db.global._testVigorMode then
+        self:Print("|cffff0000[TEST MODE ON]|r 暴雪動作條隱藏 + SetScale hooks 全部暫停。")
+        self:Print("此模式移除所有可能汙染安全框架的 rawset hooks，")
+        self:Print("讓 WoW 的 override bar 轉換流程在乾淨狀態下運作。")
+        self:Print("請輸入 |cffffd100/reload|r 使設定生效，然後騎上飛龍檢查 vigor bar。")
+        self:Print("完成後輸入 |cffffd100/lunar testvigor|r 關閉測試模式。")
+    else
+        self:Print("|cff00ff00[TEST MODE OFF]|r 恢復暴雪動作條隱藏。")
+        self:Print("請輸入 |cffffd100/reload|r 使設定生效。")
+    end
 end
 
 --------------------------------------------------------------------------------

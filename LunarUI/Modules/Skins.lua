@@ -50,14 +50,16 @@ end
 
 --- 替換框架背景為 LunarUI 風格
 function LunarUI:SkinFrame(frame, options)
-    if not frame then return end
+    if not frame or not frame.GetObjectType then return end
     options = options or {}
 
     -- 隱藏暴雪 NineSlice 邊框
     if frame.NineSlice then frame.NineSlice:SetAlpha(0) end
 
-    -- 移除原始裝飾材質
-    StripTextures(frame)
+    -- 移除原始裝飾材質（noStrip = true 時跳過，保留羊皮紙等內容背景）
+    if not options.noStrip then
+        StripTextures(frame)
+    end
 
     -- 建立 LunarUI 風格背景
     if not frame._lunarSkinBG then
@@ -79,7 +81,7 @@ end
 -- @param depth 遞迴深度限制（預設 2，避免過度遍歷影響效能）
 -- @param currentDepth 當前深度（內部使用）
 function LunarUI:SkinFrameText(frame, depth, currentDepth)
-    if not frame then return end
+    if not frame or not frame.GetRegions then return end
     depth = depth or 2
     currentDepth = currentDepth or 0
 
@@ -90,10 +92,9 @@ function LunarUI:SkinFrameText(frame, depth, currentDepth)
         for i = 1, n do
             local region = regions[i]
             if region and region.IsObjectType and region:IsObjectType("FontString") then
-                -- 檢查是否為深色文字（需要修復）
+                -- 只修復近黑色文字（閾值 0.3），避免誤改暴雪故意使用的中灰色/陰影文字
                 local r, g, b = region:GetTextColor()
-                if r and r < 0.5 and g < 0.5 and b < 0.5 then
-                    -- 深色文字改為白色
+                if r and r < 0.3 and g < 0.3 and b < 0.3 then
                     region:SetTextColor(1, 1, 1, 1)
                 end
             end
@@ -222,10 +223,10 @@ end
 ---@return string|Frame|nil frame 框架引用；找不到框架時回傳 nil
 function LunarUI:SkinStandardFrame(frameName, options)
     local frame = type(frameName) == "string" and _G[frameName] or frameName
-    if not frame then return nil end
+    if not frame or not frame.GetObjectType then return nil end
     options = options or {}
 
-    self:SkinFrame(frame, { textDepth = options.textDepth or 3 })
+    self:SkinFrame(frame, { textDepth = options.textDepth or 3, noStrip = options.noStrip })
 
     if frame.TitleText then
         LunarUI.SetFontLight(frame.TitleText)
@@ -305,10 +306,9 @@ local function ApplySkin(name)
 
     local ok, result = pcall(skin.func)
     if not ok then
-        -- result 此時為錯誤訊息
-        -- if LunarUI.DebugPrint then
-        --     LunarUI:DebugPrint("Skin error [" .. name .. "]: " .. tostring(result))
-        -- end
+        if LunarUI.Debug then
+            LunarUI:Debug("Skin error [" .. name .. "]: " .. tostring(result))
+        end
     elseif result then
         skinned[name] = true
     end

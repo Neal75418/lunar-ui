@@ -1979,6 +1979,13 @@ local function OnBagEvent(_self, event, ...)
         end
 
         wipe(pendingBagUpdates)
+        -- 排序後清理物品快取（避免 orphan entries 累積）
+        if isSorting then
+            wipe(itemLevelCache)
+            wipe(equipmentTypeCache)
+            itemLevelCacheMeta.n = 0
+            equipmentTypeCacheMeta.n = 0
+        end
         isSorting = false  -- 排序完成，恢復正常事件處理
         return
     end

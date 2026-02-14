@@ -483,11 +483,11 @@ local blizzShowHooks = {}  -- 追蹤已 hook Show 的暴雪框架（避免重複
 
 local function HideBlizzardBuffFrames()
     -- 不使用 SetParent（會造成 taint 汙染）
-    -- 改用 Hide + UnregisterAllEvents + SetAlpha(0) + Hook Show 防止重新顯示
+    -- 不使用 UnregisterAllEvents（無法還原，阻止即時 toggle 恢復）
+    -- 改用 Hide + SetAlpha(0) + Hook Show 防止重新顯示
     local frames = { _G.BuffFrame, _G.DebuffFrame }
     for _, frame in ipairs(frames) do
         if frame then
-            pcall(function() frame:UnregisterAllEvents() end)
             pcall(function() frame:Hide() end)
             pcall(function() frame:SetAlpha(0) end)
             -- Hook Show 防止暴雪代碼重新顯示（hooksecurefunc 不造成 taint）
@@ -709,7 +709,6 @@ function LunarUI.CleanupAuraFrames()
     if debuffFrame then debuffFrame:Hide() end
 
     -- 還原暴雪框架（標記 _lunarUIAllowShow 繞過 Show hook）
-    -- 注意：UnregisterAllEvents 無法還原，完整恢復需 /reload
     for _, frame in ipairs({ _G.BuffFrame, _G.DebuffFrame }) do
         if frame then
             frame._lunarUIAllowShow = true

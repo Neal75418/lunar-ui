@@ -602,7 +602,7 @@ local function SetupTimestamps()
     for _, frameName in ipairs(CHAT_FRAMES) do
         local frame = _G[frameName]
         if frame and not frame._lunarTimestampHooked then
-            -- 只在首次 hook 時保存原始函數（防止 toggle 時覆蓋）
+            -- 保存原始函數用於 Cleanup 還原（只存首次值）
             if not savedAddMessageFuncs[frameName] then
                 savedAddMessageFuncs[frameName] = frame.AddMessage
             end
@@ -611,13 +611,14 @@ local function SetupTimestamps()
             -- 必須用直接覆寫（非 hooksecurefunc）：需在 AddMessage 前修改 msg 參數
             -- hooksecurefunc 是 post-hook，無法修改傳入參數
             -- ChatFrame 非 secure frame，不會觸發 "action blocked"
-            local origAddMessage = savedAddMessageFuncs[frameName]
+            -- 取當前值（可能已被 ShortenChannelNames 覆寫），形成 wrapper chain
+            local currentAddMessage = frame.AddMessage
             frame.AddMessage = function(self, msg, ...)
                 if msg and type(msg) == "string" then
                     local timestamp = date(fmt)
                     msg = "|cffb3b3b3[" .. timestamp .. "]|r " .. msg
                 end
-                return origAddMessage(self, msg, ...)
+                return currentAddMessage(self, msg, ...)
             end
         end
     end
@@ -680,7 +681,7 @@ local function ShortenChannelNames()
     for _, frameName in ipairs(CHAT_FRAMES) do
         local frame = _G[frameName]
         if frame and not frame._lunarShortChannelHooked then
-            -- 只在首次 hook 時保存原始函數（防止 toggle 時覆蓋）
+            -- 保存原始函數用於 Cleanup 還原（只存首次值）
             if not savedAddMessageFuncs[frameName] then
                 savedAddMessageFuncs[frameName] = frame.AddMessage
             end
@@ -688,7 +689,8 @@ local function ShortenChannelNames()
             frame._lunarShortChannelHooked = true
             -- 必須用直接覆寫（非 hooksecurefunc）：需在 AddMessage 前修改 msg 參數
             -- ChatFrame 非 secure frame，不會觸發 "action blocked"
-            local origAddMessage = savedAddMessageFuncs[frameName]
+            -- 取當前值（保持 wrapper chain），savedAddMessageFuncs 只用於 Cleanup 還原
+            local currentAddMessage = frame.AddMessage
             frame.AddMessage = function(self, msg, ...)
                 if msg and type(msg) == "string" then
                     -- 替換數字頻道名稱：[2. 交易] → [2.交]
@@ -700,7 +702,7 @@ local function ShortenChannelNames()
                         return "[" .. num .. "." .. name .. "]"
                     end)
                 end
-                return origAddMessage(self, msg, ...)
+                return currentAddMessage(self, msg, ...)
             end
         end
     end

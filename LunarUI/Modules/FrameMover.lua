@@ -265,8 +265,13 @@ local function ApplySavedPosition(name)
 
     local saved = LoadPosition(name)
     if saved then
+        -- 限制座標在螢幕範圍內（處理解析度變更後舊資料超出邊界的情況）
+        local screenW, screenH = UIParent:GetWidth(), UIParent:GetHeight()
+        local x = math.max(-screenW, math.min(screenW, saved.x))
+        local y = math.max(-screenH, math.min(screenH, saved.y))
+
         data.frame:ClearAllPoints()
-        data.frame:SetPoint(saved.point, UIParent, saved.relativePoint, saved.x, saved.y)
+        data.frame:SetPoint(saved.point, UIParent, saved.relativePoint, x, y)
     end
 end
 

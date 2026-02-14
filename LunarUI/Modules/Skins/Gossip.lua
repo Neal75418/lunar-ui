@@ -10,6 +10,7 @@ local LunarUI = Engine.LunarUI
 local function SkinGossip()
     local frame = LunarUI:SkinStandardFrame("GossipFrame", {
         textDepth = 4,
+        noStrip = true,  -- 保留羊皮紙內容背景，避免黑底蓋住對話文字
     })
     if not frame then return end
 
@@ -23,26 +24,8 @@ local function SkinGossip()
         LunarUI.SkinCloseButton(_G.GossipFrameCloseButton)
     end
 
-    -- Greeting 面板
-    if frame.GreetingPanel then
-        LunarUI.StripTextures(frame.GreetingPanel)
-        LunarUI:SkinFrameText(frame.GreetingPanel, 3)
-
-        -- 再見按鈕
-        if frame.GreetingPanel.GoodbyeButton then
-            LunarUI.SkinButton(frame.GreetingPanel.GoodbyeButton)
-        end
-    end
-
-    -- 舊版再見按鈕
-    if _G.GossipFrameGreetingGoodbyeButton then
-        LunarUI.SkinButton(_G.GossipFrameGreetingGoodbyeButton)
-    end
-
-    -- NPC 模型區域背景
-    if frame.FriendshipStatusBar then
-        LunarUI.StripTextures(frame.FriendshipStatusBar)
-    end
+    -- Greeting 面板 / 再見按鈕 / NPC 模型區域
+    -- noStrip 模式：保留原始外觀，不對子元件做 SkinButton / StripTextures
 
     -- 對話文字（重要！NPC 說的話）
     if _G.GossipGreetingText then

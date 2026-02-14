@@ -159,8 +159,8 @@ local function CreateBarFrame(name, numButtons, parent, orientation)
     local bg = CreateFrame("Frame", nil, UIParent)
     bg:SetPoint("TOPLEFT", frame, "TOPLEFT", -4, 4)
     bg:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 4, -4)
-    bg:SetFrameStrata("TOOLTIP")  -- 最高層級，確保可見
-    bg:SetFrameLevel(0)
+    bg:SetFrameStrata("MEDIUM")
+    bg:SetFrameLevel(2)  -- 低於 vigor bar widget(70/121)，低於動作條按鈕(100)
     -- 背景材質
     local bgTex = bg:CreateTexture(nil, "BACKGROUND")
     bgTex:SetAllPoints()
@@ -1261,6 +1261,11 @@ local function CleanupActionBars()
 
     -- 清理微型按鈕列
     CleanupMicroBar()
+
+    -- 還原 EditMode 佈局覆寫
+    if LunarUI.UnpatchEditModeLayout then
+        LunarUI.UnpatchEditModeLayout()
+    end
 end
 
 -- 匯出

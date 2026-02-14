@@ -108,14 +108,24 @@ local function CacheInspectData(guid, ilvl, spec)
         spec = spec,
         time = GetTime(),
     }
-    -- 單次迭代：計數 + 清理過期條目
+    -- 清理：過期條目一律刪除，再檢查大小上限
     local count = 0
     local now = GetTime()
+    local oldestKey, oldestTime = nil, now
     for k, v in pairs(inspectCache) do
-        count = count + 1
-        if count > INSPECT_CACHE_MAX and (now - v.time) >= INSPECT_CACHE_TTL then
+        if (now - v.time) >= INSPECT_CACHE_TTL then
             inspectCache[k] = nil
+        else
+            count = count + 1
+            if v.time < oldestTime then
+                oldestKey = k
+                oldestTime = v.time
+            end
         end
+    end
+    -- 超過上限時移除最舊的條目
+    if count > INSPECT_CACHE_MAX and oldestKey then
+        inspectCache[oldestKey] = nil
     end
 end
 
@@ -157,11 +167,15 @@ local function GetInspectSpec(unit)
     return nil
 end
 
--- 請求 Inspect
+-- 請求 Inspect（含節流：避免滑鼠快速掃過玩家時轟炸伺服器）
+local lastInspectTime = 0
+local INSPECT_THROTTLE = 1.0  -- 最小請求間隔（秒）
+
 local function RequestInspect(unit)
     -- if not unit or not UnitIsPlayer(unit) then return end (Caller ensures)
     if not CanInspect(unit) then return end
     if InCombatLockdown() then return end
+    if GetTime() - lastInspectTime < INSPECT_THROTTLE then return end
 
     local guid = UnitGUID(unit)
     if not guid then return end
@@ -171,6 +185,7 @@ local function RequestInspect(unit)
     if cached then return end
 
     -- 發送 Inspect 請求
+    lastInspectTime = GetTime()
     pendingInspect = guid
     NotifyInspect(unit)
 end

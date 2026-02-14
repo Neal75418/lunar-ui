@@ -552,6 +552,17 @@ local function AuraFilter(_element, unit, data)
 end
 
 --[[ 光環排序：根據 DB 設定排序 ]]
+-- taint 安全工具：用 tonumber/tostring 斷開 WoW 12.0 aura 資料的 taint 鏈
+local function SanitizeNumber(val)
+    if val == nil then return 0 end
+    return tonumber(tostring(val)) or 0
+end
+
+local function SanitizeString(val)
+    if val == nil then return "" end
+    return tostring(val)
+end
+
 local function GetAuraSortFunction()
     local db = LunarUI.db.profile
     local af = db and db.auraFilters or {}
@@ -561,8 +572,8 @@ local function GetAuraSortFunction()
     if method == "time" then
         -- 按剩餘時間排序（快到期的在前）
         return function(a, b)
-            local aTime = a.expirationTime or 0
-            local bTime = b.expirationTime or 0
+            local aTime = SanitizeNumber(a.expirationTime)
+            local bTime = SanitizeNumber(b.expirationTime)
             if aTime == 0 then aTime = math.huge end
             if bTime == 0 then bTime = math.huge end
             if reverse then return aTime > bTime end
@@ -571,31 +582,31 @@ local function GetAuraSortFunction()
     elseif method == "duration" then
         -- 按總持續時間排序
         return function(a, b)
-            local aDur = a.duration or 0
-            local bDur = b.duration or 0
+            local aDur = SanitizeNumber(a.duration)
+            local bDur = SanitizeNumber(b.duration)
             if reverse then return aDur > bDur end
             return aDur < bDur
         end
     elseif method == "name" then
         -- 按名稱字母排序
         return function(a, b)
-            local aName = a.name or ""
-            local bName = b.name or ""
+            local aName = SanitizeString(a.name)
+            local bName = SanitizeString(b.name)
             if reverse then return aName > bName end
             return aName < bName
         end
     elseif method == "player" then
         -- 玩家施放的在前
         return function(a, b)
-            local aPlayer = a.isPlayerAura and 1 or 0
-            local bPlayer = b.isPlayerAura and 1 or 0
+            local aPlayer = (a.isPlayerAura == true) and 1 or 0
+            local bPlayer = (b.isPlayerAura == true) and 1 or 0
             if aPlayer ~= bPlayer then
                 if reverse then return aPlayer < bPlayer end
                 return aPlayer > bPlayer
             end
             -- 同類別按剩餘時間排序
-            local aTime = a.expirationTime or 0
-            local bTime = b.expirationTime or 0
+            local aTime = SanitizeNumber(a.expirationTime)
+            local bTime = SanitizeNumber(b.expirationTime)
             return aTime < bTime
         end
     end
