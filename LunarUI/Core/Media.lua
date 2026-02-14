@@ -74,7 +74,7 @@ function LunarUI.StyleIcon(icon, inset)
 
     inset = inset or 1
 
-    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     icon:SetDrawLayer("ARTWORK")
     icon:ClearAllPoints()
     icon:SetPoint("TOPLEFT", inset, -inset)
@@ -176,7 +176,7 @@ function LunarUI.StyleAuraButton(button)
         button:SetBackdrop(LunarUI.backdropTemplate)
     end
     if button.Icon then
-        button.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        button.Icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     end
     if button.Count then
         LunarUI.SetFont(button.Count, 10, "OUTLINE")

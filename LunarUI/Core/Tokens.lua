@@ -137,3 +137,6 @@ LunarUI.Easing = {
         return -c / 2 * (t * (t - 2) - 1) + b
     end,
 }
+
+-- 圖示紋理座標（裁切邊緣 8%，消除毛邊）
+LunarUI.ICON_TEXCOORD = { 0.08, 0.92, 0.08, 0.92 }

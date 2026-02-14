@@ -190,14 +190,7 @@ local function ShowText(amount, isCrit, textType)
     if not fs then return end  -- 池耗盡
 
     -- 設定文字
-    local displayAmount
-    if amount >= 1e6 then
-        displayAmount = string.format("%.1fM", amount / 1e6)
-    elseif amount >= 1e3 then
-        displayAmount = string.format("%.1fK", amount / 1e3)
-    else
-        displayAmount = tostring(math.floor(amount))
-    end
+    local displayAmount = LunarUI.FormatValue(math.floor(amount))
 
     if isCrit then
         displayAmount = displayAmount .. "!"

@@ -680,7 +680,7 @@ local function CreateMailIndicator()
     local icon = mail:CreateTexture(nil, "ARTWORK")
     icon:SetAllPoints()
     icon:SetTexture("Interface\\Icons\\INV_Letter_15")
-    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     mail.icon = icon
 
     -- 光暈效果

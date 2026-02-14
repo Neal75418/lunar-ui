@@ -389,7 +389,7 @@ local function SetupResourceDisplay()
 
         for i = 1, max do
             if not resourceIcons[i] then
-                resourceIcons[i] = CreateResourceIcon(resourceFrame, i)
+                resourceIcons[i] = CreateResourceIcon(resourceFrame)
             end
             resourceIcons[i]:SetPoint("CENTER", resourceFrame, "CENTER", startX + (i - 1) * (ICON_SIZE + ICON_SPACING), 0)
             resourceIcons[i]:Show()

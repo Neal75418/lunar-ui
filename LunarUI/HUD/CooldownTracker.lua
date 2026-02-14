@@ -293,7 +293,7 @@ local function CreateCooldownIcon(parent)
     local texture = icon:CreateTexture(nil, "ARTWORK")
     texture:SetPoint("TOPLEFT", 1, -1)
     texture:SetPoint("BOTTOMRIGHT", -1, 1)
-    texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    texture:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     icon.texture = texture
 
     -- 冷卻遮罩
@@ -373,7 +373,7 @@ local function CreateCooldownFrame()
 
     -- 建立圖示
     for i = 1, MAX_ICONS do
-        cooldownIcons[i] = CreateCooldownIcon(cooldownFrame, i)
+        cooldownIcons[i] = CreateCooldownIcon(cooldownFrame)
     end
 
     return cooldownFrame
@@ -588,7 +588,7 @@ function LunarUI.RebuildCooldownTracker()
     end
     -- 新增不足的圖示
     for i = oldMaxIcons + 1, MAX_ICONS do
-        cooldownIcons[i] = CreateCooldownIcon(cooldownFrame, i)
+        cooldownIcons[i] = CreateCooldownIcon(cooldownFrame)
     end
     if cooldownFrame then
         cooldownFrame:SetSize(MAX_ICONS * (ICON_SIZE + ICON_SPACING) - ICON_SPACING, ICON_SIZE + 10)

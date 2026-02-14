@@ -326,7 +326,7 @@ local function CreateCastbar(frame, unit)
     local icon = castbar:CreateTexture(nil, "OVERLAY")
     icon:SetSize(16, 16)
     icon:SetPoint("LEFT", castbar, "LEFT", 2, 0)
-    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     castbar.Icon = icon
 
     -- 法術名稱

@@ -170,21 +170,9 @@ local function CreateHealthBar(frame)
             if fmt == "percent" then
                 healthText:SetText(pct .. "%")
             elseif fmt == "current" then
-                if cur >= 1e6 then
-                    healthText:SetText(string.format("%.1fM", cur / 1e6))
-                elseif cur >= 1e3 then
-                    healthText:SetText(string.format("%.1fK", cur / 1e3))
-                else
-                    healthText:SetText(tostring(cur))
-                end
+                healthText:SetText(LunarUI.FormatValue(cur))
             elseif fmt == "both" then
-                if cur >= 1e6 then
-                    healthText:SetText(string.format("%.1fM - %d%%", cur / 1e6, pct))
-                elseif cur >= 1e3 then
-                    healthText:SetText(string.format("%.1fK - %d%%", cur / 1e3, pct))
-                else
-                    healthText:SetText(string.format("%d - %d%%", cur, pct))
-                end
+                healthText:SetText(LunarUI.FormatValue(cur) .. " - " .. pct .. "%")
             end
         end
     end
@@ -245,7 +233,7 @@ local function CreateCastbar(frame)
     local icon = castbar:CreateTexture(nil, "OVERLAY")
     icon:SetSize(6, 6)
     icon:SetPoint("RIGHT", castbar, "LEFT", -2, 0)
-    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     castbar.Icon = icon
 
     -- Text
@@ -279,6 +267,16 @@ local function CreateCastbar(frame)
     return castbar
 end
 
+-- 名牌 Aura 按鈕共用樣式（Debuffs / Buffs 共用）
+local function StyleNameplateAura(_self, button)
+    LunarUI.StyleAuraButton(button)
+    LunarUI.SetFont(button.Count, 8, "OUTLINE")
+    button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
+    if button.SetBackdropColor then
+        button:SetBackdropColor(C.bgOverlay[1], C.bgOverlay[2], C.bgOverlay[3], C.bgOverlay[4])
+    end
+end
+
 --[[ Debuffs ]]
 local function CreateDebuffs(frame)
     local debuffs = CreateFrame("Frame", nil, frame)
@@ -303,15 +301,7 @@ local function CreateDebuffs(frame)
         return data.isPlayerAura == true
     end
 
-    -- Post-create styling
-    debuffs.PostCreateButton = function(_self, button)
-        LunarUI.StyleAuraButton(button)
-        LunarUI.SetFont(button.Count, 8, "OUTLINE")
-        button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
-        if button.SetBackdropColor then
-            button:SetBackdropColor(C.bgOverlay[1], C.bgOverlay[2], C.bgOverlay[3], C.bgOverlay[4])
-        end
-    end
+    debuffs.PostCreateButton = StyleNameplateAura
 
     -- Post-update for debuff type colors
     -- Fix #50 + Fix #57: WoW 12.0 makes dispelName a secret value
@@ -355,15 +345,7 @@ local function CreateNameplateBuffs(frame)
         return data.isStealable == true
     end
 
-    -- Post-create styling (shared with debuffs)
-    buffs.PostCreateButton = function(_self, button)
-        LunarUI.StyleAuraButton(button)
-        LunarUI.SetFont(button.Count, 8, "OUTLINE")
-        button.Count:SetPoint("BOTTOMRIGHT", 2, -2)
-        if button.SetBackdropColor then
-            button:SetBackdropColor(C.bgOverlay[1], C.bgOverlay[2], C.bgOverlay[3], C.bgOverlay[4])
-        end
-    end
+    buffs.PostCreateButton = StyleNameplateAura
 
     -- Stealable buffs get a bright border
     buffs.PostUpdateButton = function(_self, button, _unit, _data, _position)

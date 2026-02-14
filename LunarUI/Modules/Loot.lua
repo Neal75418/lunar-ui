@@ -62,7 +62,7 @@ local function CreateLootSlot(parent, index)
     local icon = slot:CreateTexture(nil, "ARTWORK")
     icon:SetSize(ICON_SIZE, ICON_SIZE)
     icon:SetPoint("LEFT", slot, "LEFT", 2, 0)
-    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     slot.icon = icon
 
     -- Icon border (quality color)

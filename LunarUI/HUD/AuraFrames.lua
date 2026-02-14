@@ -114,7 +114,7 @@ local function CreateAuraIconVisuals(icon)
     texture:SetPoint("TOPLEFT", 1, -1)
     texture:SetPoint("TOPRIGHT", -1, -1)
     texture:SetHeight(ICON_SIZE - 2)
-    texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    texture:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     icon.texture = texture
 
     -- 冷卻旋轉覆蓋

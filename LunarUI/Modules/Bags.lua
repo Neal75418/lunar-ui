@@ -384,7 +384,7 @@ local function SetupSlotBase(button, bag, slot)
     -- 設定圖示樣式
     local icon = button.icon or _G[button:GetName() .. "IconTexture"]
     if icon then
-        icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
         icon:ClearAllPoints()
         icon:SetPoint("TOPLEFT", 1, -1)
         icon:SetPoint("BOTTOMRIGHT", -1, 1)

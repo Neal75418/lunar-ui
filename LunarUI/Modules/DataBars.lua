@@ -99,14 +99,7 @@ end
 -- Format helpers
 --------------------------------------------------------------------------------
 
-local function FormatValue(value)
-    if value >= 1e6 then
-        return format("%.1fM", value / 1e6)
-    elseif value >= 1e3 then
-        return format("%.1fK", value / 1e3)
-    end
-    return tostring(value)
-end
+local FormatValue = LunarUI.FormatValue
 
 local function FormatBarText(textFormat, cur, max, extra)
     if not cur or not max or max == 0 then return "" end

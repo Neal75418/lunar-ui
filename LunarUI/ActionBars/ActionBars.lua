@@ -212,7 +212,7 @@ local function StyleButton(button)
 
     -- 樣式化圖示
     if icon then
-        icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
         icon:SetDrawLayer("ARTWORK")
         icon:ClearAllPoints()
         icon:SetPoint("TOPLEFT", 1, -1)
@@ -389,12 +389,6 @@ local function PlayPressFlash(button)
         button._lunarFlash:Show()
         button._lunarFlashAG:Play()
     end
-end
-
--- WoW 12.0 對 GetActionCooldown 回傳密值，無法進行比較
--- 停用自訂冷卻文字，使用內建冷卻螺旋與 OmniCC 等插件處理
-local function _UpdateCooldownText(_button)
-    -- 刻意留空 - WoW 12.0 密值阻止自訂冷卻文字
 end
 
 --------------------------------------------------------------------------------
@@ -669,7 +663,6 @@ local fadeState = {}  -- { [barKey] = { alpha, targetAlpha, hovered, timer } }
 
 local function GetFadeSettings()
     local db = LunarUI.db.profile.actionbars
-    -- if not db then return false, 0.3, 2.0, 0.4 end
     return db.fadeEnabled ~= false,
            db.fadeAlpha or 0.3,
            db.fadeDelay or 2.0,
