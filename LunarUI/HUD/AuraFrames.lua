@@ -488,6 +488,8 @@ local function HideBlizzardBuffFrames()
     local frames = { _G.BuffFrame, _G.DebuffFrame }
     for _, frame in ipairs(frames) do
         if frame then
+            -- 清除放行標記，讓 Show hook 恢復攔截
+            frame._lunarUIAllowShow = nil
             pcall(function() frame:Hide() end)
             pcall(function() frame:SetAlpha(0) end)
             -- Hook Show 防止暴雪代碼重新顯示（hooksecurefunc 不造成 taint）
@@ -708,13 +710,13 @@ function LunarUI.CleanupAuraFrames()
     if buffFrame then buffFrame:Hide() end
     if debuffFrame then debuffFrame:Hide() end
 
-    -- 還原暴雪框架（標記 _lunarUIAllowShow 繞過 Show hook）
+    -- 還原暴雪框架（保留 _lunarUIAllowShow 讓 Show hook 永久放行，
+    -- re-enable 時 HideBlizzardBuffFrames 會清除此標記）
     for _, frame in ipairs({ _G.BuffFrame, _G.DebuffFrame }) do
         if frame then
             frame._lunarUIAllowShow = true
             pcall(function() frame:SetAlpha(1) end)
             pcall(function() frame:Show() end)
-            frame._lunarUIAllowShow = nil
         end
     end
 

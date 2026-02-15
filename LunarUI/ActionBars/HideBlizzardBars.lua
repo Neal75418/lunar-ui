@@ -461,6 +461,7 @@ end
 -- 改用 PLAYER_MOUNT_DISPLAY_CHANGED + 定時檢查
 local vigorTraceHooked = false
 local vigorTraceOutputCount = 0  -- 限制輸出次數避免洗頻
+local vigorTraceFrame             -- module scope 引用，供 cleanup 使用
 local function SetupVigorTrace()
     if vigorTraceHooked then return end
     vigorTraceHooked = true
@@ -654,12 +655,12 @@ local function SetupVigorTrace()
         VigorDebugPrint("|cff88aaff[VigorTrace]|r " .. table.concat(lines, " | "))
     end
 
-    local traceFrame = CreateFrame("Frame")
-    traceFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
-    traceFrame:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
-    traceFrame:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR")
-    traceFrame:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
-    traceFrame:SetScript("OnEvent", function(_, event)
+    vigorTraceFrame = CreateFrame("Frame")
+    vigorTraceFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+    vigorTraceFrame:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
+    vigorTraceFrame:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR")
+    vigorTraceFrame:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
+    vigorTraceFrame:SetScript("OnEvent", function(_, event)
         -- 騎上坐騎時重設計數器
         if event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
             vigorTraceOutputCount = 0
@@ -679,6 +680,17 @@ local function SetupVigorTrace()
             end)
         end
     end)
+end
+
+-- Vigor trace 清理（解除事件，允許重新建立）
+local function CleanupVigorTrace()
+    if vigorTraceFrame then
+        vigorTraceFrame:UnregisterAllEvents()
+        vigorTraceFrame:SetScript("OnEvent", nil)
+        vigorTraceFrame = nil
+        vigorTraceHooked = false
+        vigorTraceOutputCount = 0
+    end
 end
 
 -- 延遲隱藏以捕捉初始載入後建立的框架
@@ -704,3 +716,5 @@ end
 
 LunarUI.HideBlizzardBarsDelayed = HideBlizzardBarsDelayed
 LunarUI.UnpatchEditModeLayout = UnpatchEditModeLayout
+LunarUI.SetupVigorTrace = SetupVigorTrace
+LunarUI.CleanupVigorTrace = CleanupVigorTrace

@@ -1262,6 +1262,11 @@ local function CleanupActionBars()
     -- 清理微型按鈕列
     CleanupMicroBar()
 
+    -- 清理 Vigor debug trace
+    if LunarUI.CleanupVigorTrace then
+        LunarUI.CleanupVigorTrace()
+    end
+
     -- 還原 EditMode 佈局覆寫
     if LunarUI.UnpatchEditModeLayout then
         LunarUI.UnpatchEditModeLayout()

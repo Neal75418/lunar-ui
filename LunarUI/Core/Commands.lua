@@ -105,17 +105,21 @@ function LunarUI:SlashCommand(input)
             if not self.db.global then self.db.global = {} end
             self.db.global._debugVigor = not self.db.global._debugVigor
             if self.db.global._debugVigor then
+                if LunarUI.SetupVigorTrace then LunarUI.SetupVigorTrace() end
                 self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r（VigorTrace/DeepDiag 訊息已啟用）")
             else
+                if LunarUI.CleanupVigorTrace then LunarUI.CleanupVigorTrace() end
                 self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
             end
         elseif sub == "on" then
             if not self.db.global then self.db.global = {} end
             self.db.global._debugVigor = true
+            if LunarUI.SetupVigorTrace then LunarUI.SetupVigorTrace() end
             self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r")
         elseif sub == "off" then
             if not self.db.global then self.db.global = {} end
             self.db.global._debugVigor = false
+            if LunarUI.CleanupVigorTrace then LunarUI.CleanupVigorTrace() end
             self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
         else
             self:DebugVigorFrames()
