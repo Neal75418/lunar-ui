@@ -1266,11 +1266,6 @@ local function CleanupActionBars()
     if LunarUI.CleanupVigorTrace then
         LunarUI.CleanupVigorTrace()
     end
-
-    -- 還原 EditMode 佈局覆寫
-    if LunarUI.UnpatchEditModeLayout then
-        LunarUI.UnpatchEditModeLayout()
-    end
 end
 
 -- 匯出

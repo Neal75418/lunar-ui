@@ -107,43 +107,15 @@ local HideFramePermanently = HideFrameSafely
 -- 這些是安全/受管理框架，用於 boss encounter 技能條等場景。
 -- 對它們呼叫 SetAlpha/EnableMouse 會產生 taint，阻止 WoW C++ 側正常管理狀態轉換。
 
--- 修補 EditMode 佈局計算：WoW 12.0 隱藏動作條後，
--- UpdateRightActionBarPositions 計算出負數 scale 導致 SetScale() 錯誤。
--- 用 pcall 包裹避免錯誤彈窗，因為隱藏的動作條不需要正確的佈局計算。
-local savedOrigUpdateRight  -- module scope：保留原始函數引用以供還原
-
-local function PatchEditModeLayout()
-    if not EditModeManagerFrame then return end
-    if EditModeManagerFrame._lunarLayoutPatched then return end
-    EditModeManagerFrame._lunarLayoutPatched = true
-
-    savedOrigUpdateRight = EditModeManagerFrame.UpdateRightActionBarPositions
-    if savedOrigUpdateRight then
-        EditModeManagerFrame.UpdateRightActionBarPositions = function(self, ...)
-            local ok, err = pcall(savedOrigUpdateRight, self, ...)
-            if not ok and LunarUI.Debug then
-                LunarUI:Debug("EditMode layout error: " .. tostring(err))
-            end
-        end
-    end
-end
-
-local function UnpatchEditModeLayout()
-    if not EditModeManagerFrame then return end
-    if not EditModeManagerFrame._lunarLayoutPatched then return end
-    if savedOrigUpdateRight then
-        EditModeManagerFrame.UpdateRightActionBarPositions = savedOrigUpdateRight
-        savedOrigUpdateRight = nil
-    end
-    EditModeManagerFrame._lunarLayoutPatched = nil
-end
+-- EditMode 佈局：WoW 12.0 隱藏動作條後，UpdateRightActionBarPositions
+-- 可能計算出負數 scale 導致 SetScale() 錯誤。
+-- 此錯誤由 Blizzard 內部程式碼拋出，WoW 會自行處理；
+-- 不再用函數替換攔截（替換 EditModeManagerFrame 方法會產生 Lua Taint）。
+-- 保持 MultiBarRight/MultiBarLeft alpha=1 以減少錯誤頻率（見下方 restore 區段）。
 
 local function HideBlizzardBars()
     -- 戰鬥中不修改框架以避免 taint
     if InCombatLockdown() then return end
-
-    -- 修補 EditMode 佈局（只執行一次）
-    PatchEditModeLayout()
 
     -- testvigor 模式：暫停所有隱藏操作，讓暴雪動作條完全顯示
     -- 用於診斷 vigor bar 不可見是否由隱藏操作引起的 taint 所導致
@@ -715,6 +687,5 @@ local function HideBlizzardBarsDelayed()
 end
 
 LunarUI.HideBlizzardBarsDelayed = HideBlizzardBarsDelayed
-LunarUI.UnpatchEditModeLayout = UnpatchEditModeLayout
 LunarUI.SetupVigorTrace = SetupVigorTrace
 LunarUI.CleanupVigorTrace = CleanupVigorTrace
