@@ -46,6 +46,7 @@ L["Tooltip"] = "滑鼠提示"
 
 -- 系統訊息
 L["AddonLoaded"] = "插件載入完成"
+L["AddonDisabled"] = "|cffff6666LunarUI 已停用|r（輸入 /lunar on 啟用）"
 L["AddonEnabled"] = "已啟用。輸入 |cff8882ff/lunar|r 查看命令"
 L["DebugEnabled"] = "除錯模式：已開啟"
 L["DebugDisabled"] = "除錯模式：已關閉"
@@ -358,8 +359,12 @@ L["MoverAlpha"] = "移動器透明度"
 L["MoverAlphaDesc"] = "解鎖時移動器方塊的透明度"
 
 -- 選項面板
+L["AddonHeader"] = "|cff8882ffLunarUI|r - 現代化戰鬥 UI 系統"
 L["OptionsDesc"] = "月光主題現代化戰鬥 UI 替換"
 L["EnableLunarUI"] = "啟用 LunarUI"
+L["EnableLunarUIDesc"] = "啟用或停用 LunarUI"
+L["LunarUIEnabled"] = "LunarUI 已啟用"
+L["LunarUIDisabledReload"] = "LunarUI 已停用（需重載 UI）"
 L["DebugModeDesc"] = "顯示除錯面板（FPS 和記憶體資訊）"
 L["RolePresets"] = "角色佈局預設"
 L["RolePresetsDesc"] = "根據你的角色快速調整團隊/隊伍框架佈局。"

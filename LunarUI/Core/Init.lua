@@ -121,7 +121,7 @@ function LunarUI:OnInitialize()
     end
 
     local L = Engine.L or {}
-    local msg = L["AddonLoaded"] or "插件載入完成"
+    local msg = L["AddonLoaded"] or "Addon loaded"
     self:Print("|cff8882ffLunar|r|cffffffffUI|r v" .. self.version .. " " .. msg)
 end
 
@@ -144,7 +144,7 @@ function LunarUI:OnEnable()
     -- 全域開關檢查：若停用則跳過模組啟用（保留命令與選項面板以便重新啟用）
     if self.db and self.db.profile and self.db.profile.enabled == false then
         local L = Engine.L or {}
-        self:Print(L["AddonDisabled"] or "|cffff6666LunarUI 已停用|r（輸入 /lunar on 啟用）")
+        self:Print(L["AddonDisabled"] or "|cffff6666LunarUI disabled|r (type /lunar on to enable)")
         return
     end
 

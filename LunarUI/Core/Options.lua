@@ -101,7 +101,7 @@ local function GetOptionsTable()
             header = {
                 order = 1,
                 type = "description",
-                name = "|cff8882ffLunarUI|r - 現代化戰鬥 UI 系統\n版本: " .. (LunarUI.version or "0.7.0") .. "\n",
+                name = (L["AddonHeader"] or "|cff8882ffLunarUI|r - Modern Combat UI System") .. "\n" .. (LunarUI.version or "0.7.0") .. "\n",
                 fontSize = "medium",
             },
 
@@ -109,21 +109,21 @@ local function GetOptionsTable()
             general = {
                 order = 10,
                 type = "group",
-                name = L["General"] or "一般設定",
+                name = L["General"] or "General",
                 inline = true,
                 args = {
                     enabled = {
                         order = 1,
                         type = "toggle",
-                        name = L["Enable"] or "啟用插件",
-                        desc = "啟用或停用 LunarUI",
+                        name = L["EnableLunarUI"] or "Enable LunarUI",
+                        desc = L["EnableLunarUIDesc"] or "Enable or disable LunarUI",
                         get = function() return LunarUI.db.profile.enabled end,
                         set = function(_, val)
                             LunarUI.db.profile.enabled = val
                             if val then
-                                LunarUI:Print("LunarUI 已啟用")
+                                LunarUI:Print(L["LunarUIEnabled"] or "LunarUI enabled")
                             else
-                                LunarUI:Print("LunarUI 已停用（需重載 UI）")
+                                LunarUI:Print(L["LunarUIDisabledReload"] or "LunarUI disabled (requires UI reload)")
                             end
                         end,
                         width = "full",
@@ -131,8 +131,8 @@ local function GetOptionsTable()
                     debug = {
                         order = 2,
                         type = "toggle",
-                        name = L["Debug"] or "除錯模式",
-                        desc = "顯示除錯資訊",
+                        name = L["Debug"] or "Debug",
+                        desc = L["DebugModeDesc"] or "Show debug overlay with FPS and memory info",
                         get = function() return LunarUI.db.profile.debug end,
                         set = function(_, val) LunarUI.db.profile.debug = val end,
                     },

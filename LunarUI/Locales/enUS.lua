@@ -43,6 +43,7 @@ L["Tooltip"] = "Tooltip"
 
 -- System Messages
 L["AddonLoaded"] = "Addon loaded"
+L["AddonDisabled"] = "|cffff6666LunarUI disabled|r (type /lunar on to enable)"
 L["AddonEnabled"] = "Enabled. Type |cff8882ff/lunar|r for commands"
 L["DebugEnabled"] = "Debug mode: ON"
 L["DebugDisabled"] = "Debug mode: OFF"
@@ -355,8 +356,12 @@ L["MoverAlpha"] = "Mover Opacity"
 L["MoverAlphaDesc"] = "Opacity of mover blocks when unlocked"
 
 -- Options Panel
+L["AddonHeader"] = "|cff8882ffLunarUI|r - Modern Combat UI System"
 L["OptionsDesc"] = "Modern combat UI replacement with Lunar theme"
 L["EnableLunarUI"] = "Enable LunarUI"
+L["EnableLunarUIDesc"] = "Enable or disable LunarUI"
+L["LunarUIEnabled"] = "LunarUI enabled"
+L["LunarUIDisabledReload"] = "LunarUI disabled (requires UI reload)"
 L["DebugModeDesc"] = "Show debug overlay with FPS and memory info"
 L["RolePresets"] = "Role Presets"
 L["RolePresetsDesc"] = "Quickly adjust raid/party frame layout for your role."

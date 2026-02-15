@@ -243,16 +243,10 @@ local function CreateCastbar(frame)
     text:SetJustifyH("CENTER")
     castbar.Text = text
 
-    -- Interruptible color change
-    -- Fix #69: WoW 12.0 makes notInterruptible a secret value
+    -- WoW 12.0 將 notInterruptible 設為 secret value，無法可靠判斷
+    -- 統一使用固定顏色（與 UnitFrames/Layout.lua PostCastStart 一致）
     castbar.PostCastStart = function(self, _unit)
-        -- Use pcall to safely check notInterruptible
-        local success, isNotInterruptible = pcall(function() return self.notInterruptible == true end)
-        if success and isNotInterruptible then
-            self:SetStatusBarColor(0.7, 0.3, 0.3, 1)  -- Red for uninterruptible
-        else
-            self:SetStatusBarColor(0.4, 0.6, 0.8, 1)  -- Blue for interruptible
-        end
+        self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
     end
     castbar.PostChannelStart = castbar.PostCastStart
 

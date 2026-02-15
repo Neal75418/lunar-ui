@@ -60,7 +60,7 @@ function LunarUI:OnProfileChanged()
         self:ApplyHUDScale()
     end
 
-    self:Print(L["ProfileChanged"] or "設定檔已變更，UI 已重新整理")
+    self:Print(L["ProfileChanged"] or "Profile changed, UI refreshed")
 end
 
 --------------------------------------------------------------------------------

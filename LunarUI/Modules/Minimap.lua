@@ -39,8 +39,10 @@ local clockText
 local buttonFrame
 local collectedButtons = {}
 local zoomResetHandle       -- 縮放自動重置計時器
-local addonLoadedFrame      -- ADDON_LOADED 事件監聽框架
+local addonLoadedFrame      -- ADDON_LOADED 事件監聯框架
 local buttonScanTimers = {} -- 按鈕掃描延遲計時器
+local mail                  -- 郵件通知框架
+local diff                  -- 難度圖示框架
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -162,6 +164,24 @@ local function ClearStaleButtonReferences()
     wipe(scannedButtonIDs)
 end
 
+-- 跳過系統按鈕和由 LunarUI 管理的按鈕（提升為常數避免每次呼叫重建 table）
+local SKIP_BUTTONS = {
+    "MiniMapTracking",
+    "MiniMapMailFrame",
+    "MinimapZoomIn",
+    "MinimapZoomOut",
+    "Minimap",
+    "MinimapBackdrop",
+    "GameTimeFrame",
+    "TimeManagerClockButton",
+    "LunarUI_MinimapButton",
+    "LunarUI_MinimapMail",
+    "LunarUI_MinimapDifficulty",
+    "AddonCompartmentFrame",
+    "QueueStatusMinimapButton",
+    "ExpansionLandingPageMinimapButton",
+}
+
 local function CollectMinimapButton(button)
     if not button then return end
     if not (button:IsObjectType("Button") or button:IsObjectType("Frame")) then
@@ -174,25 +194,7 @@ local function CollectMinimapButton(button)
     -- 使用雜湊表進行 O(1) 重複檢查
     if scannedButtonIDs[name] then return end
 
-    -- 跳過系統按鈕和由 ApplyIconSettings 管理的按鈕
-    local skipButtons = {
-        "MiniMapTracking",
-        "MiniMapMailFrame",
-        "MinimapZoomIn",
-        "MinimapZoomOut",
-        "Minimap",
-        "MinimapBackdrop",
-        "GameTimeFrame",
-        "TimeManagerClockButton",
-        "LunarUI_MinimapButton",
-        "LunarUI_MinimapMail",
-        "LunarUI_MinimapDifficulty",
-        "AddonCompartmentFrame",
-        "QueueStatusMinimapButton",
-        "ExpansionLandingPageMinimapButton",
-    }
-
-    for _, skip in ipairs(skipButtons) do
+    for _, skip in ipairs(SKIP_BUTTONS) do
         if name:find(skip) then return end
     end
 
@@ -673,7 +675,7 @@ end
 local function CreateMailIndicator()
     if not minimapFrame then return end
 
-    local mail = CreateFrame("Frame", "LunarUI_MinimapMail", minimapFrame)
+    mail = CreateFrame("Frame", "LunarUI_MinimapMail", minimapFrame)
     mail:SetSize(18, 18)
     mail:SetPoint("BOTTOMLEFT", minimapFrame, "BOTTOMLEFT", 4, 4)
 
@@ -732,7 +734,7 @@ end
 local function CreateDifficultyIndicator()
     if not minimapFrame then return end
 
-    local diff = CreateFrame("Frame", "LunarUI_MinimapDifficulty", minimapFrame)
+    diff = CreateFrame("Frame", "LunarUI_MinimapDifficulty", minimapFrame)
     diff:SetSize(24, 12)
     diff:SetPoint("TOPLEFT", minimapFrame, "TOPLEFT", 4, -4)
 
