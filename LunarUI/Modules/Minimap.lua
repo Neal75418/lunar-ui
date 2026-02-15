@@ -14,8 +14,9 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local C = LunarUI.Colors
 
--- 備份原始形狀函數（覆寫移入 InitializeMinimap，避免未啟用時污染全域）
-local originalGetMinimapShape = GetMinimapShape
+-- GetMinimapShape flag-based wrapper（避免 enable/disable 時全域還原衝突）
+local originalGetMinimapShape
+local lunarMinimapIsSquare = false
 
 --------------------------------------------------------------------------------
 -- 常數
@@ -1016,8 +1017,16 @@ local function InitializeMinimap()
     if not db or not db.enabled then return end
     isInitialized = true
 
-    -- 只在模組啟用時覆寫形狀函數
-    function GetMinimapShape() return "SQUARE" end
+    -- 首次啟用時安裝 flag-controlled wrapper，之後只切換 flag
+    if not originalGetMinimapShape then
+        originalGetMinimapShape = GetMinimapShape
+        GetMinimapShape = function()
+            if lunarMinimapIsSquare then return "SQUARE" end
+            if originalGetMinimapShape then return originalGetMinimapShape() end
+            return "ROUND"
+        end
+    end
+    lunarMinimapIsSquare = true
 
     CreateMinimapFrame()           -- 先建立框架、reparent Minimap
     HideBlizzardMinimapElements()  -- 再隱藏裝飾
@@ -1113,10 +1122,8 @@ function LunarUI.CleanupMinimap()
         addonLoadedFrame:SetScript("OnEvent", nil)
         addonLoadedFrame = nil
     end
-    -- 還原 GetMinimapShape 全域函數
-    if originalGetMinimapShape then
-        GetMinimapShape = originalGetMinimapShape
-    end
+    -- 停用方形小地圖（wrapper 仍在，但 flag 為 false 時直接透傳原始函數）
+    lunarMinimapIsSquare = false
     isInitialized = false
 end
 

@@ -97,6 +97,13 @@ function LunarUI:SlashCommand(input)
             self:Print(_L["ImportUnavailable"] or "Import unavailable")
         end
 
+    elseif cmd == "debugauras" then
+        if self.DebugAuraFrames then
+            self.DebugAuraFrames()
+        else
+            self:Print("DebugAuraFrames not available")
+        end
+
     elseif cmd == "debugvigor" then
         local sub = args[2]
         if not sub then

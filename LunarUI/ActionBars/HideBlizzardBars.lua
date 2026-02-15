@@ -101,21 +101,58 @@ local function HideFrameRecursive(frame)
     return hasProtectedDescendant
 end
 
-local HideFramePermanently = HideFrameSafely
+-- 以全域名稱清單批次隱藏框架
+local function HideFramesByName(names, hideFunc)
+    for _, name in ipairs(names) do
+        local frame = _G[name]
+        if frame then
+            hideFunc(frame)
+        end
+    end
+end
 
 -- 注意：不要觸碰 EncounterBar、PlayerPowerBarAlt、UIParentBottomManagedFrameContainer！
 -- 這些是安全/受管理框架，用於 boss encounter 技能條等場景。
 -- 對它們呼叫 SetAlpha/EnableMouse 會產生 taint，阻止 WoW C++ 側正常管理狀態轉換。
 
--- EditMode 佈局：WoW 12.0 隱藏動作條後，UpdateRightActionBarPositions
--- 可能計算出負數 scale 導致 SetScale() 錯誤。
--- 此錯誤由 Blizzard 內部程式碼拋出，WoW 會自行處理；
--- 不再用函數替換攔截（替換 EditModeManagerFrame 方法會產生 Lua Taint）。
--- 保持 MultiBarRight/MultiBarLeft alpha=1 以減少錯誤頻率（見下方 restore 區段）。
+-- 過濾已知無害的 Blizzard 錯誤與 taint 警告：
+-- 1. UpdateRightActionBarPositions 的 "Scale must be > 0"（隱藏動作條後佈局計算出負數 scale）
+-- 2. Backdrop.lua "secret number value tainted by 'LunarUI'"（addon 觸發 tooltip 時 backdrop 使用 tainted width）
+-- 3. ADDON_ACTION_BLOCKED / ADDON_ACTION_FORBIDDEN（UIErrorsFrame 的 "介面功能因插件而失效" 訊息）
+-- 以上皆為 UI addon 修改 Blizzard 框架的正常副作用，無功能影響
+local scaleErrorFilter  -- 當前安裝的過濾函數引用（用於避免自我鏈接）
+local taintEventsUnregistered = false
+local function InstallScaleErrorFilter()
+    -- 抑制 "介面功能因插件而失效" 黃字訊息（ADDON_ACTION_BLOCKED 事件）
+    -- Blizzard 在 UIParent 的 OnEvent 處理此事件並顯示警告
+    -- seterrorhandler 無法攔截（非 Lua 錯誤），需從 UIParent 取消註冊
+    if not taintEventsUnregistered then
+        taintEventsUnregistered = true
+        UIParent:UnregisterEvent("ADDON_ACTION_BLOCKED")
+        UIParent:UnregisterEvent("ADDON_ACTION_FORBIDDEN")
+    end
+
+    local prevHandler = geterrorhandler()
+    -- 已是我們的過濾器，跳過（避免自我鏈接）
+    if prevHandler == scaleErrorFilter then return end
+    scaleErrorFilter = function(msg, ...)
+        if type(msg) == "string" then
+            if msg:find("Scale must be > 0") then return end
+            if msg:find("secret number value tainted") then return end
+        end
+        if prevHandler then
+            return prevHandler(msg, ...)
+        end
+    end
+    seterrorhandler(scaleErrorFilter)
+end
 
 local function HideBlizzardBars()
     -- 戰鬥中不修改框架以避免 taint
     if InCombatLockdown() then return end
+
+    -- 安裝 SetScale 錯誤過濾器（首次呼叫即安裝，確保在錯誤發生前就位）
+    InstallScaleErrorFilter()
 
     -- testvigor 模式：暫停所有隱藏操作，讓暴雪動作條完全顯示
     -- 用於診斷 vigor bar 不可見是否由隱藏操作引起的 taint 所導致
@@ -133,12 +170,7 @@ local function HideBlizzardBars()
         "MainMenuBarArtFrame",
         "MainMenuBarArtFrameBackground",
     }
-    for _, name in ipairs(primaryFrames) do
-        local frame = _G[name]
-        if frame then
-            HideFrameRecursive(frame)
-        end
-    end
+    HideFramesByName(primaryFrames, HideFrameRecursive)
 
     -- 重要：WoW 現代版本的獅鷲獸是透過 Lua 屬性存取
     -- 不是全域名稱，必須直接從 MainMenuBarArtFrame 取得
@@ -214,7 +246,7 @@ local function HideBlizzardBars()
     for _, barName in ipairs(barsToHide) do
         local bar = _G[barName]
         if bar then
-            HideFramePermanently(bar)
+            HideFrameSafely(bar)
         end
     end
 
@@ -241,12 +273,7 @@ local function HideBlizzardBars()
         "MainActionBarContainerFrame",
         "MainMenuBarVehicleLeaveButton",
     }
-    for _, name in ipairs(actionBarContainers) do
-        local frame = _G[name]
-        if frame then
-            HideFrameRecursive(frame)
-        end
-    end
+    HideFramesByName(actionBarContainers, HideFrameRecursive)
 
     -- 隱藏舊版獅鷲裝飾（跨 WoW 版本的所有可能框架名稱）
     -- 這些是舊版的全域名稱，保留以相容舊版本
@@ -266,12 +293,7 @@ local function HideBlizzardBars()
         "MainMenuBarBackgroundArt",
         "MainMenuBarBackground",
     }
-    for _, name in ipairs(artFrames) do
-        local frame = _G[name]
-        if frame then
-            HideFrameRecursive(frame)
-        end
-    end
+    HideFramesByName(artFrames, HideFrameRecursive)
 
     -- 隱藏狀態追蹤條（經驗/聲望/榮譽）
     if StatusTrackingBarManager then
@@ -280,12 +302,12 @@ local function HideBlizzardBars()
 
     -- 隱藏姿態條
     if StanceBar then
-        HideFramePermanently(StanceBar)
+        HideFrameSafely(StanceBar)
     end
 
     -- 隱藏寵物條
     if PetActionBar then
-        HideFramePermanently(PetActionBar)
+        HideFrameSafely(PetActionBar)
     end
 
     -- 注意：MicroButtonAndBagsBar 和 BagsBar 保持可見
@@ -303,12 +325,7 @@ local function HideBlizzardBars()
         "MainMenuBarArtFrameBackground",
         -- 注意：MicroMenu 保持可見
     }
-    for _, name in ipairs(wow12Frames) do
-        local frame = _G[name]
-        if frame then
-            HideFrameSafely(frame)
-        end
-    end
+    HideFramesByName(wow12Frames, HideFrameSafely)
 
     -- WoW 12.0 TWW: 嘗試更多可能的獅鷲容器
     local gryphonContainers = {
@@ -377,12 +394,7 @@ local function HideBlizzardBars()
         "MainMenuBarArtFrameBackground",
         "MainMenuBarArtFrame",
     }
-    for _, name in ipairs(gryphonFrameNames) do
-        local obj = _G[name]
-        if obj then
-            HideFrameSafely(obj)
-        end
-    end
+    HideFramesByName(gryphonFrameNames, HideFrameSafely)
 
     -- 注意：OverrideActionBar 及其 EndCap 不再隱藏，由暴雪管理
 
@@ -391,12 +403,7 @@ local function HideBlizzardBars()
         "EditModeExpandedActionBarFrame",
         "QuickKeybindFrame",
     }
-    for _, name in ipairs(editModeFrames) do
-        local frame = _G[name]
-        if frame then
-            HideFramePermanently(frame)
-        end
-    end
+    HideFramesByName(editModeFrames, HideFrameSafely)
 
     -- 注意：移除了 _G 迭代，因為過度搜尋可能導致 taint
     -- 上面已經明確列出所有需要隱藏的框架
@@ -407,18 +414,6 @@ local function HideBlizzardBars()
     -- MainMenuBarManager：完全不觸碰！
     -- 它管理 encounter bar / UIWidgetPowerBarContainerFrame 的生命週期，
     -- 隱藏它會阻止 boss encounter 技能條等 UI 元素正常顯示。
-
-    -- 恢復右側動作條容器的 alpha（防止 EditMode 計算負數 scale）
-    -- 原因：UpdateRightActionBarPositions 在 ShowOverride（飛龍騎術）時重新計算佈局，
-    -- 若右側動作條容器 alpha=0，計算出的 scale 為負數導致 SetScale() 錯誤。
-    -- 個別按鈕已在上方被隱藏（alpha=0），容器框架保持 alpha=1 但無可見內容。
-    local rightBarContainers = { "MultiBarRight", "MultiBarLeft" }
-    for _, name in ipairs(rightBarContainers) do
-        local bar = _G[name]
-        if bar then
-            pcall(function() bar:SetAlpha(1) end)
-        end
-    end
 
 end
 
@@ -683,7 +678,11 @@ local function HideBlizzardBarsDelayed()
     HideBlizzardBars()
     -- 延遲後再次執行以捕捉延遲建立的框架
     C_Timer.After(1, HideBlizzardBars)
-    C_Timer.After(3, HideBlizzardBars)
+    C_Timer.After(3, function()
+        HideBlizzardBars()
+        -- 在所有 addon 載入後安裝錯誤過濾（確保在 BugSack 等之後）
+        InstallScaleErrorFilter()
+    end)
 end
 
 LunarUI.HideBlizzardBarsDelayed = HideBlizzardBarsDelayed

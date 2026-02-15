@@ -402,7 +402,6 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
         local auraOk, auraData = pcall(getDataFn, "player", i)
         if not auraOk or not auraData then break end
 
-        -- Fix 10: 合併 pcall — 同時取 name 和 duration，減少每個 aura 開銷
         local ok, nameStr, durNum = pcall(function()
             return tostring(auraData.name or ""), tonumber(auraData.duration or 0) or 0
         end)
@@ -423,6 +422,10 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
             end
         end
     end
+
+    -- 戰鬥中若 API 回傳空資料（taint 限制導致），保留現有圖示不清除
+    -- 避免 "介面功能因插件而失效" 後所有 buff 圖示消失
+    if visibleIndex == 0 and InCombatLockdown() then return end
 
     -- 隱藏多餘圖示
     for i = visibleIndex + 1, maxIcons do
@@ -479,29 +482,23 @@ end
 -- 暴雪框架隱藏
 --------------------------------------------------------------------------------
 
-local blizzShowHooks = {}  -- 追蹤已 hook Show 的暴雪框架（避免重複 hook）
-
 local function HideBlizzardBuffFrames()
-    -- 不使用 SetParent（會造成 taint 汙染）
-    -- 不使用 UnregisterAllEvents（無法還原，阻止即時 toggle 恢復）
-    -- 改用 Hide + SetAlpha(0) + Hook Show 防止重新顯示
+    -- 策略：SetScale(0.001) + SetAlpha(0) 使框架不可見
+    -- 即使戰鬥中 Blizzard 再次 Show() 或 SetAlpha(1)，
+    -- scale 0.001 使框架僅有次像素大小，肉眼不可見且無法點擊
+    -- 不呼叫 Hide() — WoW 12.0 的 BuffFrame 是 EditMode 管理框架，
+    -- Hide 會導致 Blizzard aura 管理系統停止更新，影響 C_UnitAuras 事件
+    -- 不使用 hooksecurefunc — hook 在戰鬥中觸發會造成 taint 傳播
+    -- 不使用 SetParent（造成 taint）
+    -- 不使用 UnregisterAllEvents（無法還原，阻止 toggle 恢復）
+    if InCombatLockdown() then return end
     local frames = { _G.BuffFrame, _G.DebuffFrame }
     for _, frame in ipairs(frames) do
         if frame then
-            -- 清除放行標記，讓 Show hook 恢復攔截
-            frame._lunarUIAllowShow = nil
-            pcall(function() frame:Hide() end)
-            pcall(function() frame:SetAlpha(0) end)
-            -- Hook Show 防止暴雪代碼重新顯示（hooksecurefunc 不造成 taint）
-            if not blizzShowHooks[frame] then
-                blizzShowHooks[frame] = true
-                pcall(function()
-                    hooksecurefunc(frame, "Show", function(self)
-                        if self._lunarUIAllowShow then return end
-                        pcall(function() self:Hide() end)
-                    end)
-                end)
-            end
+            pcall(function()
+                frame:SetScale(0.001)
+                frame:SetAlpha(0)
+            end)
         end
     end
 end
@@ -581,11 +578,16 @@ eventFrame = LunarUI.CreateEventHandler(
                 ScheduleAuraUpdate()
             end
         elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
-            -- 戰鬥狀態切換時，確保框架可見並強制更新
+            -- 戰鬥狀態切換時，確保 LunarUI 框架可見並強制更新
             if isInitialized then
                 if buffFrame and not buffFrame:IsShown() then buffFrame:Show() end
                 if debuffFrame and not debuffFrame:IsShown() then debuffFrame:Show() end
                 ScheduleAuraUpdate()
+                -- 離開戰鬥時，重新確保暴雪框架被隱藏
+                -- （戰鬥中 Blizzard 可能改變了框架狀態）
+                if event == "PLAYER_REGEN_ENABLED" then
+                    HideBlizzardBuffFrames()
+                end
             end
         end
     end
@@ -710,13 +712,16 @@ function LunarUI.CleanupAuraFrames()
     if buffFrame then buffFrame:Hide() end
     if debuffFrame then debuffFrame:Hide() end
 
-    -- 還原暴雪框架（保留 _lunarUIAllowShow 讓 Show hook 永久放行，
-    -- re-enable 時 HideBlizzardBuffFrames 會清除此標記）
-    for _, frame in ipairs({ _G.BuffFrame, _G.DebuffFrame }) do
-        if frame then
-            frame._lunarUIAllowShow = true
-            pcall(function() frame:SetAlpha(1) end)
-            pcall(function() frame:Show() end)
+    -- 還原暴雪框架（恢復 scale / alpha / 可見性）
+    if not InCombatLockdown() then
+        for _, frame in ipairs({ _G.BuffFrame, _G.DebuffFrame }) do
+            if frame then
+                pcall(function()
+                    frame:SetScale(1)
+                    frame:SetAlpha(1)
+                    frame:Show()
+                end)
+            end
         end
     end
 
@@ -727,6 +732,98 @@ function LunarUI.CleanupAuraFrames()
     isInitialized = false
     -- 不取消事件註冊：OnEvent 已有 isInitialized guard，
     -- 保留事件以便 toggle 重新啟用時 Initialize 能被正確呼叫
+end
+
+--------------------------------------------------------------------------------
+-- 診斷工具
+--------------------------------------------------------------------------------
+
+function LunarUI.DebugAuraFrames()
+    local lines = {}
+    local function add(text) lines[#lines + 1] = text end
+    local function safeNum(val) return tonumber(tostring(val or 0)) or 0 end
+
+    add("=== AuraFrames Debug ===")
+    add("isInitialized=" .. tostring(isInitialized))
+    add("InCombatLockdown=" .. tostring(InCombatLockdown()))
+
+    -- 框架狀態
+    for _, info in ipairs({
+        { name = "LunarUI_BuffFrame", frame = buffFrame },
+        { name = "LunarUI_DebuffFrame", frame = debuffFrame },
+    }) do
+        local f = info.frame
+        if f then
+            local shown, visible, alpha, effAlpha, scale, effScale = "?", "?", 0, 0, 0, 0
+            pcall(function() shown = f:IsShown() and "shown" or "HIDDEN" end)
+            pcall(function() visible = f:IsVisible() and "visible" or "INVISIBLE" end)
+            pcall(function() alpha = safeNum(f:GetAlpha()) end)
+            pcall(function() effAlpha = safeNum(f:GetEffectiveAlpha()) end)
+            pcall(function() scale = safeNum(f:GetScale()) end)
+            pcall(function() effScale = safeNum(f:GetEffectiveScale()) end)
+            local pos = "?"
+            pcall(function()
+                local p, rel, rp, px, py = f:GetPoint(1)
+                local relName = rel and (rel.GetName and rel:GetName() or "unnamed") or "nil"
+                pos = string.format("%s@%s(%+.0f,%+.0f)", tostring(p), relName, safeNum(px), safeNum(py))
+            end)
+            local parent = "?"
+            pcall(function()
+                local pp = f:GetParent()
+                parent = pp and (pp.GetName and pp:GetName() or "unnamed") or "nil"
+            end)
+            add(string.format("%s: %s/%s a=%.2f effA=%.2f sc=%.3f effSc=%.4f pos=%s parent=%s",
+                info.name, shown, visible, alpha, effAlpha, scale, effScale, pos, parent))
+        else
+            add(info.name .. ": NIL (frame not created)")
+        end
+    end
+
+    -- 圖示可見數量
+    local buffCount, debuffCount = 0, 0
+    for i = 1, MAX_BUFFS do
+        if buffIcons[i] and buffIcons[i]:IsShown() then buffCount = buffCount + 1 end
+    end
+    for i = 1, MAX_DEBUFFS do
+        if debuffIcons[i] and debuffIcons[i]:IsShown() then debuffCount = debuffCount + 1 end
+    end
+    add(string.format("Visible icons: buff=%d/%d debuff=%d/%d", buffCount, MAX_BUFFS, debuffCount, MAX_DEBUFFS))
+
+    -- 光環資料測試
+    add("--- C_UnitAuras Test ---")
+    for i = 1, 5 do
+        local ok, data = pcall(C_UnitAuras.GetBuffDataByIndex, "player", i)
+        if not ok then
+            add(string.format("  Buff[%d]: ERROR: %s", i, tostring(data)))
+            break
+        elseif not data then
+            add(string.format("  Buff[%d]: nil (no more buffs)", i))
+            break
+        else
+            local name = "?"
+            pcall(function() name = tostring(data.name or "?") end)
+            add(string.format("  Buff[%d]: %s", i, name))
+        end
+    end
+
+    -- 暴雪框架狀態
+    add("--- Blizzard Frames ---")
+    for _, name in ipairs({"BuffFrame", "DebuffFrame"}) do
+        local f = _G[name]
+        if f then
+            local shown, alpha, scale = "?", 0, 0
+            pcall(function() shown = f:IsShown() and "shown" or "hidden" end)
+            pcall(function() alpha = safeNum(f:GetAlpha()) end)
+            pcall(function() scale = safeNum(f:GetScale()) end)
+            add(string.format("  %s: %s a=%.2f sc=%.4f", name, shown, alpha, scale))
+        end
+    end
+
+    -- 輸出
+    add("=== End AuraFrames Debug ===")
+    for _, line in ipairs(lines) do
+        print("|cff88bbff[AuraDebug]|r " .. tostring(line))
+    end
 end
 
 LunarUI:RegisterModule("AuraFrames", {

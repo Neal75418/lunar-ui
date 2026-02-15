@@ -40,6 +40,20 @@ end
 LunarUI.InvalidateStatusBarTextureCache = InvalidateStatusBarTexture
 local C = LunarUI.Colors
 
+-- 共用顏色常數
+local CASTBAR_COLOR = { 0.4, 0.6, 0.8, 1 }
+local BG_DARKEN = 0.3
+local REACTION_COLORS = {
+    [1] = { 0.9, 0.2, 0.2 },  -- 仇恨
+    [2] = { 0.9, 0.2, 0.2 },  -- 敵對
+    [3] = { 0.9, 0.2, 0.2 },  -- 不友好
+    [4] = { 0.9, 0.9, 0.2 },  -- 中立
+    [5] = { 0.2, 0.9, 0.3 },  -- 友善
+    [6] = { 0.2, 0.9, 0.3 },  -- 尊敬
+    [7] = { 0.2, 0.9, 0.3 },  -- 崇敬
+    [8] = { 0.2, 0.9, 0.3 },  -- 崇拜
+}
+
 -- 框架尺寸
 local SIZES = {
     player = { width = 220, height = 50 },
@@ -84,7 +98,7 @@ local function CreateHealthBar(frame, unit)
     health.bg:SetAllPoints()
     health.bg:SetTexture(GetStatusBarTexture())
     health.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
-    health.bg.multiplier = 0.3
+    health.bg.multiplier = BG_DARKEN
 
     -- 頻繁更新以確保動畫流暢
     health.frequentUpdates = true
@@ -111,12 +125,11 @@ local function CreateHealthBar(frame, unit)
         if not r then
             local reaction = UnitReaction(ownerUnit, "player")
             if reaction then
-                if reaction >= 5 then
-                    r, g, b = 0.2, 0.9, 0.3  -- 友善
-                elseif reaction == 4 then
-                    r, g, b = 0.9, 0.9, 0.2  -- 中立
+                local rc = REACTION_COLORS[reaction]
+                if rc then
+                    r, g, b = rc[1], rc[2], rc[3]
                 else
-                    r, g, b = 0.9, 0.2, 0.2  -- 敵對
+                    r, g, b = REACTION_COLORS[3][1], REACTION_COLORS[3][2], REACTION_COLORS[3][3]
                 end
             end
         end
@@ -127,7 +140,7 @@ local function CreateHealthBar(frame, unit)
         if self._lastR ~= r or self._lastG ~= g or self._lastB ~= b then
             self._lastR, self._lastG, self._lastB = r, g, b
             self:SetStatusBarColor(r, g, b)
-            self.bg:SetVertexColor(r * 0.3, g * 0.3, b * 0.3, 0.8)
+            self.bg:SetVertexColor(r * BG_DARKEN, g * BG_DARKEN, b * BG_DARKEN, 0.8)
         end
     end
 
@@ -150,7 +163,7 @@ local function CreatePowerBar(frame)
     power.bg:SetAllPoints()
     power.bg:SetTexture(GetStatusBarTexture())
     power.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
-    power.bg.multiplier = 0.3
+    power.bg.multiplier = BG_DARKEN
 
     frame.Power = power
     return power
@@ -303,7 +316,7 @@ local function CreateCastbar(frame, unit)
 
     local castbar = CreateFrame("StatusBar", nil, frame)
     castbar:SetStatusBarTexture(GetStatusBarTexture())
-    castbar:SetStatusBarColor(0.4, 0.6, 0.8, 1)
+    castbar:SetStatusBarColor(unpack(CASTBAR_COLOR))
 
     -- 位於主框架下方
     castbar:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 0, -4)
@@ -359,7 +372,7 @@ local function CreateCastbar(frame, unit)
     -- 暴雪故意限制插件存取此資訊
     -- 使用統一的施法條顏色（無法判斷是否可打斷）
     castbar.PostCastStart = function(self, _unit)
-        self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
+        self:SetStatusBarColor(unpack(CASTBAR_COLOR))
         HideAllTicks(self)
 
         -- 玩家施法條：顯示延遲
@@ -383,7 +396,7 @@ local function CreateCastbar(frame, unit)
 
     local showTicks = cbDB.showTicks ~= false
     castbar.PostChannelStart = function(self, _unit, spellID)
-        self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
+        self:SetStatusBarColor(unpack(CASTBAR_COLOR))
 
         -- 引導法術 tick 標記
         if showTicks then
@@ -1080,111 +1093,9 @@ local function CreateResurrectIndicator(frame)
     return res
 end
 
--- 死亡指示器：使用單一全域事件框架防止記憶體洩漏
--- 使用弱引用表追蹤需要死亡狀態更新的框架
--- TEMPORARY DISABLE: 完全禁用以修復 taint
-local DEATH_INDICATOR_DISABLED = true
-local deathIndicatorFrames = setmetatable({}, { __mode = "k" })
-local deathUnitMap = {}  -- unit → frame 反向映射（O(1) 事件查詢）
-local deathMapNeedsRebuild = false  -- 延遲重建標記（避免 protected context 中迭代）
-local deathIndicatorEventFrame
-local playerEnterWorldFrame  -- PLAYER_ENTERING_WORLD 事件框架
-
-local function UpdateDeathStateForFrame(frame)
-    if DEATH_INDICATOR_DISABLED then return end
-    -- 使用 pcall 包裹並記錄除錯資訊，防止靜默失敗
-    local success, err = pcall(function()
-        local unit = frame.unit
-        if not unit or not UnitExists(unit) then
-            if frame.DeadIndicator then frame.DeadIndicator:Hide() end
-            if frame.DeadOverlay then frame.DeadOverlay:Hide() end
-            return
-        end
-
-        if UnitIsDead(unit) or UnitIsGhost(unit) then
-            if frame.DeadIndicator then frame.DeadIndicator:Show() end
-            if frame.DeadOverlay then frame.DeadOverlay:Show() end
-        else
-            if frame.DeadIndicator then frame.DeadIndicator:Hide() end
-            if frame.DeadOverlay then frame.DeadOverlay:Hide() end
-        end
-    end)
-
-    if not success and LunarUI:IsDebugMode() then
-        LunarUI:Debug("UpdateDeathStateForFrame 錯誤：" .. tostring(err))
-    end
-end
-
-local function RebuildDeathUnitMap()
-    if DEATH_INDICATOR_DISABLED then return end
-    wipe(deathUnitMap)
-    for frame in pairs(deathIndicatorFrames) do
-        if frame and frame.unit then
-            -- 單一映射避免 taint：只保留最後一個框架
-            -- 同一 unit 的多個框架會在全量刷新時都被更新
-            deathUnitMap[frame.unit] = frame
-        end
-    end
-    deathMapNeedsRebuild = false
-end
-
-local function UpdateAllDeathStates(eventUnit)
-    if DEATH_INDICATOR_DISABLED then return end
-    if not eventUnit then
-        -- 全量刷新（PLAYER_ENTERING_WORLD / GROUP_ROSTER_UPDATE）
-        RebuildDeathUnitMap()
-        for frame in pairs(deathIndicatorFrames) do
-            if frame and frame.unit then
-                UpdateDeathStateForFrame(frame)
-            end
-        end
-    else
-        -- O(1) 查詢取代 O(n) 迭代
-        local frame = deathUnitMap[eventUnit]
-        if not frame or frame.unit ~= eventUnit then
-            -- 映射表過時，標記延遲重建（避免 protected context 中迭代）
-            if not deathMapNeedsRebuild then
-                deathMapNeedsRebuild = true
-                C_Timer.After(0, function()
-                    if deathMapNeedsRebuild then
-                        RebuildDeathUnitMap()
-                    end
-                end)
-            end
-            -- 暫時跳過此次更新，等待下次事件
-            return
-        end
-        if frame then
-            UpdateDeathStateForFrame(frame)
-        end
-    end
-end
-
--- 建立單一全域事件框架（延遲初始化）
-local function EnsureDeathIndicatorEventFrame()
-    if DEATH_INDICATOR_DISABLED then return end
-    if deathIndicatorEventFrame then return end
-
-    deathIndicatorEventFrame = CreateFrame("Frame")
-    deathIndicatorEventFrame:RegisterEvent("UNIT_HEALTH")
-    deathIndicatorEventFrame:RegisterEvent("UNIT_CONNECTION")
-    deathIndicatorEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    deathIndicatorEventFrame:RegisterEvent("UNIT_FLAGS")
-    deathIndicatorEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-    deathIndicatorEventFrame:SetScript("OnEvent", function(_self, event, eventUnit)
-        if event == "PLAYER_ENTERING_WORLD" or event == "GROUP_ROSTER_UPDATE" then
-            -- 延遲執行避免在 protected context 中迭代 oUF frames
-            C_Timer.After(0, function()
-                UpdateAllDeathStates()
-            end)
-        elseif eventUnit then
-            UpdateAllDeathStates(eventUnit)
-        end
-    end)
-end
-
+-- 死亡指示器：純 UI 元素（骷髏圖示 + 灰色覆蓋）
+-- 事件驅動的狀態更新因 taint 問題已移除，死亡狀態由 oUF 內建機制處理
 local function CreateDeathIndicator(frame, _unit)
-    -- 建立死亡單位的骷髏圖示
     local dead = frame:CreateTexture(nil, "OVERLAY")
     dead:SetSize(20, 20)
     dead:SetPoint("CENTER", frame.Health, "CENTER")
@@ -1192,21 +1103,11 @@ local function CreateDeathIndicator(frame, _unit)
     dead:Hide()
     frame.DeadIndicator = dead
 
-    -- 建立死亡單位的灰色覆蓋
     local deadOverlay = frame.Health:CreateTexture(nil, "OVERLAY")
     deadOverlay:SetAllPoints(frame.Health)
     deadOverlay:SetColorTexture(0.3, 0.3, 0.3, 0.6)
     deadOverlay:Hide()
     frame.DeadOverlay = deadOverlay
-
-    -- TEMPORARY DISABLE: 全域事件系統導致 taint
-    -- EnsureDeathIndicatorEventFrame()
-    -- deathIndicatorFrames[frame] = true
-    --
-    -- -- 初始更新
-    -- C_Timer.After(0.2, function()
-    --     UpdateDeathStateForFrame(frame)
-    -- end)
 
     return dead
 end
@@ -1622,21 +1523,15 @@ if _G.EditModeManagerFrame and _G.EditModeManagerFrame.ExitEditMode then
     end)
 end
 
+local playerEnterWorldFrame  -- forward declaration
+
 -- 清理函數
 local function CleanupUnitFrames()
-    -- 清除死亡指示器事件框架
-    if deathIndicatorEventFrame then
-        deathIndicatorEventFrame:UnregisterAllEvents()
-        deathIndicatorEventFrame:SetScript("OnEvent", nil)
-    end
     -- 清除 PLAYER_ENTERING_WORLD 事件框架
     if playerEnterWorldFrame then
         playerEnterWorldFrame:UnregisterAllEvents()
         playerEnterWorldFrame:SetScript("OnEvent", nil)
     end
-    -- 清除死亡指示器弱引用表項目
-    wipe(deathIndicatorFrames)
-    wipe(deathUnitMap)
 end
 
 -- 匯出

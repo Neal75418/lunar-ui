@@ -33,6 +33,11 @@ local function GetStatusBarTexture()
     end
     return statusBarTexture
 end
+
+-- 共用顏色常數（與 UnitFrames/Layout.lua 一致）
+local CASTBAR_COLOR = { 0.4, 0.6, 0.8, 1 }
+local BG_DARKEN = 0.3
+
 -- Classification colors
 local CLASSIFICATION_COLORS = {
     worldboss = { r = 1.0, g = 0.2, b = 0.2 },
@@ -120,7 +125,7 @@ local function CreateHealthBar(frame)
     health.bg:SetAllPoints()
     health.bg:SetTexture(GetStatusBarTexture())
     health.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
-    health.bg.multiplier = 0.3
+    health.bg.multiplier = BG_DARKEN
 
     -- Frequent updates
     health.frequentUpdates = true
@@ -147,7 +152,7 @@ local function CreateHealthBar(frame)
                     if (not reaction or reaction <= 4) and not UnitIsTapDenied(unit) then
                         bar:SetStatusBarColor(npcColor.r, npcColor.g, npcColor.b)
                         if bar.bg then
-                            bar.bg:SetVertexColor(npcColor.r * 0.3, npcColor.g * 0.3, npcColor.b * 0.3)
+                            bar.bg:SetVertexColor(npcColor.r * BG_DARKEN, npcColor.g * BG_DARKEN, npcColor.b * BG_DARKEN)
                         end
                     end
                 end
@@ -211,7 +216,7 @@ end
 local function CreateCastbar(frame)
     local castbar = CreateFrame("StatusBar", nil, frame)
     castbar:SetStatusBarTexture(GetStatusBarTexture())
-    castbar:SetStatusBarColor(0.4, 0.6, 0.8, 1)
+    castbar:SetStatusBarColor(unpack(CASTBAR_COLOR))
     castbar:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 0, -3)
     castbar:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, -3)
     castbar:SetHeight(6)
@@ -246,7 +251,7 @@ local function CreateCastbar(frame)
     -- WoW 12.0 將 notInterruptible 設為 secret value，無法可靠判斷
     -- 統一使用固定顏色（與 UnitFrames/Layout.lua PostCastStart 一致）
     castbar.PostCastStart = function(self, _unit)
-        self:SetStatusBarColor(0.4, 0.6, 0.8, 1)
+        self:SetStatusBarColor(unpack(CASTBAR_COLOR))
     end
     castbar.PostChannelStart = castbar.PostCastStart
 

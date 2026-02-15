@@ -72,21 +72,25 @@ end
 local Tags = oUF.Tags
 if not Tags or not Tags.Methods or not Tags.Events then return end
 
--- [lunar:health] — 格式化當前血量（12.3K / 1.23M）
-Tags.Methods["lunar:health"] = function(unit)
+-- 單位不可用狀態文字（死亡/鬼魂/離線），回傳 nil 表示單位正常
+local function UnitStatusText(unit)
     if UnitIsDead(unit) then return "|cffcc3333Dead|r" end
     if UnitIsGhost(unit) then return "|cffcc3333Ghost|r" end
     if not UnitIsConnected(unit) then return "|cff999999Offline|r" end
-    local cur = UnitHealth(unit) or 0
-    return ShortValue(cur)
+end
+
+-- [lunar:health] — 格式化當前血量（12.3K / 1.23M）
+Tags.Methods["lunar:health"] = function(unit)
+    local status = UnitStatusText(unit)
+    if status then return status end
+    return ShortValue(UnitHealth(unit) or 0)
 end
 Tags.Events["lunar:health"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
 
 -- [lunar:health:percent] — 血量百分比
 Tags.Methods["lunar:health:percent"] = function(unit)
-    if UnitIsDead(unit) then return "|cffcc3333Dead|r" end
-    if UnitIsGhost(unit) then return "|cffcc3333Ghost|r" end
-    if not UnitIsConnected(unit) then return "|cff999999Offline|r" end
+    local status = UnitStatusText(unit)
+    if status then return status end
     local pct = UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)
     return format("%d%%", pct or 0)
 end
@@ -94,12 +98,9 @@ Tags.Events["lunar:health:percent"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTIO
 
 -- [lunar:health:current-max] — "12.3K / 45.6K" 格式
 Tags.Methods["lunar:health:current-max"] = function(unit)
-    if UnitIsDead(unit) then return "|cffcc3333Dead|r" end
-    if UnitIsGhost(unit) then return "|cffcc3333Ghost|r" end
-    if not UnitIsConnected(unit) then return "|cff999999Offline|r" end
-    local cur = UnitHealth(unit) or 0
-    local max = UnitHealthMax(unit) or 0
-    return ShortValue(cur) .. " / " .. ShortValue(max)
+    local status = UnitStatusText(unit)
+    if status then return status end
+    return ShortValue(UnitHealth(unit) or 0) .. " / " .. ShortValue(UnitHealthMax(unit) or 0)
 end
 Tags.Events["lunar:health:current-max"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
 
@@ -186,9 +187,8 @@ Tags.Events["lunar:class:color"] = "UNIT_NAME_UPDATE"
 
 -- [lunar:status] — 狀態文字（死亡/鬼魂/離線/暫離）
 Tags.Methods["lunar:status"] = function(unit)
-    if UnitIsDead(unit) then return "|cffcc3333Dead|r" end
-    if UnitIsGhost(unit) then return "|cffcc3333Ghost|r" end
-    if not UnitIsConnected(unit) then return "|cff999999Offline|r" end
+    local status = UnitStatusText(unit)
+    if status then return status end
     if UnitIsAFK(unit) then return "|cff999999AFK|r" end
     return ""
 end

@@ -42,6 +42,18 @@ end
 local DEFAULT_BUTTON_SIZE = 36
 local DEFAULT_BUTTON_SPACING = 4
 
+-- 按鈕樣式顏色常數
+local BUTTON_COLORS = {
+    pushed      = { 1, 1, 1, 0.4 },
+    highlight   = { 1, 1, 1, 0.3 },
+    checked     = { 0.4, 0.6, 0.8, 0.5 },
+    flash       = { 1, 0.9, 0.6, 0.4 },
+    disabled    = { 0.4, 0.4, 0.4 },
+    hotkeyText  = { 0.8, 0.8, 0.8 },
+    flyoutBg    = { 0.1, 0.2, 0.5, 0.6 },
+    flyoutBorder = { 0.4, 0.6, 1.0, 1 },
+}
+
 -- WoW 綁定命令映射：bar ID → binding prefix（參照 Bartender4）
 -- bar2 是主動作條第二頁，不應獨立綁定（跳過）
 local BINDING_FORMATS = {
@@ -164,33 +176,120 @@ local function CreateBarFrame(name, numButtons, parent, orientation)
     -- 背景材質
     local bgTex = bg:CreateTexture(nil, "BACKGROUND")
     bgTex:SetAllPoints()
-    bgTex:SetColorTexture(0.1, 0.2, 0.5, 0.6)
+    bgTex:SetColorTexture(unpack(BUTTON_COLORS.flyoutBg))
     bg._bgTex = bgTex
     -- 邊框材質（四邊各 1px）
     local borderTop = bg:CreateTexture(nil, "BORDER")
     borderTop:SetHeight(1)
     borderTop:SetPoint("TOPLEFT")
     borderTop:SetPoint("TOPRIGHT")
-    borderTop:SetColorTexture(0.4, 0.6, 1.0, 1)
+    borderTop:SetColorTexture(unpack(BUTTON_COLORS.flyoutBorder))
     local borderBottom = bg:CreateTexture(nil, "BORDER")
     borderBottom:SetHeight(1)
     borderBottom:SetPoint("BOTTOMLEFT")
     borderBottom:SetPoint("BOTTOMRIGHT")
-    borderBottom:SetColorTexture(0.4, 0.6, 1.0, 1)
+    borderBottom:SetColorTexture(unpack(BUTTON_COLORS.flyoutBorder))
     local borderLeft = bg:CreateTexture(nil, "BORDER")
     borderLeft:SetWidth(1)
     borderLeft:SetPoint("TOPLEFT")
     borderLeft:SetPoint("BOTTOMLEFT")
-    borderLeft:SetColorTexture(0.4, 0.6, 1.0, 1)
+    borderLeft:SetColorTexture(unpack(BUTTON_COLORS.flyoutBorder))
     local borderRight = bg:CreateTexture(nil, "BORDER")
     borderRight:SetWidth(1)
     borderRight:SetPoint("TOPRIGHT")
     borderRight:SetPoint("BOTTOMRIGHT")
-    borderRight:SetColorTexture(0.4, 0.6, 1.0, 1)
+    borderRight:SetColorTexture(unpack(BUTTON_COLORS.flyoutBorder))
     bg:Hide()
     frame.bg = bg
 
     return frame
+end
+
+-- 隱藏預設 NormalTexture 並安裝 hook 防止重新出現
+local function StyleButtonNormalTexture(button, normalTexture)
+    if normalTexture then
+        normalTexture:SetTexture(nil)
+        normalTexture:Hide()
+    end
+
+    if button._lunarHookedNormal then return end
+    button._lunarHookedNormal = true
+
+    hooksecurefunc(button, "SetNormalTexture", ClearNormalTexture)
+
+    if button.SetNormalAtlas then
+        hooksecurefunc(button, "SetNormalAtlas", ClearNormalTexture)
+    end
+
+    if button.Update then
+        hooksecurefunc(button, "Update", function(self)
+            pendingNormalClear[self] = true
+            if not normalClearScheduled then
+                normalClearScheduled = true
+                C_Timer.After(0, ProcessPendingNormalClears)
+            end
+        end)
+    end
+end
+
+-- 設定冷卻框架樣式與去飽和 hook
+local function StyleButtonCooldown(button)
+    local cooldown = button.cooldown
+    if not cooldown then return end
+
+    cooldown:ClearAllPoints()
+    cooldown:SetAllPoints(button)
+    cooldown:SetDrawSwipe(true)
+    cooldown:SetSwipeColor(0, 0, 0, 0.8)
+    cooldown:SetDrawEdge(true)
+    cooldown:SetFrameLevel(button:GetFrameLevel() + 1)
+
+    if button._lunarHookedCooldown then return end
+    button._lunarHookedCooldown = true
+
+    hooksecurefunc(cooldown, "SetCooldown", function()
+        pendingDesaturate[button] = true
+        if not desaturateScheduled then
+            desaturateScheduled = true
+            C_Timer.After(0, ProcessPendingDesaturate)
+        end
+    end)
+
+    cooldown:HookScript("OnHide", function()
+        local btnIcon = button.icon or (button:GetName() and _G[button:GetName() .. "Icon"])
+        if btnIcon then
+            btnIcon:SetDesaturated(false)
+            btnIcon:SetVertexColor(1, 1, 1)
+        end
+    end)
+end
+
+-- 樣式化按下/高亮/選中/閃光材質
+local function StyleButtonOverlays(button, pushedTexture, highlightTexture, checkedTexture)
+    if pushedTexture then
+        pushedTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
+        pushedTexture:SetVertexColor(unpack(BUTTON_COLORS.pushed))
+        pushedTexture:SetAllPoints()
+    end
+
+    if highlightTexture then
+        highlightTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
+        highlightTexture:SetVertexColor(unpack(BUTTON_COLORS.highlight))
+        highlightTexture:SetAllPoints()
+    end
+
+    if checkedTexture then
+        checkedTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
+        checkedTexture:SetVertexColor(unpack(BUTTON_COLORS.checked))
+        checkedTexture:SetAllPoints()
+    end
+
+    if button.Flash then
+        button.Flash:SetTexture("Interface\\Buttons\\WHITE8x8")
+        button.Flash:SetVertexColor(unpack(BUTTON_COLORS.flash))
+        button.Flash:SetAllPoints()
+        button.Flash:SetDrawLayer("OVERLAY")
+    end
 end
 
 local function StyleButton(button)
@@ -235,7 +334,7 @@ local function StyleButton(button)
             LunarUI.SetFont(hotkey, 10, "OUTLINE")
             hotkey:ClearAllPoints()
             hotkey:SetPoint("TOPRIGHT", -2, -2)
-            hotkey:SetTextColor(0.8, 0.8, 0.8)
+            hotkey:SetTextColor(unpack(BUTTON_COLORS.hotkeyText))
         end
     end
 
@@ -255,67 +354,8 @@ local function StyleButton(button)
         border:SetTexture(nil)
     end
 
-    -- 樣式化一般材質（隱藏預設背景）
-    if normalTexture then
-        normalTexture:SetTexture(nil)
-        normalTexture:Hide()
-    end
-
-    -- Hook SetNormalTexture 防止拖動技能時背景重新出現
-    if not button._lunarHookedNormal then
-        button._lunarHookedNormal = true
-
-        hooksecurefunc(button, "SetNormalTexture", ClearNormalTexture)
-
-        -- WoW 12.0：也可能使用 SetNormalAtlas
-        if button.SetNormalAtlas then
-            hooksecurefunc(button, "SetNormalAtlas", ClearNormalTexture)
-        end
-
-        -- LAB 在 OnButtonUpdate/OnReceiveDrag 後可能重設材質
-        -- Fix 6: 用 dirty flag 批次排程，避免每個按鈕都建 closure
-        if button.Update then
-            hooksecurefunc(button, "Update", function(self)
-                pendingNormalClear[self] = true
-                if not normalClearScheduled then
-                    normalClearScheduled = true
-                    C_Timer.After(0, ProcessPendingNormalClears)
-                end
-            end)
-        end
-    end
-
-    -- 冷卻框架：確保 sweep（時鐘轉圈）正常顯示
-    local cooldown = button.cooldown
-    if cooldown then
-        cooldown:ClearAllPoints()
-        cooldown:SetAllPoints(button)
-        cooldown:SetDrawSwipe(true)
-        cooldown:SetSwipeColor(0, 0, 0, 0.8)
-        cooldown:SetDrawEdge(true)
-        cooldown:SetFrameLevel(button:GetFrameLevel() + 1)
-
-        -- 冷卻中圖示去飽和（變灰）— 使用 dirty flag 批次處理避免 GC 壓力
-        if not button._lunarHookedCooldown then
-            button._lunarHookedCooldown = true
-
-            hooksecurefunc(cooldown, "SetCooldown", function()
-                pendingDesaturate[button] = true
-                if not desaturateScheduled then
-                    desaturateScheduled = true
-                    C_Timer.After(0, ProcessPendingDesaturate)
-                end
-            end)
-
-            cooldown:HookScript("OnHide", function()
-                local btnIcon = button.icon or (button:GetName() and _G[button:GetName() .. "Icon"])
-                if btnIcon then
-                    btnIcon:SetDesaturated(false)
-                    btnIcon:SetVertexColor(1, 1, 1)
-                end
-            end)
-        end
-    end
+    StyleButtonNormalTexture(button, normalTexture)
+    StyleButtonCooldown(button)
 
     -- 建立自訂邊框（frame level 在 cooldown 之上，但填充透明不遮蓋）
     if not button.LunarBorder then
@@ -326,34 +366,7 @@ local function StyleButton(button)
         button.LunarBorder = borderFrame
     end
 
-    -- 樣式化按下材質（提高可見度）
-    if pushedTexture then
-        pushedTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
-        pushedTexture:SetVertexColor(1, 1, 1, 0.4)
-        pushedTexture:SetAllPoints()
-    end
-
-    -- 樣式化高亮材質
-    if highlightTexture then
-        highlightTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
-        highlightTexture:SetVertexColor(1, 1, 1, 0.3)
-        highlightTexture:SetAllPoints()
-    end
-
-    -- 樣式化選中材質
-    if checkedTexture then
-        checkedTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
-        checkedTexture:SetVertexColor(0.4, 0.6, 0.8, 0.5)
-        checkedTexture:SetAllPoints()
-    end
-
-    -- 按下閃光反饋（Flash 材質）
-    if button.Flash then
-        button.Flash:SetTexture("Interface\\Buttons\\WHITE8x8")
-        button.Flash:SetVertexColor(1, 0.9, 0.6, 0.4)
-        button.Flash:SetAllPoints()
-        button.Flash:SetDrawLayer("OVERLAY")
-    end
+    StyleButtonOverlays(button, pushedTexture, highlightTexture, checkedTexture)
 end
 
 -- 按鈕按下閃光動畫：短暫白色閃爍提供打擊回饋感
@@ -531,7 +544,7 @@ local function UpdateStanceButton(button, index)
         if isCastable then
             icon:SetVertexColor(1, 1, 1)
         else
-            icon:SetVertexColor(0.4, 0.4, 0.4)
+            icon:SetVertexColor(unpack(BUTTON_COLORS.disabled))
         end
     end
 end

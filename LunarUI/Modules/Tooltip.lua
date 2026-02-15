@@ -420,7 +420,13 @@ local function OnTooltipSetUnit(tooltip)
         end
     end
 
-    tooltip:Show()
+    -- 重新 Show 以更新 tooltip 大小（新增行後需要重新排版）
+    -- 戰鬥中跳過：tooltip:Show() 會觸發 Backdrop:SetupTextureCoordinates，
+    -- 而我們的修改（AddLine 等）taint 了 tooltip 的 width，導致安全程式碼計算錯誤
+    -- Blizzard 的 TooltipDataHandler 會自行處理顯示，此處不需要額外 Show
+    if not InCombatLockdown() then
+        tooltip:Show()
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -525,7 +531,9 @@ local function OnTooltipSetItem(tooltip)
         end
     end
 
-    tooltip:Show()
+    if not InCombatLockdown() then
+        tooltip:Show()
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -541,7 +549,9 @@ local function OnTooltipSetSpell(tooltip)
     local spellID = select(2, tooltip:GetSpell())
     if spellID then
         tooltip:AddLine("|cff888888法術 ID: " .. spellID .. "|r")
-        tooltip:Show()
+        if not InCombatLockdown() then
+            tooltip:Show()
+        end
     end
 end
 

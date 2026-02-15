@@ -342,11 +342,17 @@ local function HookBlizzardLoot()
     blizzardLootHooked = true
 
     -- Prevent Blizzard LootFrame from showing when our module is active
+    -- 戰鬥中不呼叫 Hide()（LootFrame 是保護框架，會造成 taint）
+    -- 改用 SetAlpha(0) 讓框架不可見
     if _G.LootFrame and _G.LootFrame.Show then
         hooksecurefunc(_G.LootFrame, "Show", function(self)
             local db = LunarUI.db and LunarUI.db.profile
             if db and db.loot and db.loot.enabled then
-                self:Hide()
+                if not InCombatLockdown() then
+                    self:Hide()
+                else
+                    self:SetAlpha(0)
+                end
             end
         end)
     end

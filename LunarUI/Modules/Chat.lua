@@ -390,14 +390,9 @@ local function CreateCopyFrame()
     titleText:SetText("Copy Chat")
     titleText:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
 
-    -- 關閉按鈕
-    local closeBtn = CreateFrame("Button", nil, copyFrame)
-    closeBtn:SetSize(20, 20)
-    closeBtn:SetPoint("TOPRIGHT", -4, -2)
-    closeBtn:SetNormalFontObject(GameFontNormal)
-    closeBtn:SetText("×")
-    LunarUI.SetFont(closeBtn:GetFontString(), 16, "OUTLINE")
-    closeBtn:SetScript("OnClick", function() copyFrame:Hide() end)
+    -- 關閉按鈕（使用標準模板確保點擊區域正確）
+    local closeBtn = CreateFrame("Button", nil, copyFrame, "UIPanelCloseButton")
+    closeBtn:SetPoint("TOPRIGHT", 2, 2)
 
     -- 捲動框架
     local scrollFrame = CreateFrame("ScrollFrame", "LunarUI_ChatCopyScroll", copyFrame, "UIPanelScrollFrameTemplate")
