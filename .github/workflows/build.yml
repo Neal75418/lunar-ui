@@ -46,15 +46,10 @@ jobs:
           echo "All Lua files have valid syntax!"
 
       - name: Lint with luacheck
-        continue-on-error: true  # Informational only — don't block build
         run: |
           sudo apt-get install -y luarocks
           sudo luarocks install luacheck
-          luacheck LunarUI/ LunarUI_Options/ \
-            --exclude-files "LunarUI/Libs/**" \
-            --std lua51 \
-            --no-max-line-length \
-            --ignore 21/_  # Ignore unused variables prefixed with _
+          luacheck .
 
       - name: Package addon (dry run)
         uses: BigWigsMods/packager@v2

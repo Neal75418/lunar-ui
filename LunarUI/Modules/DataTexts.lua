@@ -159,7 +159,7 @@ RegisterProvider("durability", {
                 end
             end
         end
-        local r, g = 1, 1
+        local r, g
         if lowestDur < 25 then
             r, g = 1, 0.3
         elseif lowestDur < 50 then
@@ -189,7 +189,7 @@ RegisterProvider("durability", {
             local cur, max = GetInventoryItemDurability(slotID)
             if cur and max and max > 0 then
                 local pct = floor(cur / max * 100)
-                local r, g = 1, 1
+                local r, g
                 if pct < 25 then r, g = 1, 0.3
                 elseif pct < 50 then r, g = 1, 0.8
                 else r, g = 0.3, 1 end
@@ -212,7 +212,7 @@ RegisterProvider("bagSlots", {
             totalFree = totalFree + (freeSlots or 0)
             totalSlots = totalSlots + (numSlots or 0)
         end
-        local r, g = 1, 1
+        local r, g
         if totalFree < 5 then
             r, g = 1, 0.3
         elseif totalFree < 15 then

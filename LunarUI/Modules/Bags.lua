@@ -1156,7 +1156,7 @@ local function CreateBankFrame()
     local ApplyBankSearch
 
     -- 搜尋防抖動：使用 HookScript 保留 SearchBoxTemplate 內建的佔位文字隱藏行為
-    bankSearchBox:HookScript("OnTextChanged", function(self)
+    bankSearchBox:HookScript("OnTextChanged", function(_self)
         if bankSearchTimer then
             bankSearchTimer:Cancel()
             bankSearchTimer = nil

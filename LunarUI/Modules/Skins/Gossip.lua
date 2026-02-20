@@ -40,17 +40,19 @@ local function SkinGossip()
 
         -- 對於每個對話選項，需要 hook 來處理動態內容
         hooksecurefunc(frame.GreetingPanel.ScrollBox, "Update", function(self)
-            local n = select("#", self:GetChildren())
-            if n > 0 then
-                local children = { self:GetChildren() }
-                for i = 1, n do
-                    local child = children[i]
-                    if child then
-                        -- 確保選項文字可讀
-                        LunarUI:SkinFrameText(child, 1)
+            pcall(function()
+                local n = select("#", self:GetChildren())
+                if n > 0 then
+                    local children = { self:GetChildren() }
+                    for i = 1, n do
+                        local child = children[i]
+                        if child then
+                            -- 確保選項文字可讀
+                            LunarUI:SkinFrameText(child, 1)
+                        end
                     end
                 end
-            end
+            end)
         end)
     end
     return true

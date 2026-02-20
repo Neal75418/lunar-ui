@@ -201,11 +201,18 @@ function LunarUI.SkinCloseButton(btn)
     if btn.SetDisabledTexture then btn:SetDisabledTexture("") end
 end
 
---- 替換分頁按鈕（底線指示器風格）
+--- 替換分頁按鈕（底線指示器風格 + 半透明背景）
 function LunarUI.SkinTab(tab)
     if not tab then return end
 
     StripTextures(tab)
+
+    -- 半透明背景（讓 tab 可見，不再全透明）
+    if not tab._lunarTabBG then
+        tab._lunarTabBG = tab:CreateTexture(nil, "BACKGROUND")
+        tab._lunarTabBG:SetAllPoints()
+        tab._lunarTabBG:SetColorTexture(C.bg[1], C.bg[2], C.bg[3], 0.9)
+    end
 
     -- 底線指示器取代凸出分頁
     if not tab._lunarIndicator then

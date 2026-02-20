@@ -292,7 +292,7 @@ end
 
 local eventFrame = CreateFrame("Frame")
 
-local function OnEvent(_self, event, ...)
+local function OnEvent(_self, event)
     if event == "LOOT_OPENED" then
         -- Check if module is enabled
         local db = LunarUI.db and LunarUI.db.profile

@@ -60,16 +60,18 @@ local function SkinMerchant()
     if not merchantHookRegistered then
         merchantHookRegistered = true
         hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
-            for i = 1, _G.MERCHANT_ITEMS_PER_PAGE or 12 do
-                local btn = _G["MerchantItem" .. i]
-                if btn then
-                    if LunarUI.MarkSkinned(btn) then
-                        LunarUI.StripTextures(btn)
+            pcall(function()
+                for i = 1, _G.MERCHANT_ITEMS_PER_PAGE or 12 do
+                    local btn = _G["MerchantItem" .. i]
+                    if btn then
+                        if LunarUI.MarkSkinned(btn) then
+                            LunarUI.StripTextures(btn)
+                        end
+                        -- 每次更新都修復文字顏色（物品可能改變）
+                        SkinMerchantItem(btn, i)
                     end
-                    -- 每次更新都修復文字顏色（物品可能改變）
-                    SkinMerchantItem(btn, i)
                 end
-            end
+            end)
         end)
     end
 

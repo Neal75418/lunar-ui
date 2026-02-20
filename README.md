@@ -298,6 +298,42 @@ rm -rf /tmp/Ace3*
 
 ---
 
+## Troubleshooting
+
+### Taint 錯誤（"介面功能因插件而失效"）
+
+WoW 的安全框架（secure frames）在被第三方插件修改後會觸發 taint 警告。LunarUI 已內建過濾器抑制已知無害的 taint 錯誤（如 `Scale must be > 0`、`secret number value tainted`）。若仍收到此訊息，通常無功能影響，可安全忽略。
+
+### 與其他插件衝突
+
+LunarUI 替換了多數暴雪 UI 元素。若同時使用其他 UI 替換插件（如 ElvUI、TukUI），可能會發生衝突。建議：
+
+- **單位框架**：停用其他 oUF 佈局或暴雪框架替換插件
+- **動作條**：停用 Bartender4 或 Dominos
+- **背包**：停用 AdiBags 或 Bagnon
+- **名牌**：停用 Plater 或 KuiNameplates
+
+### Skin 錯誤
+
+部分 Blizzard 介面在 WoW 改版後可能變更結構。LunarUI 的 Skin 模組使用 `pcall` 保護，單一 Skin 失敗不會影響其他模組。可在設定中個別停用有問題的 Skin（`/lunar config` → Skins）。
+
+### 重置設定
+
+```bash
+# 重置框架位置
+/lunar reset all
+
+# 重新執行安裝精靈
+/lunar install
+
+# 完全重置（刪除 SavedVariables）
+# 退出 WoW 後刪除：
+# WTF/Account/<帳號>/SavedVariables/LunarUI.lua
+# WTF/Account/<帳號>/SavedVariables/LunarUI.lua.bak
+```
+
+---
+
 ## License
 
 [GPL-3.0](LICENSE)

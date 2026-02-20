@@ -572,11 +572,11 @@ function LunarUI:ShowImportFrame()
             end
         end)
 
-        importBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(0.3, 0.5, 0.3, 1)
+        importBtn:SetScript("OnEnter", function(btn)
+            btn:SetBackdropColor(0.3, 0.5, 0.3, 1)
         end)
-        importBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.2, 0.4, 0.2, 1)
+        importBtn:SetScript("OnLeave", function(btn)
+            btn:SetBackdropColor(0.2, 0.4, 0.2, 1)
         end)
 
         -- 說明

@@ -45,21 +45,23 @@ local function SkinCharacterFrame()
     for _, slotName in ipairs(slots) do
         local slot = _G[slotName]
         if slot then
-            -- 隱藏原始邊框材質
-            if slot.IconBorder then
-                slot.IconBorder:SetAlpha(0)
-            end
-            -- 新增 LunarUI 邊框
-            if not slot._lunarBorder and BackdropTemplateMixin then
-                local border = CreateFrame("Frame", nil, slot, "BackdropTemplate")
-                border:SetPoint("TOPLEFT", -1, 1)
-                border:SetPoint("BOTTOMRIGHT", 1, -1)
-                border:SetBackdrop(LunarUI.iconBackdropTemplate)
-                border:SetBackdropColor(0, 0, 0, 0)
-                border:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
-                border:SetFrameLevel(slot:GetFrameLevel() + 1)
-                slot._lunarBorder = border
-            end
+            pcall(function()
+                -- 隱藏原始邊框材質
+                if slot.IconBorder then
+                    slot.IconBorder:SetAlpha(0)
+                end
+                -- 新增 LunarUI 邊框
+                if not slot._lunarBorder and BackdropTemplateMixin then
+                    local border = CreateFrame("Frame", nil, slot, "BackdropTemplate")
+                    border:SetPoint("TOPLEFT", -1, 1)
+                    border:SetPoint("BOTTOMRIGHT", 1, -1)
+                    border:SetBackdrop(LunarUI.iconBackdropTemplate)
+                    border:SetBackdropColor(0, 0, 0, 0)
+                    border:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
+                    border:SetFrameLevel(slot:GetFrameLevel() + 1)
+                    slot._lunarBorder = border
+                end
+            end)
         end
     end
 

@@ -314,7 +314,7 @@ end
 -- 更新函數
 --------------------------------------------------------------------------------
 
-local function UpdateAuraIcon(iconFrame, auraData, index, filter, isDebuff)
+local function UpdateAuraIcon(iconFrame, auraData, _index, filter, isDebuff)
     local name = tostring(auraData.name or "")
     local iconTexture = auraData.icon
     local count = tonumber(tostring(auraData.applications or 0)) or 0
@@ -763,7 +763,7 @@ function LunarUI.DebugAuraFrames()
             pcall(function() effScale = safeNum(f:GetEffectiveScale()) end)
             local pos = "?"
             pcall(function()
-                local p, rel, rp, px, py = f:GetPoint(1)
+                local p, rel, _rp, px, py = f:GetPoint(1)
                 local relName = rel and (rel.GetName and rel:GetName() or "unnamed") or "nil"
                 pos = string.format("%s@%s(%+.0f,%+.0f)", tostring(p), relName, safeNum(px), safeNum(py))
             end)

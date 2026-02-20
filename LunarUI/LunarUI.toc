@@ -40,6 +40,7 @@ Core\Serialization.lua
 Core\Options.lua
 Core\InstallWizard.lua
 Core\Commands.lua
+Core\VigorDebug.lua
 Core\Debug.lua
 Core\Tags.lua
 

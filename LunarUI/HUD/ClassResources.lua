@@ -91,7 +91,7 @@ local resourceIcons = {}
 ---@type StatusBar?
 local resourceBar
 ---@type integer?
-local playerClass
+local _playerClass
 ---@type integer?
 local resourceType
 local maxResources = 0
@@ -409,7 +409,7 @@ end
 -- 事件處理
 --------------------------------------------------------------------------------
 
-local eventFrame = LunarUI.CreateEventHandler(
+local _eventFrame = LunarUI.CreateEventHandler(
     {"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "UNIT_POWER_UPDATE", "UNIT_MAXPOWER", "RUNE_POWER_UPDATE"},
     function(_self, event, arg1)
         if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_SPECIALIZATION_CHANGED" then
@@ -447,7 +447,7 @@ local function Initialize()
 
     -- 取得玩家職業
     local _, _, classID = UnitClass("player")
-    playerClass = classID
+    _playerClass = classID
 
     SetupResourceDisplay()
 

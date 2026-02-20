@@ -86,7 +86,7 @@ end
 
 local achievementFrame = CreateFrame("Frame")
 
-local function OnAchievementEarned(_self, _event, ...)
+local function OnAchievementEarned(_self, _event)
     local cfg = GetAutoConfig()
     if not cfg or not cfg.autoScreenshot then return end
 
