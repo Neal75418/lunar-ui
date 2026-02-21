@@ -1,6 +1,7 @@
 --[[
     Unit tests for Bags module pure functions
-    Tests: GetItemLevel, IsEquipment, IsItemUpgrade, GetBagTypeColor, GetBankSlotsPerRow
+    Tests: GetItemLevel, IsEquipment, IsItemUpgrade, GetBagTypeColor, GetBankSlotsPerRow,
+           MaybeEvictCache, GetTotalSlots, GetTotalFreeSlots, GetTotalBankSlots, GetTotalBankFreeSlots
 ]]
 
 require("spec.wow_mock")
@@ -419,5 +420,166 @@ describe("GetBankSlotsPerRow", function()
         end
         local result = LunarUI.GetBankSlotsPerRow(1)
         assert.equals(12, result) -- should not go below default
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- MaybeEvictCache
+--------------------------------------------------------------------------------
+
+describe("MaybeEvictCache", function()
+    it("does nothing when under limit", function()
+        local cache = { a = 1, b = 2 }
+        local sizeRef = { n = 5 }
+        LunarUI.MaybeEvictCache(cache, sizeRef)
+        assert.equals(1, cache.a)
+        assert.equals(5, sizeRef.n)
+    end)
+
+    it("clears cache and resets counter at limit", function()
+        local cache = { a = 1, b = 2, c = 3 }
+        local sizeRef = { n = 1000 }
+        LunarUI.MaybeEvictCache(cache, sizeRef)
+        assert.is_nil(cache.a)
+        assert.equals(0, sizeRef.n)
+    end)
+
+    it("clears cache when over limit", function()
+        local cache = { x = "test" }
+        local sizeRef = { n = 1500 }
+        LunarUI.MaybeEvictCache(cache, sizeRef)
+        assert.is_nil(cache.x)
+        assert.equals(0, sizeRef.n)
+    end)
+
+    it("handles empty cache at limit", function()
+        local cache = {}
+        local sizeRef = { n = 1000 }
+        LunarUI.MaybeEvictCache(cache, sizeRef)
+        assert.equals(0, sizeRef.n)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- GetTotalSlots
+--------------------------------------------------------------------------------
+
+describe("GetTotalSlots", function()
+    before_each(function()
+        _G.C_Container.GetContainerNumSlots = function()
+            return 0
+        end
+    end)
+
+    it("returns 0 when all bags empty", function()
+        assert.equals(0, LunarUI.GetTotalSlots())
+    end)
+
+    it("sums slots across bags 0-4", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            local sizes = { [0] = 16, [1] = 28, [2] = 32, [3] = 32, [4] = 30 }
+            return sizes[bag] or 0
+        end
+        assert.equals(138, LunarUI.GetTotalSlots())
+    end)
+
+    it("handles single bag with slots", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            if bag == 0 then
+                return 16
+            end
+            return 0
+        end
+        assert.equals(16, LunarUI.GetTotalSlots())
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- GetTotalFreeSlots
+--------------------------------------------------------------------------------
+
+describe("GetTotalFreeSlots", function()
+    before_each(function()
+        _G.C_Container.GetContainerNumFreeSlots = function()
+            return 0, 0
+        end
+    end)
+
+    it("returns 0 when no free slots", function()
+        assert.equals(0, LunarUI.GetTotalFreeSlots())
+    end)
+
+    it("sums free slots across bags 0-4", function()
+        _G.C_Container.GetContainerNumFreeSlots = function(bag)
+            local free = { [0] = 5, [1] = 10, [2] = 0, [3] = 8, [4] = 3 }
+            return free[bag] or 0, 0
+        end
+        assert.equals(26, LunarUI.GetTotalFreeSlots())
+    end)
+
+    it("handles all bags full", function()
+        _G.C_Container.GetContainerNumFreeSlots = function()
+            return 0, 0
+        end
+        assert.equals(0, LunarUI.GetTotalFreeSlots())
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- GetTotalBankSlots
+--------------------------------------------------------------------------------
+
+describe("GetTotalBankSlots", function()
+    before_each(function()
+        _G.C_Container.GetContainerNumSlots = function()
+            return 0
+        end
+    end)
+
+    it("returns 0 when bank empty", function()
+        assert.equals(0, LunarUI.GetTotalBankSlots())
+    end)
+
+    it("sums main bank and bank bags", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            -- bag -1 = main bank, bags 5-11 = bank bags
+            local sizes = { [-1] = 28, [5] = 32, [6] = 32, [7] = 0, [8] = 0, [9] = 0, [10] = 0, [11] = 0 }
+            return sizes[bag] or 0
+        end
+        assert.equals(92, LunarUI.GetTotalBankSlots())
+    end)
+
+    it("handles only main bank with no bank bags", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            if bag == -1 then
+                return 28
+            end
+            return 0
+        end
+        assert.equals(28, LunarUI.GetTotalBankSlots())
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- GetTotalBankFreeSlots
+--------------------------------------------------------------------------------
+
+describe("GetTotalBankFreeSlots", function()
+    before_each(function()
+        _G.C_Container.GetContainerNumFreeSlots = function()
+            return 0, 0
+        end
+    end)
+
+    it("returns 0 when no free bank slots", function()
+        assert.equals(0, LunarUI.GetTotalBankFreeSlots())
+    end)
+
+    it("sums free slots across bank containers", function()
+        _G.C_Container.GetContainerNumFreeSlots = function(bag)
+            local free = { [-1] = 10, [5] = 5, [6] = 8 }
+            return free[bag] or 0, 0
+        end
+        assert.equals(23, LunarUI.GetTotalBankFreeSlots())
     end)
 end)

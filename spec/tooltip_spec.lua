@@ -1,6 +1,7 @@
 --[[
     Unit tests for Tooltip module pure functions
-    Tests: GetLevelDifficultyColor, GetUnitColor, GetInspectItemLevel, GetInspectSpec
+    Tests: GetLevelDifficultyColor, GetUnitColor, GetInspectItemLevel, GetInspectSpec,
+           TooltipGetItemLevel, GetCachedInspectData, CacheInspectData
 ]]
 
 require("spec.wow_mock")
@@ -343,5 +344,147 @@ describe("GetInspectSpec", function()
             return nil
         end
         assert.is_nil(LunarUI.GetInspectSpec("target"))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- TooltipGetItemLevel
+--------------------------------------------------------------------------------
+
+describe("TooltipGetItemLevel", function()
+    before_each(function()
+        _G.C_Item.GetDetailedItemLevelInfo = function()
+            return nil
+        end
+    end)
+
+    it("returns item level for valid link", function()
+        _G.C_Item.GetDetailedItemLevelInfo = function()
+            return 489
+        end
+        assert.equals(489, LunarUI.TooltipGetItemLevel("item:12345"))
+    end)
+
+    it("returns nil when API returns nil", function()
+        assert.is_nil(LunarUI.TooltipGetItemLevel("item:99999"))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- GetCachedInspectData
+--------------------------------------------------------------------------------
+
+describe("GetCachedInspectData", function()
+    before_each(function()
+        LunarUI.ClearInspectCache()
+        _G.GetTime = function()
+            return 1000
+        end
+    end)
+
+    it("returns nil for unknown guid", function()
+        assert.is_nil(LunarUI.GetCachedInspectData("unknown-guid"))
+    end)
+
+    it("returns cached data within TTL", function()
+        LunarUI.CacheInspectData("Player-1234", 480, "Arcane")
+        local data = LunarUI.GetCachedInspectData("Player-1234")
+        assert.is_truthy(data)
+        assert.equals(480, data.ilvl)
+        assert.equals("Arcane", data.spec)
+    end)
+
+    it("returns nil for expired data", function()
+        LunarUI.CacheInspectData("Player-1234", 480, "Arcane")
+        -- Advance time past TTL (30 seconds)
+        _G.GetTime = function()
+            return 1031
+        end
+        assert.is_nil(LunarUI.GetCachedInspectData("Player-1234"))
+    end)
+
+    it("returns nil after cache clear", function()
+        LunarUI.CacheInspectData("Player-1234", 480, "Arcane")
+        LunarUI.ClearInspectCache()
+        assert.is_nil(LunarUI.GetCachedInspectData("Player-1234"))
+    end)
+
+    it("returns data at TTL boundary (29 seconds)", function()
+        LunarUI.CacheInspectData("Player-1234", 480, "Arcane")
+        _G.GetTime = function()
+            return 1029
+        end
+        local data = LunarUI.GetCachedInspectData("Player-1234")
+        assert.is_truthy(data)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- CacheInspectData
+--------------------------------------------------------------------------------
+
+describe("CacheInspectData", function()
+    before_each(function()
+        LunarUI.ClearInspectCache()
+        _G.GetTime = function()
+            return 1000
+        end
+    end)
+
+    it("stores ilvl, spec, and time correctly", function()
+        LunarUI.CacheInspectData("Player-1234", 480, "Arcane")
+        local data = LunarUI.GetCachedInspectData("Player-1234")
+        assert.equals(480, data.ilvl)
+        assert.equals("Arcane", data.spec)
+        assert.equals(1000, data.time)
+    end)
+
+    it("overwrites existing entry for same guid", function()
+        LunarUI.CacheInspectData("Player-1234", 480, "Arcane")
+        LunarUI.CacheInspectData("Player-1234", 500, "Fire")
+        local data = LunarUI.GetCachedInspectData("Player-1234")
+        assert.equals(500, data.ilvl)
+        assert.equals("Fire", data.spec)
+    end)
+
+    it("evicts expired entries during insert", function()
+        LunarUI.CacheInspectData("Player-OLD", 400, "Frost")
+        -- Advance past TTL
+        _G.GetTime = function()
+            return 1031
+        end
+        LunarUI.CacheInspectData("Player-NEW", 500, "Fire")
+        -- Old entry should be evicted
+        _G.GetTime = function()
+            return 1031
+        end
+        assert.is_nil(LunarUI.GetCachedInspectData("Player-OLD"))
+        assert.is_truthy(LunarUI.GetCachedInspectData("Player-NEW"))
+    end)
+
+    it("evicts oldest when exceeding max entries", function()
+        -- Fill cache to max (50 entries)
+        for i = 1, 50 do
+            _G.GetTime = function()
+                return 1000 + i
+            end
+            LunarUI.CacheInspectData("Player-" .. i, 400 + i, "Spec")
+        end
+        -- Add one more (should evict oldest = Player-1 at time 1001)
+        _G.GetTime = function()
+            return 1051
+        end
+        LunarUI.CacheInspectData("Player-51", 500, "Fire")
+        -- Player-1 (oldest) should be evicted
+        assert.is_nil(LunarUI.GetCachedInspectData("Player-1"))
+        -- Player-51 (newest) should exist
+        assert.is_truthy(LunarUI.GetCachedInspectData("Player-51"))
+    end)
+
+    it("handles nil spec gracefully", function()
+        LunarUI.CacheInspectData("Player-1234", 480, nil)
+        local data = LunarUI.GetCachedInspectData("Player-1234")
+        assert.equals(480, data.ilvl)
+        assert.is_nil(data.spec)
     end)
 end)

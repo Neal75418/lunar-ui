@@ -2272,6 +2272,11 @@ LunarUI.IsEquipment = IsEquipment
 LunarUI.IsItemUpgrade = IsItemUpgrade
 LunarUI.GetBagTypeColor = GetBagTypeColor
 LunarUI.GetBankSlotsPerRow = GetBankSlotsPerRow
+LunarUI.MaybeEvictCache = MaybeEvictCache
+LunarUI.GetTotalSlots = GetTotalSlots
+LunarUI.GetTotalFreeSlots = GetTotalFreeSlots
+LunarUI.GetTotalBankSlots = GetTotalBankSlots
+LunarUI.GetTotalBankFreeSlots = GetTotalBankFreeSlots
 
 LunarUI:RegisterModule("Bags", {
     onEnable = InitializeBags,

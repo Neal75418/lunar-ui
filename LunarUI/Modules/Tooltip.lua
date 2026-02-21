@@ -128,6 +128,10 @@ local function CacheInspectData(guid, ilvl, spec)
     end
 end
 
+local function ClearInspectCache()
+    wipe(inspectCache)
+end
+
 -- 計算裝備等級（從 inspect 資料）
 local function GetInspectItemLevel(unit)
     local totalIlvl = 0
@@ -733,6 +737,10 @@ LunarUI.GetLevelDifficultyColor = GetLevelDifficultyColor
 LunarUI.GetUnitColor = GetUnitColor
 LunarUI.GetInspectItemLevel = GetInspectItemLevel
 LunarUI.GetInspectSpec = GetInspectSpec
+LunarUI.TooltipGetItemLevel = GetItemLevel
+LunarUI.GetCachedInspectData = GetCachedInspectData
+LunarUI.CacheInspectData = CacheInspectData
+LunarUI.ClearInspectCache = ClearInspectCache
 
 LunarUI:RegisterModule("Tooltip", {
     onEnable = InitializeTooltip,
