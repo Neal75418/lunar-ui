@@ -1,6 +1,6 @@
 --[[
     Unit tests for HUD module pure functions
-    Tests: FormatCooldown, GetTimerBarColor, Sanitize
+    Tests: FormatCooldown, GetTimerBarColor, Sanitize, ShouldShowBuff, FCTGetSettings
 ]]
 
 require("spec.wow_mock")
@@ -187,5 +187,119 @@ describe("Sanitize", function()
     it("passes through tables unchanged", function()
         local t = { 1, 2, 3 }
         assert.equals(t, Sanitize(t))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- ShouldShowBuff (AuraFrames.lua)
+--------------------------------------------------------------------------------
+
+describe("ShouldShowBuff", function()
+    local ShouldShowBuff = LunarUI_AF.ShouldShowBuff
+
+    it("returns true for normal buff", function()
+        assert.is_true(ShouldShowBuff("Power Word: Fortitude", 3600))
+    end)
+
+    it("returns false for Well Rested", function()
+        assert.is_false(ShouldShowBuff("Well Rested", 0))
+    end)
+
+    it("returns false for 充分休息", function()
+        assert.is_false(ShouldShowBuff("充分休息", 0))
+    end)
+
+    it("returns false for Resurrection Sickness", function()
+        assert.is_false(ShouldShowBuff("Resurrection Sickness", 600))
+    end)
+
+    it("returns false for 復活虛弱", function()
+        assert.is_false(ShouldShowBuff("復活虛弱", 600))
+    end)
+
+    it("handles nil name without error", function()
+        -- pcall protects against nil table index
+        local ok, _result = pcall(ShouldShowBuff, nil, 10)
+        assert.is_true(ok)
+        -- nil key in table lookup via pcall → should not crash
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- FCTGetSettings (FloatingCombatText.lua)
+--------------------------------------------------------------------------------
+
+describe("FCTGetSettings", function()
+    local FCTGetSettings = LunarUI_FCT.FCTGetSettings
+
+    it("returns defaults when db is nil", function()
+        local origDb = LunarUI_FCT.db
+        LunarUI_FCT.db = nil
+        local enabled, fontSize, critScale, duration, dmgOut, dmgIn, healing = FCTGetSettings()
+        assert.is_false(enabled)
+        assert.equals(24, fontSize)
+        assert.equals(1.5, critScale)
+        assert.equals(1.5, duration)
+        assert.is_true(dmgOut)
+        assert.is_true(dmgIn)
+        assert.is_true(healing)
+        LunarUI_FCT.db = origDb
+    end)
+
+    it("returns defaults when profile.hud is nil", function()
+        local origDb = LunarUI_FCT.db
+        LunarUI_FCT.db = { profile = {} }
+        local enabled, fontSize = FCTGetSettings()
+        assert.is_false(enabled)
+        assert.equals(24, fontSize)
+        LunarUI_FCT.db = origDb
+    end)
+
+    it("returns actual values from db", function()
+        local origDb = LunarUI_FCT.db
+        LunarUI_FCT.db = {
+            profile = {
+                hud = {
+                    fctEnabled = true,
+                    fctFontSize = 18,
+                    fctCritScale = 2.0,
+                    fctDuration = 2.0,
+                    fctDamageOut = false,
+                    fctDamageIn = true,
+                    fctHealing = false,
+                },
+            },
+        }
+        local enabled, fontSize, critScale, duration, dmgOut, dmgIn, healing = FCTGetSettings()
+        assert.is_true(enabled)
+        assert.equals(18, fontSize)
+        assert.equals(2.0, critScale)
+        assert.equals(2.0, duration)
+        assert.is_false(dmgOut)
+        assert.is_true(dmgIn)
+        assert.is_false(healing)
+        LunarUI_FCT.db = origDb
+    end)
+
+    it("fctEnabled defaults to false when not set", function()
+        local origDb = LunarUI_FCT.db
+        LunarUI_FCT.db = { profile = { hud = {} } }
+        local enabled = FCTGetSettings()
+        assert.is_false(enabled)
+        LunarUI_FCT.db = origDb
+    end)
+
+    it("uses fallback for nil individual settings", function()
+        local origDb = LunarUI_FCT.db
+        LunarUI_FCT.db = { profile = { hud = { fctEnabled = true } } }
+        local enabled, fontSize, critScale, duration, dmgOut, dmgIn, healing = FCTGetSettings()
+        assert.is_true(enabled)
+        assert.equals(24, fontSize)
+        assert.equals(1.5, critScale)
+        assert.equals(1.5, duration)
+        assert.is_true(dmgOut)
+        assert.is_true(dmgIn)
+        assert.is_true(healing)
+        LunarUI_FCT.db = origDb
     end)
 end)

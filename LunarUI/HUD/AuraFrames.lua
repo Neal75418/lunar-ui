@@ -594,6 +594,7 @@ end
 -- 暴露函數供 Options toggle 即時切換與測試使用
 LunarUI.InitAuraFrames = Initialize
 LunarUI.GetTimerBarColor = GetTimerBarColor
+LunarUI.ShouldShowBuff = ShouldShowBuff
 
 --------------------------------------------------------------------------------
 -- 事件處理
