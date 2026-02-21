@@ -139,7 +139,9 @@ end
 
 local function RefreshUI()
     -- Trigger HUD scale refresh as a general UI update
-    if LunarUI.ApplyHUDScale then LunarUI:ApplyHUDScale() end
+    if LunarUI.ApplyHUDScale then
+        LunarUI:ApplyHUDScale()
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -170,8 +172,12 @@ local options = {
                     type = "toggle",
                     name = L.enable,
                     desc = L["EnableLunarUI"] or "Enable LunarUI",
-                    get = function() return GetDB().enabled end,
-                    set = function(_, v) GetDB().enabled = v end,
+                    get = function()
+                        return GetDB().enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().enabled = v
+                    end,
                     width = "full",
                 },
                 debug = {
@@ -179,7 +185,9 @@ local options = {
                     type = "toggle",
                     name = "Debug Mode",
                     desc = L["DebugModeDesc"] or "Show debug overlay with FPS and memory info",
-                    get = function() return GetDB().debug end,
+                    get = function()
+                        return GetDB().debug
+                    end,
                     set = function(_, v)
                         GetDB().debug = v
                         if v then
@@ -205,41 +213,76 @@ local options = {
                 local function MakeUnitFrameGroup(unit, ord, displayName, opts)
                     local args = {
                         enabled = {
-                            order = 1, type = "toggle", name = L.enable, width = "full",
-                            get = function() return GetDB().unitframes[unit].enabled end,
-                            set = function(_, v) GetDB().unitframes[unit].enabled = v; RefreshUI() end,
+                            order = 1,
+                            type = "toggle",
+                            name = L.enable,
+                            width = "full",
+                            get = function()
+                                return GetDB().unitframes[unit].enabled
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].enabled = v
+                                RefreshUI()
+                            end,
                         },
                         width = {
-                            order = 2, type = "range", name = L.width,
-                            min = opts.wMin, max = opts.wMax, step = 5,
-                            get = function() return GetDB().unitframes[unit].width end,
-                            set = function(_, v) GetDB().unitframes[unit].width = v; RefreshUI() end,
+                            order = 2,
+                            type = "range",
+                            name = L.width,
+                            min = opts.wMin,
+                            max = opts.wMax,
+                            step = 5,
+                            get = function()
+                                return GetDB().unitframes[unit].width
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].width = v
+                                RefreshUI()
+                            end,
                         },
                         height = {
-                            order = 3, type = "range", name = L.height,
-                            min = opts.hMin, max = opts.hMax, step = 1,
-                            get = function() return GetDB().unitframes[unit].height end,
-                            set = function(_, v) GetDB().unitframes[unit].height = v; RefreshUI() end,
+                            order = 3,
+                            type = "range",
+                            name = L.height,
+                            min = opts.hMin,
+                            max = opts.hMax,
+                            step = 1,
+                            get = function()
+                                return GetDB().unitframes[unit].height
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].height = v
+                                RefreshUI()
+                            end,
                         },
                     }
                     if opts.spacingMax then
                         args.spacing = {
-                            order = 4, type = "range", name = L.spacing,
-                            min = 0, max = opts.spacingMax, step = 1,
-                            get = function() return GetDB().unitframes[unit].spacing end,
-                            set = function(_, v) GetDB().unitframes[unit].spacing = v; RefreshUI() end,
+                            order = 4,
+                            type = "range",
+                            name = L.spacing,
+                            min = 0,
+                            max = opts.spacingMax,
+                            step = 1,
+                            get = function()
+                                return GetDB().unitframes[unit].spacing
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].spacing = v
+                                RefreshUI()
+                            end,
                         }
                     end
                     return { order = ord, type = "group", name = displayName, args = args }
                 end
 
                 local UNIT_FRAME_DEFS = {
-                    { "player", 1, L.player, { wMin=100, wMax=400, hMin=20, hMax=100 } },
-                    { "target", 2, L.target, { wMin=100, wMax=400, hMin=20, hMax=100 } },
-                    { "focus",  3, L.focus,  { wMin=80,  wMax=300, hMin=15, hMax=80 } },
-                    { "party",  4, L.party,  { wMin=80,  wMax=250, hMin=15, hMax=60, spacingMax=20 } },
-                    { "raid",   5, L.raid,   { wMin=50,  wMax=150, hMin=15, hMax=50, spacingMax=10 } },
-                    { "boss",   6, L.boss,   { wMin=100, wMax=300, hMin=20, hMax=80 } },
+                    { "player", 1, L.player, { wMin = 100, wMax = 400, hMin = 20, hMax = 100 } },
+                    { "target", 2, L.target, { wMin = 100, wMax = 400, hMin = 20, hMax = 100 } },
+                    { "focus", 3, L.focus, { wMin = 80, wMax = 300, hMin = 15, hMax = 80 } },
+                    { "party", 4, L.party, { wMin = 80, wMax = 250, hMin = 15, hMax = 60, spacingMax = 20 } },
+                    { "raid", 5, L.raid, { wMin = 50, wMax = 150, hMin = 15, hMax = 50, spacingMax = 10 } },
+                    { "boss", 6, L.boss, { wMin = 100, wMax = 300, hMin = 20, hMax = 80 } },
                 }
 
                 local result = {
@@ -252,22 +295,31 @@ local options = {
                             desc = {
                                 order = 0,
                                 type = "description",
-                                name = (L["RolePresetsDesc"] or "Quickly adjust raid/party frame layout for your role.") .. "\n",
+                                name = (
+                                    L["RolePresetsDesc"] or "Quickly adjust raid/party frame layout for your role."
+                                ) .. "\n",
                             },
                             dps = {
                                 order = 1,
                                 type = "execute",
                                 name = L["DPSLayout"] or "DPS Layout",
                                 desc = L["DPSLayoutDesc"] or "Compact raid frames, optimized for damage dealers",
-                                func = function() LunarUI:ApplyRolePreset("DAMAGER"); RefreshUI() end,
+                                func = function()
+                                    LunarUI:ApplyRolePreset("DAMAGER")
+                                    RefreshUI()
+                                end,
                                 width = 0.8,
                             },
                             tank = {
                                 order = 2,
                                 type = "execute",
                                 name = L["TankLayout"] or "Tank Layout",
-                                desc = L["TankLayoutDesc"] or "Wider frames with larger nameplates for threat awareness",
-                                func = function() LunarUI:ApplyRolePreset("TANK"); RefreshUI() end,
+                                desc = L["TankLayoutDesc"]
+                                    or "Wider frames with larger nameplates for threat awareness",
+                                func = function()
+                                    LunarUI:ApplyRolePreset("TANK")
+                                    RefreshUI()
+                                end,
                                 width = 0.8,
                             },
                             healer = {
@@ -275,7 +327,10 @@ local options = {
                                 type = "execute",
                                 name = L["HealerLayout"] or "Healer Layout",
                                 desc = L["HealerLayoutDesc"] or "Large raid frames centered for heal targeting",
-                                func = function() LunarUI:ApplyRolePreset("HEALER"); RefreshUI() end,
+                                func = function()
+                                    LunarUI:ApplyRolePreset("HEALER")
+                                    RefreshUI()
+                                end,
                                 width = 0.8,
                             },
                         },
@@ -309,8 +364,13 @@ local options = {
                     order = 1,
                     type = "toggle",
                     name = L.enable,
-                    get = function() return GetDB().nameplates.enabled end,
-                    set = function(_, v) GetDB().nameplates.enabled = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.enabled = v
+                        RefreshUI()
+                    end,
                     width = "full",
                 },
                 width = {
@@ -320,8 +380,13 @@ local options = {
                     min = 80,
                     max = 200,
                     step = 5,
-                    get = function() return GetDB().nameplates.width end,
-                    set = function(_, v) GetDB().nameplates.width = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.width
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.width = v
+                        RefreshUI()
+                    end,
                 },
                 height = {
                     order = 3,
@@ -330,16 +395,27 @@ local options = {
                     min = 6,
                     max = 30,
                     step = 1,
-                    get = function() return GetDB().nameplates.height end,
-                    set = function(_, v) GetDB().nameplates.height = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.height
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.height = v
+                        RefreshUI()
+                    end,
                 },
                 stackingDetection = {
                     order = 4,
                     type = "toggle",
                     name = L.StackingDetection or "Stacking Detection",
-                    desc = L.StackingDetectionDesc or "Offset overlapping nameplates so they don't cover each other (requires reload)",
-                    get = function() return GetDB().nameplates.stackingDetection end,
-                    set = function(_, v) GetDB().nameplates.stackingDetection = v; RefreshUI() end,
+                    desc = L.StackingDetectionDesc
+                        or "Offset overlapping nameplates so they don't cover each other (requires reload)",
+                    get = function()
+                        return GetDB().nameplates.stackingDetection
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.stackingDetection = v
+                        RefreshUI()
+                    end,
                 },
                 spacer1 = { order = 10, type = "description", name = "\n" },
                 enemyHeader = {
@@ -351,38 +427,63 @@ local options = {
                     order = 12,
                     type = "toggle",
                     name = L.enable,
-                    get = function() return GetDB().nameplates.enemy.enabled end,
-                    set = function(_, v) GetDB().nameplates.enemy.enabled = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.enemy.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.enemy.enabled = v
+                        RefreshUI()
+                    end,
                 },
                 enemyShowCastbar = {
                     order = 13,
                     type = "toggle",
                     name = L.showCastbar,
-                    get = function() return GetDB().nameplates.enemy.showCastbar end,
-                    set = function(_, v) GetDB().nameplates.enemy.showCastbar = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.enemy.showCastbar
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.enemy.showCastbar = v
+                        RefreshUI()
+                    end,
                 },
                 enemyShowAuras = {
                     order = 14,
                     type = "toggle",
                     name = L.showAuras,
-                    get = function() return GetDB().nameplates.enemy.showAuras end,
-                    set = function(_, v) GetDB().nameplates.enemy.showAuras = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.enemy.showAuras
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.enemy.showAuras = v
+                        RefreshUI()
+                    end,
                 },
                 enemyShowLevel = {
                     order = 15,
                     type = "toggle",
                     name = L.NameplateLevel or "Level Text",
                     desc = L.NameplateLevelDesc or "Show level text next to name on enemy nameplates (requires reload)",
-                    get = function() return GetDB().nameplates.enemy.showLevel end,
-                    set = function(_, v) GetDB().nameplates.enemy.showLevel = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.enemy.showLevel
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.enemy.showLevel = v
+                        RefreshUI()
+                    end,
                 },
                 enemyShowQuestIcon = {
                     order = 16,
                     type = "toggle",
                     name = L.QuestIcon or "Quest Icon",
                     desc = L.QuestIconDesc or "Show quest objective icon on enemy nameplates (requires reload)",
-                    get = function() return GetDB().nameplates.enemy.showQuestIcon end,
-                    set = function(_, v) GetDB().nameplates.enemy.showQuestIcon = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.enemy.showQuestIcon
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.enemy.showQuestIcon = v
+                        RefreshUI()
+                    end,
                 },
                 spacer2 = { order = 20, type = "description", name = "\n" },
                 friendlyHeader = {
@@ -394,23 +495,39 @@ local options = {
                     order = 22,
                     type = "toggle",
                     name = L.enable,
-                    get = function() return GetDB().nameplates.friendly.enabled end,
-                    set = function(_, v) GetDB().nameplates.friendly.enabled = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.friendly.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.friendly.enabled = v
+                        RefreshUI()
+                    end,
                 },
                 friendlyShowHealth = {
                     order = 23,
                     type = "toggle",
                     name = L.showHealth,
-                    get = function() return GetDB().nameplates.friendly.showHealth end,
-                    set = function(_, v) GetDB().nameplates.friendly.showHealth = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().nameplates.friendly.showHealth
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.friendly.showHealth = v
+                        RefreshUI()
+                    end,
                 },
                 friendlyShowLevel = {
                     order = 24,
                     type = "toggle",
                     name = L.NameplateLevel or "Level Text",
-                    desc = L.NameplateLevelDesc or "Show level text next to name on friendly nameplates (requires reload)",
-                    get = function() return GetDB().nameplates.friendly.showLevel end,
-                    set = function(_, v) GetDB().nameplates.friendly.showLevel = v; RefreshUI() end,
+                    desc = L.NameplateLevelDesc
+                        or "Show level text next to name on friendly nameplates (requires reload)",
+                    get = function()
+                        return GetDB().nameplates.friendly.showLevel
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.friendly.showLevel = v
+                        RefreshUI()
+                    end,
                 },
             },
         },
@@ -439,11 +556,17 @@ local options = {
                             type = "range",
                             name = L["HUDScale"],
                             desc = L["HUDScaleDesc"],
-                            min = 0.5, max = 2.0, step = 0.05,
-                            get = function() return GetDB().hud.scale or 1.0 end,
+                            min = 0.5,
+                            max = 2.0,
+                            step = 0.05,
+                            get = function()
+                                return GetDB().hud.scale or 1.0
+                            end,
                             set = function(_, v)
                                 GetDB().hud.scale = v
-                                if LunarUI.ApplyHUDScale then LunarUI:ApplyHUDScale() end
+                                if LunarUI.ApplyHUDScale then
+                                    LunarUI:ApplyHUDScale()
+                                end
                             end,
                             width = "full",
                         },
@@ -457,13 +580,19 @@ local options = {
                             type = "toggle",
                             name = L["HUDPerfMonitor"],
                             desc = L["HUDPerfMonitorDesc"],
-                            get = function() return GetDB().hud.performanceMonitor end,
+                            get = function()
+                                return GetDB().hud.performanceMonitor
+                            end,
                             set = function(_, v)
                                 GetDB().hud.performanceMonitor = v
                                 if v then
-                                    if LunarUI.InitPerformanceMonitor then LunarUI.InitPerformanceMonitor() end
+                                    if LunarUI.InitPerformanceMonitor then
+                                        LunarUI.InitPerformanceMonitor()
+                                    end
                                 else
-                                    if LunarUI.CleanupPerformanceMonitor then LunarUI.CleanupPerformanceMonitor() end
+                                    if LunarUI.CleanupPerformanceMonitor then
+                                        LunarUI.CleanupPerformanceMonitor()
+                                    end
                                 end
                             end,
                             width = "full",
@@ -473,13 +602,19 @@ local options = {
                             type = "toggle",
                             name = L["HUDClassResources"],
                             desc = L["HUDClassResourcesDesc"],
-                            get = function() return GetDB().hud.classResources end,
+                            get = function()
+                                return GetDB().hud.classResources
+                            end,
                             set = function(_, v)
                                 GetDB().hud.classResources = v
                                 if v then
-                                    if LunarUI.InitClassResources then LunarUI.InitClassResources() end
+                                    if LunarUI.InitClassResources then
+                                        LunarUI.InitClassResources()
+                                    end
                                 else
-                                    if LunarUI.CleanupClassResources then LunarUI.CleanupClassResources() end
+                                    if LunarUI.CleanupClassResources then
+                                        LunarUI.CleanupClassResources()
+                                    end
                                 end
                             end,
                             width = "full",
@@ -489,13 +624,19 @@ local options = {
                             type = "toggle",
                             name = L["HUDCooldownTracker"],
                             desc = L["HUDCooldownTrackerDesc"],
-                            get = function() return GetDB().hud.cooldownTracker end,
+                            get = function()
+                                return GetDB().hud.cooldownTracker
+                            end,
                             set = function(_, v)
                                 GetDB().hud.cooldownTracker = v
                                 if v then
-                                    if LunarUI.InitCooldownTracker then LunarUI.InitCooldownTracker() end
+                                    if LunarUI.InitCooldownTracker then
+                                        LunarUI.InitCooldownTracker()
+                                    end
                                 else
-                                    if LunarUI.CleanupCooldownTracker then LunarUI.CleanupCooldownTracker() end
+                                    if LunarUI.CleanupCooldownTracker then
+                                        LunarUI.CleanupCooldownTracker()
+                                    end
                                 end
                             end,
                             width = "full",
@@ -505,13 +646,19 @@ local options = {
                             type = "toggle",
                             name = L["HUDAuraFrames"],
                             desc = L["HUDAuraFramesDesc"],
-                            get = function() return GetDB().hud.auraFrames end,
+                            get = function()
+                                return GetDB().hud.auraFrames
+                            end,
                             set = function(_, v)
                                 GetDB().hud.auraFrames = v
                                 if v then
-                                    if LunarUI.InitAuraFrames then LunarUI.InitAuraFrames() end
+                                    if LunarUI.InitAuraFrames then
+                                        LunarUI.InitAuraFrames()
+                                    end
                                 else
-                                    if LunarUI.CleanupAuraFrames then LunarUI.CleanupAuraFrames() end
+                                    if LunarUI.CleanupAuraFrames then
+                                        LunarUI.CleanupAuraFrames()
+                                    end
                                 end
                             end,
                             width = "full",
@@ -535,11 +682,17 @@ local options = {
                             type = "range",
                             name = L["HUDIconSize"],
                             desc = L["HUDAuraIconSizeDesc"],
-                            min = 24, max = 64, step = 2,
-                            get = function() return GetDB().hud.auraIconSize end,
+                            min = 24,
+                            max = 64,
+                            step = 2,
+                            get = function()
+                                return GetDB().hud.auraIconSize
+                            end,
                             set = function(_, v)
                                 GetDB().hud.auraIconSize = v
-                                if LunarUI.RebuildAuraFrames then LunarUI:RebuildAuraFrames() end
+                                if LunarUI.RebuildAuraFrames then
+                                    LunarUI:RebuildAuraFrames()
+                                end
                             end,
                             width = "full",
                         },
@@ -548,11 +701,17 @@ local options = {
                             type = "range",
                             name = L["HUDIconSpacing"],
                             desc = L["HUDIconSpacingDesc"],
-                            min = 0, max = 12, step = 1,
-                            get = function() return GetDB().hud.auraIconSpacing end,
+                            min = 0,
+                            max = 12,
+                            step = 1,
+                            get = function()
+                                return GetDB().hud.auraIconSpacing
+                            end,
                             set = function(_, v)
                                 GetDB().hud.auraIconSpacing = v
-                                if LunarUI.RebuildAuraFrames then LunarUI:RebuildAuraFrames() end
+                                if LunarUI.RebuildAuraFrames then
+                                    LunarUI:RebuildAuraFrames()
+                                end
                             end,
                             width = "full",
                         },
@@ -561,11 +720,17 @@ local options = {
                             type = "range",
                             name = L["HUDIconsPerRow"],
                             desc = L["HUDIconsPerRowDesc"],
-                            min = 4, max = 16, step = 1,
-                            get = function() return GetDB().hud.auraIconsPerRow end,
+                            min = 4,
+                            max = 16,
+                            step = 1,
+                            get = function()
+                                return GetDB().hud.auraIconsPerRow
+                            end,
                             set = function(_, v)
                                 GetDB().hud.auraIconsPerRow = v
-                                if LunarUI.RebuildAuraFrames then LunarUI:RebuildAuraFrames() end
+                                if LunarUI.RebuildAuraFrames then
+                                    LunarUI:RebuildAuraFrames()
+                                end
                             end,
                             width = "full",
                         },
@@ -574,11 +739,17 @@ local options = {
                             type = "range",
                             name = L["HUDMaxBuffs"],
                             desc = L["HUDMaxBuffsDesc"],
-                            min = 4, max = 40, step = 1,
-                            get = function() return GetDB().hud.maxBuffs end,
+                            min = 4,
+                            max = 40,
+                            step = 1,
+                            get = function()
+                                return GetDB().hud.maxBuffs
+                            end,
                             set = function(_, v)
                                 GetDB().hud.maxBuffs = v
-                                if LunarUI.RebuildAuraFrames then LunarUI:RebuildAuraFrames() end
+                                if LunarUI.RebuildAuraFrames then
+                                    LunarUI:RebuildAuraFrames()
+                                end
                             end,
                             width = "full",
                         },
@@ -587,11 +758,17 @@ local options = {
                             type = "range",
                             name = L["HUDMaxDebuffs"],
                             desc = L["HUDMaxDebuffsDesc"],
-                            min = 4, max = 20, step = 1,
-                            get = function() return GetDB().hud.maxDebuffs end,
+                            min = 4,
+                            max = 20,
+                            step = 1,
+                            get = function()
+                                return GetDB().hud.maxDebuffs
+                            end,
                             set = function(_, v)
                                 GetDB().hud.maxDebuffs = v
-                                if LunarUI.RebuildAuraFrames then LunarUI:RebuildAuraFrames() end
+                                if LunarUI.RebuildAuraFrames then
+                                    LunarUI:RebuildAuraFrames()
+                                end
                             end,
                             width = "full",
                         },
@@ -600,11 +777,17 @@ local options = {
                             type = "range",
                             name = L["HUDAuraBarHeight"],
                             desc = L["HUDAuraBarHeightDesc"],
-                            min = 2, max = 10, step = 1,
-                            get = function() return GetDB().hud.auraBarHeight end,
+                            min = 2,
+                            max = 10,
+                            step = 1,
+                            get = function()
+                                return GetDB().hud.auraBarHeight
+                            end,
                             set = function(_, v)
                                 GetDB().hud.auraBarHeight = v
-                                if LunarUI.RebuildAuraFrames then LunarUI:RebuildAuraFrames() end
+                                if LunarUI.RebuildAuraFrames then
+                                    LunarUI:RebuildAuraFrames()
+                                end
                             end,
                             width = "full",
                         },
@@ -620,9 +803,9 @@ local options = {
                         desc = {
                             order = 0,
                             type = "description",
-                            name = "Control which buffs/debuffs are shown on unit frames.\n" ..
-                                "Enter spell IDs separated by commas (e.g. 1459, 21562, 6673).\n" ..
-                                "You can find spell IDs by holding Shift and hovering over a spell in the tooltip.\n\n",
+                            name = "Control which buffs/debuffs are shown on unit frames.\n"
+                                .. "Enter spell IDs separated by commas (e.g. 1459, 21562, 6673).\n"
+                                .. "You can find spell IDs by holding Shift and hovering over a spell in the tooltip.\n\n",
                         },
                         whitelist = {
                             order = 1,
@@ -631,11 +814,15 @@ local options = {
                             desc = "Spell IDs that should always be displayed, bypassing all filters",
                             multiline = 3,
                             width = "full",
-                            get = function() return GetDB().auraWhitelist or "" end,
+                            get = function()
+                                return GetDB().auraWhitelist or ""
+                            end,
                             set = function(_, v)
                                 GetDB().auraWhitelist = v
                                 -- 觸發快取重建
-                                if LunarUI.RebuildAuraFilterCache then LunarUI:RebuildAuraFilterCache() end
+                                if LunarUI.RebuildAuraFilterCache then
+                                    LunarUI:RebuildAuraFilterCache()
+                                end
                             end,
                         },
                         blacklist = {
@@ -645,15 +832,18 @@ local options = {
                             desc = "Spell IDs that should never be displayed",
                             multiline = 3,
                             width = "full",
-                            get = function() return GetDB().auraBlacklist or "" end,
+                            get = function()
+                                return GetDB().auraBlacklist or ""
+                            end,
                             set = function(_, v)
                                 GetDB().auraBlacklist = v
-                                if LunarUI.RebuildAuraFilterCache then LunarUI:RebuildAuraFilterCache() end
+                                if LunarUI.RebuildAuraFilterCache then
+                                    LunarUI:RebuildAuraFilterCache()
+                                end
                             end,
                         },
                     },
                 },
-
 
                 -- 冷卻追蹤分頁
                 cdSettings = {
@@ -671,11 +861,17 @@ local options = {
                             type = "range",
                             name = L["HUDIconSize"],
                             desc = L["HUDCDIconSizeDesc"],
-                            min = 24, max = 56, step = 2,
-                            get = function() return GetDB().hud.cdIconSize end,
+                            min = 24,
+                            max = 56,
+                            step = 2,
+                            get = function()
+                                return GetDB().hud.cdIconSize
+                            end,
                             set = function(_, v)
                                 GetDB().hud.cdIconSize = v
-                                if LunarUI.RebuildCooldownTracker then LunarUI:RebuildCooldownTracker() end
+                                if LunarUI.RebuildCooldownTracker then
+                                    LunarUI:RebuildCooldownTracker()
+                                end
                             end,
                             width = "full",
                         },
@@ -684,11 +880,17 @@ local options = {
                             type = "range",
                             name = L["HUDIconSpacing"],
                             desc = L["HUDIconSpacingDesc"],
-                            min = 0, max = 12, step = 1,
-                            get = function() return GetDB().hud.cdIconSpacing end,
+                            min = 0,
+                            max = 12,
+                            step = 1,
+                            get = function()
+                                return GetDB().hud.cdIconSpacing
+                            end,
                             set = function(_, v)
                                 GetDB().hud.cdIconSpacing = v
-                                if LunarUI.RebuildCooldownTracker then LunarUI:RebuildCooldownTracker() end
+                                if LunarUI.RebuildCooldownTracker then
+                                    LunarUI:RebuildCooldownTracker()
+                                end
                             end,
                             width = "full",
                         },
@@ -697,11 +899,17 @@ local options = {
                             type = "range",
                             name = L["HUDCDMaxIcons"],
                             desc = L["HUDCDMaxIconsDesc"],
-                            min = 3, max = 16, step = 1,
-                            get = function() return GetDB().hud.cdMaxIcons end,
+                            min = 3,
+                            max = 16,
+                            step = 1,
+                            get = function()
+                                return GetDB().hud.cdMaxIcons
+                            end,
                             set = function(_, v)
                                 GetDB().hud.cdMaxIcons = v
-                                if LunarUI.RebuildCooldownTracker then LunarUI:RebuildCooldownTracker() end
+                                if LunarUI.RebuildCooldownTracker then
+                                    LunarUI:RebuildCooldownTracker()
+                                end
                             end,
                             width = "full",
                         },
@@ -724,11 +932,17 @@ local options = {
                             type = "range",
                             name = L["HUDIconSize"],
                             desc = L["HUDCRIconSizeDesc"],
-                            min = 16, max = 48, step = 2,
-                            get = function() return GetDB().hud.crIconSize end,
+                            min = 16,
+                            max = 48,
+                            step = 2,
+                            get = function()
+                                return GetDB().hud.crIconSize
+                            end,
                             set = function(_, v)
                                 GetDB().hud.crIconSize = v
-                                if LunarUI.RebuildClassResources then LunarUI:RebuildClassResources() end
+                                if LunarUI.RebuildClassResources then
+                                    LunarUI:RebuildClassResources()
+                                end
                             end,
                             width = "full",
                         },
@@ -737,11 +951,17 @@ local options = {
                             type = "range",
                             name = L["HUDIconSpacing"],
                             desc = L["HUDCRIconSpacingDesc"],
-                            min = 0, max = 12, step = 1,
-                            get = function() return GetDB().hud.crIconSpacing end,
+                            min = 0,
+                            max = 12,
+                            step = 1,
+                            get = function()
+                                return GetDB().hud.crIconSpacing
+                            end,
                             set = function(_, v)
                                 GetDB().hud.crIconSpacing = v
-                                if LunarUI.RebuildClassResources then LunarUI:RebuildClassResources() end
+                                if LunarUI.RebuildClassResources then
+                                    LunarUI:RebuildClassResources()
+                                end
                             end,
                             width = "full",
                         },
@@ -750,11 +970,17 @@ local options = {
                             type = "range",
                             name = L["HUDCRBarHeight"],
                             desc = L["HUDCRBarHeightDesc"],
-                            min = 4, max = 20, step = 1,
-                            get = function() return GetDB().hud.crBarHeight end,
+                            min = 4,
+                            max = 20,
+                            step = 1,
+                            get = function()
+                                return GetDB().hud.crBarHeight
+                            end,
                             set = function(_, v)
                                 GetDB().hud.crBarHeight = v
-                                if LunarUI.RebuildClassResources then LunarUI:RebuildClassResources() end
+                                if LunarUI.RebuildClassResources then
+                                    LunarUI:RebuildClassResources()
+                                end
                             end,
                             width = "full",
                         },
@@ -774,8 +1000,12 @@ local options = {
                     order = 1,
                     type = "toggle",
                     name = L.enable,
-                    get = function() return GetDB().minimap.enabled end,
-                    set = function(_, v) GetDB().minimap.enabled = v end,
+                    get = function()
+                        return GetDB().minimap.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().minimap.enabled = v
+                    end,
                     width = "full",
                 },
 
@@ -789,11 +1019,17 @@ local options = {
                     order = 11,
                     type = "range",
                     name = "Size",
-                    min = 120, max = 250, step = 5,
-                    get = function() return GetDB().minimap.size end,
+                    min = 120,
+                    max = 250,
+                    step = 5,
+                    get = function()
+                        return GetDB().minimap.size
+                    end,
                     set = function(_, v)
                         GetDB().minimap.size = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
                 borderColor = {
@@ -808,7 +1044,9 @@ local options = {
                     set = function(_, r, g, b, a)
                         local c = GetDB().minimap.borderColor
                         c.r, c.g, c.b, c.a = r, g, b, a
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
                 pinScale = {
@@ -816,11 +1054,17 @@ local options = {
                     type = "range",
                     name = "Pin Scale",
                     desc = "Scale of minimap pins (quests, herbs, nodes)",
-                    min = 0.5, max = 2.0, step = 0.1,
-                    get = function() return GetDB().minimap.pinScale end,
+                    min = 0.5,
+                    max = 2.0,
+                    step = 0.1,
+                    get = function()
+                        return GetDB().minimap.pinScale
+                    end,
                     set = function(_, v)
                         GetDB().minimap.pinScale = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
 
@@ -834,20 +1078,28 @@ local options = {
                     order = 21,
                     type = "toggle",
                     name = L.showCoords,
-                    get = function() return GetDB().minimap.showCoords end,
+                    get = function()
+                        return GetDB().minimap.showCoords
+                    end,
                     set = function(_, v)
                         GetDB().minimap.showCoords = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
                 showClock = {
                     order = 22,
                     type = "toggle",
                     name = L.showClock,
-                    get = function() return GetDB().minimap.showClock end,
+                    get = function()
+                        return GetDB().minimap.showClock
+                    end,
                     set = function(_, v)
                         GetDB().minimap.showClock = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
                 clockFormat = {
@@ -855,10 +1107,14 @@ local options = {
                     type = "select",
                     name = "Clock Format",
                     values = { ["24h"] = "24-Hour", ["12h"] = "12-Hour" },
-                    get = function() return GetDB().minimap.clockFormat end,
+                    get = function()
+                        return GetDB().minimap.clockFormat
+                    end,
                     set = function(_, v)
                         GetDB().minimap.clockFormat = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
                 zoneTextDisplay = {
@@ -871,20 +1127,28 @@ local options = {
                         ["MOUSEOVER"] = "Show on Mouseover",
                         ["HIDE"] = "Hidden",
                     },
-                    get = function() return GetDB().minimap.zoneTextDisplay end,
+                    get = function()
+                        return GetDB().minimap.zoneTextDisplay
+                    end,
                     set = function(_, v)
                         GetDB().minimap.zoneTextDisplay = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
                 organizeButtons = {
                     order = 25,
                     type = "toggle",
                     name = L.organizeButtons,
-                    get = function() return GetDB().minimap.organizeButtons end,
+                    get = function()
+                        return GetDB().minimap.organizeButtons
+                    end,
                     set = function(_, v)
                         GetDB().minimap.organizeButtons = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
 
@@ -898,11 +1162,17 @@ local options = {
                     order = 31,
                     type = "range",
                     name = "Zone Text Size",
-                    min = 8, max = 24, step = 1,
-                    get = function() return GetDB().minimap.zoneFontSize end,
+                    min = 8,
+                    max = 24,
+                    step = 1,
+                    get = function()
+                        return GetDB().minimap.zoneFontSize
+                    end,
                     set = function(_, v)
                         GetDB().minimap.zoneFontSize = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
                 zoneFontOutline = {
@@ -915,21 +1185,31 @@ local options = {
                         ["THICKOUTLINE"] = "Thick Outline",
                         ["MONOCHROMEOUTLINE"] = "Monochrome",
                     },
-                    get = function() return GetDB().minimap.zoneFontOutline end,
+                    get = function()
+                        return GetDB().minimap.zoneFontOutline
+                    end,
                     set = function(_, v)
                         GetDB().minimap.zoneFontOutline = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
                 coordFontSize = {
                     order = 33,
                     type = "range",
                     name = "Coord / Clock Text Size",
-                    min = 8, max = 18, step = 1,
-                    get = function() return GetDB().minimap.coordFontSize end,
+                    min = 8,
+                    max = 18,
+                    step = 1,
+                    get = function()
+                        return GetDB().minimap.coordFontSize
+                    end,
                     set = function(_, v)
                         GetDB().minimap.coordFontSize = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
 
@@ -944,32 +1224,50 @@ local options = {
                     type = "range",
                     name = "Reset Zoom Timer",
                     desc = "Auto zoom-out after this many seconds (0 = disabled)",
-                    min = 0, max = 15, step = 1,
-                    get = function() return GetDB().minimap.resetZoomTimer end,
-                    set = function(_, v) GetDB().minimap.resetZoomTimer = v end,
+                    min = 0,
+                    max = 15,
+                    step = 1,
+                    get = function()
+                        return GetDB().minimap.resetZoomTimer
+                    end,
+                    set = function(_, v)
+                        GetDB().minimap.resetZoomTimer = v
+                    end,
                 },
                 fadeOnMouseLeave = {
                     order = 42,
                     type = "toggle",
                     name = "Fade on Mouse Leave",
                     desc = "Fade the minimap when the mouse is not over it",
-                    get = function() return GetDB().minimap.fadeOnMouseLeave end,
+                    get = function()
+                        return GetDB().minimap.fadeOnMouseLeave
+                    end,
                     set = function(_, v)
                         GetDB().minimap.fadeOnMouseLeave = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
                 fadeAlpha = {
                     order = 43,
                     type = "range",
                     name = "Fade Alpha",
-                    min = 0.1, max = 0.9, step = 0.05,
+                    min = 0.1,
+                    max = 0.9,
+                    step = 0.05,
                     isPercent = true,
-                    disabled = function() return not GetDB().minimap.fadeOnMouseLeave end,
-                    get = function() return GetDB().minimap.fadeAlpha end,
+                    disabled = function()
+                        return not GetDB().minimap.fadeOnMouseLeave
+                    end,
+                    get = function()
+                        return GetDB().minimap.fadeAlpha
+                    end,
                     set = function(_, v)
                         GetDB().minimap.fadeAlpha = v
-                        if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
                     end,
                 },
 
@@ -981,19 +1279,25 @@ local options = {
                     inline = true,
                     args = (function()
                         local ICON_NAMES = {
-                            { key = "calendar",    name = "Calendar" },
-                            { key = "tracking",    name = "Tracking" },
-                            { key = "mail",        name = "Mail Indicator" },
-                            { key = "difficulty",  name = "Difficulty Text" },
-                            { key = "lfg",         name = "LFG Queue" },
-                            { key = "expansion",   name = "Expansion Button" },
+                            { key = "calendar", name = "Calendar" },
+                            { key = "tracking", name = "Tracking" },
+                            { key = "mail", name = "Mail Indicator" },
+                            { key = "difficulty", name = "Difficulty Text" },
+                            { key = "lfg", name = "LFG Queue" },
+                            { key = "expansion", name = "Expansion Button" },
                             { key = "compartment", name = "Addon Compartment" },
                         }
 
                         local POSITION_VALUES = {
-                            TOPLEFT = "Top Left", TOP = "Top", TOPRIGHT = "Top Right",
-                            LEFT = "Left", CENTER = "Center", RIGHT = "Right",
-                            BOTTOMLEFT = "Bottom Left", BOTTOM = "Bottom", BOTTOMRIGHT = "Bottom Right",
+                            TOPLEFT = "Top Left",
+                            TOP = "Top",
+                            TOPRIGHT = "Top Right",
+                            LEFT = "Left",
+                            CENTER = "Center",
+                            RIGHT = "Right",
+                            BOTTOMLEFT = "Bottom Left",
+                            BOTTOM = "Bottom",
+                            BOTTOMRIGHT = "Bottom Right",
                         }
 
                         local args = {}
@@ -1010,10 +1314,14 @@ local options = {
                                 type = "toggle",
                                 name = "Hide",
                                 width = "half",
-                                get = function() return GetDB().minimap.icons[iconKey].hide end,
+                                get = function()
+                                    return GetDB().minimap.icons[iconKey].hide
+                                end,
                                 set = function(_, v)
                                     GetDB().minimap.icons[iconKey].hide = v
-                                    if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                                    if LunarUI.RefreshMinimap then
+                                        LunarUI:RefreshMinimap()
+                                    end
                                 end,
                             }
                             args[iconKey .. "Position"] = {
@@ -1021,47 +1329,77 @@ local options = {
                                 type = "select",
                                 name = "Anchor",
                                 values = POSITION_VALUES,
-                                disabled = function() return GetDB().minimap.icons[iconKey].hide end,
-                                get = function() return GetDB().minimap.icons[iconKey].position end,
+                                disabled = function()
+                                    return GetDB().minimap.icons[iconKey].hide
+                                end,
+                                get = function()
+                                    return GetDB().minimap.icons[iconKey].position
+                                end,
                                 set = function(_, v)
                                     GetDB().minimap.icons[iconKey].position = v
-                                    if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                                    if LunarUI.RefreshMinimap then
+                                        LunarUI:RefreshMinimap()
+                                    end
                                 end,
                             }
                             args[iconKey .. "Scale"] = {
                                 order = o + 3,
                                 type = "range",
                                 name = "Scale",
-                                min = 0.5, max = 2.0, step = 0.1,
-                                disabled = function() return GetDB().minimap.icons[iconKey].hide end,
-                                get = function() return GetDB().minimap.icons[iconKey].scale end,
+                                min = 0.5,
+                                max = 2.0,
+                                step = 0.1,
+                                disabled = function()
+                                    return GetDB().minimap.icons[iconKey].hide
+                                end,
+                                get = function()
+                                    return GetDB().minimap.icons[iconKey].scale
+                                end,
                                 set = function(_, v)
                                     GetDB().minimap.icons[iconKey].scale = v
-                                    if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                                    if LunarUI.RefreshMinimap then
+                                        LunarUI:RefreshMinimap()
+                                    end
                                 end,
                             }
                             args[iconKey .. "XOffset"] = {
                                 order = o + 4,
                                 type = "range",
                                 name = "X Offset",
-                                min = -50, max = 50, step = 1,
-                                disabled = function() return GetDB().minimap.icons[iconKey].hide end,
-                                get = function() return GetDB().minimap.icons[iconKey].xOffset end,
+                                min = -50,
+                                max = 50,
+                                step = 1,
+                                disabled = function()
+                                    return GetDB().minimap.icons[iconKey].hide
+                                end,
+                                get = function()
+                                    return GetDB().minimap.icons[iconKey].xOffset
+                                end,
                                 set = function(_, v)
                                     GetDB().minimap.icons[iconKey].xOffset = v
-                                    if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                                    if LunarUI.RefreshMinimap then
+                                        LunarUI:RefreshMinimap()
+                                    end
                                 end,
                             }
                             args[iconKey .. "YOffset"] = {
                                 order = o + 5,
                                 type = "range",
                                 name = "Y Offset",
-                                min = -50, max = 50, step = 1,
-                                disabled = function() return GetDB().minimap.icons[iconKey].hide end,
-                                get = function() return GetDB().minimap.icons[iconKey].yOffset end,
+                                min = -50,
+                                max = 50,
+                                step = 1,
+                                disabled = function()
+                                    return GetDB().minimap.icons[iconKey].hide
+                                end,
+                                get = function()
+                                    return GetDB().minimap.icons[iconKey].yOffset
+                                end,
                                 set = function(_, v)
                                     GetDB().minimap.icons[iconKey].yOffset = v
-                                    if LunarUI.RefreshMinimap then LunarUI:RefreshMinimap() end
+                                    if LunarUI.RefreshMinimap then
+                                        LunarUI:RefreshMinimap()
+                                    end
                                 end,
                             }
                         end
@@ -1082,8 +1420,12 @@ local options = {
                     order = 1,
                     type = "toggle",
                     name = L.enable,
-                    get = function() return GetDB().bags.enabled end,
-                    set = function(_, v) GetDB().bags.enabled = v end,
+                    get = function()
+                        return GetDB().bags.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.enabled = v
+                    end,
                     width = "full",
                 },
                 layoutHeader = {
@@ -1095,45 +1437,69 @@ local options = {
                     order = 3,
                     type = "range",
                     name = "Slots Per Row",
-                    min = 8, max = 16, step = 1,
-                    get = function() return GetDB().bags.slotsPerRow end,
+                    min = 8,
+                    max = 16,
+                    step = 1,
+                    get = function()
+                        return GetDB().bags.slotsPerRow
+                    end,
                     set = function(_, v)
                         GetDB().bags.slotsPerRow = v
-                        if LunarUI.RebuildBags then LunarUI:RebuildBags() end
+                        if LunarUI.RebuildBags then
+                            LunarUI:RebuildBags()
+                        end
                     end,
                 },
                 slotSize = {
                     order = 4,
                     type = "range",
                     name = "Slot Size",
-                    min = 28, max = 48, step = 1,
-                    get = function() return GetDB().bags.slotSize end,
+                    min = 28,
+                    max = 48,
+                    step = 1,
+                    get = function()
+                        return GetDB().bags.slotSize
+                    end,
                     set = function(_, v)
                         GetDB().bags.slotSize = v
-                        if LunarUI.RebuildBags then LunarUI:RebuildBags() end
+                        if LunarUI.RebuildBags then
+                            LunarUI:RebuildBags()
+                        end
                     end,
                 },
                 slotSpacing = {
                     order = 5,
                     type = "range",
                     name = "Slot Spacing",
-                    min = 0, max = 8, step = 1,
-                    get = function() return GetDB().bags.slotSpacing end,
+                    min = 0,
+                    max = 8,
+                    step = 1,
+                    get = function()
+                        return GetDB().bags.slotSpacing
+                    end,
                     set = function(_, v)
                         GetDB().bags.slotSpacing = v
-                        if LunarUI.RebuildBags then LunarUI:RebuildBags() end
+                        if LunarUI.RebuildBags then
+                            LunarUI:RebuildBags()
+                        end
                     end,
                 },
                 frameAlpha = {
                     order = 6,
                     type = "range",
                     name = "Background Opacity",
-                    min = 0.3, max = 1.0, step = 0.05,
+                    min = 0.3,
+                    max = 1.0,
+                    step = 0.05,
                     isPercent = true,
-                    get = function() return GetDB().bags.frameAlpha end,
+                    get = function()
+                        return GetDB().bags.frameAlpha
+                    end,
                     set = function(_, v)
                         GetDB().bags.frameAlpha = v
-                        if LunarUI.RebuildBags then LunarUI:RebuildBags() end
+                        if LunarUI.RebuildBags then
+                            LunarUI:RebuildBags()
+                        end
                     end,
                 },
                 reverseBagSlots = {
@@ -1141,10 +1507,14 @@ local options = {
                     type = "toggle",
                     name = "Reverse Bag Slots",
                     desc = "Reverse the order of items in the bag",
-                    get = function() return GetDB().bags.reverseBagSlots end,
+                    get = function()
+                        return GetDB().bags.reverseBagSlots
+                    end,
                     set = function(_, v)
                         GetDB().bags.reverseBagSlots = v
-                        if LunarUI.RebuildBags then LunarUI:RebuildBags() end
+                        if LunarUI.RebuildBags then
+                            LunarUI:RebuildBags()
+                        end
                     end,
                 },
                 splitBags = {
@@ -1152,10 +1522,14 @@ local options = {
                     type = "toggle",
                     name = "Split Bags",
                     desc = "Show each bag as a separate section with visual gaps",
-                    get = function() return GetDB().bags.splitBags end,
+                    get = function()
+                        return GetDB().bags.splitBags
+                    end,
                     set = function(_, v)
                         GetDB().bags.splitBags = v
-                        if LunarUI.RebuildBags then LunarUI:RebuildBags() end
+                        if LunarUI.RebuildBags then
+                            LunarUI:RebuildBags()
+                        end
                     end,
                 },
                 displayHeader = {
@@ -1167,65 +1541,99 @@ local options = {
                     order = 11,
                     type = "toggle",
                     name = L.showItemLevel,
-                    get = function() return GetDB().bags.showItemLevel end,
-                    set = function(_, v) GetDB().bags.showItemLevel = v end,
+                    get = function()
+                        return GetDB().bags.showItemLevel
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.showItemLevel = v
+                    end,
                 },
                 ilvlThreshold = {
                     order = 12,
                     type = "range",
                     name = "Item Level Threshold",
                     desc = "Only show item level for items at or above this level",
-                    min = 1, max = 600, step = 1,
-                    get = function() return GetDB().bags.ilvlThreshold end,
-                    set = function(_, v) GetDB().bags.ilvlThreshold = v end,
+                    min = 1,
+                    max = 600,
+                    step = 1,
+                    get = function()
+                        return GetDB().bags.ilvlThreshold
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.ilvlThreshold = v
+                    end,
                 },
                 showBindType = {
                     order = 13,
                     type = "toggle",
                     name = "Show Bind Type",
                     desc = "Show BoE/BoU text on item slots",
-                    get = function() return GetDB().bags.showBindType end,
-                    set = function(_, v) GetDB().bags.showBindType = v end,
+                    get = function()
+                        return GetDB().bags.showBindType
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.showBindType = v
+                    end,
                 },
                 showCooldown = {
                     order = 14,
                     type = "toggle",
                     name = "Show Cooldowns",
                     desc = "Show cooldown animation on items in bags",
-                    get = function() return GetDB().bags.showCooldown end,
-                    set = function(_, v) GetDB().bags.showCooldown = v end,
+                    get = function()
+                        return GetDB().bags.showCooldown
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.showCooldown = v
+                    end,
                 },
                 showNewGlow = {
                     order = 15,
                     type = "toggle",
                     name = "New Item Glow",
                     desc = "Show a glow animation on newly acquired items",
-                    get = function() return GetDB().bags.showNewGlow end,
-                    set = function(_, v) GetDB().bags.showNewGlow = v end,
+                    get = function()
+                        return GetDB().bags.showNewGlow
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.showNewGlow = v
+                    end,
                 },
                 showQuestItems = {
                     order = 16,
                     type = "toggle",
                     name = "Show Quest Items",
                     desc = "Show quest item indicator on bag slots",
-                    get = function() return GetDB().bags.showQuestItems end,
-                    set = function(_, v) GetDB().bags.showQuestItems = v end,
+                    get = function()
+                        return GetDB().bags.showQuestItems
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.showQuestItems = v
+                    end,
                 },
                 showProfessionColors = {
                     order = 17,
                     type = "toggle",
                     name = "Profession Bag Colors",
                     desc = "Color-code profession bag slots",
-                    get = function() return GetDB().bags.showProfessionColors end,
-                    set = function(_, v) GetDB().bags.showProfessionColors = v end,
+                    get = function()
+                        return GetDB().bags.showProfessionColors
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.showProfessionColors = v
+                    end,
                 },
                 showUpgradeArrow = {
                     order = 18,
                     type = "toggle",
                     name = "Upgrade Arrow",
                     desc = "Show green arrow on items that are an upgrade",
-                    get = function() return GetDB().bags.showUpgradeArrow end,
-                    set = function(_, v) GetDB().bags.showUpgradeArrow = v end,
+                    get = function()
+                        return GetDB().bags.showUpgradeArrow
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.showUpgradeArrow = v
+                    end,
                 },
                 behaviorHeader = {
                     order = 20,
@@ -1236,16 +1644,24 @@ local options = {
                     order = 21,
                     type = "toggle",
                     name = L.autoSellJunk,
-                    get = function() return GetDB().bags.autoSellJunk end,
-                    set = function(_, v) GetDB().bags.autoSellJunk = v end,
+                    get = function()
+                        return GetDB().bags.autoSellJunk
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.autoSellJunk = v
+                    end,
                 },
                 clearSearchOnClose = {
                     order = 22,
                     type = "toggle",
                     name = "Clear Search On Close",
                     desc = "Automatically clear the search box when closing bags",
-                    get = function() return GetDB().bags.clearSearchOnClose end,
-                    set = function(_, v) GetDB().bags.clearSearchOnClose = v end,
+                    get = function()
+                        return GetDB().bags.clearSearchOnClose
+                    end,
+                    set = function(_, v)
+                        GetDB().bags.clearSearchOnClose = v
+                    end,
                 },
                 resetPosition = {
                     order = 30,
@@ -1256,7 +1672,9 @@ local options = {
                         local bagDb = GetDB().bags
                         bagDb.bagPosition = nil
                         bagDb.bankPosition = nil
-                        if LunarUI.RebuildBags then LunarUI:RebuildBags() end
+                        if LunarUI.RebuildBags then
+                            LunarUI:RebuildBags()
+                        end
                     end,
                 },
             },
@@ -1273,8 +1691,12 @@ local options = {
                     order = 1,
                     type = "toggle",
                     name = L.enable,
-                    get = function() return GetDB().chat.enabled end,
-                    set = function(_, v) GetDB().chat.enabled = v end,
+                    get = function()
+                        return GetDB().chat.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.enabled = v
+                    end,
                     width = "full",
                 },
                 width = {
@@ -1284,8 +1706,12 @@ local options = {
                     min = 200,
                     max = 600,
                     step = 10,
-                    get = function() return GetDB().chat.width end,
-                    set = function(_, v) GetDB().chat.width = v end,
+                    get = function()
+                        return GetDB().chat.width
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.width = v
+                    end,
                 },
                 height = {
                     order = 3,
@@ -1294,22 +1720,34 @@ local options = {
                     min = 100,
                     max = 400,
                     step = 10,
-                    get = function() return GetDB().chat.height end,
-                    set = function(_, v) GetDB().chat.height = v end,
+                    get = function()
+                        return GetDB().chat.height
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.height = v
+                    end,
                 },
                 improvedColors = {
                     order = 4,
                     type = "toggle",
                     name = L.improvedColors,
-                    get = function() return GetDB().chat.improvedColors end,
-                    set = function(_, v) GetDB().chat.improvedColors = v end,
+                    get = function()
+                        return GetDB().chat.improvedColors
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.improvedColors = v
+                    end,
                 },
                 classColors = {
                     order = 5,
                     type = "toggle",
                     name = L.classColors,
-                    get = function() return GetDB().chat.classColors end,
-                    set = function(_, v) GetDB().chat.classColors = v end,
+                    get = function()
+                        return GetDB().chat.classColors
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.classColors = v
+                    end,
                 },
             },
         },
@@ -1325,44 +1763,68 @@ local options = {
                     order = 1,
                     type = "toggle",
                     name = L.enable,
-                    get = function() return GetDB().tooltip.enabled end,
-                    set = function(_, v) GetDB().tooltip.enabled = v end,
+                    get = function()
+                        return GetDB().tooltip.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().tooltip.enabled = v
+                    end,
                     width = "full",
                 },
                 anchorCursor = {
                     order = 2,
                     type = "toggle",
                     name = "Anchor to Cursor",
-                    get = function() return GetDB().tooltip.anchorCursor end,
-                    set = function(_, v) GetDB().tooltip.anchorCursor = v end,
+                    get = function()
+                        return GetDB().tooltip.anchorCursor
+                    end,
+                    set = function(_, v)
+                        GetDB().tooltip.anchorCursor = v
+                    end,
                 },
                 showItemLevel = {
                     order = 3,
                     type = "toggle",
                     name = L.showItemLevel,
-                    get = function() return GetDB().tooltip.showItemLevel end,
-                    set = function(_, v) GetDB().tooltip.showItemLevel = v end,
+                    get = function()
+                        return GetDB().tooltip.showItemLevel
+                    end,
+                    set = function(_, v)
+                        GetDB().tooltip.showItemLevel = v
+                    end,
                 },
                 showSpellID = {
                     order = 4,
                     type = "toggle",
                     name = L.showSpellID,
-                    get = function() return GetDB().tooltip.showSpellID end,
-                    set = function(_, v) GetDB().tooltip.showSpellID = v end,
+                    get = function()
+                        return GetDB().tooltip.showSpellID
+                    end,
+                    set = function(_, v)
+                        GetDB().tooltip.showSpellID = v
+                    end,
                 },
                 showItemID = {
                     order = 5,
                     type = "toggle",
                     name = "Show Item ID",
-                    get = function() return GetDB().tooltip.showItemID end,
-                    set = function(_, v) GetDB().tooltip.showItemID = v end,
+                    get = function()
+                        return GetDB().tooltip.showItemID
+                    end,
+                    set = function(_, v)
+                        GetDB().tooltip.showItemID = v
+                    end,
                 },
                 showTargetTarget = {
                     order = 6,
                     type = "toggle",
                     name = L.showTargetTarget,
-                    get = function() return GetDB().tooltip.showTargetTarget end,
-                    set = function(_, v) GetDB().tooltip.showTargetTarget = v end,
+                    get = function()
+                        return GetDB().tooltip.showTargetTarget
+                    end,
+                    set = function(_, v)
+                        GetDB().tooltip.showTargetTarget = v
+                    end,
                 },
             },
         },
@@ -1384,12 +1846,20 @@ local options = {
                     type = "range",
                     name = L["GridSize"],
                     desc = L["GridSizeDesc"],
-                    min = 1, max = 40, step = 1,
-                    get = function() return GetDB().frameMover and GetDB().frameMover.gridSize or 10 end,
+                    min = 1,
+                    max = 40,
+                    step = 1,
+                    get = function()
+                        return GetDB().frameMover and GetDB().frameMover.gridSize or 10
+                    end,
                     set = function(_, v)
-                        if not GetDB().frameMover then GetDB().frameMover = {} end
+                        if not GetDB().frameMover then
+                            GetDB().frameMover = {}
+                        end
                         GetDB().frameMover.gridSize = v
-                        if LunarUI.LoadFrameMoverSettings then LunarUI:LoadFrameMoverSettings() end
+                        if LunarUI.LoadFrameMoverSettings then
+                            LunarUI:LoadFrameMoverSettings()
+                        end
                     end,
                     width = "full",
                 },
@@ -1398,12 +1868,20 @@ local options = {
                     type = "range",
                     name = L["MoverAlpha"],
                     desc = L["MoverAlphaDesc"],
-                    min = 0.1, max = 1.0, step = 0.05,
-                    get = function() return GetDB().frameMover and GetDB().frameMover.moverAlpha or 0.6 end,
+                    min = 0.1,
+                    max = 1.0,
+                    step = 0.05,
+                    get = function()
+                        return GetDB().frameMover and GetDB().frameMover.moverAlpha or 0.6
+                    end,
                     set = function(_, v)
-                        if not GetDB().frameMover then GetDB().frameMover = {} end
+                        if not GetDB().frameMover then
+                            GetDB().frameMover = {}
+                        end
                         GetDB().frameMover.moverAlpha = v
-                        if LunarUI.LoadFrameMoverSettings then LunarUI:LoadFrameMoverSettings() end
+                        if LunarUI.LoadFrameMoverSettings then
+                            LunarUI:LoadFrameMoverSettings()
+                        end
                     end,
                     width = "full",
                 },
@@ -1426,8 +1904,13 @@ local options = {
                         parchment = "Parchment",
                         minimal = "Minimal",
                     },
-                    get = function() return GetDB().style.theme end,
-                    set = function(_, v) GetDB().style.theme = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().style.theme
+                    end,
+                    set = function(_, v)
+                        GetDB().style.theme = v
+                        RefreshUI()
+                    end,
                     width = "full",
                 },
                 font = {
@@ -1437,7 +1920,9 @@ local options = {
                     desc = L.fontDesc,
                     values = function()
                         local LSM = LibStub("LibSharedMedia-3.0", true)
-                        if not LSM then return {} end
+                        if not LSM then
+                            return {}
+                        end
                         local fonts = LSM:List("font")
                         local t = {}
                         for _, name in ipairs(fonts) do
@@ -1445,8 +1930,13 @@ local options = {
                         end
                         return t
                     end,
-                    get = function() return GetDB().style.font end,
-                    set = function(_, v) GetDB().style.font = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().style.font
+                    end,
+                    set = function(_, v)
+                        GetDB().style.font = v
+                        RefreshUI()
+                    end,
                     width = "full",
                 },
                 fontSize = {
@@ -1454,9 +1944,16 @@ local options = {
                     type = "range",
                     name = L.fontSize,
                     desc = L.fontSizeDesc,
-                    min = 8, max = 24, step = 1,
-                    get = function() return GetDB().style.fontSize end,
-                    set = function(_, v) GetDB().style.fontSize = v; RefreshUI() end,
+                    min = 8,
+                    max = 24,
+                    step = 1,
+                    get = function()
+                        return GetDB().style.fontSize
+                    end,
+                    set = function(_, v)
+                        GetDB().style.fontSize = v
+                        RefreshUI()
+                    end,
                     width = "full",
                 },
                 statusBarTexture = {
@@ -1466,7 +1963,9 @@ local options = {
                     desc = L.statusBarTextureDesc,
                     values = function()
                         local LSM = LibStub("LibSharedMedia-3.0", true)
-                        if not LSM then return {} end
+                        if not LSM then
+                            return {}
+                        end
                         local bars = LSM:List("statusbar")
                         local t = {}
                         for _, name in ipairs(bars) do
@@ -1474,8 +1973,13 @@ local options = {
                         end
                         return t
                     end,
-                    get = function() return GetDB().style.statusBarTexture end,
-                    set = function(_, v) GetDB().style.statusBarTexture = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().style.statusBarTexture
+                    end,
+                    set = function(_, v)
+                        GetDB().style.statusBarTexture = v
+                        RefreshUI()
+                    end,
                     width = "full",
                 },
                 borderStyle = {
@@ -1488,8 +1992,13 @@ local options = {
                         clean = "Clean",
                         none = "None",
                     },
-                    get = function() return GetDB().style.borderStyle end,
-                    set = function(_, v) GetDB().style.borderStyle = v; RefreshUI() end,
+                    get = function()
+                        return GetDB().style.borderStyle
+                    end,
+                    set = function(_, v)
+                        GetDB().style.borderStyle = v
+                        RefreshUI()
+                    end,
                     width = "full",
                 },
             },
@@ -1505,7 +2014,8 @@ local options = {
                     order = 1,
                     type = "toggle",
                     name = L["LootFrame"] or "Custom Loot Frame",
-                    desc = L["LootFrameDesc"] or "Replace the default loot window with a LunarUI-styled frame (requires reload)",
+                    desc = L["LootFrameDesc"]
+                        or "Replace the default loot window with a LunarUI-styled frame (requires reload)",
                     get = function()
                         local db = GetDB()
                         return db and db.loot and db.loot.enabled
@@ -1537,8 +2047,12 @@ local options = {
                     type = "toggle",
                     name = "Auto Repair",
                     desc = "Automatically repair equipment when visiting a vendor",
-                    get = function() return GetDB().automation.autoRepair end,
-                    set = function(_, v) GetDB().automation.autoRepair = v end,
+                    get = function()
+                        return GetDB().automation.autoRepair
+                    end,
+                    set = function(_, v)
+                        GetDB().automation.autoRepair = v
+                    end,
                     width = "full",
                 },
                 useGuildRepair = {
@@ -1546,9 +2060,15 @@ local options = {
                     type = "toggle",
                     name = "Use Guild Funds",
                     desc = "Prefer guild bank for repair costs when available",
-                    disabled = function() return not GetDB().automation.autoRepair end,
-                    get = function() return GetDB().automation.useGuildRepair end,
-                    set = function(_, v) GetDB().automation.useGuildRepair = v end,
+                    disabled = function()
+                        return not GetDB().automation.autoRepair
+                    end,
+                    get = function()
+                        return GetDB().automation.useGuildRepair
+                    end,
+                    set = function(_, v)
+                        GetDB().automation.useGuildRepair = v
+                    end,
                     width = "full",
                 },
                 spacer1 = { order = 5, type = "description", name = "\n" },
@@ -1557,8 +2077,12 @@ local options = {
                     type = "toggle",
                     name = "Auto Release Spirit (BG)",
                     desc = "Automatically release spirit when dying in battlegrounds",
-                    get = function() return GetDB().automation.autoRelease end,
-                    set = function(_, v) GetDB().automation.autoRelease = v end,
+                    get = function()
+                        return GetDB().automation.autoRelease
+                    end,
+                    set = function(_, v)
+                        GetDB().automation.autoRelease = v
+                    end,
                     width = "full",
                 },
                 spacer2 = { order = 10, type = "description", name = "\n" },
@@ -1567,8 +2091,12 @@ local options = {
                     type = "toggle",
                     name = "Achievement Screenshot",
                     desc = "Automatically take a screenshot when earning an achievement",
-                    get = function() return GetDB().automation.autoScreenshot end,
-                    set = function(_, v) GetDB().automation.autoScreenshot = v end,
+                    get = function()
+                        return GetDB().automation.autoScreenshot
+                    end,
+                    set = function(_, v)
+                        GetDB().automation.autoScreenshot = v
+                    end,
                     width = "full",
                 },
             },
@@ -1586,107 +2114,167 @@ local options = {
                     type = "toggle",
                     name = L.enable,
                     desc = L.skinsDesc,
-                    get = function() return GetDB().skins.enabled end,
-                    set = function(_, v) GetDB().skins.enabled = v end,
+                    get = function()
+                        return GetDB().skins.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.enabled = v
+                    end,
                     width = "full",
                 },
                 character = {
                     order = 2,
                     type = "toggle",
                     name = L.skinCharacter,
-                    get = function() return GetDB().skins.blizzard.character end,
-                    set = function(_, v) GetDB().skins.blizzard.character = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.character
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.character = v
+                    end,
                 },
                 spellbook = {
                     order = 3,
                     type = "toggle",
                     name = L.skinSpellbook,
-                    get = function() return GetDB().skins.blizzard.spellbook end,
-                    set = function(_, v) GetDB().skins.blizzard.spellbook = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.spellbook
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.spellbook = v
+                    end,
                 },
                 talents = {
                     order = 4,
                     type = "toggle",
                     name = L.skinTalents,
-                    get = function() return GetDB().skins.blizzard.talents end,
-                    set = function(_, v) GetDB().skins.blizzard.talents = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.talents
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.talents = v
+                    end,
                 },
                 quest = {
                     order = 5,
                     type = "toggle",
                     name = L.skinQuest,
-                    get = function() return GetDB().skins.blizzard.quest end,
-                    set = function(_, v) GetDB().skins.blizzard.quest = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.quest
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.quest = v
+                    end,
                 },
                 merchant = {
                     order = 6,
                     type = "toggle",
                     name = L.skinMerchant,
-                    get = function() return GetDB().skins.blizzard.merchant end,
-                    set = function(_, v) GetDB().skins.blizzard.merchant = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.merchant
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.merchant = v
+                    end,
                 },
                 gossip = {
                     order = 7,
                     type = "toggle",
                     name = L.skinGossip,
-                    get = function() return GetDB().skins.blizzard.gossip end,
-                    set = function(_, v) GetDB().skins.blizzard.gossip = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.gossip
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.gossip = v
+                    end,
                 },
                 worldmap = {
                     order = 8,
                     type = "toggle",
                     name = L.skinWorldMap,
-                    get = function() return GetDB().skins.blizzard.worldmap end,
-                    set = function(_, v) GetDB().skins.blizzard.worldmap = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.worldmap
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.worldmap = v
+                    end,
                 },
                 achievements = {
                     order = 9,
                     type = "toggle",
                     name = L.skinAchievements,
-                    get = function() return GetDB().skins.blizzard.achievements end,
-                    set = function(_, v) GetDB().skins.blizzard.achievements = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.achievements
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.achievements = v
+                    end,
                 },
                 mail = {
                     order = 10,
                     type = "toggle",
                     name = L.skinMail,
-                    get = function() return GetDB().skins.blizzard.mail end,
-                    set = function(_, v) GetDB().skins.blizzard.mail = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.mail
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.mail = v
+                    end,
                 },
                 collections = {
                     order = 11,
                     type = "toggle",
                     name = L.skinCollections,
-                    get = function() return GetDB().skins.blizzard.collections end,
-                    set = function(_, v) GetDB().skins.blizzard.collections = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.collections
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.collections = v
+                    end,
                 },
                 lfg = {
                     order = 12,
                     type = "toggle",
                     name = L.skinLFG,
-                    get = function() return GetDB().skins.blizzard.lfg end,
-                    set = function(_, v) GetDB().skins.blizzard.lfg = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.lfg
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.lfg = v
+                    end,
                 },
                 encounterjournal = {
                     order = 13,
                     type = "toggle",
                     name = L.skinEncounterJournal,
-                    get = function() return GetDB().skins.blizzard.encounterjournal end,
-                    set = function(_, v) GetDB().skins.blizzard.encounterjournal = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.encounterjournal
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.encounterjournal = v
+                    end,
                 },
                 auctionhouse = {
                     order = 14,
                     type = "toggle",
                     name = L.skinAuctionHouse,
-                    get = function() return GetDB().skins.blizzard.auctionhouse end,
-                    set = function(_, v) GetDB().skins.blizzard.auctionhouse = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.auctionhouse
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.auctionhouse = v
+                    end,
                 },
                 communities = {
                     order = 15,
                     type = "toggle",
                     name = L.skinCommunities,
-                    get = function() return GetDB().skins.blizzard.communities end,
-                    set = function(_, v) GetDB().skins.blizzard.communities = v end,
+                    get = function()
+                        return GetDB().skins.blizzard.communities
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.communities = v
+                    end,
                 },
             },
         },
@@ -1704,8 +2292,13 @@ for i = 1, 6 do
                 order = 1,
                 type = "toggle",
                 name = L.enable,
-                get = function() return GetDB().actionbars["bar" .. i].enabled end,
-                set = function(_, v) GetDB().actionbars["bar" .. i].enabled = v; RefreshUI() end,
+                get = function()
+                    return GetDB().actionbars["bar" .. i].enabled
+                end,
+                set = function(_, v)
+                    GetDB().actionbars["bar" .. i].enabled = v
+                    RefreshUI()
+                end,
                 width = "full",
             },
             buttons = {
@@ -1715,8 +2308,13 @@ for i = 1, 6 do
                 min = 1,
                 max = 12,
                 step = 1,
-                get = function() return GetDB().actionbars["bar" .. i].buttons end,
-                set = function(_, v) GetDB().actionbars["bar" .. i].buttons = v; RefreshUI() end,
+                get = function()
+                    return GetDB().actionbars["bar" .. i].buttons
+                end,
+                set = function(_, v)
+                    GetDB().actionbars["bar" .. i].buttons = v
+                    RefreshUI()
+                end,
             },
             buttonSize = {
                 order = 3,
@@ -1725,8 +2323,13 @@ for i = 1, 6 do
                 min = 24,
                 max = 48,
                 step = 1,
-                get = function() return GetDB().actionbars["bar" .. i].buttonSize end,
-                set = function(_, v) GetDB().actionbars["bar" .. i].buttonSize = v; RefreshUI() end,
+                get = function()
+                    return GetDB().actionbars["bar" .. i].buttonSize
+                end,
+                set = function(_, v)
+                    GetDB().actionbars["bar" .. i].buttonSize = v
+                    RefreshUI()
+                end,
             },
         },
     }
@@ -1742,8 +2345,13 @@ options.args.actionbars.args.petbar = {
             order = 1,
             type = "toggle",
             name = L.enable,
-            get = function() return GetDB().actionbars.petbar.enabled end,
-            set = function(_, v) GetDB().actionbars.petbar.enabled = v; RefreshUI() end,
+            get = function()
+                return GetDB().actionbars.petbar.enabled
+            end,
+            set = function(_, v)
+                GetDB().actionbars.petbar.enabled = v
+                RefreshUI()
+            end,
             width = "full",
         },
     },
@@ -1758,12 +2366,301 @@ options.args.actionbars.args.stancebar = {
             order = 1,
             type = "toggle",
             name = L.enable,
-            get = function() return GetDB().actionbars.stancebar.enabled end,
-            set = function(_, v) GetDB().actionbars.stancebar.enabled = v; RefreshUI() end,
+            get = function()
+                return GetDB().actionbars.stancebar.enabled
+            end,
+            set = function(_, v)
+                GetDB().actionbars.stancebar.enabled = v
+                RefreshUI()
+            end,
             width = "full",
         },
     },
 }
+
+--------------------------------------------------------------------------------
+-- Options 搜尋功能
+--------------------------------------------------------------------------------
+
+local searchIndex = nil
+local searchFrame = nil
+local searchTimer = nil
+
+--- 安全取得可能為函數的 AceConfig 欄位值
+--- AceConfig 的 name/desc 回呼期望 (info) 參數，此處無法提供，以 pcall 保護
+local function SafeGetField(field)
+    if type(field) == "function" then
+        local ok, val = pcall(field)
+        return ok and type(val) == "string" and val or ""
+    end
+    return type(field) == "string" and field or ""
+end
+
+--- 淺拷貝 table 陣列部分
+local function CopyPath(src)
+    local copy = {}
+    for i = 1, #src do
+        copy[i] = src[i]
+    end
+    return copy
+end
+
+--- 遞迴走訪 options.args 表，建構搜尋索引
+--- @param args table      AceConfig args 表
+--- @param breadcrumbs string 當前的麵包屑路徑（"General > Debug"）
+--- @param groupPath table   當前的 group key 路徑（{"general"}）
+local function BuildSearchIndex(args, breadcrumbs, groupPath)
+    local results = {}
+    if not args then
+        return results
+    end
+
+    for key, entry in pairs(args) do
+        if type(entry) == "table" and entry.type then
+            local name = SafeGetField(entry.name)
+            local desc = SafeGetField(entry.desc)
+
+            -- 去除 WoW 色碼（|cXXXXXXXX ... |r）
+            local cleanName = name:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+            local cleanDesc = desc:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+
+            if entry.type == "group" then
+                local newCrumbs = breadcrumbs ~= "" and (breadcrumbs .. " > " .. cleanName) or cleanName
+                local newPath = CopyPath(groupPath)
+                newPath[#newPath + 1] = key
+
+                results[#results + 1] = {
+                    name = cleanName,
+                    desc = cleanDesc,
+                    breadcrumbs = newCrumbs,
+                    path = newPath,
+                    isGroup = true,
+                }
+
+                -- 遞迴進入子 args
+                if type(entry.args) == "table" then
+                    local subResults = BuildSearchIndex(entry.args, newCrumbs, newPath)
+                    for _, r in ipairs(subResults) do
+                        results[#results + 1] = r
+                    end
+                end
+            elseif entry.type ~= "header" and entry.type ~= "description" then
+                -- 葉節點設定項（toggle, range, select, execute 等）
+                local crumb = breadcrumbs ~= "" and (breadcrumbs .. " > " .. cleanName) or cleanName
+                results[#results + 1] = {
+                    name = cleanName,
+                    desc = cleanDesc,
+                    breadcrumbs = crumb,
+                    path = CopyPath(groupPath), -- 導航到父 group（淺拷貝防止共用參照）
+                    isGroup = false,
+                }
+            end
+        end
+    end
+
+    return results
+end
+
+--- 重建搜尋索引（每次開啟面板時呼叫，確保索引反映最新狀態）
+local function RebuildSearchIndex()
+    searchIndex = BuildSearchIndex(options.args, "", {})
+end
+
+--- 模糊匹配過濾搜尋結果
+--- @param query string 使用者輸入的搜尋文字
+--- @return table 過濾後的搜尋結果
+local function FilterSearchResults(query)
+    if not searchIndex then
+        RebuildSearchIndex()
+    end
+
+    if not query or query == "" then
+        return {}
+    end
+
+    query = query:lower()
+    local matches = {}
+
+    for _, entry in ipairs(searchIndex) do
+        local nameMatch = entry.name:lower():find(query, 1, true)
+        local descMatch = entry.desc:lower():find(query, 1, true)
+        local crumbMatch = entry.breadcrumbs:lower():find(query, 1, true)
+
+        if nameMatch or descMatch or crumbMatch then
+            -- 優先順序：名稱匹配 > 描述匹配 > 麵包屑匹配
+            local priority = nameMatch and 1 or (descMatch and 2 or 3)
+            matches[#matches + 1] = {
+                entry = entry,
+                priority = priority,
+            }
+        end
+    end
+
+    -- 排序：priority 升序，同 priority 按名稱字母序
+    table.sort(matches, function(a, b)
+        if a.priority ~= b.priority then
+            return a.priority < b.priority
+        end
+        return a.entry.name < b.entry.name
+    end)
+
+    -- 限制最多 20 筆結果
+    local limited = {}
+    for i = 1, min(#matches, 20) do
+        limited[i] = matches[i].entry
+    end
+
+    return limited
+end
+
+--- 建立搜尋 UI（EditBox + 結果清單疊層）
+--- @param dialogFrame Frame AceConfigDialog 的實際框架
+local function CreateSearchUI(dialogFrame)
+    -- 每次開啟時重建索引，確保反映最新的 options 狀態
+    RebuildSearchIndex()
+
+    -- 若搜尋框已存在且父框架相同，直接顯示
+    if searchFrame then
+        if searchFrame:GetParent() == dialogFrame then
+            searchFrame:Show()
+            return
+        end
+        -- 父框架已變更（AceConfigDialog 重建），重新建立
+        searchFrame = nil
+    end
+
+    -- 搜尋框
+    local searchBox = CreateFrame("EditBox", "LunarUIOptionsSearchBox", dialogFrame, "InputBoxTemplate")
+    searchBox:SetSize(200, 20)
+    searchBox:SetPoint("TOPRIGHT", dialogFrame, "TOPRIGHT", -40, -8)
+    searchBox:SetAutoFocus(false)
+    searchBox:SetFontObject(GameFontNormalSmall)
+
+    -- 占位文字
+    local placeholder = searchBox:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+    placeholder:SetPoint("LEFT", searchBox, "LEFT", 6, 0)
+    placeholder:SetText("Search settings...")
+    searchBox._placeholder = placeholder
+
+    -- 結果下拉面板
+    local resultsPanel = CreateFrame("Frame", nil, dialogFrame, "BackdropTemplate")
+    resultsPanel:SetPoint("TOPRIGHT", searchBox, "BOTTOMRIGHT", 0, -2)
+    resultsPanel:SetSize(340, 0)
+    resultsPanel:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    resultsPanel:SetBackdropColor(0.08, 0.08, 0.10, 0.98)
+    resultsPanel:SetBackdropBorderColor(0.20, 0.16, 0.30, 1)
+    resultsPanel:SetFrameStrata("DIALOG")
+    resultsPanel:Hide()
+
+    local resultButtons = {}
+
+    local function UpdateResults(query)
+        local results = FilterSearchResults(query)
+
+        -- 隱藏所有既有按鈕
+        for _, btn in ipairs(resultButtons) do
+            btn:Hide()
+        end
+
+        if #results == 0 then
+            resultsPanel:Hide()
+            return
+        end
+
+        local buttonHeight = 24
+        local maxResults = min(#results, 15)
+
+        for i = 1, maxResults do
+            local result = results[i]
+            local btn = resultButtons[i]
+
+            if not btn then
+                btn = CreateFrame("Button", nil, resultsPanel)
+                btn:SetHeight(buttonHeight)
+                btn:SetPoint("TOPLEFT", resultsPanel, "TOPLEFT", 2, -(i - 1) * buttonHeight - 2)
+                btn:SetPoint("TOPRIGHT", resultsPanel, "TOPRIGHT", -2, -(i - 1) * buttonHeight - 2)
+
+                btn.text = btn:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+                btn.text:SetPoint("LEFT", 6, 0)
+                btn.text:SetPoint("RIGHT", -6, 0)
+                btn.text:SetJustifyH("LEFT")
+
+                local highlight = btn:CreateTexture(nil, "HIGHLIGHT")
+                highlight:SetAllPoints()
+                highlight:SetTexture("Interface\\Buttons\\WHITE8x8")
+                highlight:SetVertexColor(0.53, 0.51, 1.0, 0.15)
+
+                resultButtons[i] = btn
+            end
+
+            -- 顯示文字：group 用紫色，leaf 用白色
+            local displayText = result.breadcrumbs
+            if result.isGroup then
+                displayText = "|cff8882ff" .. displayText .. "|r"
+            end
+            btn.text:SetText(displayText)
+
+            -- 點擊導航到對應面板
+            btn:SetScript("OnClick", function()
+                if AceConfigDialog and #result.path > 0 then
+                    AceConfigDialog:SelectGroup("LunarUI", unpack(result.path))
+                end
+                searchBox:SetText("")
+                searchBox:ClearFocus()
+                resultsPanel:Hide()
+            end)
+
+            btn:Show()
+        end
+
+        resultsPanel:SetHeight(maxResults * buttonHeight + 4)
+        resultsPanel:Show()
+    end
+
+    -- EditBox 事件（節流 0.15 秒，減少 GC 壓力）
+    searchBox:SetScript("OnTextChanged", function(self)
+        local text = self:GetText()
+        if text == "" then
+            placeholder:Show()
+            resultsPanel:Hide()
+            if searchTimer then
+                searchTimer:Cancel()
+                searchTimer = nil
+            end
+        else
+            placeholder:Hide()
+            if searchTimer then
+                searchTimer:Cancel()
+            end
+            searchTimer = C_Timer.NewTimer(0.15, function()
+                searchTimer = nil
+                UpdateResults(text)
+            end)
+        end
+    end)
+
+    searchBox:SetScript("OnEscapePressed", function(self)
+        self:SetText("")
+        self:ClearFocus()
+        resultsPanel:Hide()
+    end)
+
+    searchBox:SetScript("OnEditFocusGained", function()
+        placeholder:Hide()
+    end)
+
+    searchBox:SetScript("OnEditFocusLost", function(self)
+        if self:GetText() == "" then
+            placeholder:Show()
+        end
+    end)
+
+    searchFrame = searchBox
+end
 
 --------------------------------------------------------------------------------
 -- Profile Options
@@ -1846,10 +2743,14 @@ local function StyleConfigFrame()
     -- 取得 AceConfigDialog 開啟的框架
     local openFrames = AceConfigDialog and AceConfigDialog.OpenFrames
     local aceFrame = openFrames and openFrames["LunarUI"]
-    if not aceFrame then return end
+    if not aceFrame then
+        return
+    end
 
     local dialogFrame = aceFrame.frame
-    if not dialogFrame or dialogFrame._lunarStyled then return end
+    if not dialogFrame or dialogFrame._lunarStyled then
+        return
+    end
     dialogFrame._lunarStyled = true
 
     -- 替換 backdrop 為 LunarUI 風格
@@ -1883,6 +2784,9 @@ local function StyleConfigFrame()
         aceFrame.statustext:SetFont(STANDARD_TEXT_FONT, 10, "")
         aceFrame.statustext:SetTextColor(0.5, 0.5, 0.5)
     end
+
+    -- 搜尋 UI
+    CreateSearchUI(dialogFrame)
 end
 
 local function OpenConfig()
