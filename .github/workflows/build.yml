@@ -68,7 +68,7 @@ jobs:
           busted --coverage spec/
           luacov
           echo "=== Coverage Summary ==="
-          tail -20 luacov.report.out || true
+          tail -30 luacov.report.out || true
 
       - name: Cache StyLua
         id: cache-stylua
