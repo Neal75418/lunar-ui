@@ -519,8 +519,9 @@ local function Initialize()
     end
 end
 
--- 暴露 Initialize 供 Options toggle 即時切換
+-- 暴露函數供 Options toggle 即時切換與測試使用
 LunarUI.InitCooldownTracker = Initialize
+LunarUI.FormatCooldown = FormatCooldown
 
 --------------------------------------------------------------------------------
 -- 事件處理

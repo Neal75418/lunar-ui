@@ -591,8 +591,9 @@ local function Initialize()
     UpdateAuras()
 end
 
--- 暴露 Initialize 供 Options toggle 即時切換
+-- 暴露函數供 Options toggle 即時切換與測試使用
 LunarUI.InitAuraFrames = Initialize
+LunarUI.GetTimerBarColor = GetTimerBarColor
 
 --------------------------------------------------------------------------------
 -- 事件處理

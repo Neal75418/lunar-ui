@@ -415,6 +415,7 @@ LunarUI.InitFCT = function()
 end
 
 LunarUI.CleanupFCT = CleanupFCT
+LunarUI.Sanitize = Sanitize
 
 LunarUI:RegisterModule("FloatingCombatText", {
     onEnable = function()

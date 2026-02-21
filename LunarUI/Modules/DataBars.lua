@@ -541,6 +541,7 @@ end
 
 -- Export
 LunarUI.InitializeDataBars = InitializeDataBars
+LunarUI.FormatBarText = FormatBarText
 
 LunarUI:RegisterModule("DataBars", {
     onEnable = InitializeDataBars,
