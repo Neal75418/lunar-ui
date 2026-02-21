@@ -291,9 +291,70 @@ local function DeserializeString(str)
     return result, err
 end
 
+--------------------------------------------------------------------------------
+-- 匯入合併 / 裁剪輔助（從 ImportSettings 提取，供獨立測試）
+--------------------------------------------------------------------------------
+
+-- Lua table 無法儲存 nil value，因此 defaults 中 `key = nil` 的 key 在 template 裡不存在。
+-- 這裡補充這些合法的 nil-default key，確保匯入時不會被靜默丟棄。
+local nilDefaultKeys = {
+    bags = { bagPosition = true, bankPosition = true },
+    actionbars = {
+        bar1 = { fadeEnabled = true },
+        bar2 = { fadeEnabled = true },
+        bar3 = { fadeEnabled = true },
+        bar4 = { fadeEnabled = true },
+        bar5 = { fadeEnabled = true },
+        bar6 = { fadeEnabled = true },
+        petbar = { fadeEnabled = true },
+        stancebar = { fadeEnabled = true },
+    },
+}
+
+local function MergeTable(target, source, template, extra)
+    if not template then
+        return
+    end
+    for k, v in pairs(source) do
+        local tval = template[k]
+        local extraVal = extra and extra[k]
+        if tval ~= nil or extraVal then
+            if type(v) == "table" and type(target[k]) == "table" and type(tval) == "table" then
+                MergeTable(target[k], v, tval, type(extraVal) == "table" and extraVal or nil)
+            elseif tval == nil or type(v) == type(tval) then
+                -- tval == nil: extra key（無 template 型別資訊，允許任意型別）
+                -- type(v) == type(tval): 確保匯入值的型別與 defaults 一致，防止型別污染
+                target[k] = v
+            end
+        end
+    end
+end
+
+-- 裁剪關鍵數值至安全範圍（防止惡意或損壞的匯入字串導致 UI 異常）
+local function ClampImportedValues(profile)
+    if profile.style and type(profile.style.fontSize) == "number" then
+        profile.style.fontSize = math.max(8, math.min(24, profile.style.fontSize))
+    end
+    if profile.hud and type(profile.hud.scale) == "number" then
+        profile.hud.scale = math.max(0.5, math.min(2.0, profile.hud.scale))
+    end
+    -- 驗證每個動作條的 buttonSize（範圍與 Options 面板一致）
+    if profile.actionbars then
+        for i = 1, 6 do
+            local barKey = "bar" .. i
+            if profile.actionbars[barKey] and type(profile.actionbars[barKey].buttonSize) == "number" then
+                profile.actionbars[barKey].buttonSize =
+                    math.max(24, math.min(48, profile.actionbars[barKey].buttonSize))
+            end
+        end
+    end
+end
+
 -- 曝露供單元測試使用
 LunarUI.SerializeValue = SerializeValue
 LunarUI.DeserializeString = DeserializeString
+LunarUI.MergeTable = MergeTable
+LunarUI.ClampImportedValues = ClampImportedValues
 
 --------------------------------------------------------------------------------
 -- 匯出/匯入函數
@@ -376,61 +437,6 @@ function LunarUI:ImportSettings(importString)
 
     -- 合併匯入的設定檔與目前設定檔（基於 defaults 白名單，忽略未知 key）
     local defaultProfile = Engine._defaults and Engine._defaults.profile
-
-    -- Lua table 無法儲存 nil value，因此 defaults 中 `key = nil` 的 key 在 template 裡不存在。
-    -- 這裡補充這些合法的 nil-default key，確保匯入時不會被靜默丟棄。
-    local nilDefaultKeys = {
-        bags = { bagPosition = true, bankPosition = true },
-        actionbars = {
-            bar1 = { fadeEnabled = true },
-            bar2 = { fadeEnabled = true },
-            bar3 = { fadeEnabled = true },
-            bar4 = { fadeEnabled = true },
-            bar5 = { fadeEnabled = true },
-            bar6 = { fadeEnabled = true },
-            petbar = { fadeEnabled = true },
-            stancebar = { fadeEnabled = true },
-        },
-    }
-
-    local function MergeTable(target, source, template, extra)
-        if not template then
-            return
-        end
-        for k, v in pairs(source) do
-            local tval = template[k]
-            local extraVal = extra and extra[k]
-            if tval ~= nil or extraVal then
-                if type(v) == "table" and type(target[k]) == "table" and type(tval) == "table" then
-                    MergeTable(target[k], v, tval, type(extraVal) == "table" and extraVal or nil)
-                elseif tval == nil or type(v) == type(tval) then
-                    -- tval == nil: extra key（無 template 型別資訊，允許任意型別）
-                    -- type(v) == type(tval): 確保匯入值的型別與 defaults 一致，防止型別污染
-                    target[k] = v
-                end
-            end
-        end
-    end
-
-    -- 裁剪關鍵數值至安全範圍（防止惡意或損壞的匯入字串導致 UI 異常）
-    local function ClampImportedValues(profile)
-        if profile.style and type(profile.style.fontSize) == "number" then
-            profile.style.fontSize = math.max(8, math.min(24, profile.style.fontSize))
-        end
-        if profile.hud and type(profile.hud.scale) == "number" then
-            profile.hud.scale = math.max(0.5, math.min(2.0, profile.hud.scale))
-        end
-        -- 驗證每個動作條的 buttonSize（範圍與 Options 面板一致）
-        if profile.actionbars then
-            for i = 1, 6 do
-                local barKey = "bar" .. i
-                if profile.actionbars[barKey] and type(profile.actionbars[barKey].buttonSize) == "number" then
-                    profile.actionbars[barKey].buttonSize =
-                        math.max(24, math.min(48, profile.actionbars[barKey].buttonSize))
-                end
-            end
-        end
-    end
 
     if data.profile then
         ClampImportedValues(data.profile)
