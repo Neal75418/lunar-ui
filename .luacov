@@ -1,0 +1,6 @@
+return {
+    exclude = {
+        "LunarUI/Libs/",
+        "spec/",
+    },
+}

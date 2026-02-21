@@ -45,23 +45,51 @@ jobs:
           done
           echo "All Lua files have valid syntax!"
 
+      - name: Cache luarocks packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.luarocks
+            /usr/local/lib/luarocks
+            /usr/local/share/lua
+          key: luarocks-${{ runner.os }}-${{ hashFiles('.busted', '.luacheckrc') }}
+          restore-keys: luarocks-${{ runner.os }}-
+
       - name: Lint with luacheck
         run: |
           sudo apt-get install -y luarocks
           sudo luarocks install luacheck
           luacheck .
 
-      - name: Run unit tests
+      - name: Run unit tests with coverage
         run: |
           sudo luarocks install busted
-          busted spec/
+          sudo luarocks install luacov
+          busted --coverage spec/
+          luacov
+          echo "=== Coverage Summary ==="
+          tail -20 luacov.report.out || true
+
+      - name: Cache StyLua
+        id: cache-stylua
+        uses: actions/cache@v4
+        with:
+          path: ./stylua
+          key: stylua-${{ runner.os }}-latest
 
       - name: Check formatting with StyLua
         run: |
-          curl -sSL https://github.com/JohnnyMorganz/StyLua/releases/latest/download/stylua-linux-x86_64.zip -o stylua.zip
-          unzip -q stylua.zip
-          chmod +x stylua
+          if [ ! -f ./stylua ]; then
+            curl -sSL https://github.com/JohnnyMorganz/StyLua/releases/latest/download/stylua-linux-x86_64.zip -o stylua.zip
+            unzip -q stylua.zip
+            chmod +x stylua
+          fi
           ./stylua --check --glob '**/*.lua' --glob '!LunarUI/Libs/**' .
+
+      - name: Lint locale key parity
+        run: |
+          chmod +x scripts/check-locale-keys.sh
+          ./scripts/check-locale-keys.sh
 
       - name: Package addon (dry run)
         uses: BigWigsMods/packager@v2
