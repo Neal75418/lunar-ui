@@ -2267,6 +2267,11 @@ LunarUI.CloseBags = CloseBags
 LunarUI.SellJunk = SellJunk
 LunarUI.OpenBank = OpenBank
 LunarUI.CloseBank = CloseBank
+LunarUI.BagsGetItemLevel = GetItemLevel
+LunarUI.IsEquipment = IsEquipment
+LunarUI.IsItemUpgrade = IsItemUpgrade
+LunarUI.GetBagTypeColor = GetBagTypeColor
+LunarUI.GetBankSlotsPerRow = GetBankSlotsPerRow
 
 LunarUI:RegisterModule("Bags", {
     onEnable = InitializeBags,
