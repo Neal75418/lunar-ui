@@ -1,4 +1,7 @@
 return {
+    include = {
+        "LunarUI/",
+    },
     exclude = {
         "LunarUI/Libs/",
         "spec/",
