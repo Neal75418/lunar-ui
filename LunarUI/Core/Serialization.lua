@@ -59,7 +59,7 @@ local function SerializeValue(val, depth, visited)
             table.insert(parts, keyStr .. SerializeValue(v, depth + 1, visited))
         end
 
-        visited[val] = nil  -- 允許同一 table 出現在不同路徑
+        visited[val] = nil -- 允許同一 table 出現在不同路徑
         return "{" .. table.concat(parts, ",") .. "}"
     else
         return "nil"
@@ -92,7 +92,7 @@ local function DeserializeStringInner(str)
             return nil, "預期字串"
         end
         pos = pos + 1
-        local _startPos = pos  -- 用於除錯
+        local _startPos = pos -- 用於除錯
         local result = ""
 
         while pos <= len do
@@ -100,13 +100,20 @@ local function DeserializeStringInner(str)
             if c == "\\" and pos < len then
                 -- 處理跳脫序列
                 local next = str:sub(pos + 1, pos + 1)
-                if next == "n" then result = result .. "\n"
-                elseif next == "t" then result = result .. "\t"
-                elseif next == "r" then result = result .. "\r"
-                elseif next == "\\" then result = result .. "\\"
-                elseif next == '"' then result = result .. '"'
-                elseif next == "'" then result = result .. "'"
-                else result = result .. next
+                if next == "n" then
+                    result = result .. "\n"
+                elseif next == "t" then
+                    result = result .. "\t"
+                elseif next == "r" then
+                    result = result .. "\r"
+                elseif next == "\\" then
+                    result = result .. "\\"
+                elseif next == '"' then
+                    result = result .. '"'
+                elseif next == "'" then
+                    result = result .. "'"
+                else
+                    result = result .. next
                 end
                 pos = pos + 2
             elseif c == quote then
@@ -170,7 +177,9 @@ local function DeserializeStringInner(str)
                 pos = pos + 1
                 skipWhitespace()
                 local keyVal, err = parseValue()
-                if err then return nil, err end
+                if err then
+                    return nil, err
+                end
                 key = keyVal
                 skipWhitespace()
                 if str:sub(pos, pos) ~= "]" then
@@ -201,7 +210,9 @@ local function DeserializeStringInner(str)
             -- 解析值
             skipWhitespace()
             local value, err = parseValue()
-            if err then return nil, err end
+            if err then
+                return nil, err
+            end
             result[key] = value
 
             skipWhitespace()
@@ -280,6 +291,10 @@ local function DeserializeString(str)
     return result, err
 end
 
+-- 曝露供單元測試使用
+LunarUI.SerializeValue = SerializeValue
+LunarUI.DeserializeString = DeserializeString
+
 --------------------------------------------------------------------------------
 -- 匯出/匯入函數
 --------------------------------------------------------------------------------
@@ -296,7 +311,7 @@ function LunarUI:ExportSettings()
     -- 建立設定檔副本（排除函數和 userdata）
     local exportData = {
         version = self.version,
-        profile = {}
+        profile = {},
     }
 
     -- 複製所有設定檔設定
@@ -379,7 +394,9 @@ function LunarUI:ImportSettings(importString)
     }
 
     local function MergeTable(target, source, template, extra)
-        if not template then return end
+        if not template then
+            return
+        end
         for k, v in pairs(source) do
             local tval = template[k]
             local extraVal = extra and extra[k]
@@ -408,7 +425,8 @@ function LunarUI:ImportSettings(importString)
             for i = 1, 6 do
                 local barKey = "bar" .. i
                 if profile.actionbars[barKey] and type(profile.actionbars[barKey].buttonSize) == "number" then
-                    profile.actionbars[barKey].buttonSize = math.max(24, math.min(48, profile.actionbars[barKey].buttonSize))
+                    profile.actionbars[barKey].buttonSize =
+                        math.max(24, math.min(48, profile.actionbars[barKey].buttonSize))
                 end
             end
         end
@@ -422,7 +440,8 @@ function LunarUI:ImportSettings(importString)
     -- 觸發設定檔變更以重新整理 UI
     self:OnProfileChanged()
 
-    return true, (L["SettingsImported"] or "設定匯入成功") .. "（版本：" .. (data.version or "未知") .. "）"
+    return true,
+        (L["SettingsImported"] or "設定匯入成功") .. "（版本：" .. (data.version or "未知") .. "）"
 end
 
 --------------------------------------------------------------------------------
@@ -466,7 +485,9 @@ function LunarUI:ShowExportFrame()
         closeBtn:SetNormalFontObject(GameFontNormal)
         closeBtn:SetText("×")
         LunarUI.SetFont(closeBtn:GetFontString(), 16, "OUTLINE")
-        closeBtn:SetScript("OnClick", function() frame:Hide() end)
+        closeBtn:SetScript("OnClick", function()
+            frame:Hide()
+        end)
 
         -- 捲動框架
         local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
@@ -528,7 +549,9 @@ function LunarUI:ShowImportFrame()
         closeBtn:SetNormalFontObject(GameFontNormal)
         closeBtn:SetText("×")
         LunarUI.SetFont(closeBtn:GetFontString(), 16, "OUTLINE")
-        closeBtn:SetScript("OnClick", function() frame:Hide() end)
+        closeBtn:SetScript("OnClick", function()
+            frame:Hide()
+        end)
 
         -- 捲動框架
         local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")

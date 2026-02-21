@@ -51,6 +51,18 @@ jobs:
           sudo luarocks install luacheck
           luacheck .
 
+      - name: Run unit tests
+        run: |
+          sudo luarocks install busted
+          busted spec/
+
+      - name: Check formatting with StyLua
+        run: |
+          curl -sSL https://github.com/JohnnyMorganz/StyLua/releases/latest/download/stylua-linux-x86_64.zip -o stylua.zip
+          unzip -q stylua.zip
+          chmod +x stylua
+          ./stylua --check --glob '**/*.lua' --glob '!LunarUI/Libs/**' .
+
       - name: Package addon (dry run)
         uses: BigWigsMods/packager@v2
         continue-on-error: true  # Don't fail build if packaging has issues (externals may be unavailable)

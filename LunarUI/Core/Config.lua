@@ -41,7 +41,9 @@ function LunarUI:InitDB()
 
     -- 專精切換自動設定檔
     self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED", function()
-        if not self.db or not self.db.profile or not self.db.char then return end
+        if not self.db or not self.db.profile or not self.db.char then
+            return
+        end
 
         local specIndex = GetSpecialization and GetSpecialization()
         if specIndex and self.db.char.specProfiles then
@@ -80,7 +82,9 @@ end
         if not db or not db.enabled then return end
 ]]
 function LunarUI:GetModuleConfig(moduleName)
-    if not self.db or not self.db.profile then return nil end
+    if not self.db or not self.db.profile then
+        return nil
+    end
     return self.db.profile[moduleName]
 end
 
@@ -94,13 +98,19 @@ end
         local enabled = LunarUI:GetConfigValue("unitframes", "player", "enabled")
 ]]
 function LunarUI:GetConfigValue(...)
-    if not self.db or not self.db.profile then return nil end
+    if not self.db or not self.db.profile then
+        return nil
+    end
     local config = self.db.profile
     for i = 1, select("#", ...) do
         local key = select(i, ...)
-        if type(config) ~= "table" then return nil end
+        if type(config) ~= "table" then
+            return nil
+        end
         config = config[key]
-        if config == nil then return nil end
+        if config == nil then
+            return nil
+        end
     end
     return config
 end
@@ -113,67 +123,86 @@ end
 -- path 為 "." 分隔的設定路徑，type 為 "number"/"string"/"boolean"
 local VALIDATION_RULES = {
     -- HUD
-    { path = "hud.scale",               type = "number", min = 0.5,  max = 2.0 },
-    { path = "hud.auraIconSize",        type = "number", min = 10,   max = 80 },
-    { path = "hud.cdIconSize",          type = "number", min = 10,   max = 80 },
-    { path = "hud.fctFontSize",         type = "number", min = 8,    max = 48 },
-    { path = "hud.fctCritScale",        type = "number", min = 1.0,  max = 3.0 },
-    { path = "hud.fctDuration",         type = "number", min = 0.5,  max = 5.0 },
+    { path = "hud.scale", type = "number", min = 0.5, max = 2.0 },
+    { path = "hud.auraIconSize", type = "number", min = 10, max = 80 },
+    { path = "hud.cdIconSize", type = "number", min = 10, max = 80 },
+    { path = "hud.fctFontSize", type = "number", min = 8, max = 48 },
+    { path = "hud.fctCritScale", type = "number", min = 1.0, max = 3.0 },
+    { path = "hud.fctDuration", type = "number", min = 0.5, max = 5.0 },
     -- 動作條
-    { path = "actionbars.alpha",        type = "number", min = 0,    max = 1 },
-    { path = "actionbars.fadeAlpha",    type = "number", min = 0,    max = 1 },
-    { path = "actionbars.fadeDelay",    type = "number", min = 0,    max = 30 },
-    { path = "actionbars.fadeDuration", type = "number", min = 0,    max = 5 },
-    { path = "actionbars.buttonSize",   type = "number", min = 16,   max = 64 },
-    { path = "actionbars.buttonSpacing",type = "number", min = 0,    max = 20 },
+    { path = "actionbars.alpha", type = "number", min = 0, max = 1 },
+    { path = "actionbars.fadeAlpha", type = "number", min = 0, max = 1 },
+    { path = "actionbars.fadeDelay", type = "number", min = 0, max = 30 },
+    { path = "actionbars.fadeDuration", type = "number", min = 0, max = 5 },
+    { path = "actionbars.buttonSize", type = "number", min = 16, max = 64 },
+    { path = "actionbars.buttonSpacing", type = "number", min = 0, max = 20 },
     -- 小地圖
-    { path = "minimap.size",            type = "number", min = 100,  max = 400 },
-    { path = "minimap.fadeAlpha",       type = "number", min = 0,    max = 1 },
-    { path = "minimap.pinScale",        type = "number", min = 0.5,  max = 2.0 },
-    { path = "minimap.resetZoomTimer",  type = "number", min = 0,    max = 15 },
-    { path = "minimap.zoneFontSize",    type = "number", min = 6,    max = 24 },
-    { path = "minimap.coordFontSize",   type = "number", min = 6,    max = 24 },
-    { path = "minimap.clockFormat",     type = "string", enum = { ["12h"] = true, ["24h"] = true } },
+    { path = "minimap.size", type = "number", min = 100, max = 400 },
+    { path = "minimap.fadeAlpha", type = "number", min = 0, max = 1 },
+    { path = "minimap.pinScale", type = "number", min = 0.5, max = 2.0 },
+    { path = "minimap.resetZoomTimer", type = "number", min = 0, max = 15 },
+    { path = "minimap.zoneFontSize", type = "number", min = 6, max = 24 },
+    { path = "minimap.coordFontSize", type = "number", min = 6, max = 24 },
+    { path = "minimap.clockFormat", type = "string", enum = { ["12h"] = true, ["24h"] = true } },
     { path = "minimap.zoneTextDisplay", type = "string", enum = { SHOW = true, MOUSEOVER = true, HIDE = true } },
-    { path = "minimap.zoneFontOutline", type = "string", enum = { NONE = true, OUTLINE = true, THICKOUTLINE = true, MONOCHROMEOUTLINE = true } },
-    { path = "minimap.coordFontOutline",type = "string", enum = { NONE = true, OUTLINE = true, THICKOUTLINE = true, MONOCHROMEOUTLINE = true } },
+    {
+        path = "minimap.zoneFontOutline",
+        type = "string",
+        enum = { NONE = true, OUTLINE = true, THICKOUTLINE = true, MONOCHROMEOUTLINE = true },
+    },
+    {
+        path = "minimap.coordFontOutline",
+        type = "string",
+        enum = { NONE = true, OUTLINE = true, THICKOUTLINE = true, MONOCHROMEOUTLINE = true },
+    },
     -- 背包
-    { path = "bags.slotsPerRow",        type = "number", min = 6,    max = 24 },
-    { path = "bags.slotSize",           type = "number", min = 20,   max = 60 },
-    { path = "bags.slotSpacing",        type = "number", min = 0,    max = 10 },
-    { path = "bags.frameAlpha",         type = "number", min = 0,    max = 1 },
-    { path = "bags.ilvlThreshold",      type = "number", min = 0,    max = 1000 },
+    { path = "bags.slotsPerRow", type = "number", min = 6, max = 24 },
+    { path = "bags.slotSize", type = "number", min = 20, max = 60 },
+    { path = "bags.slotSpacing", type = "number", min = 0, max = 10 },
+    { path = "bags.frameAlpha", type = "number", min = 0, max = 1 },
+    { path = "bags.ilvlThreshold", type = "number", min = 0, max = 1000 },
     -- 聊天
-    { path = "chat.width",              type = "number", min = 100,  max = 1000 },
-    { path = "chat.height",             type = "number", min = 50,   max = 600 },
-    { path = "chat.fadeTime",           type = "number", min = 0,    max = 600 },
+    { path = "chat.width", type = "number", min = 100, max = 1000 },
+    { path = "chat.height", type = "number", min = 50, max = 600 },
+    { path = "chat.fadeTime", type = "number", min = 0, max = 600 },
     -- 視覺風格
-    { path = "style.theme",             type = "string", enum = { lunar = true, parchment = true, minimal = true } },
-    { path = "style.fontSize",          type = "number", min = 6,    max = 32 },
-    { path = "style.borderStyle",       type = "string", enum = { ink = true, clean = true, none = true } },
+    { path = "style.theme", type = "string", enum = { lunar = true, parchment = true, minimal = true } },
+    { path = "style.fontSize", type = "number", min = 6, max = 32 },
+    { path = "style.borderStyle", type = "string", enum = { ink = true, clean = true, none = true } },
     -- 名牌
     { path = "nameplates.healthTextFormat", type = "string", enum = { percent = true, current = true, both = true } },
     -- 光環過濾
-    { path = "auraFilters.sortMethod",  type = "string", enum = { time = true, duration = true, name = true, player = true } },
+    {
+        path = "auraFilters.sortMethod",
+        type = "string",
+        enum = { time = true, duration = true, name = true, player = true },
+    },
     -- 框架移動器
-    { path = "frameMover.gridSize",     type = "number", min = 1,    max = 50 },
-    { path = "frameMover.moverAlpha",   type = "number", min = 0,    max = 1 },
+    { path = "frameMover.gridSize", type = "number", min = 1, max = 50 },
+    { path = "frameMover.moverAlpha", type = "number", min = 0, max = 1 },
 }
 
--- 從 "." 分隔路徑取得設定表中的值及其父表
+-- 從 "." 分隔路徑取得設定表中的值及其父表（亦曝露供單元測試使用）
 local function resolveDBPath(db, path)
     local parts = { strsplit(".", path) }
     local parent = db
     for i = 1, #parts - 1 do
         parent = parent[parts[i]]
-        if type(parent) ~= "table" then return nil, nil, nil end
+        if type(parent) ~= "table" then
+            return nil, nil, nil
+        end
     end
     local key = parts[#parts]
     return parent, key, parent[key]
 end
 
+-- 曝露供單元測試使用
+LunarUI.resolveDBPath = resolveDBPath
+
 function LunarUI:ValidateDB()
-    if not self.db or not self.db.profile then return end
+    if not self.db or not self.db.profile then
+        return
+    end
 
     local profile = self.db.profile
     local defaults = Engine._defaults and Engine._defaults.profile
@@ -210,10 +239,14 @@ function LunarUI:ValidateDB()
                 if defaultValue ~= nil then
                     parent[key] = defaultValue
                     fixCount = fixCount + 1
-                    self:Print(string.format(
-                        "|cffff8800[Config]|r %s: invalid value %s, reset to %s",
-                        rule.path, tostring(value), tostring(defaultValue)
-                    ))
+                    self:Print(
+                        string.format(
+                            "|cffff8800[Config]|r %s: invalid value %s, reset to %s",
+                            rule.path,
+                            tostring(value),
+                            tostring(defaultValue)
+                        )
+                    )
                 end
             end
         end
