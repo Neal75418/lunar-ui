@@ -204,7 +204,8 @@ L["ItemCountDesc"] = "Show item count (bags/bank) in tooltips"
 
 -- UnitFrame enhancements
 L["ClassPower"] = "Class Power"
-L["ClassPowerDesc"] = "Show class resource bar above player frame (combo points, holy power, runes, etc.) (requires reload)"
+L["ClassPowerDesc"] =
+    "Show class resource bar above player frame (combo points, holy power, runes, etc.) (requires reload)"
 L["HealPrediction"] = "Heal Prediction"
 L["HealPredictionDesc"] = "Show incoming heal prediction overlay on health bars (requires reload)"
 
@@ -238,10 +239,13 @@ L["InstallReloadBtn"] = "Reload"
 L["InstallReloadLater"] = "Later"
 L["InstallTitle"] = "|cff8882ffLunar|r|cffffffffUI|r Setup"
 L["InstallStep"] = "Step %d / %d"
-L["InstallWelcomeBody"] = "Welcome to |cff8882ffLunar|r|cffffffffUI|r!\n\nThis wizard will help you configure the essential settings. You can always change these later via |cff8882ff/lunar config|r.\n"
+L["InstallWelcomeBody"] =
+    "Welcome to |cff8882ffLunar|r|cffffffffUI|r!\n\nThis wizard will help you configure the essential settings. You can always change these later via |cff8882ff/lunar config|r.\n"
 L["InstallUIScale"] = "UI Scale"
-L["InstallUIScaleTip"] = "|cff888888Tip: Higher values = bigger UI elements. The recommended value is 0.75 for 1920x1080.|r"
-L["InstallLayoutTitle"] = "Choose your primary role. This adjusts the size and layout of raid/party frames to match your playstyle.\n"
+L["InstallUIScaleTip"] =
+    "|cff888888Tip: Higher values = bigger UI elements. The recommended value is 0.75 for 1920x1080.|r"
+L["InstallLayoutTitle"] =
+    "Choose your primary role. This adjusts the size and layout of raid/party frames to match your playstyle.\n"
 L["InstallLayoutDPS"] = "DPS"
 L["InstallLayoutDPSDesc"] = "Compact raid frames, large player/target, debuff-focused"
 L["InstallLayoutTank"] = "Tank"
@@ -250,13 +254,15 @@ L["InstallLayoutHealer"] = "Healer"
 L["InstallLayoutHealerDesc"] = "Large raid frames with heal prediction, centered position"
 L["InstallActionBarTitle"] = "Action Bar Options\n\nConfigure how your action bars behave outside of combat.\n"
 L["InstallActionBarFade"] = "Fade action bars when out of combat"
-L["InstallActionBarFadeDesc"] = "|cff888888Action bars will fade to 30% opacity when you are not in combat, and instantly appear when entering combat or hovering over them.|r"
+L["InstallActionBarFadeDesc"] =
+    "|cff888888Action bars will fade to 30% opacity when you are not in combat, and instantly appear when entering combat or hovering over them.|r"
 L["InstallSummaryTitle"] = "|cff8882ffSetup Complete!|r"
 L["InstallSummary"] = "Your settings summary:"
 L["InstallSummaryScale"] = "|cff8882ffUI Scale:|r %s"
 L["InstallSummaryLayout"] = "|cff8882ffLayout:|r %s"
 L["InstallSummaryFade"] = "|cff8882ffAction Bar Fade:|r %s"
-L["InstallSummaryHint"] = "|cff888888Click \"Finish\" to apply settings and reload the UI.\nYou can always reconfigure via |cff8882ff/lunar config|r.|r"
+L["InstallSummaryHint"] =
+    '|cff888888Click "Finish" to apply settings and reload the UI.\nYou can always reconfigure via |cff8882ff/lunar config|r.|r'
 L["InstallBtnSkip"] = "Skip"
 L["InstallBtnBack"] = "Back"
 L["InstallBtnNext"] = "Next"
@@ -340,7 +346,8 @@ L["HUDCDSettingsDesc"] = "Cooldown tracker icon settings. Changes take effect im
 L["HUDCDIconSizeDesc"] = "Pixel size of cooldown tracker icons"
 L["HUDCDMaxIcons"] = "Max Icons"
 L["HUDCDMaxIconsDesc"] = "Maximum number of cooldowns displayed simultaneously"
-L["HUDCRSettingsDesc"] = "Class resource (combo points, runes, etc.) display settings. Changes take effect immediately.\n\n"
+L["HUDCRSettingsDesc"] =
+    "Class resource (combo points, runes, etc.) display settings. Changes take effect immediately.\n\n"
 L["HUDCRIconSizeDesc"] = "Pixel size of resource point icons"
 L["HUDCRIconSpacingDesc"] = "Distance between resource points"
 L["HUDCRBarHeight"] = "Bar Height"

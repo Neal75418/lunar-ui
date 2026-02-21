@@ -12,7 +12,9 @@ local function SkinTradeFrame()
     local frame = LunarUI:SkinStandardFrame("TradeFrame", {
         textDepth = 3,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 交易按鈕
     if _G.TradeFrameTradeButton then

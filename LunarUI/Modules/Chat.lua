@@ -67,80 +67,80 @@ local CHANNEL_COLORS = {
 -- 短頻道名稱映射
 local SHORT_CHANNEL_NAMES = {
     -- 英文
-    ["General"]         = "G",
-    ["Trade"]           = "T",
-    ["LocalDefense"]    = "LD",
+    ["General"] = "G",
+    ["Trade"] = "T",
+    ["LocalDefense"] = "LD",
     ["LookingForGroup"] = "LFG",
-    ["WorldDefense"]    = "WD",
-    ["Newcomers"]       = "New",
+    ["WorldDefense"] = "WD",
+    ["Newcomers"] = "New",
     -- 繁中
-    ["綜合"]            = "綜",
-    ["交易"]            = "交",
-    ["本地防務"]        = "防",
-    ["尋求組隊"]        = "組",
-    ["世界防務"]        = "世",
-    ["新手"]            = "新",
+    ["綜合"] = "綜",
+    ["交易"] = "交",
+    ["本地防務"] = "防",
+    ["尋求組隊"] = "組",
+    ["世界防務"] = "世",
+    ["新手"] = "新",
 }
 
 -- 頻道類型短名稱（聊天類型標頭）
 local SHORT_CHANNEL_TYPES = {
     -- 英文
-    ["Guild"]                = "G",
-    ["Party"]                = "P",
-    ["Party Leader"]         = "PL",
-    ["Raid"]                 = "R",
-    ["Raid Leader"]          = "RL",
-    ["Raid Warning"]         = "RW",
-    ["Instance"]             = "I",
-    ["Instance Leader"]      = "IL",
-    ["Officer"]              = "O",
-    ["Whisper From"]         = "W",
-    ["Whisper To"]           = "W",
+    ["Guild"] = "G",
+    ["Party"] = "P",
+    ["Party Leader"] = "PL",
+    ["Raid"] = "R",
+    ["Raid Leader"] = "RL",
+    ["Raid Warning"] = "RW",
+    ["Instance"] = "I",
+    ["Instance Leader"] = "IL",
+    ["Officer"] = "O",
+    ["Whisper From"] = "W",
+    ["Whisper To"] = "W",
     -- 繁中
-    ["公會"]                 = "公",
-    ["隊伍"]                 = "隊",
-    ["隊伍領袖"]             = "隊長",
-    ["團隊"]                 = "團",
-    ["團隊領袖"]             = "團長",
-    ["團隊警告"]             = "團警",
-    ["副本"]                 = "副",
-    ["副本領袖"]             = "副長",
-    ["幹部"]                 = "幹",
-    ["悄悄話 來自"]          = "密",
-    ["悄悄話 給"]            = "密",
+    ["公會"] = "公",
+    ["隊伍"] = "隊",
+    ["隊伍領袖"] = "隊長",
+    ["團隊"] = "團",
+    ["團隊領袖"] = "團長",
+    ["團隊警告"] = "團警",
+    ["副本"] = "副",
+    ["副本領袖"] = "副長",
+    ["幹部"] = "幹",
+    ["悄悄話 來自"] = "密",
+    ["悄悄話 給"] = "密",
 }
 
 -- 表情符號替換表（文字 → 遊戲內建圖示）
 local EMOJI_MAP = {
-    [":)"]   = "|TInterface\\Icons\\INV_Misc_Food_11:14:14|t",
-    [":D"]   = "|TInterface\\Icons\\Spell_Holy_HolyGuidance:14:14|t",
-    [":("]   = "|TInterface\\Icons\\Ability_Hunter_MasterMarksman:14:14|t",
-    [";)"]   = "|TInterface\\Icons\\INV_ValentinesCandy:14:14|t",
-    [":P"]   = "|TInterface\\Icons\\INV_Misc_Food_19:14:14|t",
-    ["<3"]   = "|TInterface\\Icons\\INV_ValentinesCandy:14:14|t",
-    [":O"]   = "|TInterface\\Icons\\Spell_Shadow_Skull:14:14|t",
-    ["B)"]   = "|TInterface\\Icons\\INV_Helm_Goggles_01:14:14|t",
+    [":)"] = "|TInterface\\Icons\\INV_Misc_Food_11:14:14|t",
+    [":D"] = "|TInterface\\Icons\\Spell_Holy_HolyGuidance:14:14|t",
+    [":("] = "|TInterface\\Icons\\Ability_Hunter_MasterMarksman:14:14|t",
+    [";)"] = "|TInterface\\Icons\\INV_ValentinesCandy:14:14|t",
+    [":P"] = "|TInterface\\Icons\\INV_Misc_Food_19:14:14|t",
+    ["<3"] = "|TInterface\\Icons\\INV_ValentinesCandy:14:14|t",
+    [":O"] = "|TInterface\\Icons\\Spell_Shadow_Skull:14:14|t",
+    ["B)"] = "|TInterface\\Icons\\INV_Helm_Goggles_01:14:14|t",
 }
 
 -- 角色圖示材質（坦/治/傷）
 local ROLE_ICONS = {
-    TANK    = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:0:19:22:41|t",
-    HEALER  = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:1:20|t",
+    TANK = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:0:19:22:41|t",
+    HEALER = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:1:20|t",
     DAMAGER = "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:22:41|t",
 }
 
 -- 垃圾訊息過濾關鍵字（不區分大小寫）
 local SPAM_PATTERNS = {
-    "w+w+w%.%S+%.%S+",         -- www.xxx.xxx 網站
-    "bit%.ly",                  -- 短網址
-    "gold.*cheap",              -- 賣金
+    "w+w+w%.%S+%.%S+", -- www.xxx.xxx 網站
+    "bit%.ly", -- 短網址
+    "gold.*cheap", -- 賣金
     "cheap.*gold",
     "buy.*gold",
     "sell.*gold",
-    "power%s*level",            -- 代練
+    "power%s*level", -- 代練
     "boost.*%$",
     "%$.*boost",
-    "discord%.gg/",             -- Discord 邀請（垃圾廣告常用）
+    "discord%.gg/", -- Discord 邀請（垃圾廣告常用）
 }
 
 -- 關鍵字警報音效
@@ -154,10 +154,10 @@ local KEYWORD_ALERT_FALLBACK_SOUND = SOUNDKIT and SOUNDKIT.TELL_MESSAGE or 3081
 local styledFrames = {}
 local copyFrame
 local copyEditBox
-local chatTempWindowHooked = false  -- 私有狀態（不暴露到 LunarUI 物件）
-local savedChannelFormats = {}       -- 用於 Cleanup 還原 CHAT_*_GET 格式字串
-local savedAddMessageFuncs = {}      -- 用於 Cleanup 還原 AddMessage 覆寫
-local chatFiltersRegistered = false  -- 防止 ChatFrame_AddMessageEventFilter 重複註冊
+local chatTempWindowHooked = false -- 私有狀態（不暴露到 LunarUI 物件）
+local savedChannelFormats = {} -- 用於 Cleanup 還原 CHAT_*_GET 格式字串
+local savedAddMessageFuncs = {} -- 用於 Cleanup 還原 AddMessage 覆寫
+local chatFiltersRegistered = false -- 防止 ChatFrame_AddMessageEventFilter 重複註冊
 -- Emoji 觸發字元 character class（匹配所有可能的 2-char emoji 序列）
 local EMOJI_PATTERN = "[%:%;<B][%)%(DPO3]"
 local escapedKeywordCache = {} -- Fix 3b: 預快取 keyword escaped pattern
@@ -168,14 +168,15 @@ local KEYWORD_CACHE_MAX = 100
 -- 輔助函數
 --------------------------------------------------------------------------------
 
-
 --------------------------------------------------------------------------------
 -- 聊天框架樣式
 --------------------------------------------------------------------------------
 
 local function StyleChatTab(chatFrame)
     local tab = _G[chatFrame:GetName() .. "Tab"]
-    if not tab then return end
+    if not tab then
+        return
+    end
 
     -- 簡化標籤外觀
     local tabText = _G[chatFrame:GetName() .. "TabText"] or tab.Text
@@ -185,10 +186,18 @@ local function StyleChatTab(chatFrame)
 
     -- 隱藏標籤材質
     local textures = {
-        "Left", "Middle", "Right",
-        "SelectedLeft", "SelectedMiddle", "SelectedRight",
-        "HighlightLeft", "HighlightMiddle", "HighlightRight",
-        "ActiveLeft", "ActiveMiddle", "ActiveRight",
+        "Left",
+        "Middle",
+        "Right",
+        "SelectedLeft",
+        "SelectedMiddle",
+        "SelectedRight",
+        "HighlightLeft",
+        "HighlightMiddle",
+        "HighlightRight",
+        "ActiveLeft",
+        "ActiveMiddle",
+        "ActiveRight",
     }
 
     for _, texName in ipairs(textures) do
@@ -207,7 +216,9 @@ end
 
 local function StyleChatEditBox(chatFrame)
     local editBox = _G[chatFrame:GetName() .. "EditBox"]
-    if not editBox then return end
+    if not editBox then
+        return
+    end
 
     -- 建立背景
     if not editBox.LunarBackdrop then
@@ -221,8 +232,12 @@ local function StyleChatEditBox(chatFrame)
 
     -- 隱藏預設材質
     local textures = {
-        "Left", "Mid", "Right",
-        "FocusLeft", "FocusMid", "FocusRight",
+        "Left",
+        "Mid",
+        "Right",
+        "FocusLeft",
+        "FocusMid",
+        "FocusRight",
     }
 
     for _, texName in ipairs(textures) do
@@ -244,10 +259,14 @@ local function StyleChatEditBox(chatFrame)
 end
 
 local function StyleChatFrame(chatFrame)
-    if not chatFrame then return end
+    if not chatFrame then
+        return
+    end
 
     local name = chatFrame:GetName()
-    if styledFrames[name] then return end
+    if styledFrames[name] then
+        return
+    end
 
     -- 建立背景
     if not chatFrame.LunarBackdrop then
@@ -273,7 +292,7 @@ local function StyleChatFrame(chatFrame)
                 self.LunarBackdrop:SetScript("OnUpdate", function(bd, dt)
                     local target = bd._fadeTarget or 0
                     local current = bd:GetAlpha()
-                    local speed = 4 * dt  -- ~0.25s fade
+                    local speed = 4 * dt -- ~0.25s fade
                     if current < target then
                         bd:SetAlpha(math.min(current + speed, target))
                     elseif current > target then
@@ -303,8 +322,16 @@ local function StyleChatFrame(chatFrame)
     end)
 
     -- 隱藏預設材質
-    for _, texName in ipairs({ "TopLeftTexture", "TopRightTexture", "BottomLeftTexture", "BottomRightTexture",
-                               "LeftTexture", "RightTexture", "TopTexture", "BottomTexture" }) do
+    for _, texName in ipairs({
+        "TopLeftTexture",
+        "TopRightTexture",
+        "BottomLeftTexture",
+        "BottomRightTexture",
+        "LeftTexture",
+        "RightTexture",
+        "TopTexture",
+        "BottomTexture",
+    }) do
         local tex = _G[name .. texName]
         if tex then
             tex:SetTexture(nil)
@@ -362,7 +389,9 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateCopyFrame()
-    if copyFrame then return copyFrame end
+    if copyFrame then
+        return copyFrame
+    end
 
     copyFrame = CreateFrame("Frame", "LunarUI_ChatCopy", UIParent, "BackdropTemplate")
     copyFrame:SetSize(500, 300)
@@ -381,8 +410,12 @@ local function CreateCopyFrame()
     titleBar:SetPoint("TOPRIGHT", 0, 0)
     titleBar:EnableMouse(true)
     titleBar:RegisterForDrag("LeftButton")
-    titleBar:SetScript("OnDragStart", function() copyFrame:StartMoving() end)
-    titleBar:SetScript("OnDragStop", function() copyFrame:StopMovingOrSizing() end)
+    titleBar:SetScript("OnDragStart", function()
+        copyFrame:StartMoving()
+    end)
+    titleBar:SetScript("OnDragStop", function()
+        copyFrame:StopMovingOrSizing()
+    end)
 
     local titleText = titleBar:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(titleText, 12, "OUTLINE")
@@ -406,7 +439,9 @@ local function CreateCopyFrame()
     LunarUI.SetFont(copyEditBox, 12, "")
     copyEditBox:SetWidth(scrollFrame:GetWidth())
     copyEditBox:SetAutoFocus(false)
-    copyEditBox:SetScript("OnEscapePressed", function() copyFrame:Hide() end)
+    copyEditBox:SetScript("OnEscapePressed", function()
+        copyFrame:Hide()
+    end)
     scrollFrame:SetScrollChild(copyEditBox)
 
     -- 樣式化捲軸
@@ -419,10 +454,14 @@ local function CreateCopyFrame()
 end
 
 local function ShowCopyFrame(chatFrame)
-    if not chatFrame then return end
+    if not chatFrame then
+        return
+    end
 
     CreateCopyFrame()
-    if not copyEditBox or not copyFrame then return end
+    if not copyEditBox or not copyFrame then
+        return
+    end
 
     -- 收集聊天訊息
     local lines = {}
@@ -449,7 +488,9 @@ end
 
 local function ApplyChannelColors()
     local db = GetChatDB()
-    if not db or not db.improvedColors then return end
+    if not db or not db.improvedColors then
+        return
+    end
 
     for channel, color in pairs(CHANNEL_COLORS) do
         ChangeChatColor(channel, color[1], color[2], color[3])
@@ -462,14 +503,31 @@ end
 
 local function EnableClassColoredNames()
     local db = GetChatDB()
-    if not db or not db.classColors then return end
+    if not db or not db.classColors then
+        return
+    end
 
     -- 由暴雪選項處理，我們只需啟用它
     for _, chatType in ipairs({
-        "SAY", "EMOTE", "YELL", "WHISPER", "WHISPER_INFORM",
-        "PARTY", "PARTY_LEADER", "RAID", "RAID_LEADER", "RAID_WARNING",
-        "GUILD", "OFFICER", "INSTANCE_CHAT", "INSTANCE_CHAT_LEADER",
-        "CHANNEL1", "CHANNEL2", "CHANNEL3", "CHANNEL4", "CHANNEL5",
+        "SAY",
+        "EMOTE",
+        "YELL",
+        "WHISPER",
+        "WHISPER_INFORM",
+        "PARTY",
+        "PARTY_LEADER",
+        "RAID",
+        "RAID_LEADER",
+        "RAID_WARNING",
+        "GUILD",
+        "OFFICER",
+        "INSTANCE_CHAT",
+        "INSTANCE_CHAT_LEADER",
+        "CHANNEL1",
+        "CHANNEL2",
+        "CHANNEL3",
+        "CHANNEL4",
+        "CHANNEL5",
     }) do
         SetChatColorNameByClass(chatType, true)
     end
@@ -497,10 +555,14 @@ end
 
 -- 過濾函數：偵測網址並轉換為可點擊連結
 local function AddURLsToMessage(_self, _event, msg, ...)
-    if not msg then return false, msg, ... end
+    if not msg then
+        return false, msg, ...
+    end
 
     local db = GetChatDB()
-    if not db or not db.detectURLs then return false, msg, ... end
+    if not db or not db.detectURLs then
+        return false, msg, ...
+    end
 
     local newMsg = msg
     for _, pattern in ipairs(URL_PATTERNS) do
@@ -516,36 +578,39 @@ end
 
 -- 處理網址超連結點擊
 local function HandleURLClick(_self, link, _text, _button)
-    if not link then return end
+    if not link then
+        return
+    end
 
     local linkType, url = strsplit(":", link, 2)
     if linkType == "LunarURL" and url then
         -- 使用本地化字串顯示網址複製彈窗
         local popupText = L["PressToCopyURL"] or "Press Ctrl+C to copy URL:"
-        local closeText = CLOSE or "Close"  -- 使用暴雪全域 CLOSE 字串
+        local closeText = CLOSE or "Close" -- 使用暴雪全域 CLOSE 字串
 
         -- 建立彈窗以顯示並複製網址
-        StaticPopupDialogs["LUNARUI_URL_COPY"] = StaticPopupDialogs["LUNARUI_URL_COPY"] or {
-            text = popupText,
-            button1 = closeText,
-            hasEditBox = true,
-            editBoxWidth = 280,
-            OnShow = function(popup, data)
-                popup.editBox:SetText(data)
-                popup.editBox:HighlightText()
-                popup.editBox:SetFocus()
-            end,
-            EditBoxOnEnterPressed = function(editBox)
-                editBox:GetParent():Hide()
-            end,
-            EditBoxOnEscapePressed = function(editBox)
-                editBox:GetParent():Hide()
-            end,
-            timeout = 0,
-            whileDead = true,
-            hideOnEscape = true,
-            preferredIndex = 3,
-        }
+        StaticPopupDialogs["LUNARUI_URL_COPY"] = StaticPopupDialogs["LUNARUI_URL_COPY"]
+            or {
+                text = popupText,
+                button1 = closeText,
+                hasEditBox = true,
+                editBoxWidth = 280,
+                OnShow = function(popup, data)
+                    popup.editBox:SetText(data)
+                    popup.editBox:HighlightText()
+                    popup.editBox:SetFocus()
+                end,
+                EditBoxOnEnterPressed = function(editBox)
+                    editBox:GetParent():Hide()
+                end,
+                EditBoxOnEscapePressed = function(editBox)
+                    editBox:GetParent():Hide()
+                end,
+                timeout = 0,
+                whileDead = true,
+                hideOnEscape = true,
+                preferredIndex = 3,
+            }
 
         StaticPopup_Show("LUNARUI_URL_COPY", nil, nil, url)
         return true
@@ -555,16 +620,27 @@ end
 -- 為所有聊天事件註冊網址過濾器
 local function RegisterURLFilter()
     local db = GetChatDB()
-    if not db or not db.detectURLs then return end
+    if not db or not db.detectURLs then
+        return
+    end
 
     local chatEvents = {
-        "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_EMOTE",
-        "CHAT_MSG_WHISPER", "CHAT_MSG_WHISPER_INFORM",
-        "CHAT_MSG_BN_WHISPER", "CHAT_MSG_BN_WHISPER_INFORM",
-        "CHAT_MSG_PARTY", "CHAT_MSG_PARTY_LEADER",
-        "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING",
-        "CHAT_MSG_INSTANCE_CHAT", "CHAT_MSG_INSTANCE_CHAT_LEADER",
-        "CHAT_MSG_GUILD", "CHAT_MSG_OFFICER",
+        "CHAT_MSG_SAY",
+        "CHAT_MSG_YELL",
+        "CHAT_MSG_EMOTE",
+        "CHAT_MSG_WHISPER",
+        "CHAT_MSG_WHISPER_INFORM",
+        "CHAT_MSG_BN_WHISPER",
+        "CHAT_MSG_BN_WHISPER_INFORM",
+        "CHAT_MSG_PARTY",
+        "CHAT_MSG_PARTY_LEADER",
+        "CHAT_MSG_RAID",
+        "CHAT_MSG_RAID_LEADER",
+        "CHAT_MSG_RAID_WARNING",
+        "CHAT_MSG_INSTANCE_CHAT",
+        "CHAT_MSG_INSTANCE_CHAT_LEADER",
+        "CHAT_MSG_GUILD",
+        "CHAT_MSG_OFFICER",
         "CHAT_MSG_CHANNEL",
     }
 
@@ -590,7 +666,9 @@ end
 
 local function SetupTimestamps()
     local db = GetChatDB()
-    if not db or not db.showTimestamps then return end
+    if not db or not db.showTimestamps then
+        return
+    end
 
     local fmt = db.timestampFormat or "%H:%M"
 
@@ -625,12 +703,16 @@ end
 
 local function ShortenChannelNames()
     local db = GetChatDB()
-    if not db or not db.shortChannelNames then return end
+    if not db or not db.shortChannelNames then
+        return
+    end
 
     -- 覆寫頻道標頭格式
     -- 數字頻道：[2. 交易] → [交]
     local origGetChannelName = _G.ChatFrame_MessageEventHandler
-    if not origGetChannelName then return end
+    if not origGetChannelName then
+        return
+    end
 
     -- 替換 CHAT_*_GET 格式字串中的頻道名稱
     -- 這些全域字串控制頻道訊息的前綴格式
@@ -657,14 +739,11 @@ local function ShortenChannelNames()
     for _, chatType in ipairs(channelTypes) do
         local original = _G[chatType]
         if original and not savedChannelFormats[chatType] then
-            savedChannelFormats[chatType] = original  -- 只存首次原始值，防止 toggle off/on 時覆蓋
+            savedChannelFormats[chatType] = original -- 只存首次原始值，防止 toggle off/on 時覆蓋
             -- 從格式字串中提取方括號內的頻道名稱
             for longName, shortName in pairs(SHORT_CHANNEL_TYPES) do
                 if original:find(longName, 1, true) then
-                    _G[chatType] = original:gsub(
-                        "%[" .. longName .. "%]",
-                        "[" .. shortName .. "]"
-                    )
+                    _G[chatType] = original:gsub("%[" .. longName .. "%]", "[" .. shortName .. "]")
                     break
                 end
             end
@@ -711,10 +790,14 @@ end
 local EMOJI_QUICK_CHECK = "[%:%;<B]"
 
 local function AddEmojisToMessage(_self, _event, msg, ...)
-    if not msg then return false, msg, ... end
+    if not msg then
+        return false, msg, ...
+    end
 
     local db = GetChatDB()
-    if not db or not db.enableEmojis then return false, msg, ... end
+    if not db or not db.enableEmojis then
+        return false, msg, ...
+    end
 
     -- 效能優化：先快速檢查是否包含 emoji 起始字元
     if not msg:find(EMOJI_QUICK_CHECK) then
@@ -735,10 +818,14 @@ end
 --------------------------------------------------------------------------------
 
 local function AddRoleIconToMessage(_self, _event, msg, author, ...)
-    if not msg or not author then return false, msg, author, ... end
+    if not msg or not author then
+        return false, msg, author, ...
+    end
 
     local db = GetChatDB()
-    if not db or not db.showRoleIcons then return false, msg, author, ... end
+    if not db or not db.showRoleIcons then
+        return false, msg, author, ...
+    end
 
     -- 只在隊伍/團隊頻道中顯示角色圖示
     -- 嘗試從隊伍成員中找到對應角色
@@ -785,10 +872,14 @@ end
 local lastKeywordAlert = 0
 
 local function CheckKeywordAlert(_self, _event, msg, author, ...)
-    if not msg then return false, msg, author, ... end
+    if not msg then
+        return false, msg, author, ...
+    end
 
     local db = GetChatDB()
-    if not db or not db.keywordAlerts then return false, msg, author, ... end
+    if not db or not db.keywordAlerts then
+        return false, msg, author, ...
+    end
 
     -- 不對自己的訊息觸發
     local playerName = UnitName("player")
@@ -868,10 +959,14 @@ end
 --------------------------------------------------------------------------------
 
 local function FilterSpamMessage(_self, _event, msg, author, ...)
-    if not msg then return false, msg, author, ... end
+    if not msg then
+        return false, msg, author, ...
+    end
 
     local db = GetChatDB()
-    if not db or not db.spamFilter then return false, msg, author, ... end
+    if not db or not db.spamFilter then
+        return false, msg, author, ...
+    end
 
     local msgLower = msg:lower()
 
@@ -891,7 +986,9 @@ end
 
 local function SetupLinkTooltipPreview()
     local db = GetChatDB()
-    if not db or not db.linkTooltipPreview then return end
+    if not db or not db.linkTooltipPreview then
+        return
+    end
 
     for _, frameName in ipairs(CHAT_FRAMES) do
         local frame = _G[frameName]
@@ -899,10 +996,14 @@ local function SetupLinkTooltipPreview()
             frame._lunarLinkPreviewHooked = true
 
             frame:HookScript("OnHyperlinkEnter", function(_self, link)
-                if not link then return end
+                if not link then
+                    return
+                end
 
                 local linkType, linkData = strsplit(":", link, 2)
-                if not linkType then return end
+                if not linkType then
+                    return
+                end
 
                 GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
 
@@ -937,22 +1038,35 @@ end
 local function RegisterChatEnhancementFilters()
     -- WoW 不提供 RemoveMessageEventFilter API，重複呼叫會累積 filter
     -- 用 flag 防止 toggle off/on 時重複註冊（filter 內部已有各自的 DB 開關判斷）
-    if chatFiltersRegistered then return end
+    if chatFiltersRegistered then
+        return
+    end
     chatFiltersRegistered = true
 
     local chatEvents = {
-        "CHAT_MSG_SAY", "CHAT_MSG_YELL", "CHAT_MSG_EMOTE",
-        "CHAT_MSG_WHISPER", "CHAT_MSG_WHISPER_INFORM",
-        "CHAT_MSG_BN_WHISPER", "CHAT_MSG_BN_WHISPER_INFORM",
-        "CHAT_MSG_PARTY", "CHAT_MSG_PARTY_LEADER",
-        "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING",
-        "CHAT_MSG_INSTANCE_CHAT", "CHAT_MSG_INSTANCE_CHAT_LEADER",
-        "CHAT_MSG_GUILD", "CHAT_MSG_OFFICER",
+        "CHAT_MSG_SAY",
+        "CHAT_MSG_YELL",
+        "CHAT_MSG_EMOTE",
+        "CHAT_MSG_WHISPER",
+        "CHAT_MSG_WHISPER_INFORM",
+        "CHAT_MSG_BN_WHISPER",
+        "CHAT_MSG_BN_WHISPER_INFORM",
+        "CHAT_MSG_PARTY",
+        "CHAT_MSG_PARTY_LEADER",
+        "CHAT_MSG_RAID",
+        "CHAT_MSG_RAID_LEADER",
+        "CHAT_MSG_RAID_WARNING",
+        "CHAT_MSG_INSTANCE_CHAT",
+        "CHAT_MSG_INSTANCE_CHAT_LEADER",
+        "CHAT_MSG_GUILD",
+        "CHAT_MSG_OFFICER",
         "CHAT_MSG_CHANNEL",
     }
 
     local db = GetChatDB()
-    if not db then return end
+    if not db then
+        return
+    end
 
     -- 表情符號替換
     if db.enableEmojis then
@@ -964,9 +1078,13 @@ local function RegisterChatEnhancementFilters()
     -- 角色圖示（僅隊伍/團隊頻道）
     if db.showRoleIcons then
         local roleEvents = {
-            "CHAT_MSG_PARTY", "CHAT_MSG_PARTY_LEADER",
-            "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING",
-            "CHAT_MSG_INSTANCE_CHAT", "CHAT_MSG_INSTANCE_CHAT_LEADER",
+            "CHAT_MSG_PARTY",
+            "CHAT_MSG_PARTY_LEADER",
+            "CHAT_MSG_RAID",
+            "CHAT_MSG_RAID_LEADER",
+            "CHAT_MSG_RAID_WARNING",
+            "CHAT_MSG_INSTANCE_CHAT",
+            "CHAT_MSG_INSTANCE_CHAT_LEADER",
         }
         for _, event in ipairs(roleEvents) do
             ChatFrame_AddMessageEventFilter(event, AddRoleIconToMessage)
@@ -983,7 +1101,8 @@ local function RegisterChatEnhancementFilters()
     -- 垃圾訊息過濾（僅公開頻道）
     if db.spamFilter then
         local spamEvents = {
-            "CHAT_MSG_SAY", "CHAT_MSG_YELL",
+            "CHAT_MSG_SAY",
+            "CHAT_MSG_YELL",
             "CHAT_MSG_CHANNEL",
             "CHAT_MSG_WHISPER",
         }
@@ -1021,7 +1140,9 @@ end
 
 local function InitializeChat()
     local db = GetChatDB()
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
     -- 樣式化所有聊天框架
     for _, frameName in ipairs(CHAT_FRAMES) do
@@ -1069,9 +1190,15 @@ local function InitializeChat()
     SetupLinkTooltipPreview()
 
     -- 隱藏聊天按鈕
-    if ChatFrameMenuButton then ChatFrameMenuButton:Hide() end
-    if ChatFrameChannelButton then ChatFrameChannelButton:Hide() end
-    if QuickJoinToastButton then QuickJoinToastButton:Hide() end
+    if ChatFrameMenuButton then
+        ChatFrameMenuButton:Hide()
+    end
+    if ChatFrameChannelButton then
+        ChatFrameChannelButton:Hide()
+    end
+    if QuickJoinToastButton then
+        QuickJoinToastButton:Hide()
+    end
 end
 
 --------------------------------------------------------------------------------

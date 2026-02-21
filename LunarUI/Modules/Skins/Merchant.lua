@@ -11,7 +11,9 @@ local merchantHookRegistered = false
 
 --- 修復商品物品的文字顏色
 local function SkinMerchantItem(btn, index)
-    if not btn then return end
+    if not btn then
+        return
+    end
 
     -- 物品名稱
     local nameFrame = _G["MerchantItem" .. index .. "Name"]
@@ -34,9 +36,12 @@ end
 
 local function SkinMerchant()
     local frame = LunarUI:SkinStandardFrame("MerchantFrame", {
-        tabPrefix = "MerchantFrameTab", tabCount = 2,
+        tabPrefix = "MerchantFrameTab",
+        tabCount = 2,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 標題文字 fallback
     if not frame.TitleText and _G.MerchantFrameTitleText then

@@ -9,10 +9,13 @@ local LunarUI = Engine.LunarUI
 
 local function SkinPVPFrame()
     local frame = LunarUI:SkinStandardFrame("PVPUIFrame", {
-        tabPrefix = "PVPUIFrameTab", tabCount = 3,
+        tabPrefix = "PVPUIFrameTab",
+        tabCount = 3,
         textDepth = 3,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 榮譽面板
     if _G.HonorFrame then

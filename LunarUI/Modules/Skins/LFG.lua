@@ -9,9 +9,12 @@ local LunarUI = Engine.LunarUI
 
 local function SkinLFG()
     local frame = LunarUI:SkinStandardFrame("PVEFrame", {
-        tabPrefix = "PVEFrameTab", tabCount = 4,
+        tabPrefix = "PVEFrameTab",
+        tabCount = 4,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 關閉按鈕 fallback
     if not frame.CloseButton and _G.PVEFrameCloseButton then

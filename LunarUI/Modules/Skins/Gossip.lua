@@ -10,9 +10,11 @@ local LunarUI = Engine.LunarUI
 local function SkinGossip()
     local frame = LunarUI:SkinStandardFrame("GossipFrame", {
         textDepth = 4,
-        noStrip = true,  -- 保留羊皮紙內容背景，避免黑底蓋住對話文字
+        noStrip = true, -- 保留羊皮紙內容背景，避免黑底蓋住對話文字
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 標題文字 fallback
     if not frame.TitleText and _G.GossipFrameTitleText then
@@ -35,7 +37,9 @@ local function SkinGossip()
     -- 對話選項按鈕（WoW 12.0 使用 ScrollFrame）
     if frame.GreetingPanel and frame.GreetingPanel.ScrollBox then
         -- 防止重複 hook
-        if frame.GreetingPanel.ScrollBox._lunarHooked then return end
+        if frame.GreetingPanel.ScrollBox._lunarHooked then
+            return
+        end
         frame.GreetingPanel.ScrollBox._lunarHooked = true
 
         -- 對於每個對話選項，需要 hook 來處理動態內容

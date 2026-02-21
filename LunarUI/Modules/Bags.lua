@@ -20,7 +20,7 @@ local LunarUI = Engine.LunarUI
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
-local bit_band = bit.band  -- LuaJIT built-in（LLS 環境限制，快取為 local）
+local bit_band = bit.band -- LuaJIT built-in（LLS 環境限制，快取為 local）
 
 --------------------------------------------------------------------------------
 -- DB 存取
@@ -41,13 +41,13 @@ local SLOTS_PER_ROW = 12
 local PADDING = 10
 local HEADER_HEIGHT = 30
 local FOOTER_HEIGHT = 30
-local SEARCH_DEBOUNCE = 0.2       -- 搜尋防抖延遲（秒）
-local SEARCH_DIM_ALPHA = 0.3      -- 搜尋不符合時的透明度
-local BORDER_COLOR_DEFAULT = C.border      -- { 0.15, 0.12, 0.08, 1 }
-local BORDER_COLOR_BANK = C.borderGold     -- { 0.4, 0.35, 0.2, 1 }
-local JUNK_SELL_DELAY = 0.3       -- 商人開啟後延遲販賣垃圾（秒）
-local INIT_DELAY = 0.5            -- 插件初始化延遲（秒）
-local FRAME_ALPHA = 0.95          -- 框架背景透明度
+local SEARCH_DEBOUNCE = 0.2 -- 搜尋防抖延遲（秒）
+local SEARCH_DIM_ALPHA = 0.3 -- 搜尋不符合時的透明度
+local BORDER_COLOR_DEFAULT = C.border -- { 0.15, 0.12, 0.08, 1 }
+local BORDER_COLOR_BANK = C.borderGold -- { 0.4, 0.35, 0.2, 1 }
+local JUNK_SELL_DELAY = 0.3 -- 商人開啟後延遲販賣垃圾（秒）
+local INIT_DELAY = 0.5 -- 插件初始化延遲（秒）
+local FRAME_ALPHA = 0.95 -- 框架背景透明度
 local backdropTemplate = LunarUI.backdropTemplate
 
 -- 使用集中定義的品質顏色
@@ -58,41 +58,41 @@ local ITEM_QUALITY_COLORS = LunarUI.QUALITY_COLORS
 -- bagType 是位元遮罩（flag），對應 Enum.BagFamily
 local PROFESSION_BAG_COLORS = {
     -- bagType flag → { r, g, b, a }
-    [0x0008]  = { 0.18, 0.55, 0.18, 0.25 },   -- 草藥（Herbs）綠色
-    [0x0010]  = { 0.55, 0.28, 0.55, 0.25 },   -- 附魔（Enchanting）紫色
-    [0x0020]  = { 0.45, 0.45, 0.55, 0.25 },   -- 工程（Engineering）灰藍
-    [0x0040]  = { 0.20, 0.50, 0.70, 0.25 },   -- 珠寶（Gems）藍色
-    [0x0080]  = { 0.50, 0.40, 0.25, 0.25 },   -- 礦石（Mining）褐色
-    [0x0200]  = { 0.60, 0.45, 0.30, 0.25 },   -- 製皮（Leatherworking）皮革色
-    [0x0400]  = { 0.50, 0.50, 0.50, 0.25 },   -- 銘文（Inscription）灰色
-    [0x0800]  = { 0.30, 0.55, 0.45, 0.25 },   -- 釣魚（Fishing/Tackle）青色
-    [0x1000]  = { 0.55, 0.35, 0.20, 0.25 },   -- 烹飪（Cooking）橘棕色
+    [0x0008] = { 0.18, 0.55, 0.18, 0.25 }, -- 草藥（Herbs）綠色
+    [0x0010] = { 0.55, 0.28, 0.55, 0.25 }, -- 附魔（Enchanting）紫色
+    [0x0020] = { 0.45, 0.45, 0.55, 0.25 }, -- 工程（Engineering）灰藍
+    [0x0040] = { 0.20, 0.50, 0.70, 0.25 }, -- 珠寶（Gems）藍色
+    [0x0080] = { 0.50, 0.40, 0.25, 0.25 }, -- 礦石（Mining）褐色
+    [0x0200] = { 0.60, 0.45, 0.30, 0.25 }, -- 製皮（Leatherworking）皮革色
+    [0x0400] = { 0.50, 0.50, 0.50, 0.25 }, -- 銘文（Inscription）灰色
+    [0x0800] = { 0.30, 0.55, 0.45, 0.25 }, -- 釣魚（Fishing/Tackle）青色
+    [0x1000] = { 0.55, 0.35, 0.20, 0.25 }, -- 烹飪（Cooking）橘棕色
 }
 
 -- 裝備槽位 ID 對應（用於升級判斷）
 local EQUIP_LOC_TO_SLOT = {
-    INVTYPE_HEAD          = { 1 },
-    INVTYPE_NECK          = { 2 },
-    INVTYPE_SHOULDER      = { 3 },
-    INVTYPE_BODY          = { 4 },
-    INVTYPE_CHEST         = { 5 },
-    INVTYPE_ROBE          = { 5 },
-    INVTYPE_WAIST         = { 6 },
-    INVTYPE_LEGS          = { 7 },
-    INVTYPE_FEET          = { 8 },
-    INVTYPE_WRIST         = { 9 },
-    INVTYPE_HAND          = { 10 },
-    INVTYPE_FINGER        = { 11, 12 },
-    INVTYPE_TRINKET       = { 13, 14 },
-    INVTYPE_CLOAK         = { 15 },
-    INVTYPE_WEAPON        = { 16, 17 },
-    INVTYPE_SHIELD        = { 17 },
-    INVTYPE_2HWEAPON      = { 16 },
+    INVTYPE_HEAD = { 1 },
+    INVTYPE_NECK = { 2 },
+    INVTYPE_SHOULDER = { 3 },
+    INVTYPE_BODY = { 4 },
+    INVTYPE_CHEST = { 5 },
+    INVTYPE_ROBE = { 5 },
+    INVTYPE_WAIST = { 6 },
+    INVTYPE_LEGS = { 7 },
+    INVTYPE_FEET = { 8 },
+    INVTYPE_WRIST = { 9 },
+    INVTYPE_HAND = { 10 },
+    INVTYPE_FINGER = { 11, 12 },
+    INVTYPE_TRINKET = { 13, 14 },
+    INVTYPE_CLOAK = { 15 },
+    INVTYPE_WEAPON = { 16, 17 },
+    INVTYPE_SHIELD = { 17 },
+    INVTYPE_2HWEAPON = { 16 },
     INVTYPE_WEAPONMAINHAND = { 16 },
     INVTYPE_WEAPONOFFHAND = { 17 },
-    INVTYPE_HOLDABLE      = { 17 },
-    INVTYPE_RANGED        = { 16 },
-    INVTYPE_RANGEDRIGHT   = { 16 },
+    INVTYPE_HOLDABLE = { 17 },
+    INVTYPE_RANGED = { 16 },
+    INVTYPE_RANGEDRIGHT = { 16 },
 }
 
 -- 快取裝備中的物品等級（開啟背包時刷新）
@@ -113,9 +113,9 @@ local sortButton
 local closeButton
 local isOpen = false
 local isBankOpen = false
-local searchTimer      -- 背包搜尋防抖計時器
-local bankSearchTimer  -- 銀行搜尋防抖計時器
-local pendingBagUpdates = {}  -- BAG_UPDATE 累積的背包 ID（由 BAG_UPDATE_DELAYED 處理）
+local searchTimer -- 背包搜尋防抖計時器
+local bankSearchTimer -- 銀行搜尋防抖計時器
+local pendingBagUpdates = {} -- BAG_UPDATE 累積的背包 ID（由 BAG_UPDATE_DELAYED 處理）
 local isSorting = false -- 排序進行中標記（排序期間跳過 ITEM_LOCK_CHANGED 全量更新）
 
 -- 銀行容器 ID：-1 = 主銀行（28 格），5-11 = 銀行包
@@ -130,7 +130,9 @@ local SellJunk
 -- 從 DB 載入背包設定（覆寫模組常數）
 local function LoadBagSettings()
     local db = GetBagDB()
-    if not db then return end
+    if not db then
+        return
+    end
     SLOT_SIZE = db.slotSize or 37
     SLOT_SPACING = db.slotSpacing or 4
     SLOTS_PER_ROW = db.slotsPerRow or 12
@@ -176,7 +178,9 @@ local itemLevelCacheMeta = { n = 0 }
 local equipmentTypeCacheMeta = { n = 0 }
 
 local function GetItemLevel(itemLink)
-    if not itemLink then return nil end
+    if not itemLink then
+        return nil
+    end
 
     -- 使用快取避免重複 API 呼叫
     if itemLevelCache[itemLink] then
@@ -193,7 +197,9 @@ local function GetItemLevel(itemLink)
 end
 
 local function IsEquipment(itemLink)
-    if not itemLink then return false end
+    if not itemLink then
+        return false
+    end
 
     -- 使用快取避免重複 API 呼叫
     if equipmentTypeCache[itemLink] ~= nil then
@@ -219,7 +225,9 @@ local bagTypeCache = {}
 
 local function GetBagTypeColor(bag)
     local db = GetBagDB()
-    if not db or not db.showProfessionColors then return false end
+    if not db or not db.showProfessionColors then
+        return false
+    end
 
     if bagTypeCache[bag] ~= nil then
         return bagTypeCache[bag]
@@ -242,7 +250,9 @@ end
 
 -- 刷新裝備物品等級快取
 local function RefreshEquippedItemLevels()
-    if not equippedIlvlDirty then return end
+    if not equippedIlvlDirty then
+        return
+    end
     equippedIlvlDirty = false
     wipe(equippedItemLevels)
 
@@ -259,21 +269,31 @@ end
 
 -- 判斷物品是否為裝等升級
 local function IsItemUpgrade(itemLink)
-    if not itemLink then return false end
+    if not itemLink then
+        return false
+    end
 
     local db = GetBagDB()
-    if not db or not db.showUpgradeArrow then return false end
+    if not db or not db.showUpgradeArrow then
+        return false
+    end
 
     -- 取得物品裝備位置
     local _, _, _, _, _, _, _, _, equipLoc = C_Item.GetItemInfo(itemLink)
-    if not equipLoc or equipLoc == "" then return false end
+    if not equipLoc or equipLoc == "" then
+        return false
+    end
 
     local slotIDs = EQUIP_LOC_TO_SLOT[equipLoc]
-    if not slotIDs then return false end
+    if not slotIDs then
+        return false
+    end
 
     -- 取得此物品的等級
     local itemIlvl = select(1, C_Item.GetDetailedItemLevelInfo(itemLink))
-    if not itemIlvl or itemIlvl <= 1 then return false end
+    if not itemIlvl or itemIlvl <= 1 then
+        return false
+    end
 
     -- 刷新裝備快取
     RefreshEquippedItemLevels()
@@ -315,7 +335,7 @@ end
 -- 動態計算銀行每行格數，避免框架超出螢幕
 local function GetBankSlotsPerRow(totalSlots)
     local screenHeight = GetScreenHeight()
-    local maxHeight = screenHeight * 0.80  -- 留 20% 邊距
+    local maxHeight = screenHeight * 0.80 -- 留 20% 邊距
     local overhead = PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
     local maxRows = math.floor((maxHeight - overhead + SLOT_SPACING) / (SLOT_SIZE + SLOT_SPACING))
     maxRows = math.max(maxRows, 1)
@@ -330,12 +350,16 @@ end
 -- 共用的 tooltip 顯示邏輯
 local function ShowSlotTooltip(self)
     local itemInfo = C_Container.GetContainerItemInfo(self.bag, self.slot)
-    if not itemInfo then return end
+    if not itemInfo then
+        return
+    end
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     local ok = pcall(GameTooltip.SetBagItem, GameTooltip, self.bag, self.slot)
     if not ok then
         local link = C_Container.GetContainerItemLink(self.bag, self.slot)
-        if link then pcall(GameTooltip.SetHyperlink, GameTooltip, link) end
+        if link then
+            pcall(GameTooltip.SetHyperlink, GameTooltip, link)
+        end
     end
     GameTooltip:Show()
 end
@@ -346,14 +370,28 @@ end
 
 -- 隱藏格子上的所有指示器（重構：避免重複代碼）
 local function HideAllSlotIndicators(button)
-    if button.ilvlText then button.ilvlText:Hide() end
-    if button.junkIcon then button.junkIcon:Hide() end
-    if button.questIcon then button.questIcon:Hide() end
-    if button.qualityGlow then button.qualityGlow:Hide() end
-    if button.upgradeArrow then button.upgradeArrow:Hide() end
-    if button.bindText then button.bindText:Hide() end
+    if button.ilvlText then
+        button.ilvlText:Hide()
+    end
+    if button.junkIcon then
+        button.junkIcon:Hide()
+    end
+    if button.questIcon then
+        button.questIcon:Hide()
+    end
+    if button.qualityGlow then
+        button.qualityGlow:Hide()
+    end
+    if button.upgradeArrow then
+        button.upgradeArrow:Hide()
+    end
+    if button.bindText then
+        button.bindText:Hide()
+    end
     if button.newGlow then
-        if button.newGlowAnim then button.newGlowAnim:Stop() end
+        if button.newGlowAnim then
+            button.newGlowAnim:Stop()
+        end
         button.newGlow:Hide()
     end
 end
@@ -398,7 +436,7 @@ local function SetupSlotBase(button, bag, slot)
         border:SetBackdropColor(0, 0, 0, 0)
         border:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
         border:SetFrameLevel(button:GetFrameLevel() + 1)
-        border:EnableMouse(false)  -- 讓滑鼠事件穿透到按鈕
+        border:EnableMouse(false) -- 讓滑鼠事件穿透到按鈕
         button.LunarBorder = border
     end
 
@@ -505,7 +543,7 @@ local function CreateItemSlot(parent, slotID, bag, slot)
         arrow:SetSize(14, 14)
         arrow:SetPoint("TOPRIGHT", -1, -1)
         arrow:SetTexture("Interface\\BUTTONS\\UI-MicroStream-Green")
-        arrow:SetTexCoord(0, 1, 1, 0)  -- 翻轉為向上箭頭
+        arrow:SetTexCoord(0, 1, 1, 0) -- 翻轉為向上箭頭
         arrow:Hide()
         button.upgradeArrow = arrow
     end
@@ -555,7 +593,12 @@ local function UpdateSlotVisuals(button, containerInfo, quality)
             local color = ITEM_QUALITY_COLORS[quality]
             button.LunarBorder:SetBackdropBorderColor(color[1], color[2], color[3], 1)
         else
-            button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
+            button.LunarBorder:SetBackdropBorderColor(
+                BORDER_COLOR_DEFAULT[1],
+                BORDER_COLOR_DEFAULT[2],
+                BORDER_COLOR_DEFAULT[3],
+                1
+            )
         end
     end
 
@@ -687,7 +730,12 @@ local function ClearSlot(button, db, bag)
         button.Count:Hide()
     end
     if button.LunarBorder then
-        button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 0.5)
+        button.LunarBorder:SetBackdropBorderColor(
+            BORDER_COLOR_DEFAULT[1],
+            BORDER_COLOR_DEFAULT[2],
+            BORDER_COLOR_DEFAULT[3],
+            0.5
+        )
     end
     HideAllSlotIndicators(button)
     local cooldown = button.Cooldown or button.cooldown
@@ -711,7 +759,9 @@ local function ClearSlot(button, db, bag)
 end
 
 local function UpdateSlot(button)
-    if not button or not button.bag or not button.slot then return end
+    if not button or not button.bag or not button.slot then
+        return
+    end
 
     local db = GetBagDB()
     local bag, slot = button.bag, button.slot
@@ -734,9 +784,13 @@ end
 
 local function CreateBagFrame()
     local db = GetBagDB()
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
-    if bagFrame then return bagFrame end
+    if bagFrame then
+        return bagFrame
+    end
 
     -- 從 DB 載入設定
     LoadBagSettings()
@@ -774,7 +828,13 @@ local function CreateBagFrame()
 
     -- 位置記憶：優先讀取已儲存位置
     if db.bagPosition then
-        bagFrame:SetPoint(db.bagPosition.point, UIParent, db.bagPosition.relPoint or db.bagPosition.point, db.bagPosition.x, db.bagPosition.y)
+        bagFrame:SetPoint(
+            db.bagPosition.point,
+            UIParent,
+            db.bagPosition.relPoint or db.bagPosition.point,
+            db.bagPosition.x,
+            db.bagPosition.y
+        )
     else
         bagFrame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -20, 100)
     end
@@ -829,7 +889,9 @@ local function CreateBagFrame()
 
     -- 搜尋邏輯（提取為 named function 避免每次按鍵建立 closure）
     local function PerformBagSearch()
-        if not searchBox then return end
+        if not searchBox then
+            return
+        end
         local text = searchBox:GetText():lower()
         for _, button in pairs(slots) do
             if button and button:IsShown() and button.bag and button.slot then
@@ -921,7 +983,7 @@ local function CreateBagFrame()
 
     -- 建立格子（支援分離背包視圖）
     local slotID = 0
-    local layoutIdx = 0   -- 實際佈局索引（分離視圖可能跳行）
+    local layoutIdx = 0 -- 實際佈局索引（分離視圖可能跳行）
     local prevBag = nil
     for _, slotInfo in ipairs(slotList) do
         slotID = slotID + 1
@@ -939,7 +1001,10 @@ local function CreateBagFrame()
         local row = math.floor(layoutIdx / SLOTS_PER_ROW)
         local col = layoutIdx % SLOTS_PER_ROW
 
-        button:SetPoint("TOPLEFT", slotContainer, "TOPLEFT",
+        button:SetPoint(
+            "TOPLEFT",
+            slotContainer,
+            "TOPLEFT",
             col * (SLOT_SIZE + SLOT_SPACING),
             -row * (SLOT_SIZE + SLOT_SPACING)
         )
@@ -985,7 +1050,9 @@ local function CreateBankSlot(parent, slotID, bag, slot)
 end
 
 local function UpdateBankSlot(button)
-    if not button or not button.bag or not button.slot then return end
+    if not button or not button.bag or not button.slot then
+        return
+    end
 
     local db = GetBagDB()
     local bag, slot = button.bag, button.slot
@@ -1017,7 +1084,12 @@ local function UpdateBankSlot(button)
                 local color = ITEM_QUALITY_COLORS[quality]
                 button.LunarBorder:SetBackdropBorderColor(color[1], color[2], color[3], 1)
             else
-                button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
+                button.LunarBorder:SetBackdropBorderColor(
+                    BORDER_COLOR_DEFAULT[1],
+                    BORDER_COLOR_DEFAULT[2],
+                    BORDER_COLOR_DEFAULT[3],
+                    1
+                )
             end
         end
 
@@ -1067,7 +1139,12 @@ local function UpdateBankSlot(button)
             button.Count:Hide()
         end
         if button.LunarBorder then
-            button.LunarBorder:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 0.5)
+            button.LunarBorder:SetBackdropBorderColor(
+                BORDER_COLOR_DEFAULT[1],
+                BORDER_COLOR_DEFAULT[2],
+                BORDER_COLOR_DEFAULT[3],
+                0.5
+            )
         end
         -- 使用輔助函數隱藏所有指示器
         HideAllSlotIndicators(button)
@@ -1076,9 +1153,13 @@ end
 
 local function CreateBankFrame()
     local db = GetBagDB()
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
-    if bankFrame then return bankFrame end
+    if bankFrame then
+        return bankFrame
+    end
 
     -- 從 DB 載入設定
     LoadBagSettings()
@@ -1093,18 +1174,24 @@ local function CreateBankFrame()
     -- 建立主框架
     bankFrame = CreateFrame("Frame", "LunarUI_Bank", UIParent, "BackdropTemplate")
     bankFrame:SetSize(width, height)
-    bankFrame.bankCols = bankCols  -- 記錄銀行欄數供後續使用
+    bankFrame.bankCols = bankCols -- 記錄銀行欄數供後續使用
 
     -- 位置記憶：優先讀取已儲存位置
     if db.bankPosition then
-        bankFrame:SetPoint(db.bankPosition.point, UIParent, db.bankPosition.relPoint or db.bankPosition.point, db.bankPosition.x, db.bankPosition.y)
+        bankFrame:SetPoint(
+            db.bankPosition.point,
+            UIParent,
+            db.bankPosition.relPoint or db.bankPosition.point,
+            db.bankPosition.x,
+            db.bankPosition.y
+        )
     else
         bankFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 50, -100)
     end
 
     bankFrame:SetBackdrop(backdropTemplate)
     bankFrame:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], FRAME_ALPHA)
-    bankFrame:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1)  -- 銀行用金色邊框
+    bankFrame:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1) -- 銀行用金色邊框
     bankFrame:SetFrameStrata("HIGH")
     bankFrame:SetMovable(true)
     bankFrame:EnableMouse(true)
@@ -1131,7 +1218,7 @@ local function CreateBankFrame()
     LunarUI.SetFont(title, 14, "OUTLINE")
     title:SetPoint("TOPLEFT", PADDING, -8)
     title:SetText(L["BankTitle"] or "Bank")
-    title:SetTextColor(1, 0.82, 0)  -- 金色
+    title:SetTextColor(1, 0.82, 0) -- 金色
     bankFrame.title = title
 
     -- 關閉按鈕
@@ -1251,7 +1338,10 @@ local function CreateBankFrame()
         local row = math.floor((slotID - 1) / bankCols)
         local col = (slotID - 1) % bankCols
 
-        button:SetPoint("TOPLEFT", slotContainer, "TOPLEFT",
+        button:SetPoint(
+            "TOPLEFT",
+            slotContainer,
+            "TOPLEFT",
             col * (SLOT_SIZE + SLOT_SPACING),
             -row * (SLOT_SIZE + SLOT_SPACING)
         )
@@ -1270,7 +1360,10 @@ local function CreateBankFrame()
             local row = math.floor((slotID - 1) / bankCols)
             local col = (slotID - 1) % bankCols
 
-            button:SetPoint("TOPLEFT", slotContainer, "TOPLEFT",
+            button:SetPoint(
+                "TOPLEFT",
+                slotContainer,
+                "TOPLEFT",
                 col * (SLOT_SIZE + SLOT_SPACING),
                 -row * (SLOT_SIZE + SLOT_SPACING)
             )
@@ -1290,7 +1383,10 @@ local function CreateBankFrame()
         local row = math.floor((slot - 1) / bankCols)
         local col = (slot - 1) % bankCols
 
-        button:SetPoint("TOPLEFT", reagentContainer, "TOPLEFT",
+        button:SetPoint(
+            "TOPLEFT",
+            reagentContainer,
+            "TOPLEFT",
             col * (SLOT_SIZE + SLOT_SPACING),
             -row * (SLOT_SIZE + SLOT_SPACING)
         )
@@ -1301,7 +1397,9 @@ local function CreateBankFrame()
 
     -- 定義銀行搜尋過濾函數（供 OnTextChanged 與 SetActiveTab 共用）
     ApplyBankSearch = function()
-        if not bankSearchBox then return end
+        if not bankSearchBox then
+            return
+        end
         local text = bankSearchBox:GetText():lower()
         local searchSlots = bankFrame.activeTab == "reagent" and bankFrame.reagentSlots or bankSlots
         for _, button in pairs(searchSlots) do
@@ -1355,7 +1453,9 @@ local function CreateBankFrame()
             bankTab:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 0.4)
             -- 更新材料銀行格子
             for _, button in pairs(reagentSlots) do
-                if button then UpdateBankSlot(button) end
+                if button then
+                    UpdateBankSlot(button)
+                end
             end
         end
         -- 切換頁籤後重新套用搜尋過濾
@@ -1365,8 +1465,12 @@ local function CreateBankFrame()
     -- 預設啟用銀行頁籤
     SetActiveTab("bank")
 
-    bankTab:SetScript("OnClick", function() SetActiveTab("bank") end)
-    reagentTab:SetScript("OnClick", function() SetActiveTab("reagent") end)
+    bankTab:SetScript("OnClick", function()
+        SetActiveTab("bank")
+    end)
+    reagentTab:SetScript("OnClick", function()
+        SetActiveTab("reagent")
+    end)
 
     -- 空格指示器
     local freeSlots = bankFrame:CreateFontString(nil, "OVERLAY")
@@ -1433,7 +1537,9 @@ local function UpdateAllBankSlots()
 end
 
 local function RefreshBankLayout()
-    if not bankFrame then return end
+    if not bankFrame then
+        return
+    end
 
     -- 重新計算框架大小（動態調整欄數避免超出螢幕）
     local totalSlots = GetTotalBankSlots()
@@ -1465,7 +1571,10 @@ local function RefreshBankLayout()
         local col = (slotID - 1) % bankCols
 
         button:ClearAllPoints()
-        button:SetPoint("TOPLEFT", bankFrame.slotContainer, "TOPLEFT",
+        button:SetPoint(
+            "TOPLEFT",
+            bankFrame.slotContainer,
+            "TOPLEFT",
             col * (SLOT_SIZE + SLOT_SPACING),
             -row * (SLOT_SIZE + SLOT_SPACING)
         )
@@ -1490,7 +1599,10 @@ local function RefreshBankLayout()
             local col = (slotID - 1) % bankCols
 
             button:ClearAllPoints()
-            button:SetPoint("TOPLEFT", bankFrame.slotContainer, "TOPLEFT",
+            button:SetPoint(
+                "TOPLEFT",
+                bankFrame.slotContainer,
+                "TOPLEFT",
                 col * (SLOT_SIZE + SLOT_SPACING),
                 -row * (SLOT_SIZE + SLOT_SPACING)
             )
@@ -1509,7 +1621,9 @@ local function RefreshBankLayout()
 end
 
 local function OpenBank()
-    if InCombatLockdown() then return end
+    if InCombatLockdown() then
+        return
+    end
 
     if not bankFrame then
         CreateBankFrame()
@@ -1538,7 +1652,9 @@ local function CloseBank()
         if db and db.clearSearchOnClose and bankSearchBox then
             bankSearchBox:SetText("")
             for _, button in pairs(bankSlots) do
-                if button then button:SetAlpha(1) end
+                if button then
+                    button:SetAlpha(1)
+                end
             end
         end
         -- 清除銀行批次更新佇列避免洩漏
@@ -1552,7 +1668,9 @@ end
 --------------------------------------------------------------------------------
 
 local function UpdateMoney()
-    if not bagFrame or not bagFrame.money then return end
+    if not bagFrame or not bagFrame.money then
+        return
+    end
 
     local money = GetMoney()
     local gold = floor(money / 10000)
@@ -1563,7 +1681,9 @@ local function UpdateMoney()
 end
 
 local function UpdateFreeSlots()
-    if not bagFrame or not bagFrame.freeSlots then return end
+    if not bagFrame or not bagFrame.freeSlots then
+        return
+    end
 
     local free = GetTotalFreeSlots()
     local total = GetTotalSlots()
@@ -1599,7 +1719,9 @@ local function UpdateUpgradeArrows()
 end
 
 local function RefreshBagLayout()
-    if not bagFrame then return end
+    if not bagFrame then
+        return
+    end
 
     local db = GetBagDB()
 
@@ -1673,7 +1795,10 @@ local function RefreshBagLayout()
         local col = layoutIdx % SLOTS_PER_ROW
 
         button:ClearAllPoints()
-        button:SetPoint("TOPLEFT", bagFrame.slotContainer, "TOPLEFT",
+        button:SetPoint(
+            "TOPLEFT",
+            bagFrame.slotContainer,
+            "TOPLEFT",
             col * (SLOT_SIZE + SLOT_SPACING),
             -row * (SLOT_SIZE + SLOT_SPACING)
         )
@@ -1697,7 +1822,9 @@ end
 --------------------------------------------------------------------------------
 
 local function OpenBags()
-    if InCombatLockdown() then return end
+    if InCombatLockdown() then
+        return
+    end
 
     if not bagFrame then
         CreateBagFrame()
@@ -1734,7 +1861,9 @@ local function CloseBags()
         if db and db.clearSearchOnClose and searchBox then
             searchBox:SetText("")
             for _, button in pairs(slots) do
-                if button then button:SetAlpha(1) end
+                if button then
+                    button:SetAlpha(1)
+                end
             end
         end
         -- 清除待處理的背包更新佇列
@@ -1758,14 +1887,18 @@ function LunarUI.RebuildBags()
     -- 隱藏並清理舊格子（WoW 框架不可銷毀，僅隱藏+解除錨定）
     for _, button in pairs(slots) do
         if button then
-            if button.newGlowAnim then button.newGlowAnim:Stop() end
+            if button.newGlowAnim then
+                button.newGlowAnim:Stop()
+            end
             button:Hide()
             button:ClearAllPoints()
         end
     end
     for _, button in pairs(bankSlots) do
         if button then
-            if button.newGlowAnim then button.newGlowAnim:Stop() end
+            if button.newGlowAnim then
+                button.newGlowAnim:Stop()
+            end
             button:Hide()
             button:ClearAllPoints()
         end
@@ -1773,7 +1906,9 @@ function LunarUI.RebuildBags()
     if bankFrame and bankFrame.reagentSlots then
         for _, button in pairs(bankFrame.reagentSlots) do
             if button then
-                if button.newGlowAnim then button.newGlowAnim:Stop() end
+                if button.newGlowAnim then
+                    button.newGlowAnim:Stop()
+                end
                 button:Hide()
                 button:ClearAllPoints()
             end
@@ -1819,10 +1954,14 @@ end
 local hooksRegistered = false
 
 local function HookBagFunctions()
-    if hooksRegistered then return end
+    if hooksRegistered then
+        return
+    end
 
     local db = GetBagDB()
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
     hooksRegistered = true
 
@@ -1844,14 +1983,18 @@ local function HookBagFunctions()
     -- 徹底禁用暴雪背包框架（alpha 0 + 移到螢幕外 + 禁用滑鼠）
     -- 只設 alpha 0 不夠：框架仍接收滑鼠事件，會擋住我們的自訂背包
     local function KillBlizzardFrame(frame)
-        if not frame then return end
+        if not frame then
+            return
+        end
         pcall(function()
             frame:SetAlpha(0)
             frame:EnableMouse(false)
             frame:ClearAllPoints()
             frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
             for _, child in ipairs({ frame:GetChildren() }) do
-                pcall(function() child:EnableMouse(false) end)
+                pcall(function()
+                    child:EnableMouse(false)
+                end)
             end
         end)
     end
@@ -1868,7 +2011,9 @@ local function HookBagFunctions()
 
     for i = 1, 13 do
         local frame = _G["ContainerFrame" .. i]
-        if frame then KillAndHookShow(frame) end
+        if frame then
+            KillAndHookShow(frame)
+        end
     end
     if ContainerFrameCombinedBags then
         KillAndHookShow(ContainerFrameCombinedBags)
@@ -1887,7 +2032,7 @@ end
 --------------------------------------------------------------------------------
 
 local eventFrame = CreateFrame("Frame")
-local eventHandlerSet = false  -- 防止重複設定 handler
+local eventHandlerSet = false -- 防止重複設定 handler
 
 -- 事件處理函數 (提取到模組層級)
 local function OnBagEvent(_self, event, ...)
@@ -1986,11 +2131,13 @@ local function OnBagEvent(_self, event, ...)
             itemLevelCacheMeta.n = 0
             equipmentTypeCacheMeta.n = 0
         end
-        isSorting = false  -- 排序完成，恢復正常事件處理
+        isSorting = false -- 排序完成，恢復正常事件處理
         return
     end
 
-    if not bagFrame or not bagFrame:IsShown() then return end
+    if not bagFrame or not bagFrame:IsShown() then
+        return
+    end
 
     if event == "PLAYER_MONEY" then
         UpdateMoney()
@@ -2026,7 +2173,9 @@ end
 ]]
 SellJunk = function()
     local db = GetBagDB()
-    if not db or not db.autoSellJunk then return end
+    if not db or not db.autoSellJunk then
+        return
+    end
 
     -- 第一步：收集所有垃圾物品
     local junkItems = {}
@@ -2050,14 +2199,18 @@ SellJunk = function()
         end
     end
 
-    if #junkItems == 0 then return end
+    if #junkItems == 0 then
+        return
+    end
 
     -- 第二步：逐件販賣（C_Timer 分批避免伺服器節流）
     local itemCount = #junkItems
     local index = 0
     local function SellNext()
         -- 確保商人視窗仍然開啟，玩家可能在販賣過程中關閉商人
-        if not MerchantFrame or not MerchantFrame:IsShown() then return end
+        if not MerchantFrame or not MerchantFrame:IsShown() then
+            return
+        end
         index = index + 1
         if index > #junkItems then
             -- 所有垃圾已販賣，輸出統計
@@ -2080,7 +2233,9 @@ SellJunk = function()
         end
 
         local item = junkItems[index]
-        if not item then return end
+        if not item then
+            return
+        end
         C_Container.UseContainerItem(item.bag, item.slot)
         C_Timer.After(0.2, SellNext)
     end
@@ -2093,7 +2248,9 @@ end
 
 local function InitializeBags()
     local db = GetBagDB()
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
     -- 註冊事件 (移到 InitializeBags 中，確保 disable/enable 可正常工作)
     if not eventHandlerSet then

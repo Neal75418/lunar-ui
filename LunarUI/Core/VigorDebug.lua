@@ -30,8 +30,12 @@ function LunarUI:DebugVigorFrames()
     end
 
     -- 安全取值輔助（避免 secret taint）
-    local function safeNum(val) return tonumber(tostring(val or 0)) or 0 end
-    local function safeStr(val) return tostring(val or "?") end
+    local function safeNum(val)
+        return tonumber(tostring(val or 0)) or 0
+    end
+    local function safeStr(val)
+        return tostring(val or "?")
+    end
 
     -- 取得框架完整診斷資訊
     local function describeFrame(frame, indent)
@@ -42,10 +46,18 @@ function LunarUI:DebugVigorFrames()
             local visible = frame:IsVisible() and "visible" or "INVISIBLE"
             info.shown = shown .. "/" .. visible
         end)
-        pcall(function() info.alpha = string.format("%.2f", safeNum(frame:GetAlpha())) end)
-        pcall(function() info.effAlpha = string.format("%.2f", safeNum(frame:GetEffectiveAlpha())) end)
-        pcall(function() info.scale = string.format("%.2f", safeNum(frame:GetScale())) end)
-        pcall(function() info.effScale = string.format("%.3f", safeNum(frame:GetEffectiveScale())) end)
+        pcall(function()
+            info.alpha = string.format("%.2f", safeNum(frame:GetAlpha()))
+        end)
+        pcall(function()
+            info.effAlpha = string.format("%.2f", safeNum(frame:GetEffectiveAlpha()))
+        end)
+        pcall(function()
+            info.scale = string.format("%.2f", safeNum(frame:GetScale()))
+        end)
+        pcall(function()
+            info.effScale = string.format("%.3f", safeNum(frame:GetEffectiveScale()))
+        end)
         pcall(function()
             local w, h = frame:GetSize()
             info.size = string.format("%.0fx%.0f", safeNum(w), safeNum(h))
@@ -53,37 +65,69 @@ function LunarUI:DebugVigorFrames()
         pcall(function()
             local p, rel, _, px, py = frame:GetPoint(1)
             local relName = "?"
-            if rel then relName = safeStr(rel:GetName() or "unnamed") end
-            info.pos = safeStr(p) .. "(" .. string.format("%.0f", safeNum(px)) .. "," .. string.format("%.0f", safeNum(py)) .. ")@" .. relName
+            if rel then
+                relName = safeStr(rel:GetName() or "unnamed")
+            end
+            info.pos = safeStr(p)
+                .. "("
+                .. string.format("%.0f", safeNum(px))
+                .. ","
+                .. string.format("%.0f", safeNum(py))
+                .. ")@"
+                .. relName
         end)
         pcall(function()
             local l, b, w, h = frame:GetBoundsRect()
             if l then
-                info.bounds = string.format("L=%.0f B=%.0f W=%.0f H=%.0f", safeNum(l), safeNum(b), safeNum(w), safeNum(h))
+                info.bounds =
+                    string.format("L=%.0f B=%.0f W=%.0f H=%.0f", safeNum(l), safeNum(b), safeNum(w), safeNum(h))
             end
         end)
         pcall(function()
             local parent = frame:GetParent()
             info.parent = parent and safeStr(parent:GetName() or "unnamed") or "nil"
         end)
-        pcall(function() info.strata = safeStr(frame:GetFrameStrata()) end)
-        pcall(function() info.level = safeNum(frame:GetFrameLevel()) end)
+        pcall(function()
+            info.strata = safeStr(frame:GetFrameStrata())
+        end)
+        pcall(function()
+            info.level = safeNum(frame:GetFrameLevel())
+        end)
 
         -- LunarUI 標記檢查
-        if frame._lunarUIForceHidden then info.flags = (info.flags or "") .. " FORCE_HIDDEN" end
-        if frame._lunarSkinBG then info.flags = (info.flags or "") .. " SKINNED" end
+        if frame._lunarUIForceHidden then
+            info.flags = (info.flags or "") .. " FORCE_HIDDEN"
+        end
+        if frame._lunarSkinBG then
+            info.flags = (info.flags or "") .. " SKINNED"
+        end
 
-        local line = indent .. (info.shown or "?") ..
-            " a=" .. (info.alpha or "?") ..
-            " eff=" .. (info.effAlpha or "?") ..
-            " sc=" .. (info.scale or "?") ..
-            " effSc=" .. (info.effScale or "?") ..
-            " sz=" .. (info.size or "?") ..
-            " " .. (info.pos or "?") ..
-            " parent=" .. (info.parent or "?") ..
-            " strata=" .. (info.strata or "?") .. "/" .. (info.level or "?")
-        if info.bounds then line = line .. " [" .. info.bounds .. "]" end
-        if info.flags then line = line .. " FLAGS:" .. info.flags end
+        local line = indent
+            .. (info.shown or "?")
+            .. " a="
+            .. (info.alpha or "?")
+            .. " eff="
+            .. (info.effAlpha or "?")
+            .. " sc="
+            .. (info.scale or "?")
+            .. " effSc="
+            .. (info.effScale or "?")
+            .. " sz="
+            .. (info.size or "?")
+            .. " "
+            .. (info.pos or "?")
+            .. " parent="
+            .. (info.parent or "?")
+            .. " strata="
+            .. (info.strata or "?")
+            .. "/"
+            .. (info.level or "?")
+        if info.bounds then
+            line = line .. " [" .. info.bounds .. "]"
+        end
+        if info.flags then
+            line = line .. " FLAGS:" .. info.flags
+        end
         return line
     end
 
@@ -104,7 +148,9 @@ function LunarUI:DebugVigorFrames()
         if frame then
             add(name .. ": " .. describeFrame(frame))
             -- 子框架（含大小與位置）
-            local ok, children = pcall(function() return { frame:GetChildren() } end)
+            local ok, children = pcall(function()
+                return { frame:GetChildren() }
+            end)
             if ok and children then
                 for i, child in ipairs(children) do
                     if i > 10 then
@@ -112,18 +158,24 @@ function LunarUI:DebugVigorFrames()
                         break
                     end
                     local cName = "child#" .. i
-                    pcall(function() cName = child:GetName() or cName end)
+                    pcall(function()
+                        cName = child:GetName() or cName
+                    end)
                     add("  -> " .. cName .. ": " .. describeFrame(child, "     "))
                 end
             end
             -- Region（材質/文字）
-            local ok2, regions = pcall(function() return { frame:GetRegions() } end)
+            local ok2, regions = pcall(function()
+                return { frame:GetRegions() }
+            end)
             if ok2 and regions then
                 local texCount, visCount = 0, 0
                 for _, r in ipairs(regions) do
                     texCount = texCount + 1
                     pcall(function()
-                        if r:IsShown() and r:GetAlpha() > 0 then visCount = visCount + 1 end
+                        if r:IsShown() and r:GetAlpha() > 0 then
+                            visCount = visCount + 1
+                        end
                     end)
                 end
                 if texCount > 0 then
@@ -143,11 +195,17 @@ function LunarUI:DebugVigorFrames()
         local depth = 0
         while current and depth < 15 do
             local cName = "?"
-            pcall(function() cName = current:GetName() or "unnamed" end)
+            pcall(function()
+                cName = current:GetName() or "unnamed"
+            end)
             add("[" .. depth .. "] " .. safeStr(cName) .. ": " .. describeFrame(current))
-            pcall(function() current = current:GetParent() end)
+            pcall(function()
+                current = current:GetParent()
+            end)
             depth = depth + 1
-            if current == nil then break end
+            if current == nil then
+                break
+            end
         end
     else
         add("EncounterBar not found, cannot walk parent chain")
@@ -176,9 +234,13 @@ function LunarUI:DebugVigorFrames()
     local found = 0
     for k, v in pairs(_G) do
         local ok, line = pcall(function()
-            if type(k) ~= "string" or type(v) ~= "table" or not v.GetAlpha then return nil end
+            if type(k) ~= "string" or type(v) ~= "table" or not v.GetAlpha then
+                return nil
+            end
             local safeKey = tostring(k)
-            if not (safeKey:match("[Vv]igor") or safeKey:match("[Ss]kyriding") or safeKey:match("PowerBar")) then return nil end
+            if not (safeKey:match("[Vv]igor") or safeKey:match("[Ss]kyriding") or safeKey:match("PowerBar")) then
+                return nil
+            end
             return "[GLOBAL] " .. safeKey .. ": " .. describeFrame(v)
         end)
         if ok and line then
@@ -196,16 +258,28 @@ function LunarUI:DebugVigorFrames()
     if uwpbcf then
         local totalFrames, totalVisible, totalWithTex = 0, 0, 0
         local function scanDeep(frame, scanDepth, prefix)
-            if scanDepth > 5 then return end  -- 最多 5 層
-            local ok, children = pcall(function() return { frame:GetChildren() } end)
-            if not ok or not children then return end
+            if scanDepth > 5 then
+                return
+            end -- 最多 5 層
+            local ok, children = pcall(function()
+                return { frame:GetChildren() }
+            end)
+            if not ok or not children then
+                return
+            end
             for i, child in ipairs(children) do
                 totalFrames = totalFrames + 1
                 local cName = "?"
-                pcall(function() cName = child:GetName() or ("child#" .. i) end)
+                pcall(function()
+                    cName = child:GetName() or ("child#" .. i)
+                end)
                 local isVis = false
-                pcall(function() isVis = child:IsVisible() end)
-                if isVis then totalVisible = totalVisible + 1 end
+                pcall(function()
+                    isVis = child:IsVisible()
+                end)
+                if isVis then
+                    totalVisible = totalVisible + 1
+                end
                 -- 檢查是否有材質
                 local texCount = 0
                 pcall(function()
@@ -216,7 +290,9 @@ function LunarUI:DebugVigorFrames()
                         end
                     end
                 end)
-                if texCount > 0 then totalWithTex = totalWithTex + 1 end
+                if texCount > 0 then
+                    totalWithTex = totalWithTex + 1
+                end
                 -- 只輸出有內容或有名字的框架
                 if texCount > 0 or cName ~= ("child#" .. i) or scanDepth <= 2 then
                     add(prefix .. cName .. ": " .. describeFrame(child, prefix) .. " tex=" .. texCount)
@@ -235,8 +311,12 @@ function LunarUI:DebugVigorFrames()
     local bgCount = 0
     for k, v in pairs(_G) do
         local ok, line = pcall(function()
-            if type(k) ~= "string" or type(v) ~= "table" or not v.GetFrameStrata then return nil end
-            if not tostring(k):match("LunarUI.*[Bb]ar") then return nil end
+            if type(k) ~= "string" or type(v) ~= "table" or not v.GetFrameStrata then
+                return nil
+            end
+            if not tostring(k):match("LunarUI.*[Bb]ar") then
+                return nil
+            end
             local strata = v:GetFrameStrata()
             if strata == "TOOLTIP" or strata == "FULLSCREEN_DIALOG" then
                 return "[WARNING] " .. tostring(k) .. " strata=" .. strata
@@ -259,7 +339,7 @@ function LunarUI:DebugVigorFrames()
             add("C_UIWidgetManager: NOT AVAILABLE")
         else
             -- 查詢所有 widget set 的 power bar 類型 widget
-            local widgetSets = { 1, 2, 3, 283 }  -- 常見 widget set ID
+            local widgetSets = { 1, 2, 3, 283 } -- 常見 widget set ID
             for _, setID in ipairs(widgetSets) do
                 local ok, widgets = pcall(C_UIWidgetManager.GetAllWidgetsBySetID, setID)
                 if ok and widgets then
@@ -271,16 +351,27 @@ function LunarUI:DebugVigorFrames()
                             local wID = safeNum(w.widgetID)
                             -- Type 3 = StatusBar (vigor is this type)
                             -- Type 0 = IconAndText, Type 2 = CaptureBar, etc.
-                            add("  widgetID=" .. wID .. " type=" .. wType ..
-                                (wType == 3 and " (StatusBar/VIGOR?)" or ""))
+                            add(
+                                "  widgetID="
+                                    .. wID
+                                    .. " type="
+                                    .. wType
+                                    .. (wType == 3 and " (StatusBar/VIGOR?)" or "")
+                            )
                             -- 嘗試獲取 StatusBar 詳細資訊
                             if wType == 3 then
                                 local ok2, wInfo = pcall(C_UIWidgetManager.GetStatusBarWidgetVisualizationInfo, wID)
                                 if ok2 and wInfo then
-                                    add("    -> barValue=" .. safeNum(wInfo.barValue) ..
-                                        " barMin=" .. safeNum(wInfo.barMin) ..
-                                        " barMax=" .. safeNum(wInfo.barMax) ..
-                                        " text=" .. safeStr(wInfo.text))
+                                    add(
+                                        "    -> barValue="
+                                            .. safeNum(wInfo.barValue)
+                                            .. " barMin="
+                                            .. safeNum(wInfo.barMin)
+                                            .. " barMax="
+                                            .. safeNum(wInfo.barMax)
+                                            .. " text="
+                                            .. safeStr(wInfo.text)
+                                    )
                                 end
                             end
                         end
@@ -333,8 +424,7 @@ function LunarUI:DebugVigorFrames()
     pcall(function()
         if GetUnitPowerBarInfo then
             local barID, _minPower = GetUnitPowerBarInfo("player")
-            add("GetUnitPowerBarInfo: barID=" .. safeStr(barID) ..
-                " minPower=" .. safeStr(_minPower))
+            add("GetUnitPowerBarInfo: barID=" .. safeStr(barID) .. " minPower=" .. safeStr(_minPower))
         else
             add("GetUnitPowerBarInfo: API NOT FOUND")
         end
@@ -362,8 +452,12 @@ function LunarUI:DebugVigorFrames()
             local onEvent = ppba:GetScript("OnEvent")
             add("PlayerPowerBarAlt OnEvent: " .. (onEvent and "SET" or "NIL!"))
             -- 檢查事件註冊
-            local events = { "UNIT_POWER_BAR_SHOW", "UNIT_POWER_BAR_HIDE",
-                "UNIT_POWER_BAR_TIMER_UPDATE", "PLAYER_ENTERING_WORLD" }
+            local events = {
+                "UNIT_POWER_BAR_SHOW",
+                "UNIT_POWER_BAR_HIDE",
+                "UNIT_POWER_BAR_TIMER_UPDATE",
+                "PLAYER_ENTERING_WORLD",
+            }
             for _, ev in ipairs(events) do
                 local registered = ppba:IsEventRegistered(ev)
                 if registered then
@@ -383,10 +477,17 @@ function LunarUI:DebugVigorFrames()
             local onShow = ebCheck:GetScript("OnShow")
             add("EncounterBar OnShow: " .. (onShow and "SET" or "nil"))
             -- 檢查重要事件
-            local ebEvents = { "UPDATE_ENCOUNTER_BAR", "PLAYER_ENTERING_WORLD",
-                "UPDATE_UI_WIDGET", "UNIT_POWER_BAR_SHOW", "UNIT_POWER_BAR_HIDE" }
+            local ebEvents = {
+                "UPDATE_ENCOUNTER_BAR",
+                "PLAYER_ENTERING_WORLD",
+                "UPDATE_UI_WIDGET",
+                "UNIT_POWER_BAR_SHOW",
+                "UNIT_POWER_BAR_HIDE",
+            }
             for _, ev in ipairs(ebEvents) do
-                local ok, registered = pcall(function() return ebCheck:IsEventRegistered(ev) end)
+                local ok, registered = pcall(function()
+                    return ebCheck:IsEventRegistered(ev)
+                end)
                 if ok then
                     add("  event " .. ev .. ": " .. (registered and "REGISTERED" or "NOT registered"))
                 end
@@ -403,15 +504,20 @@ function LunarUI:DebugVigorFrames()
         -- Skyriding 相關 API（WoW 11.0+）
         if C_PlayerInfo and C_PlayerInfo.GetGlidingInfo then
             local isGliding, canGlide, forwardSpeed = C_PlayerInfo.GetGlidingInfo()
-            add("GlidingInfo: isGliding=" .. tostring(isGliding) ..
-                " canGlide=" .. tostring(canGlide) ..
-                " forwardSpeed=" .. safeStr(forwardSpeed))
+            add(
+                "GlidingInfo: isGliding="
+                    .. tostring(isGliding)
+                    .. " canGlide="
+                    .. tostring(canGlide)
+                    .. " forwardSpeed="
+                    .. safeStr(forwardSpeed)
+            )
         else
             add("C_PlayerInfo.GetGlidingInfo: NOT AVAILABLE")
         end
         if C_Spell and C_Spell.DoesSpellExist then
             -- Skyriding 被動技能 spell ID
-            local skyridingSpells = { 404468, 404464, 404462 }  -- 常見 Skyriding 相關 spell
+            local skyridingSpells = { 404468, 404464, 404462 } -- 常見 Skyriding 相關 spell
             for _, spellID in ipairs(skyridingSpells) do
                 local exists = C_Spell.DoesSpellExist(spellID)
                 if exists then
@@ -452,7 +558,12 @@ function LunarUI:DebugVigorFrames()
     local f = CreateFrame("Frame", "LunarUI_DebugVigorPopup", UIParent, "BackdropTemplate")
     f:SetSize(600, 400)
     f:SetPoint("CENTER")
-    f:SetBackdrop({ bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border", edgeSize = 16, insets = { left = 4, right = 4, top = 4, bottom = 4 } })
+    f:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        edgeSize = 16,
+        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    })
     f:SetFrameStrata("DIALOG")
     f:SetMovable(true)
     f:EnableMouse(true)
@@ -487,20 +598,26 @@ end
 -- 不依賴 ActionBarController_UpdateAll（WoW 12.0 可能是 local 或延遲載入）
 -- 改用 PLAYER_MOUNT_DISPLAY_CHANGED + 定時檢查
 local vigorTraceHooked = false
-local vigorTraceOutputCount = 0  -- 限制輸出次數避免洗頻
-local vigorTraceFrame             -- module scope 引用，供 cleanup 使用
+local vigorTraceOutputCount = 0 -- 限制輸出次數避免洗頻
+local vigorTraceFrame -- module scope 引用，供 cleanup 使用
 
 local function SetupVigorTrace()
-    if vigorTraceHooked then return end
+    if vigorTraceHooked then
+        return
+    end
     vigorTraceHooked = true
 
     local function DumpVigorState(trigger)
         -- 限制每次騎乘最多輸出 3 次
-        if vigorTraceOutputCount >= 3 then return end
+        if vigorTraceOutputCount >= 3 then
+            return
+        end
         vigorTraceOutputCount = vigorTraceOutputCount + 1
 
         local lines = {}
-        local function tr(msg) lines[#lines + 1] = msg end
+        local function tr(msg)
+            lines[#lines + 1] = msg
+        end
 
         tr("trigger=" .. trigger)
 
@@ -525,21 +642,44 @@ local function SetupVigorTrace()
             local a = string.format("%.1f", eb:GetAlpha())
             local ea = string.format("%.1f", eb:GetEffectiveAlpha())
             local w, h = eb:GetSize()
-            tr("EB:" .. (eb:IsShown() and "Y" or "N") .. "/" .. (eb:IsVisible() and "Y" or "N")
-                .. " a=" .. a .. " ea=" .. ea .. " sz=" .. math.floor(w) .. "x" .. math.floor(h))
+            tr(
+                "EB:"
+                    .. (eb:IsShown() and "Y" or "N")
+                    .. "/"
+                    .. (eb:IsVisible() and "Y" or "N")
+                    .. " a="
+                    .. a
+                    .. " ea="
+                    .. ea
+                    .. " sz="
+                    .. math.floor(w)
+                    .. "x"
+                    .. math.floor(h)
+            )
             -- 子框架詳細資訊（名稱、大小、可見性）
             local cc = select("#", eb:GetChildren())
             tr("EB.ch=" .. cc)
             if cc > 0 then
-                local children = {eb:GetChildren()}
+                local children = { eb:GetChildren() }
                 for ci = 1, cc do
                     local child = children[ci]
                     if child then
                         local cName = child:GetName() or ("ch" .. ci)
-                        if #cName > 20 then cName = cName:sub(1, 20) .. ".." end
+                        if #cName > 20 then
+                            cName = cName:sub(1, 20) .. ".."
+                        end
                         local cw, ch2 = child:GetSize()
-                        tr("EB[" .. ci .. "]" .. cName .. ":" .. math.floor(cw) .. "x" .. math.floor(ch2)
-                            .. (child:IsVisible() and "V" or "H"))
+                        tr(
+                            "EB["
+                                .. ci
+                                .. "]"
+                                .. cName
+                                .. ":"
+                                .. math.floor(cw)
+                                .. "x"
+                                .. math.floor(ch2)
+                                .. (child:IsVisible() and "V" or "H")
+                        )
                     end
                 end
             end
@@ -550,8 +690,18 @@ local function SetupVigorTrace()
                 local pa = string.format("%.1f", parent:GetAlpha())
                 local pea = string.format("%.1f", parent:GetEffectiveAlpha())
                 local pw, ph = parent:GetSize()
-                tr("EB.parent=" .. pName .. " a=" .. pa .. " ea=" .. pea
-                    .. " sz=" .. math.floor(pw) .. "x" .. math.floor(ph))
+                tr(
+                    "EB.parent="
+                        .. pName
+                        .. " a="
+                        .. pa
+                        .. " ea="
+                        .. pea
+                        .. " sz="
+                        .. math.floor(pw)
+                        .. "x"
+                        .. math.floor(ph)
+                )
             end
         else
             tr("EB:nil")
@@ -563,37 +713,75 @@ local function SetupVigorTrace()
             local uw, uh = uwp:GetSize()
             local uwpCC = select("#", uwp:GetChildren())
             local regSetID = uwp.registeredWidgetSetID
-            tr("UWP:" .. (uwp:IsShown() and "Y" or "N") .. "/" .. (uwp:IsVisible() and "Y" or "N")
-                .. " sz=" .. math.floor(uw) .. "x" .. math.floor(uh) .. " ch=" .. uwpCC
-                .. " regSet=" .. tostring(regSetID))
+            tr(
+                "UWP:"
+                    .. (uwp:IsShown() and "Y" or "N")
+                    .. "/"
+                    .. (uwp:IsVisible() and "Y" or "N")
+                    .. " sz="
+                    .. math.floor(uw)
+                    .. "x"
+                    .. math.floor(uh)
+                    .. " ch="
+                    .. uwpCC
+                    .. " regSet="
+                    .. tostring(regSetID)
+            )
             -- UWP 子框架（vigor widget bars）+ 深層子框架
             if uwpCC > 0 then
-                local uwpChildren = {uwp:GetChildren()}
+                local uwpChildren = { uwp:GetChildren() }
                 for ui = 1, uwpCC do
                     local uc = uwpChildren[ui]
                     if uc then
                         local ucName = uc:GetName() or ("uwp" .. ui)
-                        if #ucName > 20 then ucName = ucName:sub(1, 20) .. ".." end
+                        if #ucName > 20 then
+                            ucName = ucName:sub(1, 20) .. ".."
+                        end
                         local ucw, uch = uc:GetSize()
                         local ucChildCount = select("#", uc:GetChildren())
                         local ucRegionCount = select("#", uc:GetRegions())
-                        tr("UWP[" .. ui .. "]" .. ucName .. ":" .. math.floor(ucw) .. "x" .. math.floor(uch)
-                            .. (uc:IsVisible() and "V" or "H")
-                            .. " ch=" .. ucChildCount .. " rg=" .. ucRegionCount)
+                        tr(
+                            "UWP["
+                                .. ui
+                                .. "]"
+                                .. ucName
+                                .. ":"
+                                .. math.floor(ucw)
+                                .. "x"
+                                .. math.floor(uch)
+                                .. (uc:IsVisible() and "V" or "H")
+                                .. " ch="
+                                .. ucChildCount
+                                .. " rg="
+                                .. ucRegionCount
+                        )
                         -- 深層：顯示每個 UWP 子框架的子框架（actual vigor widgets）
                         if ucChildCount > 0 then
-                            local deepChildren = {uc:GetChildren()}
+                            local deepChildren = { uc:GetChildren() }
                             for di = 1, math.min(ucChildCount, 5) do
                                 local dc = deepChildren[di]
                                 if dc then
                                     local dcName = dc:GetName() or ("d" .. di)
-                                    if #dcName > 25 then dcName = dcName:sub(1, 25) .. ".." end
+                                    if #dcName > 25 then
+                                        dcName = dcName:sub(1, 25) .. ".."
+                                    end
                                     local dcw, dch = dc:GetSize()
                                     local dcAlpha = string.format("%.1f", dc:GetAlpha())
-                                    tr("  UWP[" .. ui .. "][" .. di .. "]" .. dcName
-                                        .. ":" .. math.floor(dcw) .. "x" .. math.floor(dch)
-                                        .. (dc:IsVisible() and "V" or "H")
-                                        .. " a=" .. dcAlpha)
+                                    tr(
+                                        "  UWP["
+                                            .. ui
+                                            .. "]["
+                                            .. di
+                                            .. "]"
+                                            .. dcName
+                                            .. ":"
+                                            .. math.floor(dcw)
+                                            .. "x"
+                                            .. math.floor(dch)
+                                            .. (dc:IsVisible() and "V" or "H")
+                                            .. " a="
+                                            .. dcAlpha
+                                    )
                                 end
                             end
                         end
@@ -625,16 +813,28 @@ local function SetupVigorTrace()
                 tr(shortName .. ":" .. (cf:IsVisible() and "V" or "H") .. " ch=" .. cc)
                 -- 列出子框架名稱（尋找 vigor/power bar widget）
                 if cc > 0 then
-                    local cfChildren = {cf:GetChildren()}
+                    local cfChildren = { cf:GetChildren() }
                     for ci = 1, math.min(cc, 5) do
                         local child = cfChildren[ci]
                         if child then
                             local chName = child:GetName() or ("c" .. ci)
-                            if #chName > 30 then chName = chName:sub(1, 30) .. ".." end
+                            if #chName > 30 then
+                                chName = chName:sub(1, 30) .. ".."
+                            end
                             local chw, chh = child:GetSize()
-                            tr("  " .. shortName .. "[" .. ci .. "]" .. chName
-                                .. ":" .. math.floor(chw) .. "x" .. math.floor(chh)
-                                .. (child:IsVisible() and "V" or "H"))
+                            tr(
+                                "  "
+                                    .. shortName
+                                    .. "["
+                                    .. ci
+                                    .. "]"
+                                    .. chName
+                                    .. ":"
+                                    .. math.floor(chw)
+                                    .. "x"
+                                    .. math.floor(chh)
+                                    .. (child:IsVisible() and "V" or "H")
+                            )
                         end
                     end
                 end
@@ -660,8 +860,7 @@ local function SetupVigorTrace()
                     if widgets then
                         for wi = 1, math.min(#widgets, 5) do
                             local w = widgets[wi]
-                            tr("pw[" .. wi .. "]id=" .. (w.widgetID or "?")
-                                .. " type=" .. (w.widgetType or "?"))
+                            tr("pw[" .. wi .. "]id=" .. (w.widgetID or "?") .. " type=" .. (w.widgetType or "?"))
                         end
                     end
                 end
@@ -672,9 +871,14 @@ local function SetupVigorTrace()
         pcall(function()
             local mgr = _G.MainMenuBarManager
             if mgr then
-                tr("MMBMgr:" .. (mgr:IsShown() and "Y" or "N") .. "/"
-                    .. (mgr:IsVisible() and "Y" or "N")
-                    .. " a=" .. string.format("%.1f", mgr:GetAlpha()))
+                tr(
+                    "MMBMgr:"
+                        .. (mgr:IsShown() and "Y" or "N")
+                        .. "/"
+                        .. (mgr:IsVisible() and "Y" or "N")
+                        .. " a="
+                        .. string.format("%.1f", mgr:GetAlpha())
+                )
             else
                 tr("MMBMgr:nil")
             end
@@ -727,7 +931,9 @@ end
 
 --- 切換 testvigor 模式：暫停所有暴雪動作條隱藏，用於診斷 vigor bar 問題
 function LunarUI:ToggleTestVigor()
-    if not self.db.global then self.db.global = {} end
+    if not self.db.global then
+        self.db.global = {}
+    end
     self.db.global._testVigorMode = not self.db.global._testVigorMode
 
     if self.db.global._testVigorMode then

@@ -26,7 +26,9 @@ local autoRepairFrame = CreateFrame("Frame")
 
 local function OnMerchantShow()
     local cfg = GetAutoConfig()
-    if not cfg or not cfg.autoRepair then return end
+    if not cfg or not cfg.autoRepair then
+        return
+    end
 
     local L = Engine.L or {}
     local repairAllCost, canRepair = GetRepairAllCost()
@@ -37,10 +39,12 @@ local function OnMerchantShow()
             local guildBankWithdraw = 0
             if _G.GetGuildBankWithdrawMoney then
                 local ok, result = pcall(_G.GetGuildBankWithdrawMoney)
-                if ok and result then guildBankWithdraw = result end
+                if ok and result then
+                    guildBankWithdraw = result
+                end
             end
             if guildBankWithdraw == -1 or guildBankWithdraw >= repairAllCost then
-                RepairAllItems(true)  -- true = 使用公會資金
+                RepairAllItems(true) -- true = 使用公會資金
                 local costStr = GetCoinTextureString(repairAllCost)
                 LunarUI:Print(string.format(L["RepairCostGuild"] or "Repaired for %s (Guild Bank)", costStr))
                 return
@@ -66,7 +70,9 @@ local autoReleaseFrame = CreateFrame("Frame")
 
 local function OnPlayerDead()
     local cfg = GetAutoConfig()
-    if not cfg or not cfg.autoRelease then return end
+    if not cfg or not cfg.autoRelease then
+        return
+    end
 
     -- 僅在戰場中自動釋放
     local instanceType = select(2, IsInInstance())
@@ -88,7 +94,9 @@ local achievementFrame = CreateFrame("Frame")
 
 local function OnAchievementEarned(_self, _event)
     local cfg = GetAutoConfig()
-    if not cfg or not cfg.autoScreenshot then return end
+    if not cfg or not cfg.autoScreenshot then
+        return
+    end
 
     -- 延遲截圖讓成就提示先顯示
     C_Timer.After(1, function()
@@ -104,13 +112,17 @@ local autoQuestFrame = CreateFrame("Frame")
 
 local function OnQuestDetail()
     local cfg = GetAutoConfig()
-    if not cfg or not cfg.autoAcceptQuest then return end
+    if not cfg or not cfg.autoAcceptQuest then
+        return
+    end
     AcceptQuest()
 end
 
 local function OnQuestProgress()
     local cfg = GetAutoConfig()
-    if not cfg or not cfg.autoAcceptQuest then return end
+    if not cfg or not cfg.autoAcceptQuest then
+        return
+    end
     if IsQuestCompletable() then
         CompleteQuest()
     end
@@ -118,7 +130,9 @@ end
 
 local function OnQuestComplete()
     local cfg = GetAutoConfig()
-    if not cfg or not cfg.autoAcceptQuest then return end
+    if not cfg or not cfg.autoAcceptQuest then
+        return
+    end
     -- 只有無獎勵選擇或僅一個獎勵時才自動繳交（避免選錯獎勵）
     local numChoices = GetNumQuestChoices()
     if numChoices <= 1 then
@@ -134,7 +148,9 @@ local autoQueueFrame = CreateFrame("Frame")
 
 local function OnLFGProposalShow()
     local cfg = GetAutoConfig()
-    if not cfg or not cfg.autoAcceptQueue then return end
+    if not cfg or not cfg.autoAcceptQueue then
+        return
+    end
     AcceptProposal()
 end
 
@@ -143,7 +159,9 @@ end
 --------------------------------------------------------------------------------
 
 function LunarUI:InitAutomation()
-    if not self.db or not self.db.profile or not self.db.profile.automation then return end
+    if not self.db or not self.db.profile or not self.db.profile.automation then
+        return
+    end
 
     -- 自動修裝
     autoRepairFrame:RegisterEvent("MERCHANT_SHOW")
@@ -194,6 +212,10 @@ function LunarUI.CleanupAutomation()
 end
 
 LunarUI:RegisterModule("Automation", {
-    onEnable = function() LunarUI:InitAutomation() end,
-    onDisable = function() LunarUI.CleanupAutomation() end,
+    onEnable = function()
+        LunarUI:InitAutomation()
+    end,
+    onDisable = function()
+        LunarUI.CleanupAutomation()
+    end,
 })

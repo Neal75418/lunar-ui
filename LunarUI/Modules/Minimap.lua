@@ -39,11 +39,11 @@ local zoneText
 local clockText
 local buttonFrame
 local collectedButtons = {}
-local zoomResetHandle       -- 縮放自動重置計時器
-local addonLoadedFrame      -- ADDON_LOADED 事件監聯框架
+local zoomResetHandle -- 縮放自動重置計時器
+local addonLoadedFrame -- ADDON_LOADED 事件監聯框架
 local buttonScanTimers = {} -- 按鈕掃描延遲計時器
-local mail                  -- 郵件通知框架
-local diff                  -- 難度圖示框架
+local mail -- 郵件通知框架
+local diff -- 難度圖示框架
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -51,10 +51,14 @@ local diff                  -- 難度圖示框架
 
 local function GetPlayerCoords()
     local mapID = C_Map.GetBestMapForUnit("player")
-    if not mapID then return nil, nil end
+    if not mapID then
+        return nil, nil
+    end
 
     local position = C_Map.GetPlayerMapPosition(mapID, "player")
-    if not position then return nil, nil end
+    if not position then
+        return nil, nil
+    end
 
     local x, y = position:GetXY()
     if x and y then
@@ -68,7 +72,9 @@ local lastCoordString = nil
 local lastClockString = nil
 
 local function UpdateCoordinates()
-    if not coordText then return end
+    if not coordText then
+        return
+    end
 
     local x, y = GetPlayerCoords()
     if x and y then
@@ -91,7 +97,9 @@ local function UpdateCoordinates()
 end
 
 local function UpdateZoneText()
-    if not zoneText then return end
+    if not zoneText then
+        return
+    end
 
     local zone = GetZoneText() or ""
     local subzone = GetSubZoneText() or ""
@@ -104,22 +112,26 @@ local function UpdateZoneText()
 
     -- 依 PvP 狀態著色（WoW 12.0 可能回傳 secret value，需 pcall）
     local ok, pvpType = pcall(C_PvP.GetZonePVPInfo)
-    if not ok then pvpType = nil end
+    if not ok then
+        pvpType = nil
+    end
     if pvpType == "sanctuary" then
-        zoneText:SetTextColor(0.41, 0.8, 0.94)  -- 淺藍
+        zoneText:SetTextColor(0.41, 0.8, 0.94) -- 淺藍
     elseif pvpType == "friendly" then
-        zoneText:SetTextColor(0.1, 1.0, 0.1)    -- 綠色
+        zoneText:SetTextColor(0.1, 1.0, 0.1) -- 綠色
     elseif pvpType == "hostile" then
-        zoneText:SetTextColor(1.0, 0.1, 0.1)    -- 紅色
+        zoneText:SetTextColor(1.0, 0.1, 0.1) -- 紅色
     elseif pvpType == "contested" then
-        zoneText:SetTextColor(1.0, 0.7, 0.0)    -- 橙色
+        zoneText:SetTextColor(1.0, 0.7, 0.0) -- 橙色
     else
-        zoneText:SetTextColor(0.9, 0.9, 0.9)    -- 白/灰
+        zoneText:SetTextColor(0.9, 0.9, 0.9) -- 白/灰
     end
 end
 
 local function UpdateClock()
-    if not clockText then return end
+    if not clockText then
+        return
+    end
 
     local db = LunarUI.db and LunarUI.db.profile.minimap
     local hour, minute = GetGameTime()
@@ -128,7 +140,9 @@ local function UpdateClock()
     if db and db.clockFormat == "12h" then
         local suffix = hour >= 12 and "PM" or "AM"
         hour = hour % 12
-        if hour == 0 then hour = 12 end
+        if hour == 0 then
+            hour = 12
+        end
         clockString = format("%d:%02d %s", hour, minute, suffix)
     else
         clockString = format("%02d:%02d", hour, minute)
@@ -184,19 +198,27 @@ local SKIP_BUTTONS = {
 }
 
 local function CollectMinimapButton(button)
-    if not button then return end
+    if not button then
+        return
+    end
     if not (button:IsObjectType("Button") or button:IsObjectType("Frame")) then
         return
     end
 
     local name = button:GetName()
-    if not name then return end
+    if not name then
+        return
+    end
 
     -- 使用雜湊表進行 O(1) 重複檢查
-    if scannedButtonIDs[name] then return end
+    if scannedButtonIDs[name] then
+        return
+    end
 
     for _, skip in ipairs(SKIP_BUTTONS) do
-        if name:find(skip) then return end
+        if name:find(skip) then
+            return
+        end
     end
 
     -- 標記為已掃描並加入集合
@@ -255,7 +277,9 @@ local function SortButtons()
 end
 
 local function OrganizeMinimapButtons()
-    if not buttonFrame then return end
+    if not buttonFrame then
+        return
+    end
 
     -- 整理前先依優先順序排序
     SortButtons()
@@ -272,7 +296,10 @@ local function OrganizeMinimapButtons()
             local row = math.floor((i - 1) / buttonsPerRow)
             local col = (i - 1) % buttonsPerRow
 
-            button:SetPoint("TOPLEFT", buttonFrame, "TOPLEFT",
+            button:SetPoint(
+                "TOPLEFT",
+                buttonFrame,
+                "TOPLEFT",
                 col * (buttonSize + spacing),
                 -row * (buttonSize + spacing)
             )
@@ -289,8 +316,12 @@ local function OrganizeMinimapButtons()
                     -- WoW 12.0 的 atlas 材質返回 fileID（數字），跳過以保留圖示
                     if texturePath and type(texturePath) == "string" then
                         local lowerPath = texturePath:lower()
-                        if lowerPath:find("minimapbutton") or lowerPath:find("trackingborder")
-                            or lowerPath:find("border") or lowerPath:find("background") then
+                        if
+                            lowerPath:find("minimapbutton")
+                            or lowerPath:find("trackingborder")
+                            or lowerPath:find("border")
+                            or lowerPath:find("background")
+                        then
                             region:SetTexture(nil)
                             region:SetAlpha(0)
                         end
@@ -352,7 +383,9 @@ local function HideBlizzardMinimapElements()
     -- 原始錨點可能指向 MinimapCluster（即將移走），必須重設
     local SafeCall = LunarUI.SafeCall
     local function ReparentButton(button, anchor, relFrame, relAnchor, x, y)
-        if not button then return end
+        if not button then
+            return
+        end
         SafeCall(function()
             button:SetParent(Minimap)
             button:SetFrameLevel(Minimap:GetFrameLevel() + 5)
@@ -391,8 +424,12 @@ local function HideBlizzardMinimapElements()
             ReparentButton(btn, "TOPLEFT", Minimap, "TOPLEFT", -4, 4)
 
             -- title/description fallback 防止 SetTooltip nil 錯誤
-            if not btn.title then btn.title = "" end
-            if not btn.description then btn.description = "" end
+            if not btn.title then
+                btn.title = ""
+            end
+            if not btn.description then
+                btn.description = ""
+            end
 
             -- 縮小按鈕到合理大小，同時讓內部材質跟著縮
             local TARGET_SIZE = 36
@@ -419,7 +456,9 @@ local function HideBlizzardMinimapElements()
             -- 防止暴雪把大小改回去
             local settingSize = false
             hooksecurefunc(btn, "SetSize", function(self, w, h)
-                if settingSize then return end
+                if settingSize then
+                    return
+                end
                 if w ~= TARGET_SIZE or h ~= TARGET_SIZE then
                     settingSize = true
                     self:SetSize(TARGET_SIZE, TARGET_SIZE)
@@ -451,7 +490,9 @@ local function HideBlizzardMinimapElements()
             for _, region in ipairs({ MinimapCluster:GetRegions() }) do
                 SafeCall(function()
                     region:SetAlpha(0)
-                    if region.Hide then region:Hide() end
+                    if region.Hide then
+                        region:Hide()
+                    end
                 end, "MinimapCluster region")
             end
         end, "MinimapCluster hide")
@@ -487,28 +528,48 @@ local function HideBlizzardMinimapElements()
 
     -- 隱藏縮放按鈕（已有滑鼠滾輪縮放，避免與時鐘文字重疊）
     SafeCall(function()
-        if MinimapZoomIn then MinimapZoomIn:Hide(); MinimapZoomIn:SetAlpha(0) end
-        if MinimapZoomOut then MinimapZoomOut:Hide(); MinimapZoomOut:SetAlpha(0) end
+        if MinimapZoomIn then
+            MinimapZoomIn:Hide()
+            MinimapZoomIn:SetAlpha(0)
+        end
+        if MinimapZoomOut then
+            MinimapZoomOut:Hide()
+            MinimapZoomOut:SetAlpha(0)
+        end
     end, "MinimapZoom")
 
     -- 4. 方形遮罩（使用已驗證的 WHITE8X8 材質）
     Minimap:SetMaskTexture("Interface\\BUTTONS\\WHITE8X8")
-
-
 
     -- 6b. ★ 關鍵：覆蓋 Minimap.Layout 防止 WoW 重設遮罩/位置
     -- BasicMinimap 同樣這麼做，這是防止系統持續重設小地圖的關鍵
     Minimap.Layout = function() end
 
     -- 7. 完整清除 blob 環形（Scalar + Alpha 都要）
-    SafeCall(function() Minimap:SetArchBlobRingScalar(0) end, "ArchBlobRingScalar")
-    SafeCall(function() Minimap:SetArchBlobRingAlpha(0) end, "ArchBlobRingAlpha")
-    SafeCall(function() Minimap:SetQuestBlobRingScalar(0) end, "QuestBlobRingScalar")
-    SafeCall(function() Minimap:SetQuestBlobRingAlpha(0) end, "QuestBlobRingAlpha")
-    SafeCall(function() Minimap:SetArchBlobInsideTexture("") end, "ArchBlobInside")
-    SafeCall(function() Minimap:SetArchBlobOutsideTexture("") end, "ArchBlobOutside")
-    SafeCall(function() Minimap:SetQuestBlobInsideTexture("") end, "QuestBlobInside")
-    SafeCall(function() Minimap:SetQuestBlobOutsideTexture("") end, "QuestBlobOutside")
+    SafeCall(function()
+        Minimap:SetArchBlobRingScalar(0)
+    end, "ArchBlobRingScalar")
+    SafeCall(function()
+        Minimap:SetArchBlobRingAlpha(0)
+    end, "ArchBlobRingAlpha")
+    SafeCall(function()
+        Minimap:SetQuestBlobRingScalar(0)
+    end, "QuestBlobRingScalar")
+    SafeCall(function()
+        Minimap:SetQuestBlobRingAlpha(0)
+    end, "QuestBlobRingAlpha")
+    SafeCall(function()
+        Minimap:SetArchBlobInsideTexture("")
+    end, "ArchBlobInside")
+    SafeCall(function()
+        Minimap:SetArchBlobOutsideTexture("")
+    end, "ArchBlobOutside")
+    SafeCall(function()
+        Minimap:SetQuestBlobInsideTexture("")
+    end, "QuestBlobInside")
+    SafeCall(function()
+        Minimap:SetQuestBlobOutsideTexture("")
+    end, "QuestBlobOutside")
 
     -- 8. ★ 關鍵：處理 HybridMinimap（室內/副本地圖覆蓋層的圓形遮罩）
     if HybridMinimap and HybridMinimap.CircleMask and HybridMinimap.MapCanvas then
@@ -544,7 +605,9 @@ end
 
 local function CreateMinimapFrame()
     local db = LunarUI.db and LunarUI.db.profile.minimap
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
     local size = db.size or MINIMAP_SIZE
     local bc = db.borderColor or { r = 0.15, g = 0.12, b = 0.08, a = 1 }
@@ -603,7 +666,9 @@ local function CreateMinimapFrame()
     coordText:SetPoint("BOTTOM", Minimap, "BOTTOM", 0, 4)
     coordText:SetTextColor(0.8, 0.8, 0.6)
     coordText:SetJustifyH("CENTER")
-    if not db.showCoords then coordText:Hide() end
+    if not db.showCoords then
+        coordText:Hide()
+    end
 
     -- 建立時鐘文字（掛在 Minimap 上，避免被遮住；左下角避免與右側圖示重疊）
     clockText = Minimap:CreateFontString(nil, "OVERLAY")
@@ -611,7 +676,9 @@ local function CreateMinimapFrame()
     clockText:SetPoint("BOTTOMLEFT", Minimap, "BOTTOMLEFT", 4, 4)
     clockText:SetTextColor(0.7, 0.7, 0.7)
     clockText:SetJustifyH("LEFT")
-    if not db.showClock then clockText:Hide() end
+    if not db.showClock then
+        clockText:Hide()
+    end
 
     -- 建立按鈕整理框架（MinimapCluster 已隱藏，必須重新掛載按鈕）
     buttonFrame = CreateFrame("Frame", "LunarUI_MinimapButtons", minimapFrame, "BackdropTemplate")
@@ -653,7 +720,9 @@ local function CreateMinimapFrame()
                     btn:ToggleMenu()
                 else
                     -- 最後手段：包在 SafeCall 中避免戰鬥中報錯
-                    LunarUI.SafeCall(function() btn:Click() end, "TrackingButton Click")
+                    LunarUI.SafeCall(function()
+                        btn:Click()
+                    end, "TrackingButton Click")
                 end
             elseif MiniMapTracking then
                 ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, "cursor")
@@ -674,7 +743,9 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateMailIndicator()
-    if not minimapFrame then return end
+    if not minimapFrame then
+        return
+    end
 
     mail = CreateFrame("Frame", "LunarUI_MinimapMail", minimapFrame)
     mail:SetSize(18, 18)
@@ -733,7 +804,9 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateDifficultyIndicator()
-    if not minimapFrame then return end
+    if not minimapFrame then
+        return
+    end
 
     diff = CreateFrame("Frame", "LunarUI_MinimapDifficulty", minimapFrame)
     diff:SetSize(24, 12)
@@ -767,7 +840,8 @@ local function CreateDifficultyIndicator()
         end
 
         -- 縮寫難度名稱
-        local abbrev = diffName:gsub("Heroic", "H"):gsub("Mythic", "M"):gsub("Normal", "N"):gsub("Looking For Raid", "LFR")
+        local abbrev =
+            diffName:gsub("Heroic", "H"):gsub("Mythic", "M"):gsub("Normal", "N"):gsub("Looking For Raid", "LFR")
         text:SetText(abbrev)
         diff:Show()
     end
@@ -786,7 +860,9 @@ end
 --------------------------------------------------------------------------------
 
 local function ApplyZoneTextDisplayMode(mode)
-    if not zoneText or not minimapFrame then return end
+    if not zoneText or not minimapFrame then
+        return
+    end
 
     if mode == "HIDE" then
         zoneText:Hide()
@@ -805,12 +881,12 @@ end
 
 local function GetIconFrameMap()
     return {
-        calendar    = GameTimeFrame,
-        tracking    = MinimapCluster and MinimapCluster.Tracking,
-        mail        = _G["LunarUI_MinimapMail"],
-        difficulty  = _G["LunarUI_MinimapDifficulty"],
-        lfg         = QueueStatusMinimapButton,
-        expansion   = ExpansionLandingPageMinimapButton,
+        calendar = GameTimeFrame,
+        tracking = MinimapCluster and MinimapCluster.Tracking,
+        mail = _G["LunarUI_MinimapMail"],
+        difficulty = _G["LunarUI_MinimapDifficulty"],
+        lfg = QueueStatusMinimapButton,
+        expansion = ExpansionLandingPageMinimapButton,
         compartment = AddonCompartmentFrame,
     }
 end
@@ -821,11 +897,15 @@ local SELF_MANAGED_ICONS = { mail = true, difficulty = true }
 
 local function ApplyIconSettings()
     local db = LunarUI.db and LunarUI.db.profile.minimap
-    if not db or not db.icons then return end
+    if not db or not db.icons then
+        return
+    end
 
     local map = GetIconFrameMap()
     for key, iconDB in pairs(db.icons) do
-        if type(iconDB) ~= "table" then break end
+        if type(iconDB) ~= "table" then
+            break
+        end
         local frame = map[key]
         if frame then
             if iconDB.hide then
@@ -857,7 +937,9 @@ end
 
 -- 安全的淡入淡出輔助（使用 AnimationGroup 避免 UIFrameFade taint）
 local function FadeTo(frame, targetAlpha, duration)
-    if not frame then return end
+    if not frame then
+        return
+    end
     -- 停止進行中的淡出動畫
     if frame._lunarFader and frame._lunarFader:IsPlaying() then
         frame._lunarFader:Stop()
@@ -891,7 +973,9 @@ end
 
 local function ApplyMouseFade()
     local db = LunarUI.db and LunarUI.db.profile.minimap
-    if not db or not minimapFrame then return end
+    if not db or not minimapFrame then
+        return
+    end
 
     local fadeEnabled = db.fadeOnMouseLeave
     local zoneMode = db.zoneTextDisplay or "SHOW"
@@ -941,7 +1025,9 @@ end
 
 function LunarUI.RefreshMinimap()
     local db = LunarUI.db and LunarUI.db.profile.minimap
-    if not db or not minimapFrame then return end
+    if not db or not minimapFrame then
+        return
+    end
 
     local size = db.size or MINIMAP_SIZE
     local bc = db.borderColor or { r = 0.15, g = 0.12, b = 0.08, a = 1 }
@@ -984,7 +1070,7 @@ function LunarUI.RefreshMinimap()
         clockText:SetFont(LunarUI.GetSelectedFont(), coordFontSize, coordFontOutline)
         if db.showClock then
             clockText:Show()
-            lastClockString = nil  -- 強制重繪（格式可能改變）
+            lastClockString = nil -- 強制重繪（格式可能改變）
         else
             clockText:Hide()
         end
@@ -1012,24 +1098,32 @@ end
 local isInitialized = false
 
 local function InitializeMinimap()
-    if isInitialized then return end
+    if isInitialized then
+        return
+    end
     local db = LunarUI.db and LunarUI.db.profile.minimap
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
     isInitialized = true
 
     -- 首次啟用時安裝 flag-controlled wrapper，之後只切換 flag
     if not originalGetMinimapShape then
         originalGetMinimapShape = GetMinimapShape
         GetMinimapShape = function()
-            if lunarMinimapIsSquare then return "SQUARE" end
-            if originalGetMinimapShape then return originalGetMinimapShape() end
+            if lunarMinimapIsSquare then
+                return "SQUARE"
+            end
+            if originalGetMinimapShape then
+                return originalGetMinimapShape()
+            end
             return "ROUND"
         end
     end
     lunarMinimapIsSquare = true
 
-    CreateMinimapFrame()           -- 先建立框架、reparent Minimap
-    HideBlizzardMinimapElements()  -- 再隱藏裝飾
+    CreateMinimapFrame() -- 先建立框架、reparent Minimap
+    HideBlizzardMinimapElements() -- 再隱藏裝飾
 
     -- 監聽 Blizzard_HybridMinimap 按需載入
     -- HybridMinimap 在進入副本/室內時才載入，需要在載入時套用方形遮罩
@@ -1094,7 +1188,9 @@ function LunarUI.CleanupMinimap()
     -- 取消按鈕掃描計時器
     if buttonScanTimers then
         for _, handle in ipairs(buttonScanTimers) do
-            if handle and handle.Cancel then handle:Cancel() end
+            if handle and handle.Cancel then
+                handle:Cancel()
+            end
         end
         wipe(buttonScanTimers)
     end
@@ -1133,6 +1229,8 @@ LunarUI.InitializeMinimap = InitializeMinimap
 
 LunarUI:RegisterModule("Minimap", {
     onEnable = InitializeMinimap,
-    onDisable = function() LunarUI:CleanupMinimap() end,
+    onDisable = function()
+        LunarUI:CleanupMinimap()
+    end,
     delay = 0.5,
 })

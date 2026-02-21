@@ -11,7 +11,9 @@ local function SkinSettingsPanel()
     local frame = LunarUI:SkinStandardFrame("SettingsPanel", {
         textDepth = 3,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 左側分類列表
     if frame.CategoryList then

@@ -10,9 +10,12 @@ local C = LunarUI.Colors
 
 local function SkinCharacterFrame()
     local frame = LunarUI:SkinStandardFrame("CharacterFrame", {
-        tabPrefix = "CharacterFrameTab", tabCount = 4,
+        tabPrefix = "CharacterFrameTab",
+        tabCount = 4,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 關閉按鈕 fallback
     if not frame.CloseButton and _G.CharacterFrameCloseButton then
@@ -35,12 +38,24 @@ local function SkinCharacterFrame()
 
     -- 裝備槽樣式化
     local slots = {
-        "CharacterHeadSlot", "CharacterNeckSlot", "CharacterShoulderSlot",
-        "CharacterBackSlot", "CharacterChestSlot", "CharacterShirtSlot",
-        "CharacterTabardSlot", "CharacterWristSlot", "CharacterHandsSlot",
-        "CharacterWaistSlot", "CharacterLegsSlot", "CharacterFeetSlot",
-        "CharacterFinger0Slot", "CharacterFinger1Slot", "CharacterTrinket0Slot",
-        "CharacterTrinket1Slot", "CharacterMainHandSlot", "CharacterSecondaryHandSlot",
+        "CharacterHeadSlot",
+        "CharacterNeckSlot",
+        "CharacterShoulderSlot",
+        "CharacterBackSlot",
+        "CharacterChestSlot",
+        "CharacterShirtSlot",
+        "CharacterTabardSlot",
+        "CharacterWristSlot",
+        "CharacterHandsSlot",
+        "CharacterWaistSlot",
+        "CharacterLegsSlot",
+        "CharacterFeetSlot",
+        "CharacterFinger0Slot",
+        "CharacterFinger1Slot",
+        "CharacterTrinket0Slot",
+        "CharacterTrinket1Slot",
+        "CharacterMainHandSlot",
+        "CharacterSecondaryHandSlot",
     }
     for _, slotName in ipairs(slots) do
         local slot = _G[slotName]

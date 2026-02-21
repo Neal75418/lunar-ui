@@ -7,7 +7,9 @@ local _ADDON_NAME, Engine = ...
 local L = Engine.L or {}
 
 -- 僅在繁中客戶端覆蓋
-if GetLocale() ~= "zhTW" then return end
+if GetLocale() ~= "zhTW" then
+    return
+end
 
 -- 一般
 L["Enabled"] = "已啟用"
@@ -194,7 +196,8 @@ L["MoverDragToMove"] = "左鍵拖曳移動"
 L["MoverCtrlSnap"] = "Ctrl+拖曳 網格對齊"
 L["MoverRightReset"] = "右鍵 重設位置"
 L["MoverCombatLocked"] = "戰鬥中無法進入移動模式"
-L["MoverEnterMode"] = "進入移動模式 — 拖曳藍色框架移動 UI | Ctrl+拖曳對齊網格 | 右鍵重設 | ESC 退出"
+L["MoverEnterMode"] =
+    "進入移動模式 — 拖曳藍色框架移動 UI | Ctrl+拖曳對齊網格 | 右鍵重設 | ESC 退出"
 L["MoverExitMode"] = "已退出移動模式"
 L["MoverAllReset"] = "所有框架位置已重設"
 
@@ -241,7 +244,8 @@ L["InstallReloadBtn"] = "重新載入"
 L["InstallReloadLater"] = "稍後"
 L["InstallTitle"] = "|cff8882ffLunar|r|cffffffffUI|r 安裝精靈"
 L["InstallStep"] = "步驟 %d / %d"
-L["InstallWelcomeBody"] = "歡迎使用 |cff8882ffLunar|r|cffffffffUI|r！\n\n此精靈將協助你完成基本設定。你可以隨時透過 |cff8882ff/lunar config|r 修改。\n"
+L["InstallWelcomeBody"] =
+    "歡迎使用 |cff8882ffLunar|r|cffffffffUI|r！\n\n此精靈將協助你完成基本設定。你可以隨時透過 |cff8882ff/lunar config|r 修改。\n"
 L["InstallUIScale"] = "UI 縮放"
 L["InstallUIScaleTip"] = "|cff888888提示：數值越大 UI 元素越大。1920x1080 解析度建議使用 0.75。|r"
 L["InstallLayoutTitle"] = "選擇你的主要角色定位，這將調整團隊/隊伍框架的大小與佈局。\n"
@@ -253,13 +257,15 @@ L["InstallLayoutHealer"] = "治療"
 L["InstallLayoutHealerDesc"] = "較大的團隊框架（含治療預測）、置中位置"
 L["InstallActionBarTitle"] = "動作條選項\n\n設定動作條在非戰鬥狀態下的行為。\n"
 L["InstallActionBarFade"] = "非戰鬥時動作條淡出"
-L["InstallActionBarFadeDesc"] = "|cff888888非戰鬥時動作條透明度降至 30%，進入戰鬥或滑鼠移到上方時立即顯示。|r"
+L["InstallActionBarFadeDesc"] =
+    "|cff888888非戰鬥時動作條透明度降至 30%，進入戰鬥或滑鼠移到上方時立即顯示。|r"
 L["InstallSummaryTitle"] = "|cff8882ff設定完成！|r"
 L["InstallSummary"] = "你的設定摘要："
 L["InstallSummaryScale"] = "|cff8882ffUI 縮放:|r %s"
 L["InstallSummaryLayout"] = "|cff8882ff佈局:|r %s"
 L["InstallSummaryFade"] = "|cff8882ff動作條淡出:|r %s"
-L["InstallSummaryHint"] = "|cff888888點擊「完成」套用設定並重新載入 UI。\n你可以隨時透過 |cff8882ff/lunar config|r 重新設定。|r"
+L["InstallSummaryHint"] =
+    "|cff888888點擊「完成」套用設定並重新載入 UI。\n你可以隨時透過 |cff8882ff/lunar config|r 重新設定。|r"
 L["InstallBtnSkip"] = "跳過"
 L["InstallBtnBack"] = "上一步"
 L["InstallBtnNext"] = "下一步"

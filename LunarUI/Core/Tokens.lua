@@ -13,34 +13,34 @@ local LunarUI = Engine.LunarUI
 
 LunarUI.Colors = {
     -- 背景
-    bg        = { 0.05, 0.05, 0.05, 0.9 },
-    bgSolid   = { 0.05, 0.05, 0.05, 0.95 },
-    bgLight   = { 0.05, 0.05, 0.05, 0.85 },
+    bg = { 0.05, 0.05, 0.05, 0.9 },
+    bgSolid = { 0.05, 0.05, 0.05, 0.95 },
+    bgLight = { 0.05, 0.05, 0.05, 0.85 },
 
     -- 邊框
-    border       = { 0.15, 0.12, 0.08, 1 },
+    border = { 0.15, 0.12, 0.08, 1 },
     borderSubtle = { 0.1, 0.1, 0.1, 1 },
-    borderWarm   = { 0.25, 0.22, 0.18, 1 },
-    borderGold   = { 0.4, 0.35, 0.2, 1 },
+    borderWarm = { 0.25, 0.22, 0.18, 1 },
+    borderGold = { 0.4, 0.35, 0.2, 1 },
 
     -- 圖示/按鈕
-    bgIcon        = { 0.1, 0.1, 0.1, 0.8 },
-    bgButton      = { 0.15, 0.15, 0.15, 0.8 },
+    bgIcon = { 0.1, 0.1, 0.1, 0.8 },
+    bgButton = { 0.15, 0.15, 0.15, 0.8 },
     bgButtonHover = { 0.2, 0.2, 0.2, 0.8 },
-    borderIcon    = { 0.2, 0.2, 0.2, 1 },
+    borderIcon = { 0.2, 0.2, 0.2, 1 },
 
     -- 文字
-    textPrimary   = { 1, 1, 1, 1 },
+    textPrimary = { 1, 1, 1, 1 },
     textSecondary = { 0.9, 0.9, 0.9, 1 },
-    textMuted     = { 0.7, 0.7, 0.7, 1 },
-    textDim       = { 0.6, 0.6, 0.6, 1 },
-    textGold      = { 1, 0.82, 0, 1 },
+    textMuted = { 0.7, 0.7, 0.7, 1 },
+    textDim = { 0.6, 0.6, 0.6, 1 },
+    textGold = { 1, 0.82, 0, 1 },
 
     -- 功能色
     success = { 0.1, 1.0, 0.1, 1 },
     warning = { 1.0, 0.7, 0.0, 1 },
-    danger  = { 1.0, 0.1, 0.1, 1 },
-    info    = { 0.41, 0.8, 0.94, 1 },
+    danger = { 1.0, 0.1, 0.1, 1 },
+    info = { 0.41, 0.8, 0.94, 1 },
 
     -- 羊皮紙風格（手繪風）
     parchment = { 0.85, 0.78, 0.65, 0.95 },
@@ -55,17 +55,17 @@ LunarUI.Colors = {
     focus = { 0.7, 0.5, 0.3, 1 },
 
     -- 透明（backdrop 填充用）
-    transparent     = { 0, 0, 0, 0 },
+    transparent = { 0, 0, 0, 0 },
 
     -- 覆蓋層
-    bgOverlay       = { 0, 0, 0, 0.5 },
+    bgOverlay = { 0, 0, 0, 0.5 },
 
     -- HUD 元件（略帶藍紫色調）
-    bgHUD           = { 0.05, 0.05, 0.08, 0.75 },
-    borderHUD       = { 0.20, 0.18, 0.30, 0.9 },
+    bgHUD = { 0.05, 0.05, 0.08, 0.75 },
+    borderHUD = { 0.20, 0.18, 0.30, 0.9 },
 
     -- 互動/狀態
-    highlightBlue   = { 0.4, 0.6, 0.8, 1 },
+    highlightBlue = { 0.4, 0.6, 0.8, 1 },
     stealableBorder = { 0.2, 0.6, 1.0, 1 },
 
     -- 月光主題
@@ -81,26 +81,26 @@ LunarUI.Colors = {
 
 LunarUI.ThemeColors = {
     parchment = {
-        bg            = { 0.18, 0.15, 0.12, 0.92 },
-        bgSolid       = { 0.18, 0.15, 0.12, 0.98 },
-        border        = { 0.35, 0.28, 0.18, 1 },
-        borderGold    = { 0.55, 0.45, 0.25, 1 },
-        textPrimary   = { 0.15, 0.12, 0.08, 1 },
+        bg = { 0.18, 0.15, 0.12, 0.92 },
+        bgSolid = { 0.18, 0.15, 0.12, 0.98 },
+        border = { 0.35, 0.28, 0.18, 1 },
+        borderGold = { 0.55, 0.45, 0.25, 1 },
+        textPrimary = { 0.15, 0.12, 0.08, 1 },
         textSecondary = { 0.30, 0.25, 0.18, 1 },
-        textMuted     = { 0.45, 0.40, 0.30, 1 },
-        bgHUD         = { 0.15, 0.12, 0.10, 0.80 },
-        borderHUD     = { 0.40, 0.32, 0.22, 0.90 },
+        textMuted = { 0.45, 0.40, 0.30, 1 },
+        bgHUD = { 0.15, 0.12, 0.10, 0.80 },
+        borderHUD = { 0.40, 0.32, 0.22, 0.90 },
     },
     minimal = {
-        bg            = { 0.08, 0.08, 0.08, 0.85 },
-        bgSolid       = { 0.08, 0.08, 0.08, 0.95 },
-        border        = { 0.20, 0.20, 0.20, 1 },
-        borderGold    = { 0.50, 0.50, 0.50, 1 },
-        textPrimary   = { 0.95, 0.95, 0.95, 1 },
+        bg = { 0.08, 0.08, 0.08, 0.85 },
+        bgSolid = { 0.08, 0.08, 0.08, 0.95 },
+        border = { 0.20, 0.20, 0.20, 1 },
+        borderGold = { 0.50, 0.50, 0.50, 1 },
+        textPrimary = { 0.95, 0.95, 0.95, 1 },
         textSecondary = { 0.75, 0.75, 0.75, 1 },
-        textMuted     = { 0.55, 0.55, 0.55, 1 },
-        bgHUD         = { 0.06, 0.06, 0.06, 0.75 },
-        borderHUD     = { 0.25, 0.25, 0.25, 0.90 },
+        textMuted = { 0.55, 0.55, 0.55, 1 },
+        bgHUD = { 0.06, 0.06, 0.06, 0.75 },
+        borderHUD = { 0.25, 0.25, 0.25, 0.90 },
     },
 }
 
@@ -132,7 +132,9 @@ LunarUI.Easing = {
     -- 二次平滑輸入輸出
     InOutQuad = function(t, b, c, d)
         t = t / (d / 2)
-        if t < 1 then return c / 2 * t * t + b end
+        if t < 1 then
+            return c / 2 * t * t + b
+        end
         t = t - 1
         return -c / 2 * (t * (t - 2) - 1) + b
     end,

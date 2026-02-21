@@ -9,7 +9,9 @@ local LunarUI = Engine.LunarUI
 
 local function SkinWorldMap()
     local frame = LunarUI:SkinStandardFrame("WorldMapFrame")
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 邊框容器
     if frame.BorderFrame then

@@ -16,19 +16,31 @@ local LunarUI = Engine.LunarUI
 -- 不使用 hooksecurefunc 或 rawset（會在安全框架上產生 taint）
 -- 只做一次性 SetAlpha(0)，不 hook，不持續修改安全框架狀態
 local function HideFrameSafely(frame)
-    if not frame then return end
-    pcall(function() frame:SetAlpha(0) end)
-    pcall(function() frame:EnableMouse(false) end)
-    pcall(function() frame:EnableKeyboard(false) end)
+    if not frame then
+        return
+    end
+    pcall(function()
+        frame:SetAlpha(0)
+    end)
+    pcall(function()
+        frame:EnableMouse(false)
+    end)
+    pcall(function()
+        frame:EnableKeyboard(false)
+    end)
 end
 
 -- 隱藏框架的所有區域（材質）- 只設置透明度
 local function HideFrameRegions(frame)
-    if not frame then return end
-    local regions = {frame:GetRegions()}
+    if not frame then
+        return
+    end
+    local regions = { frame:GetRegions() }
     for _, region in ipairs(regions) do
         if region and region.SetAlpha then
-            pcall(function() region:SetAlpha(0) end)
+            pcall(function()
+                region:SetAlpha(0)
+            end)
         end
     end
 end
@@ -38,7 +50,9 @@ end
 -- 原先 9 種方法（SetTexCoord/SetVertexColor/SetSize/ClearAllPoints/SetAtlas）為過度防禦，
 -- 每個 pcall 都有開銷，且此函數在 HideBlizzardBars() 的延遲重試中會執行 3 次。
 local function HideTextureForcefully(texture)
-    if not texture then return end
+    if not texture then
+        return
+    end
     pcall(function()
         texture:SetAlpha(0)
         texture:Hide()
@@ -59,12 +73,18 @@ local VIGOR_PROTECTED_FRAMES = {
 -- 回傳 true 代表此框架或其後代包含 vigor 保護框架
 -- 若有保護後代，只隱藏材質不設 alpha=0（避免乘法 alpha 連帶隱藏 vigor bar）
 local function HideFrameRecursive(frame)
-    if not frame then return false end
+    if not frame then
+        return false
+    end
     -- 跳過 OverrideActionBar，飛龍騎術等需要它
-    if frame == OverrideActionBar then return true end
+    if frame == OverrideActionBar then
+        return true
+    end
     -- 保護飛行活力條框架
     local frameName = frame:GetName()
-    if frameName and VIGOR_PROTECTED_FRAMES[frameName] then return true end
+    if frameName and VIGOR_PROTECTED_FRAMES[frameName] then
+        return true
+    end
 
     -- 先遞迴子框架，判斷是否有保護後代
     -- 使用 select("#", ...) 安全遍歷，避免 ipairs 在 nil gap 中斷導致跳過 vigor 保護框架
@@ -83,8 +103,12 @@ local function HideFrameRecursive(frame)
     if hasProtectedDescendant then
         -- 有保護後代：只隱藏自身材質，保持 alpha=1 讓後代可見
         HideFrameRegions(frame)
-        pcall(function() frame:EnableMouse(false) end)
-        pcall(function() frame:EnableKeyboard(false) end)
+        pcall(function()
+            frame:EnableMouse(false)
+        end)
+        pcall(function()
+            frame:EnableKeyboard(false)
+        end)
     else
         -- 無保護後代：完全隱藏
         HideFrameSafely(frame)
@@ -113,7 +137,7 @@ end
 -- 2. Backdrop.lua "secret number value tainted by 'LunarUI'"（addon 觸發 tooltip 時 backdrop 使用 tainted width）
 -- 3. ADDON_ACTION_BLOCKED / ADDON_ACTION_FORBIDDEN（UIErrorsFrame 的 "介面功能因插件而失效" 訊息）
 -- 以上皆為 UI addon 修改 Blizzard 框架的正常副作用，無功能影響
-local scaleErrorFilter  -- 當前安裝的過濾函數引用（用於避免自我鏈接）
+local scaleErrorFilter -- 當前安裝的過濾函數引用（用於避免自我鏈接）
 local taintEventsUnregistered = false
 local function InstallScaleErrorFilter()
     -- 抑制 "介面功能因插件而失效" 黃字訊息（ADDON_ACTION_BLOCKED 事件）
@@ -127,11 +151,17 @@ local function InstallScaleErrorFilter()
 
     local prevHandler = geterrorhandler()
     -- 已是我們的過濾器，跳過（避免自我鏈接）
-    if prevHandler == scaleErrorFilter then return end
+    if prevHandler == scaleErrorFilter then
+        return
+    end
     scaleErrorFilter = function(msg, ...)
         if type(msg) == "string" then
-            if msg:find("Scale must be > 0") then return end
-            if msg:find("secret number value tainted") then return end
+            if msg:find("Scale must be > 0") then
+                return
+            end
+            if msg:find("secret number value tainted") then
+                return
+            end
         end
         if prevHandler then
             return prevHandler(msg, ...)
@@ -142,7 +172,9 @@ end
 
 local function HideBlizzardBars()
     -- 戰鬥中不修改框架以避免 taint
-    if InCombatLockdown() then return end
+    if InCombatLockdown() then
+        return
+    end
 
     -- 安裝 SetScale 錯誤過濾器（首次呼叫即安裝，確保在錯誤發生前就位）
     InstallScaleErrorFilter()
@@ -197,19 +229,25 @@ local function HideBlizzardBars()
         -- 遍歷所有 Lua 屬性，隱藏所有可能的子框架/材質
         for _, value in pairs(MainMenuBarArtFrame) do
             if type(value) == "table" and value.SetAlpha then
-                pcall(function() value:SetAlpha(0) end)
+                pcall(function()
+                    value:SetAlpha(0)
+                end)
             end
         end
 
         -- 遍歷所有區域（材質），包括獅鷲獸材質
-        local regions = {MainMenuBarArtFrame:GetRegions()}
+        local regions = { MainMenuBarArtFrame:GetRegions() }
         for _, region in ipairs(regions) do
             if region and region.SetAlpha then
-                pcall(function() region:SetAlpha(0) end)
+                pcall(function()
+                    region:SetAlpha(0)
+                end)
             end
             -- 如果是材質，也嘗試隱藏
             if region and region.Hide then
-                pcall(function() region:Hide() end)
+                pcall(function()
+                    region:Hide()
+                end)
             end
         end
 
@@ -330,7 +368,7 @@ local function HideBlizzardBars()
         -- 嘗試從路徑獲取框架
         local frame = MainMenuBarArtFrame
         if frame then
-            local parts = {strsplit(".", path)}
+            local parts = { strsplit(".", path) }
             for i = 2, #parts do
                 if frame and frame[parts[i]] then
                     frame = frame[parts[i]]
@@ -349,13 +387,20 @@ local function HideBlizzardBars()
     if MainMenuBarArtFrame then
         -- 遍歷所有以 EndCap 或 Gryphon 命名的子元素
         for key, value in pairs(MainMenuBarArtFrame) do
-            if type(key) == "string" and (key:find("EndCap") or key:find("Gryphon") or key:find("Art") or key:find("Background")) then
+            if
+                type(key) == "string"
+                and (key:find("EndCap") or key:find("Gryphon") or key:find("Art") or key:find("Background"))
+            then
                 if type(value) == "table" then
                     if value.SetAlpha then
-                        pcall(function() value:SetAlpha(0) end)
+                        pcall(function()
+                            value:SetAlpha(0)
+                        end)
                     end
                     if value.Hide then
-                        pcall(function() value:Hide() end)
+                        pcall(function()
+                            value:Hide()
+                        end)
                     end
                 end
             end
@@ -371,7 +416,8 @@ local function HideBlizzardBars()
     end
 
     -- 隱藏 MultiBar 按鈕
-    local multiBarNames = {"MultiBarBottomLeftButton", "MultiBarBottomRightButton", "MultiBarRightButton", "MultiBarLeftButton"}
+    local multiBarNames =
+        { "MultiBarBottomLeftButton", "MultiBarBottomRightButton", "MultiBarRightButton", "MultiBarLeftButton" }
     for _, barPrefix in ipairs(multiBarNames) do
         for i = 1, 12 do
             local button = _G[barPrefix .. i]
@@ -407,7 +453,6 @@ local function HideBlizzardBars()
     -- MainMenuBarManager：完全不觸碰！
     -- 它管理 encounter bar / UIWidgetPowerBarContainerFrame 的生命週期，
     -- 隱藏它會阻止 boss encounter 技能條等 UI 元素正常顯示。
-
 end
 
 -- 隱藏策略：只用一次性 SetAlpha(0)，不使用任何 hooks
@@ -424,7 +469,9 @@ local function HideBlizzardBarsDelayed()
     -- 轉換追蹤：只在 debug 模式才註冊事件（避免常駐開銷）
     local isDebug = LunarUI.db and LunarUI.db.global and LunarUI.db.global._debugVigor
     if isDebug or isTestMode then
-        if LunarUI.SetupVigorTrace then LunarUI.SetupVigorTrace() end
+        if LunarUI.SetupVigorTrace then
+            LunarUI.SetupVigorTrace()
+        end
     end
 
     if isTestMode then

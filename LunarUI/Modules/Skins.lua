@@ -19,9 +19,9 @@ local C = LunarUI.Colors
 -- State
 --------------------------------------------------------------------------------
 
-local skins = {}       -- 已註冊的 skin 函數 { name = { event, func } }
-local skinned = {}     -- 已套用的框架名稱（避免重複）
-local skinsEventFrame  -- 私有事件框架（不暴露到 LunarUI 物件）
+local skins = {} -- 已註冊的 skin 函數 { name = { event, func } }
+local skinned = {} -- 已套用的框架名稱（避免重複）
+local skinsEventFrame -- 私有事件框架（不暴露到 LunarUI 物件）
 
 --------------------------------------------------------------------------------
 -- Strip Textures Helper
@@ -29,9 +29,13 @@ local skinsEventFrame  -- 私有事件框架（不暴露到 LunarUI 物件）
 
 -- Fix 4: 用 select 安全遍歷，避免 ipairs 在 nil gap 中斷
 local function StripTextures(frame)
-    if not frame or not frame.GetRegions then return end
+    if not frame or not frame.GetRegions then
+        return
+    end
     local n = select("#", frame:GetRegions())
-    if n == 0 then return end
+    if n == 0 then
+        return
+    end
     local regions = { frame:GetRegions() }
     for i = 1, n do
         local region = regions[i]
@@ -50,11 +54,15 @@ end
 
 --- 替換框架背景為 LunarUI 風格
 function LunarUI:SkinFrame(frame, options)
-    if not frame or not frame.GetObjectType then return end
+    if not frame or not frame.GetObjectType then
+        return
+    end
     options = options or {}
 
     -- 隱藏暴雪 NineSlice 邊框
-    if frame.NineSlice then frame.NineSlice:SetAlpha(0) end
+    if frame.NineSlice then
+        frame.NineSlice:SetAlpha(0)
+    end
 
     -- 移除原始裝飾材質（noStrip = true 時跳過，保留羊皮紙等內容背景）
     if not options.noStrip then
@@ -81,7 +89,9 @@ end
 -- @param depth 遞迴深度限制（預設 2，避免過度遍歷影響效能）
 -- @param currentDepth 當前深度（內部使用）
 function LunarUI:SkinFrameText(frame, depth, currentDepth)
-    if not frame or not frame.GetRegions then return end
+    if not frame or not frame.GetRegions then
+        return
+    end
     depth = depth or 2
     currentDepth = currentDepth or 0
 
@@ -141,13 +151,21 @@ end
 
 --- 替換按鈕樣式
 function LunarUI.SkinButton(btn)
-    if not btn then return end
+    if not btn then
+        return
+    end
 
     StripTextures(btn)
 
-    if btn.SetNormalTexture then btn:SetNormalTexture("") end
-    if btn.SetHighlightTexture then btn:SetHighlightTexture("") end
-    if btn.SetPushedTexture then btn:SetPushedTexture("") end
+    if btn.SetNormalTexture then
+        btn:SetNormalTexture("")
+    end
+    if btn.SetHighlightTexture then
+        btn:SetHighlightTexture("")
+    end
+    if btn.SetPushedTexture then
+        btn:SetPushedTexture("")
+    end
 
     -- 建立按鈕背景
     if not btn._lunarSkinBG then
@@ -166,7 +184,9 @@ end
 
 --- 替換關閉按鈕
 function LunarUI.SkinCloseButton(btn)
-    if not btn then return end
+    if not btn then
+        return
+    end
 
     StripTextures(btn)
     btn:SetSize(18, 18)
@@ -195,15 +215,25 @@ function LunarUI.SkinCloseButton(btn)
     end
 
     -- 清除原始材質
-    if btn.SetNormalTexture then btn:SetNormalTexture("") end
-    if btn.SetHighlightTexture then btn:SetHighlightTexture("") end
-    if btn.SetPushedTexture then btn:SetPushedTexture("") end
-    if btn.SetDisabledTexture then btn:SetDisabledTexture("") end
+    if btn.SetNormalTexture then
+        btn:SetNormalTexture("")
+    end
+    if btn.SetHighlightTexture then
+        btn:SetHighlightTexture("")
+    end
+    if btn.SetPushedTexture then
+        btn:SetPushedTexture("")
+    end
+    if btn.SetDisabledTexture then
+        btn:SetDisabledTexture("")
+    end
 end
 
 --- 替換分頁按鈕（底線指示器風格 + 半透明背景）
 function LunarUI.SkinTab(tab)
-    if not tab then return end
+    if not tab then
+        return
+    end
 
     StripTextures(tab)
 
@@ -230,7 +260,9 @@ end
 ---@return string|Frame|nil frame 框架引用；找不到框架時回傳 nil
 function LunarUI:SkinStandardFrame(frameName, options)
     local frame = type(frameName) == "string" and _G[frameName] or frameName
-    if not frame or not frame.GetObjectType then return nil end
+    if not frame or not frame.GetObjectType then
+        return nil
+    end
     options = options or {}
 
     self:SkinFrame(frame, { textDepth = options.textDepth or 3, noStrip = options.noStrip })
@@ -248,7 +280,9 @@ function LunarUI:SkinStandardFrame(frameName, options)
             local tab = _G[options.tabPrefix .. i]
             if tab then
                 LunarUI.SkinTab(tab)
-                if tab.Text then LunarUI.SetFontLight(tab.Text) end
+                if tab.Text then
+                    LunarUI.SetFontLight(tab.Text)
+                end
             end
         end
     elseif options.tabProperty then
@@ -256,14 +290,18 @@ function LunarUI:SkinStandardFrame(frameName, options)
         if tabs then
             for _, tab in pairs(tabs) do
                 LunarUI.SkinTab(tab)
-                if tab.Text then LunarUI.SetFontLight(tab.Text) end
+                if tab.Text then
+                    LunarUI.SetFontLight(tab.Text)
+                end
             end
         end
     elseif options.useTabSystem then
         if frame.TabSystem and frame.TabSystem.tabs then
             for _, tab in ipairs(frame.TabSystem.tabs) do
                 LunarUI.SkinTab(tab)
-                if tab.Text then LunarUI.SetFontLight(tab.Text) end
+                if tab.Text then
+                    LunarUI.SetFontLight(tab.Text)
+                end
             end
         end
     end
@@ -273,13 +311,17 @@ end
 
 --- 替換捲軸條
 function LunarUI.SkinScrollBar(scrollBar)
-    if not scrollBar then return end
+    if not scrollBar then
+        return
+    end
     StripTextures(scrollBar)
 end
 
 --- 替換編輯框樣式
 function LunarUI.SkinEditBox(editBox)
-    if not editBox then return end
+    if not editBox then
+        return
+    end
 
     StripTextures(editBox)
 
@@ -307,9 +349,13 @@ end
 
 --- 套用指定 skin
 local function ApplySkin(name)
-    if skinned[name] then return end
+    if skinned[name] then
+        return
+    end
     local skin = skins[name]
-    if not skin or not skin.func then return end
+    if not skin or not skin.func then
+        return
+    end
 
     local ok, result = pcall(skin.func)
     if not ok then
@@ -367,7 +413,9 @@ end
 
 local function InitializeSkins()
     local db = LunarUI.db and LunarUI.db.profile.skins
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
     -- 載入立即可用的 skins
     LoadAllSkins()
@@ -388,7 +436,9 @@ LunarUI.InitializeSkins = InitializeSkins
 
 --- 標記框架已 skin 過，回傳 true 代表首次標記（應套用 skin）
 function LunarUI.MarkSkinned(frame)
-    if not frame or frame._lunarSkinned then return false end
+    if not frame or frame._lunarSkinned then
+        return false
+    end
     frame._lunarSkinned = true
     return true
 end
@@ -403,6 +453,8 @@ end
 
 LunarUI:RegisterModule("Skins", {
     onEnable = InitializeSkins,
-    onDisable = function() LunarUI.CleanupSkins() end,
+    onDisable = function()
+        LunarUI.CleanupSkins()
+    end,
     delay = 1.5,
 })

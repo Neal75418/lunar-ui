@@ -20,38 +20,38 @@ local LunarUI = Engine.LunarUI
 --------------------------------------------------------------------------------
 
 local fctFrame = nil
-local queueFrame = nil       -- 佇列處理框架（在乾淨的執行環境中消化 CLEU 事件）
-local textPool = {}          -- 可用的 FontString 池
-local activeTexts = {}       -- 目前顯示中的 FontString
-local pendingTexts = {}      -- CLEU 事件佇列（避免在 tainted 環境中操作 UI）
-local POOL_SIZE = 20         -- 預建數量
+local queueFrame = nil -- 佇列處理框架（在乾淨的執行環境中消化 CLEU 事件）
+local textPool = {} -- 可用的 FontString 池
+local activeTexts = {} -- 目前顯示中的 FontString
+local pendingTexts = {} -- CLEU 事件佇列（避免在 tainted 環境中操作 UI）
+local POOL_SIZE = 20 -- 預建數量
 local isEnabled = false
 
 --------------------------------------------------------------------------------
 -- 常數
 --------------------------------------------------------------------------------
 
-local FLOAT_DISTANCE = 60    -- 飄動距離（像素）
-local STAGGER_OFFSET = 15    -- 同時多筆時的水平分散
+local FLOAT_DISTANCE = 60 -- 飄動距離（像素）
+local STAGGER_OFFSET = 15 -- 同時多筆時的水平分散
 
 -- 顏色表
 local FCT_COLORS = {
-    damage_out = { 1.0, 0.8, 0.2 },    -- 金色（輸出傷害）
-    damage_in  = { 0.9, 0.2, 0.2 },    -- 紅色（受到傷害）
-    heal       = { 0.2, 0.9, 0.2 },    -- 綠色（治療）
-    crit       = { 1.0, 1.0, 1.0 },    -- 白色（暴擊閃光）
+    damage_out = { 1.0, 0.8, 0.2 }, -- 金色（輸出傷害）
+    damage_in = { 0.9, 0.2, 0.2 }, -- 紅色（受到傷害）
+    heal = { 0.2, 0.9, 0.2 }, -- 綠色（治療）
+    crit = { 1.0, 1.0, 1.0 }, -- 白色（暴擊閃光）
 }
 
 -- 傷害事件對照表
 local DAMAGE_EVENTS = {
-    SWING_DAMAGE        = true,
-    SPELL_DAMAGE        = true,
-    RANGE_DAMAGE        = true,
+    SWING_DAMAGE = true,
+    SPELL_DAMAGE = true,
+    RANGE_DAMAGE = true,
     SPELL_PERIODIC_DAMAGE = true,
 }
 
 local HEAL_EVENTS = {
-    SPELL_HEAL          = true,
+    SPELL_HEAL = true,
     SPELL_PERIODIC_HEAL = true,
 }
 
@@ -60,7 +60,7 @@ local HEAL_EVENTS = {
 --------------------------------------------------------------------------------
 
 local OutQuad = LunarUI.Easing.OutQuad
-local InQuad  = LunarUI.Easing.InQuad
+local InQuad = LunarUI.Easing.InQuad
 
 --------------------------------------------------------------------------------
 -- 設定讀取
@@ -71,8 +71,7 @@ local function GetSettings()
     if not db then
         return true, 24, 1.5, 1.5, true, true, true
     end
-    return
-        db.fctEnabled ~= false,
+    return db.fctEnabled ~= false,
         db.fctFontSize or 24,
         db.fctCritScale or 1.5,
         db.fctDuration or 1.5,
@@ -177,17 +176,27 @@ end
 --------------------------------------------------------------------------------
 
 local function ShowText(amount, isCrit, textType)
-    if not isEnabled or not fctFrame then return end
+    if not isEnabled or not fctFrame then
+        return
+    end
 
     local _, fontSize, critScale, duration, showDmgOut, showDmgIn, showHeal = GetSettings()
 
     -- 類別過濾
-    if textType == "damage_out" and not showDmgOut then return end
-    if textType == "damage_in" and not showDmgIn then return end
-    if textType == "heal" and not showHeal then return end
+    if textType == "damage_out" and not showDmgOut then
+        return
+    end
+    if textType == "damage_in" and not showDmgIn then
+        return
+    end
+    if textType == "heal" and not showHeal then
+        return
+    end
 
     local fs = AcquireText()
-    if not fs then return end  -- 池耗盡
+    if not fs then
+        return
+    end -- 池耗盡
 
     -- 設定文字
     local displayAmount = LunarUI.FormatValue(math.floor(amount))
@@ -205,7 +214,7 @@ local function ShowText(amount, isCrit, textType)
 
     local color = FCT_COLORS[textType] or FCT_COLORS.damage_out
     if isCrit then
-        fs:SetTextColor(1, 1, 1)  -- 暴擊白色
+        fs:SetTextColor(1, 1, 1) -- 暴擊白色
     else
         fs:SetTextColor(color[1], color[2], color[3])
     end
@@ -220,9 +229,9 @@ local function ShowText(amount, isCrit, textType)
     -- 起始位置
     local startY = 0
     if textType == "damage_in" then
-        startY = -20  -- 受到傷害從稍低位置開始
+        startY = -20 -- 受到傷害從稍低位置開始
     elseif textType == "heal" then
-        startY = 10   -- 治療從稍高位置開始
+        startY = 10 -- 治療從稍高位置開始
     end
 
     fs:SetPoint("CENTER", fctFrame, "CENTER", offsetX, startY)
@@ -242,18 +251,28 @@ local playerGUID = nil
 -- taint 安全工具：使用 tostring/tonumber 斷開 CombatLogGetCurrentEventInfo 的 taint 鏈
 -- WoW 12.0 中 CLEU 回傳值帶有 taint，直接使用會污染後續安全操作
 local function Sanitize(val)
-    if val == nil then return nil end
+    if val == nil then
+        return nil
+    end
     local t = type(val)
-    if t == "number" then return tonumber(tostring(val)) end
-    if t == "string" then return tostring(val) end
-    if t == "boolean" then return val == true end
+    if t == "number" then
+        return tonumber(tostring(val))
+    end
+    if t == "string" then
+        return tostring(val)
+    end
+    if t == "boolean" then
+        return val == true
+    end
     return val
 end
 
 -- CLEU handler：只做資料解析，不操作任何 UI
 -- 所有 UI 操作延遲到 queueFrame 的 OnUpdate（乾淨的執行環境）
 local function OnCombatLogEvent()
-    if not isEnabled then return end
+    if not isEnabled then
+        return
+    end
 
     -- 一次擷取所有值，透過 Sanitize 斷開 taint
     local info = { CombatLogGetCurrentEventInfo() }
@@ -266,7 +285,9 @@ local function OnCombatLogEvent()
     end
 
     -- 只處理與玩家相關的事件（提早退出）
-    if sourceGUID ~= playerGUID and destGUID ~= playerGUID then return end
+    if sourceGUID ~= playerGUID and destGUID ~= playerGUID then
+        return
+    end
 
     if DAMAGE_EVENTS[event] then
         local amount, critical
@@ -278,19 +299,22 @@ local function OnCombatLogEvent()
             critical = Sanitize(info[21])
         end
 
-        if type(amount) ~= "number" then return end
+        if type(amount) ~= "number" then
+            return
+        end
 
         if sourceGUID == playerGUID then
             pendingTexts[#pendingTexts + 1] = { amount, critical, "damage_out" }
         elseif destGUID == playerGUID then
             pendingTexts[#pendingTexts + 1] = { amount, critical, "damage_in" }
         end
-
     elseif HEAL_EVENTS[event] then
         local amount = Sanitize(info[15])
         local critical = Sanitize(info[18])
 
-        if type(amount) ~= "number" then return end
+        if type(amount) ~= "number" then
+            return
+        end
 
         if sourceGUID == playerGUID then
             pendingTexts[#pendingTexts + 1] = { amount, critical, "heal" }
@@ -309,7 +333,9 @@ end
 
 ---@return Frame
 local function CreateFCTFrame()
-    if fctFrame then return fctFrame end
+    if fctFrame then
+        return fctFrame
+    end
 
     fctFrame = CreateFrame("Frame", "LunarUI_FCT", UIParent)
     fctFrame:SetSize(200, 100)
@@ -324,7 +350,7 @@ local function CreateFCTFrame()
     queueFrame = CreateFrame("Frame", nil, fctFrame)
     queueFrame:Hide()
     queueFrame:SetScript("OnUpdate", function(self)
-        self:Hide()  -- 處理完立即停止，下次有事件時再 Show()
+        self:Hide() -- 處理完立即停止，下次有事件時再 Show()
         for i = 1, #pendingTexts do
             local entry = pendingTexts[i]
             ShowText(entry[1], entry[2], entry[3])
@@ -377,7 +403,9 @@ end
 LunarUI:RegisterModule("FloatingCombatText", {
     onEnable = function()
         local enabled = GetSettings()
-        if not enabled then return end
+        if not enabled then
+            return
+        end
 
         fctFrame = CreateFCTFrame()
         fctFrame:Show()

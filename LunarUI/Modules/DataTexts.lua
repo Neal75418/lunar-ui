@@ -29,12 +29,12 @@ local floor = math.floor
 -- Module State
 --------------------------------------------------------------------------------
 
-local providers = {}          -- Registered data text providers
-local onUpdateProviders = {}  -- Only providers with onUpdate=true (Fix 1)
-local panels = {}             -- Created panel frames
-local slotsByProvider = {}    -- Reverse lookup: providerName → { slot1, slot2, ... } (Fix 5)
-local eventFrame              -- Shared event handler frame
-local eventToProviders = {}   -- event → { providerName1, providerName2, ... } (Fix 2)
+local providers = {} -- Registered data text providers
+local onUpdateProviders = {} -- Only providers with onUpdate=true (Fix 1)
+local panels = {} -- Created panel frames
+local slotsByProvider = {} -- Reverse lookup: providerName → { slot1, slot2, ... } (Fix 5)
+local eventFrame -- Shared event handler frame
+local eventToProviders = {} -- event → { providerName1, providerName2, ... } (Fix 2)
 
 --------------------------------------------------------------------------------
 -- Provider Registration
@@ -42,7 +42,7 @@ local eventToProviders = {}   -- event → { providerName1, providerName2, ... }
 
 local function RegisterProvider(name, config)
     providers[name] = config
-    config.name = name  -- 確保 provider 知道自己的名字
+    config.name = name -- 確保 provider 知道自己的名字
     -- Fix 1: 分離 onUpdate provider
     if config.onUpdate then
         onUpdateProviders[name] = config
@@ -74,9 +74,13 @@ local function StatusColor(value, greenThreshold, yellowThreshold, invert)
         good = value >= greenThreshold
         warn = value >= yellowThreshold
     end
-    if good then return 0.3, 1
-    elseif warn then return 1, 0.8
-    else return 1, 0.3 end
+    if good then
+        return 0.3, 1
+    elseif warn then
+        return 1, 0.8
+    else
+        return 1, 0.3
+    end
 end
 
 -- FPS
@@ -131,7 +135,12 @@ RegisterProvider("gold", {
         local gold = floor(money / 10000)
         local silver = floor((money % 10000) / 100)
         local copper = money % 100
-        return format("|cffffd700%d|r|TInterface\\MoneyFrame\\UI-GoldIcon:0|t |cffc7c7cf%d|r|TInterface\\MoneyFrame\\UI-SilverIcon:0|t |cffeda55f%d|r|TInterface\\MoneyFrame\\UI-CopperIcon:0|t", gold, silver, copper)
+        return format(
+            "|cffffd700%d|r|TInterface\\MoneyFrame\\UI-GoldIcon:0|t |cffc7c7cf%d|r|TInterface\\MoneyFrame\\UI-SilverIcon:0|t |cffeda55f%d|r|TInterface\\MoneyFrame\\UI-CopperIcon:0|t",
+            gold,
+            silver,
+            copper
+        )
     end,
     tooltip = function(slot)
         local money = GetMoney()
@@ -190,9 +199,13 @@ RegisterProvider("durability", {
             if cur and max and max > 0 then
                 local pct = floor(cur / max * 100)
                 local r, g
-                if pct < 25 then r, g = 1, 0.3
-                elseif pct < 50 then r, g = 1, 0.8
-                else r, g = 0.3, 1 end
+                if pct < 25 then
+                    r, g = 1, 0.3
+                elseif pct < 50 then
+                    r, g = 1, 0.8
+                else
+                    r, g = 0.3, 1
+                end
                 GameTooltip:AddDoubleLine(name, pct .. "%", 1, 1, 1, r, g, 0)
             end
         end
@@ -241,7 +254,13 @@ RegisterProvider("bagSlots", {
 -- Friends Online
 RegisterProvider("friends", {
     label = L["Friends"] or "Friends",
-    events = { "FRIENDLIST_UPDATE", "BN_FRIEND_INFO_CHANGED", "BN_FRIEND_ACCOUNT_ONLINE", "BN_FRIEND_ACCOUNT_OFFLINE", "PLAYER_ENTERING_WORLD" },
+    events = {
+        "FRIENDLIST_UPDATE",
+        "BN_FRIEND_INFO_CHANGED",
+        "BN_FRIEND_ACCOUNT_ONLINE",
+        "BN_FRIEND_ACCOUNT_OFFLINE",
+        "PLAYER_ENTERING_WORLD",
+    },
     update = function()
         local _, onlineFriends = C_FriendList.GetNumFriends()
         local bnOnline = 0
@@ -297,7 +316,9 @@ RegisterProvider("guild", {
         end
     end,
     tooltip = function(slot)
-        if not IsInGuild() then return end
+        if not IsInGuild() then
+            return
+        end
         local guildName = GetGuildInfo("player")
         local _, numOnline = GetNumGuildMembers()
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
@@ -314,7 +335,9 @@ RegisterProvider("spec", {
     events = { "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_TALENT_UPDATE", "PLAYER_ENTERING_WORLD" },
     update = function()
         local specIndex = GetSpecialization()
-        if not specIndex then return L["Spec"] or "Spec" end
+        if not specIndex then
+            return L["Spec"] or "Spec"
+        end
         local _, specName = GetSpecializationInfo(specIndex)
         return specName or (L["Spec"] or "Spec")
     end,
@@ -323,7 +346,9 @@ RegisterProvider("spec", {
     end,
     tooltip = function(slot)
         local specIndex = GetSpecialization()
-        if not specIndex then return end
+        if not specIndex then
+            return
+        end
         local _, specName, _, _icon = GetSpecializationInfo(specIndex)
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
@@ -351,7 +376,16 @@ RegisterProvider("clock", {
         GameTooltip:AddDoubleLine(L["LocalTime"] or "Local", date("%H:%M:%S"), 1, 1, 1, 1, 1, 1)
         local serverTime = C_DateAndTime.GetCurrentCalendarTime()
         if serverTime then
-            GameTooltip:AddDoubleLine(L["ServerTime"] or "Server", format("%02d:%02d", serverTime.hour, serverTime.minute), 1, 1, 1, 0.7, 0.7, 0.7)
+            GameTooltip:AddDoubleLine(
+                L["ServerTime"] or "Server",
+                format("%02d:%02d", serverTime.hour, serverTime.minute),
+                1,
+                1,
+                1,
+                0.7,
+                0.7,
+                0.7
+            )
         end
         GameTooltip:Show()
     end,
@@ -365,9 +399,13 @@ RegisterProvider("coords", {
     updateInterval = 0.2,
     update = function()
         local map = C_Map.GetBestMapForUnit("player")
-        if not map then return "-- , --" end
+        if not map then
+            return "-- , --"
+        end
         local pos = C_Map.GetPlayerMapPosition(map, "player")
-        if not pos then return "-- , --" end
+        if not pos then
+            return "-- , --"
+        end
         local x, y = pos:GetXY()
         return format("%.1f, %.1f", (x or 0) * 100, (y or 0) * 100)
     end,
@@ -501,10 +539,14 @@ end
 
 local function UpdateProvider(providerName)
     local provider = providers[providerName]
-    if not provider or not provider.update then return end
+    if not provider or not provider.update then
+        return
+    end
 
     local text = provider.update()
-    if not text then return end
+    if not text then
+        return
+    end
 
     -- Fix 5: 直接查反查表，不遍歷所有面板/欄位
     local slots = slotsByProvider[providerName]
@@ -529,7 +571,9 @@ local onUpdateFrame
 local onUpdateElapsed = {}
 
 local function SetupOnUpdate()
-    if onUpdateFrame then return end
+    if onUpdateFrame then
+        return
+    end
 
     onUpdateFrame = CreateFrame("Frame")
     -- Fix 1: 只遍歷 onUpdateProviders，不遍歷全部 providers
@@ -549,7 +593,9 @@ end
 --------------------------------------------------------------------------------
 
 local function SetupEvents()
-    if eventFrame then return end
+    if eventFrame then
+        return
+    end
 
     eventFrame = CreateFrame("Frame")
 
@@ -580,7 +626,9 @@ local function InitializeDataTexts()
     end
 
     local db = LunarUI.db and LunarUI.db.profile.datatexts
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
     -- Create panels from config
     if db.panels then
@@ -608,7 +656,6 @@ local function InitializeDataTexts()
 
     -- Initial full update
     UpdateAllProviders()
-
 end
 
 --------------------------------------------------------------------------------
@@ -653,6 +700,8 @@ LunarUI.InitializeDataTexts = InitializeDataTexts
 
 LunarUI:RegisterModule("DataTexts", {
     onEnable = InitializeDataTexts,
-    onDisable = function() LunarUI.CleanupDataTexts() end,
+    onDisable = function()
+        LunarUI.CleanupDataTexts()
+    end,
     delay = 0.4,
 })

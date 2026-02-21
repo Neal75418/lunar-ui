@@ -352,19 +352,25 @@ HybridMinimap = {}
 ---@param template? string
 ---@param id? number
 ---@return Frame
-function CreateFrame(frameType, name, parent, template, id) return _rv end
+function CreateFrame(frameType, name, parent, template, id)
+    return _rv
+end
 
 ---@param object any
 ---@vararg any
 ---@return any
-function Mixin(object, ...) return _rv end
+function Mixin(object, ...)
+    return _rv
+end
 
 ---@param r number
 ---@param g number
 ---@param b number
 ---@param a? number
 ---@return ColorMixin
-function CreateColor(r, g, b, a) return _rv end
+function CreateColor(r, g, b, a)
+    return _rv
+end
 
 ---@type Frame
 UIParent = {}
@@ -387,172 +393,278 @@ STANDARD_TEXT_FONT = ""
 -- Modifier keys
 --------------------------------------------------------------------------------
 ---@return boolean
-function IsShiftKeyDown() return _rv end
+function IsShiftKeyDown()
+    return _rv
+end
 ---@return boolean
-function IsControlKeyDown() return _rv end
+function IsControlKeyDown()
+    return _rv
+end
 ---@return boolean
-function IsAltKeyDown() return _rv end
+function IsAltKeyDown()
+    return _rv
+end
 ---@return boolean
-function IsModifierKeyDown() return _rv end
+function IsModifierKeyDown()
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Unit functions
 --------------------------------------------------------------------------------
 ---@return boolean
-function InCombatLockdown() return _rv end
+function InCombatLockdown()
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitExists(unit) return _rv end
+function UnitExists(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitIsDead(unit) return _rv end
+function UnitIsDead(unit)
+    return _rv
+end
 ---@param unit1 string
 ---@param unit2 string
 ---@return boolean
-function UnitIsUnit(unit1, unit2) return _rv end
+function UnitIsUnit(unit1, unit2)
+    return _rv
+end
 ---@param unit string
 ---@return string, string
-function UnitName(unit) return _rv end
+function UnitName(unit)
+    return _rv
+end
 ---@param unit string
 ---@return string, string, number
-function UnitClass(unit) return _rv end
+function UnitClass(unit)
+    return _rv
+end
 ---@param unit string
 ---@return string
-function UnitClassBase(unit) return _rv end
+function UnitClassBase(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function UnitHealth(unit) return _rv end
+function UnitHealth(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function UnitHealthMax(unit) return _rv end
+function UnitHealthMax(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function UnitHealthPercent(unit) return _rv end
+function UnitHealthPercent(unit)
+    return _rv
+end
 ---@param unit string
 ---@param powerType? number
 ---@return number
-function UnitPower(unit, powerType) return _rv end
+function UnitPower(unit, powerType)
+    return _rv
+end
 ---@param unit string
 ---@param powerType? number
 ---@return number
-function UnitPowerMax(unit, powerType) return _rv end
+function UnitPowerMax(unit, powerType)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function UnitPowerPercent(unit) return _rv end
+function UnitPowerPercent(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number, string
-function UnitPowerType(unit) return _rv end
+function UnitPowerType(unit)
+    return _rv
+end
 ---@param unit string
 ---@param powerType number
 ---@return number
-function UnitPowerDisplayMod(unit, powerType) return _rv end
+function UnitPowerDisplayMod(unit, powerType)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function UnitLevel(unit) return _rv end
+function UnitLevel(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function UnitEffectiveLevel(unit) return _rv end
+function UnitEffectiveLevel(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitIsPlayer(unit) return _rv end
+function UnitIsPlayer(unit)
+    return _rv
+end
 ---@param unit1 string
 ---@param unit2 string
 ---@return boolean
-function UnitIsEnemy(unit1, unit2) return _rv end
+function UnitIsEnemy(unit1, unit2)
+    return _rv
+end
 ---@param unit1 string
 ---@param unit2 string
 ---@return boolean
-function UnitIsFriend(unit1, unit2) return _rv end
+function UnitIsFriend(unit1, unit2)
+    return _rv
+end
 ---@param unit1 string
 ---@param unit2 string
 ---@return number|nil
-function UnitReaction(unit1, unit2) return _rv end
+function UnitReaction(unit1, unit2)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitAffectingCombat(unit) return _rv end
+function UnitAffectingCombat(unit)
+    return _rv
+end
 ---@param unit string
 ---@param otherUnit? string
 ---@return number
-function UnitThreatSituation(unit, otherUnit) return _rv end
+function UnitThreatSituation(unit, otherUnit)
+    return _rv
+end
 ---@param unit string
 ---@return string
-function UnitClassification(unit) return _rv end
+function UnitClassification(unit)
+    return _rv
+end
 ---@param unit string
 ---@return string
-function UnitCreatureType(unit) return _rv end
+function UnitCreatureType(unit)
+    return _rv
+end
 ---@param unit string
 ---@return string
-function UnitGUID(unit) return _rv end
+function UnitGUID(unit)
+    return _rv
+end
 ---@param unit string
 ---@return string
-function UnitGroupRolesAssigned(unit) return _rv end
+function UnitGroupRolesAssigned(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitInRaid(unit) return _rv end
+function UnitInRaid(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitInParty(unit) return _rv end
+function UnitInParty(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitIsGhost(unit) return _rv end
+function UnitIsGhost(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitIsConnected(unit) return _rv end
+function UnitIsConnected(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitIsTapDenied(unit) return _rv end
+function UnitIsTapDenied(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitPlayerControlled(unit) return _rv end
+function UnitPlayerControlled(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitInPartyIsAI(unit) return _rv end
+function UnitInPartyIsAI(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitIsVisible(unit) return _rv end
+function UnitIsVisible(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number|nil
-function UnitPhaseReason(unit) return _rv end
+function UnitPhaseReason(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitHasVehicleUI(unit) return _rv end
+function UnitHasVehicleUI(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function UnitSelectionType(unit) return _rv end
+function UnitSelectionType(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitIsDeadOrGhost(unit) return _rv end
+function UnitIsDeadOrGhost(unit)
+    return _rv
+end
 ---@param unit string
 ---@return boolean
-function UnitIsFeignDeath(unit) return _rv end
+function UnitIsFeignDeath(unit)
+    return _rv
+end
 ---@param unit string
 ---@return any
-function UnitCastingInfo(unit) return _rv end
+function UnitCastingInfo(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function UnitStagger(unit) return _rv end
+function UnitStagger(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function UnitPowerBarID(unit) return _rv end
+function UnitPowerBarID(unit)
+    return _rv
+end
 ---@param unit string
 ---@return number
-function GetUnitTotalModifiedMaxHealthPercent(unit) return _rv end
+function GetUnitTotalModifiedMaxHealthPercent(unit)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Group
 --------------------------------------------------------------------------------
 ---@return number
-function GetNumGroupMembers() return _rv end
+function GetNumGroupMembers()
+    return _rv
+end
 ---@return number
-function GetNumSubgroupMembers() return _rv end
+function GetNumSubgroupMembers()
+    return _rv
+end
 ---@return boolean
-function IsInRaid() return _rv end
+function IsInRaid()
+    return _rv
+end
 ---@return boolean
-function IsInGroup() return _rv end
+function IsInGroup()
+    return _rv
+end
 ---@param assignment string
 ---@param unit string
 ---@return boolean
-function GetPartyAssignment(assignment, unit) return _rv end
+function GetPartyAssignment(assignment, unit)
+    return _rv
+end
 ---@type any
 PartyUtil = {}
 
@@ -561,173 +673,277 @@ PartyUtil = {}
 --------------------------------------------------------------------------------
 ---@param command string
 ---@return string|nil, string|nil
-function GetBindingKey(command) return _rv end
+function GetBindingKey(command)
+    return _rv
+end
 ---@param key string
 ---@param command? string
 ---@return boolean
-function SetBinding(key, command) return _rv end
+function SetBinding(key, command)
+    return _rv
+end
 ---@param which number
-function SaveBindings(which) return _rv end
+function SaveBindings(which)
+    return _rv
+end
 ---@return number
-function GetCurrentBindingSet() return _rv end
+function GetCurrentBindingSet()
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Shapeshift / Stance
 --------------------------------------------------------------------------------
 ---@return number
-function GetNumShapeshiftForms() return _rv end
+function GetNumShapeshiftForms()
+    return _rv
+end
 ---@param index number
 ---@return string, any, boolean, boolean
-function GetShapeshiftFormInfo(index) return _rv end
+function GetShapeshiftFormInfo(index)
+    return _rv
+end
 ---@param index number
 ---@return number, number, number
-function GetShapeshiftFormCooldown(index) return _rv end
+function GetShapeshiftFormCooldown(index)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Specialization
 --------------------------------------------------------------------------------
 ---@return number|nil
-function GetSpecialization() return _rv end
+function GetSpecialization()
+    return _rv
+end
 ---@param specIndex number
 ---@return any, string, string, any, string
-function GetSpecializationInfo(specIndex) return _rv end
+function GetSpecializationInfo(specIndex)
+    return _rv
+end
 ---@param specIndex number
 ---@return string
-function GetSpecializationRole(specIndex) return _rv end
+function GetSpecializationRole(specIndex)
+    return _rv
+end
 ---@return number
-function GetNumSpecializations() return _rv end
+function GetNumSpecializations()
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Power bar / Portrait
 --------------------------------------------------------------------------------
 ---@param barID number
 ---@return any
-function GetUnitPowerBarInfo(barID) return _rv end
+function GetUnitPowerBarInfo(barID)
+    return _rv
+end
 ---@param barID number
 ---@return any
-function GetUnitPowerBarInfoByID(barID) return _rv end
+function GetUnitPowerBarInfoByID(barID)
+    return _rv
+end
 ---@param barID number
 ---@return any
-function GetUnitPowerBarStringsByID(barID) return _rv end
+function GetUnitPowerBarStringsByID(barID)
+    return _rv
+end
 ---@return any
-function GetUnitChargedPowerPoints() return _rv end
+function GetUnitChargedPowerPoints()
+    return _rv
+end
 ---@return boolean
-function PlayerVehicleHasComboPoints() return _rv end
+function PlayerVehicleHasComboPoints()
+    return _rv
+end
 ---@param texture any
 ---@param unit string
-function SetPortraitTexture(texture, unit) return _rv end
+function SetPortraitTexture(texture, unit)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- General info
 --------------------------------------------------------------------------------
 ---@return string
-function GetLocale() return _rv end
+function GetLocale()
+    return _rv
+end
 ---@return string
-function GetRealmName() return _rv end
+function GetRealmName()
+    return _rv
+end
 ---@return number
-function GetTime() return _rv end
+function GetTime()
+    return _rv
+end
 ---@return number
-function GetFramerate() return _rv end
+function GetFramerate()
+    return _rv
+end
 ---@param name string
 ---@return string|nil
-function GetCVar(name) return _rv end
+function GetCVar(name)
+    return _rv
+end
 ---@param name string
 ---@param value any
-function SetCVar(name, value) return _rv end
+function SetCVar(name, value)
+    return _rv
+end
 ---@return number
-function GetScreenWidth() return _rv end
+function GetScreenWidth()
+    return _rv
+end
 ---@return number
-function GetScreenHeight() return _rv end
+function GetScreenHeight()
+    return _rv
+end
 ---@return number
-function GetMaxPlayerLevel() return _rv end
+function GetMaxPlayerLevel()
+    return _rv
+end
 ---@return number, number, number, number
-function GetNetStats() return _rv end
+function GetNetStats()
+    return _rv
+end
 ---@return number, number
-function GetGameTime() return _rv end
+function GetGameTime()
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Spell / Item
 --------------------------------------------------------------------------------
 ---@param spellID number
 ---@return any
-function GetSpellInfo(spellID) return _rv end
+function GetSpellInfo(spellID)
+    return _rv
+end
 ---@param itemID any
 ---@return any
-function GetItemInfo(itemID) return _rv end
+function GetItemInfo(itemID)
+    return _rv
+end
 ---@param quality number
 ---@return number, number, number
-function GetItemQualityColor(quality) return _rv end
+function GetItemQualityColor(quality)
+    return _rv
+end
 ---@param unit string
 ---@param slot number
 ---@return string|nil
-function GetInventoryItemLink(unit, slot) return _rv end
+function GetInventoryItemLink(unit, slot)
+    return _rv
+end
 ---@param spellID number
 ---@return boolean
-function IsSpellKnown(spellID) return _rv end
+function IsSpellKnown(spellID)
+    return _rv
+end
 ---@param spellID number
 ---@return boolean
-function IsPlayerSpell(spellID) return _rv end
+function IsPlayerSpell(spellID)
+    return _rv
+end
 ---@param runeIndex number
 ---@return number, number, boolean
-function GetRuneCooldown(runeIndex) return _rv end
+function GetRuneCooldown(runeIndex)
+    return _rv
+end
 ---@param slot number
 ---@return any
-function GetTotemInfo(slot) return _rv end
+function GetTotemInfo(slot)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Container
 --------------------------------------------------------------------------------
 ---@param bagID number
 ---@return number
-function GetContainerNumSlots(bagID) return _rv end
+function GetContainerNumSlots(bagID)
+    return _rv
+end
 ---@param bagID number
 ---@param slot number
 ---@return any
-function GetContainerItemInfo(bagID, slot) return _rv end
+function GetContainerItemInfo(bagID, slot)
+    return _rv
+end
 ---@param bagID number
 ---@param slot number
 ---@return string|nil
-function GetContainerItemLink(bagID, slot) return _rv end
+function GetContainerItemLink(bagID, slot)
+    return _rv
+end
 ---@param bagID number
 ---@param slot number
 ---@return number|nil
-function GetContainerItemID(bagID, slot) return _rv end
+function GetContainerItemID(bagID, slot)
+    return _rv
+end
 ---@param bagID number
 ---@param slot number
-function UseContainerItem(bagID, slot) return _rv end
+function UseContainerItem(bagID, slot)
+    return _rv
+end
 ---@param bagID number
 ---@param slot number
-function PickupContainerItem(bagID, slot) return _rv end
+function PickupContainerItem(bagID, slot)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Currency
 --------------------------------------------------------------------------------
 ---@return number
-function GetMoney() return _rv end
+function GetMoney()
+    return _rv
+end
 ---@param amount number
 ---@return string
-function GetCoinTextureString(amount) return _rv end
+function GetCoinTextureString(amount)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Zone / Map
 --------------------------------------------------------------------------------
 ---@return string
-function GetMinimapZoneText() return _rv end
+function GetMinimapZoneText()
+    return _rv
+end
 ---@return string, boolean, string
-function GetZonePVPInfo() return _rv end
+function GetZonePVPInfo()
+    return _rv
+end
 ---@return string
-function GetRealZoneText() return _rv end
+function GetRealZoneText()
+    return _rv
+end
 ---@return string
-function GetSubZoneText() return _rv end
+function GetSubZoneText()
+    return _rv
+end
 ---@return string
-function GetZoneText() return _rv end
+function GetZoneText()
+    return _rv
+end
 ---@return string
-function GetMinimapShape() return _rv end
+function GetMinimapShape()
+    return _rv
+end
 ---@return string, string, number, string, number, number, boolean, number, number, number
-function GetInstanceInfo() return _rv end
+function GetInstanceInfo()
+    return _rv
+end
 ---@param difficultyID number
 ---@return string?, string?, boolean?, boolean?, boolean?, boolean?, number?
-function GetDifficultyInfo(difficultyID) return _rv end
+function GetDifficultyInfo(difficultyID)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Minimap frames
@@ -789,11 +1005,19 @@ MiniMapMailBorder = {}
 ---@type Frame
 MiniMapTrackingDropDown = {}
 ---@return number, number
-function Garrison_GetLandingPageIconSize() return _rv end
-function Minimap_ZoomIn() return _rv end
-function Minimap_ZoomOut() return _rv end
+function Garrison_GetLandingPageIconSize()
+    return _rv
+end
+function Minimap_ZoomIn()
+    return _rv
+end
+function Minimap_ZoomOut()
+    return _rv
+end
 ---@return boolean
-function HasNewMail() return _rv end
+function HasNewMail()
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Action bar frames
@@ -909,7 +1133,9 @@ PetBattlePrimaryAbilityTooltip = {}
 ---@param tooltip any
 ---@param parent any
 ---@param anchor? string
-function GameTooltip_SetDefaultAnchor(tooltip, parent, anchor) return _rv end
+function GameTooltip_SetDefaultAnchor(tooltip, parent, anchor)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Chat
@@ -937,30 +1163,46 @@ ChatFrameChannelButton = {}
 ---@type Button
 QuickJoinToastButton = {}
 ---@return any
-function FCF_GetCurrentChatFrame() return _rv end
+function FCF_GetCurrentChatFrame()
+    return _rv
+end
 ---@param editBox any
-function ChatEdit_ActivateChat(editBox) return _rv end
+function ChatEdit_ActivateChat(editBox)
+    return _rv
+end
 ---@param editBox any
-function ChatEdit_DeactivateChat(editBox) return _rv end
+function ChatEdit_DeactivateChat(editBox)
+    return _rv
+end
 ---@param event string
 ---@param filter function
-function ChatFrame_AddMessageEventFilter(event, filter) return _rv end
+function ChatFrame_AddMessageEventFilter(event, filter)
+    return _rv
+end
 ---@param self Frame
 ---@param link string
 ---@param text string
 ---@param button string
-function ChatFrame_OnHyperlinkShow(self, link, text, button) return _rv end
+function ChatFrame_OnHyperlinkShow(self, link, text, button)
+    return _rv
+end
 ---@param chatType string
 ---@param r number
 ---@param g number
 ---@param b number
-function ChangeChatColor(chatType, r, g, b) return _rv end
+function ChangeChatColor(chatType, r, g, b)
+    return _rv
+end
 ---@param chatType string
 ---@param enable boolean
-function SetChatColorNameByClass(chatType, enable) return _rv end
+function SetChatColorNameByClass(chatType, enable)
+    return _rv
+end
 ---@param frame any
 ---@return boolean
-function MouseIsOver(frame) return _rv end
+function MouseIsOver(frame)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Secure functions
@@ -968,142 +1210,216 @@ function MouseIsOver(frame) return _rv end
 ---@param table any
 ---@param funcName string
 ---@param hookFunc function
-function hooksecurefunc(table, funcName, hookFunc) return _rv end
+function hooksecurefunc(table, funcName, hookFunc)
+    return _rv
+end
 ---@param func function
 ---@vararg any
 ---@return any
-function securecall(func, ...) return _rv end
+function securecall(func, ...)
+    return _rv
+end
 ---@param frame any
 ---@param attribute string
 ---@param values string
-function RegisterStateDriver(frame, attribute, values) return _rv end
-function ClearFocus() return _rv end
+function RegisterStateDriver(frame, attribute, values)
+    return _rv
+end
+function ClearFocus()
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- UnitFrame helpers
 --------------------------------------------------------------------------------
 ---@param frame Frame
 ---@param handler function
-function UnitFrame_OnEnter(frame, handler) return _rv end
+function UnitFrame_OnEnter(frame, handler)
+    return _rv
+end
 ---@param frame Frame
-function UnitFrame_OnLeave(frame) return _rv end
+function UnitFrame_OnLeave(frame)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Lua builtins / WoW extensions
 --------------------------------------------------------------------------------
 ---@param t table
-function wipe(t) return _rv end
+function wipe(t)
+    return _rv
+end
 ---@param t table
 ---@param value any
 ---@param pos? number
-function tinsert(t, value, pos) return _rv end
+function tinsert(t, value, pos)
+    return _rv
+end
 ---@param t table
 ---@param pos? number
 ---@return any
-function tremove(t, pos) return _rv end
+function tremove(t, pos)
+    return _rv
+end
 ---@param t table
 ---@param value any
 ---@return boolean
-function tContains(t, value) return _rv end
+function tContains(t, value)
+    return _rv
+end
 ---@param t table
 ---@return table
-function CopyTable(t) return _rv end
+function CopyTable(t)
+    return _rv
+end
 ---@param list table
 ---@param i? number
 ---@param j? number
 ---@return ...
-function unpack(list, i, j) return _rv end
+function unpack(list, i, j)
+    return _rv
+end
 ---@param str string
 ---@param delimiter string
 ---@return string ...
-function strsplit(delimiter, str) return _rv end
+function strsplit(delimiter, str)
+    return _rv
+end
 ---@param str string
 ---@return string
-function strtrim(str) return _rv end
+function strtrim(str)
+    return _rv
+end
 ---@param str string
 ---@param pattern string
 ---@return any
-function strmatch(str, pattern) return _rv end
+function strmatch(str, pattern)
+    return _rv
+end
 ---@param str string
 ---@param pattern string
 ---@param init? number
 ---@return number|nil, number|nil
-function strfind(str, pattern, init) return _rv end
+function strfind(str, pattern, init)
+    return _rv
+end
 ---@param fmt string
 ---@vararg any
 ---@return string
-function format(fmt, ...) return _rv end
+function format(fmt, ...)
+    return _rv
+end
 ---@param coroutine? any
 ---@param start? number
 ---@param count? number
 ---@return string
-function debugstack(coroutine, start, count) return _rv end
+function debugstack(coroutine, start, count)
+    return _rv
+end
 ---@return function
-function geterrorhandler() return _rv end
+function geterrorhandler()
+    return _rv
+end
 ---@param func function
-function seterrorhandler(func) return _rv end
+function seterrorhandler(func)
+    return _rv
+end
 ---@param name string
 ---@param context string
 ---@return string
-function Ambiguate(name, context) return _rv end
+function Ambiguate(name, context)
+    return _rv
+end
 ---@vararg any
-function print(...) return _rv end
+function print(...)
+    return _rv
+end
 ---@param func function
 ---@vararg any
 ---@return boolean, any
-function pcall(func, ...) return _rv end
+function pcall(func, ...)
+    return _rv
+end
 ---@param func function
 ---@param handler function
 ---@vararg any
 ---@return boolean, any
-function xpcall(func, handler, ...) return _rv end
+function xpcall(func, handler, ...)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Math / Time builtins
 --------------------------------------------------------------------------------
 ---@param x number
 ---@return number
-function floor(x) return _rv end
+function floor(x)
+    return _rv
+end
 ---@param x number
 ---@return number
-function ceil(x) return _rv end
+function ceil(x)
+    return _rv
+end
 ---@param x number
 ---@return number
-function abs(x) return _rv end
+function abs(x)
+    return _rv
+end
 ---@vararg number
 ---@return number
-function min(...) return _rv end
+function min(...)
+    return _rv
+end
 ---@vararg number
 ---@return number
-function max(...) return _rv end
+function max(...)
+    return _rv
+end
 ---@param m? number
 ---@param n? number
 ---@return number
-function random(m, n) return _rv end
+function random(m, n)
+    return _rv
+end
 ---@param format? string
 ---@param time? number
 ---@return string|table
-function date(format, time) return _rv end
+function date(format, time)
+    return _rv
+end
 ---@param table? table
 ---@return number
-function time(table) return _rv end
+function time(table)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- UI / Settings
 --------------------------------------------------------------------------------
 ---@param category string
-function InterfaceOptionsFrame_OpenToCategory(category) return _rv end
+function InterfaceOptionsFrame_OpenToCategory(category)
+    return _rv
+end
 ---@type Frame
 SettingsPanel = {}
 ---@param soundKitID number
-function PlaySound(soundKitID) return _rv end
+function PlaySound(soundKitID)
+    return _rv
+end
 ---@param file string
-function PlaySoundFile(file) return _rv end
+function PlaySoundFile(file)
+    return _rv
+end
 ---@param which string
-function StaticPopup_Show(which) return _rv end
+function StaticPopup_Show(which)
+    return _rv
+end
 ---@type table
 StaticPopupDialogs = {}
-function ReloadUI() return _rv end
+function ReloadUI()
+    return _rv
+end
 ---@type table
 SlashCmdList = {}
 ---@type string
@@ -1117,28 +1433,38 @@ SLASH_LUNARUI2 = ""
 ---@param showWhenDone? boolean
 ---@param flashInHoldTime? number
 ---@param flashOutHoldTime? number
-function UIFrameFlash(frame, fadeInTime, fadeOutTime, flashDuration, showWhenDone, flashInHoldTime, flashOutHoldTime) return _rv end
+function UIFrameFlash(frame, fadeInTime, fadeOutTime, flashDuration, showWhenDone, flashInHoldTime, flashOutHoldTime)
+    return _rv
+end
 ---@param cooldown any
 ---@param start number
 ---@param duration number
 ---@param enable? number
-function CooldownFrame_Set(cooldown, start, duration, enable) return _rv end
+function CooldownFrame_Set(cooldown, start, duration, enable)
+    return _rv
+end
 ---@type Frame
 MerchantFrame = {}
 ---@type Frame
 EditModeManagerFrame = {}
 ---@param name string
 ---@return boolean
-function IsAddOnLoaded(name) return _rv end
+function IsAddOnLoaded(name)
+    return _rv
+end
 ---@param name string
-function LoadAddOn(name) return _rv end
+function LoadAddOn(name)
+    return _rv
+end
 ---@param level number
 ---@param value any
 ---@param dropDownFrame Frame
 ---@param anchorName? string
 ---@param xOffset? number
 ---@param yOffset? number
-function ToggleDropDownMenu(level, value, dropDownFrame, anchorName, xOffset, yOffset) return _rv end
+function ToggleDropDownMenu(level, value, dropDownFrame, anchorName, xOffset, yOffset)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- UI Widget frames
@@ -1218,10 +1544,14 @@ SECONDARYHANDSLOT = "Off Hand"
 -- Combat log
 --------------------------------------------------------------------------------
 ---@return ...
-function CombatLogGetCurrentEventInfo() return _rv end
+function CombatLogGetCurrentEventInfo()
+    return _rv
+end
 ---@param destFlags number
 ---@return boolean
-function CombatLog_Object_IsA(destFlags) return _rv end
+function CombatLog_Object_IsA(destFlags)
+    return _rv
+end
 ---@type number
 COMBATLOG_OBJECT_TYPE_PLAYER = 0
 ---@type number
@@ -1234,11 +1564,17 @@ COMBATLOG_OBJECT_REACTION_FRIENDLY = 0
 --------------------------------------------------------------------------------
 -- Bags / Bank frames
 --------------------------------------------------------------------------------
-function CloseAllBags() return _rv end
-function CloseBankFrame() return _rv end
+function CloseAllBags()
+    return _rv
+end
+function CloseBankFrame()
+    return _rv
+end
 ---@param button Button
 ---@param desaturated boolean
-function SetItemButtonDesaturated(button, desaturated) return _rv end
+function SetItemButtonDesaturated(button, desaturated)
+    return _rv
+end
 ---@type Frame
 ContainerFrameCombinedBags = {}
 ---@type Frame
@@ -1252,53 +1588,81 @@ QuestScrollFrame = {}
 -- Friends / BattleNet
 --------------------------------------------------------------------------------
 ---@return number, number
-function BNGetNumFriends() return _rv end
+function BNGetNumFriends()
+    return _rv
+end
 ---@param tab? number
-function ToggleFriendsFrame(tab) return _rv end
+function ToggleFriendsFrame(tab)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Guild
 --------------------------------------------------------------------------------
 ---@return boolean
-function IsInGuild() return _rv end
+function IsInGuild()
+    return _rv
+end
 ---@return number, number, number
-function GetNumGuildMembers() return _rv end
-function ToggleGuildFrame() return _rv end
+function GetNumGuildMembers()
+    return _rv
+end
+function ToggleGuildFrame()
+    return _rv
+end
 ---@param unit string
 ---@return string|nil, string|nil, number|nil
-function GetGuildInfo(unit) return _rv end
+function GetGuildInfo(unit)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Talent / Spellbook UI
 --------------------------------------------------------------------------------
-function ToggleTalentFrame() return _rv end
+function ToggleTalentFrame()
+    return _rv
+end
 ---@type Frame
 PlayerSpellsFrame = {}
-function TogglePlayerSpellsFrame() return _rv end
+function TogglePlayerSpellsFrame()
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Instance / Death
 --------------------------------------------------------------------------------
 ---@return boolean, string
-function IsInInstance() return _rv end
-function RepopMe() return _rv end
+function IsInInstance()
+    return _rv
+end
+function RepopMe()
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Inventory / Durability
 --------------------------------------------------------------------------------
 ---@param slot number
 ---@return number|nil, number|nil
-function GetInventoryItemDurability(slot) return _rv end
+function GetInventoryItemDurability(slot)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Repair
 --------------------------------------------------------------------------------
 ---@return number, boolean
-function GetRepairAllCost() return _rv end
+function GetRepairAllCost()
+    return _rv
+end
 ---@return number
-function GetGuildBankWithdrawMoney() return _rv end
+function GetGuildBankWithdrawMoney()
+    return _rv
+end
 ---@param useGuildFunds? boolean
-function RepairAllItems(useGuildFunds) return _rv end
+function RepairAllItems(useGuildFunds)
+    return _rv
+end
 
 --------------------------------------------------------------------------------
 -- Monk
@@ -1309,4 +1673,6 @@ MonkStaggerBar = {}
 --------------------------------------------------------------------------------
 -- Screenshot
 --------------------------------------------------------------------------------
-function Screenshot() return _rv end
+function Screenshot()
+    return _rv
+end

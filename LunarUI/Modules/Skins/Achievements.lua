@@ -9,9 +9,12 @@ local LunarUI = Engine.LunarUI
 
 local function SkinAchievements()
     local frame = LunarUI:SkinStandardFrame("AchievementFrame", {
-        tabPrefix = "AchievementFrameTab", tabCount = 3,
+        tabPrefix = "AchievementFrameTab",
+        tabCount = 3,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 標題文字 fallback
     if not frame.TitleText and frame.Header and frame.Header.Title then

@@ -149,8 +149,12 @@ local function CreateLootFrame()
     titleBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -FRAME_PADDING, -FRAME_PADDING)
     titleBar:EnableMouse(true)
     titleBar:RegisterForDrag("LeftButton")
-    titleBar:SetScript("OnDragStart", function() frame:StartMoving() end)
-    titleBar:SetScript("OnDragStop", function() frame:StopMovingOrSizing() end)
+    titleBar:SetScript("OnDragStart", function()
+        frame:StartMoving()
+    end)
+    titleBar:SetScript("OnDragStop", function()
+        frame:StopMovingOrSizing()
+    end)
 
     -- Title text
     local title = titleBar:CreateFontString(nil, "OVERLAY")
@@ -207,7 +211,9 @@ end
 --------------------------------------------------------------------------------
 
 local function UpdateLootFrame()
-    if not lootFrame then return end
+    if not lootFrame then
+        return
+    end
 
     local numItems = _G.GetNumLootItems()
     if numItems == 0 then
@@ -224,7 +230,9 @@ local function UpdateLootFrame()
     local visibleCount = 0
     for i = 1, numItems do
         local slot = lootSlots[i]
-        if not slot then break end
+        if not slot then
+            break
+        end
         local lootIcon, lootName, lootQuantity, _, lootQuality, _, _, _, _ = _G.GetLootSlotInfo(i)
 
         if lootName then
@@ -253,8 +261,13 @@ local function UpdateLootFrame()
 
             -- Position
             slot:ClearAllPoints()
-            slot:SetPoint("TOPLEFT", lootFrame, "TOPLEFT", FRAME_PADDING,
-                -(FRAME_PADDING + TITLE_HEIGHT + (visibleCount - 1) * (SLOT_HEIGHT + SLOT_PADDING)))
+            slot:SetPoint(
+                "TOPLEFT",
+                lootFrame,
+                "TOPLEFT",
+                FRAME_PADDING,
+                -(FRAME_PADDING + TITLE_HEIGHT + (visibleCount - 1) * (SLOT_HEIGHT + SLOT_PADDING))
+            )
             slot:Show()
         else
             slot:Hide()
@@ -279,7 +292,9 @@ local function UpdateLootFrame()
     lootFrame:SetHeight(contentHeight + FRAME_PADDING * 2)
 
     -- Reposition loot all button
-    if not lootAllButton then return end
+    if not lootAllButton then
+        return
+    end
     lootAllButton:ClearAllPoints()
     lootAllButton:SetPoint("BOTTOM", lootFrame, "BOTTOM", 0, FRAME_PADDING)
 
@@ -296,7 +311,9 @@ local function OnEvent(_self, event)
     if event == "LOOT_OPENED" then
         -- Check if module is enabled
         local db = LunarUI.db and LunarUI.db.profile
-        if not db or not db.loot or not db.loot.enabled then return end
+        if not db or not db.loot or not db.loot.enabled then
+            return
+        end
 
         -- Hide Blizzard loot frame
         if _G.LootFrame then
@@ -316,12 +333,12 @@ local function OnEvent(_self, event)
         lootFrame:SetClampedToScreen(true)
 
         UpdateLootFrame()
-
     elseif event == "LOOT_SLOT_CLEARED" then
         local db = LunarUI.db and LunarUI.db.profile
-        if not db or not db.loot or not db.loot.enabled then return end
+        if not db or not db.loot or not db.loot.enabled then
+            return
+        end
         UpdateLootFrame()
-
     elseif event == "LOOT_CLOSED" then
         if lootFrame then
             lootFrame:Hide()
@@ -338,7 +355,9 @@ eventFrame:SetScript("OnEvent", OnEvent)
 local blizzardLootHooked = false
 
 local function HookBlizzardLoot()
-    if blizzardLootHooked then return end
+    if blizzardLootHooked then
+        return
+    end
     blizzardLootHooked = true
 
     -- Prevent Blizzard LootFrame from showing when our module is active
@@ -364,7 +383,9 @@ end
 
 local function InitializeLoot()
     local db = LunarUI.db and LunarUI.db.profile
-    if not db or not db.loot or not db.loot.enabled then return end
+    if not db or not db.loot or not db.loot.enabled then
+        return
+    end
 
     eventFrame:RegisterEvent("LOOT_OPENED")
     eventFrame:RegisterEvent("LOOT_SLOT_CLEARED")

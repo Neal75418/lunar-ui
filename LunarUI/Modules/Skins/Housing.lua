@@ -12,7 +12,9 @@ local function SkinHousingFrame()
     local frame = LunarUI:SkinStandardFrame("HousingEditorFrame", {
         textDepth = 3,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 分類選擇面板
     if frame.CategoryList then

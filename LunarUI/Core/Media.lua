@@ -32,14 +32,15 @@ local C = LunarUI.Colors
 -- 共用減益類型顏色（WoW 12.0 中 DebuffTypeColor 可能不存在）
 --------------------------------------------------------------------------------
 
-LunarUI.DEBUFF_TYPE_COLORS = _G.DebuffTypeColor or {
-    none    = { r = 0.8, g = 0.0, b = 0.0 },
-    Magic   = { r = 0.2, g = 0.6, b = 1.0 },
-    Curse   = { r = 0.6, g = 0.0, b = 1.0 },
-    Disease = { r = 0.6, g = 0.4, b = 0.0 },
-    Poison  = { r = 0.0, g = 0.6, b = 0.0 },
-    [""]    = { r = 0.8, g = 0.0, b = 0.0 },
-}
+LunarUI.DEBUFF_TYPE_COLORS = _G.DebuffTypeColor
+    or {
+        none = { r = 0.8, g = 0.0, b = 0.0 },
+        Magic = { r = 0.2, g = 0.6, b = 1.0 },
+        Curse = { r = 0.6, g = 0.0, b = 1.0 },
+        Disease = { r = 0.6, g = 0.4, b = 0.0 },
+        Poison = { r = 0.0, g = 0.6, b = 0.0 },
+        [""] = { r = 0.8, g = 0.0, b = 0.0 },
+    }
 
 --------------------------------------------------------------------------------
 -- 共用材質
@@ -70,7 +71,9 @@ end
     @param inset 邊緣內縮（預設：1）
 ]]
 function LunarUI.StyleIcon(icon, inset)
-    if not icon then return end
+    if not icon then
+        return
+    end
 
     inset = inset or 1
 
@@ -87,15 +90,15 @@ end
            local color = LunarUI.GetQualityColor(quality)
 ]]
 LunarUI.QUALITY_COLORS = {
-    [0] = { 0.62, 0.62, 0.62 },  -- 粗糙（Poor）
-    [1] = { 1.00, 1.00, 1.00 },  -- 普通（Common）
-    [2] = { 0.12, 1.00, 0.00 },  -- 優秀（Uncommon）
-    [3] = { 0.00, 0.44, 0.87 },  -- 精良（Rare）
-    [4] = { 0.64, 0.21, 0.93 },  -- 史詩（Epic）
-    [5] = { 1.00, 0.50, 0.00 },  -- 傳說（Legendary）
-    [6] = { 0.90, 0.80, 0.50 },  -- 神器（Artifact）
-    [7] = { 0.00, 0.80, 0.98 },  -- 傳家寶（Heirloom）
-    [8] = { 0.00, 0.80, 1.00 },  -- WoW 代幣（Token）
+    [0] = { 0.62, 0.62, 0.62 }, -- 粗糙（Poor）
+    [1] = { 1.00, 1.00, 1.00 }, -- 普通（Common）
+    [2] = { 0.12, 1.00, 0.00 }, -- 優秀（Uncommon）
+    [3] = { 0.00, 0.44, 0.87 }, -- 精良（Rare）
+    [4] = { 0.64, 0.21, 0.93 }, -- 史詩（Epic）
+    [5] = { 1.00, 0.50, 0.00 }, -- 傳說（Legendary）
+    [6] = { 0.90, 0.80, 0.50 }, -- 神器（Artifact）
+    [7] = { 0.00, 0.80, 0.98 }, -- 傳家寶（Heirloom）
+    [8] = { 0.00, 0.80, 1.00 }, -- WoW 代幣（Token）
 }
 
 --[[
@@ -161,7 +164,9 @@ end
 ]]
 function LunarUI.ApplyBackdrop(frame, template, bgColor, borderColor)
     template = template or LunarUI.backdropTemplate
-    if not template then return end
+    if not template then
+        return
+    end
     bgColor = bgColor or C.bg
     borderColor = borderColor or C.border
     frame:SetBackdrop(template)

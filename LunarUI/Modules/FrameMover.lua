@@ -21,9 +21,9 @@ local L = Engine.L or {}
 --------------------------------------------------------------------------------
 
 -- 預設值（初始化時從 DB 讀取）
-local GRID_SIZE = 10  -- Ctrl 吸附時的網格大小
+local GRID_SIZE = 10 -- Ctrl 吸附時的網格大小
 local MOVER_ALPHA = 0.6
-local MOVER_COLOR = { 0.2, 0.4, 0.8 }  -- 藍色
+local MOVER_COLOR = { 0.2, 0.4, 0.8 } -- 藍色
 local MOVER_BORDER_COLOR = { 0.4, 0.6, 1.0 }
 local MOVER_TEXT_COLOR = { 1, 1, 1, 0.9 }
 
@@ -41,16 +41,18 @@ local backdropTemplate = LunarUI.backdropTemplate
 -- 模組狀態
 --------------------------------------------------------------------------------
 
-local isMoving = false  -- 是否處於移動模式
-local movers = {}       -- { name = { frame, mover, defaultPoint } }
-local gridFrame = nil   -- 網格背景框架
+local isMoving = false -- 是否處於移動模式
+local movers = {} -- { name = { frame, mover, defaultPoint } }
+local gridFrame = nil -- 網格背景框架
 
 --------------------------------------------------------------------------------
 -- 位置存取
 --------------------------------------------------------------------------------
 
 local function GetSavedPositions()
-    if not LunarUI.db or not LunarUI.db.profile then return {} end
+    if not LunarUI.db or not LunarUI.db.profile then
+        return {}
+    end
     if not LunarUI.db.profile.framePositions then
         LunarUI.db.profile.framePositions = {}
     end
@@ -100,7 +102,7 @@ local function ShowGrid()
     -- 繪製網格線
     local screenWidth = GetScreenWidth()
     local screenHeight = GetScreenHeight()
-    local step = GRID_SIZE * 4  -- 每 40 像素一條線
+    local step = GRID_SIZE * 4 -- 每 40 像素一條線
 
     for x = 0, screenWidth, step do
         local line = gridFrame:CreateTexture(nil, "ARTWORK")
@@ -153,8 +155,12 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateMover(name, targetFrame, label)
-    if movers[name] then return movers[name].mover end
-    if not targetFrame then return nil end
+    if movers[name] then
+        return movers[name].mover
+    end
+    if not targetFrame then
+        return nil
+    end
 
     -- 儲存原始錨點
     local numPoints = targetFrame:GetNumPoints()
@@ -197,7 +203,9 @@ local function CreateMover(name, targetFrame, label)
 
         -- 取得目前位置
         local point, _, relativePoint, x, y = self:GetPoint(1)
-        if not point then return end  -- 防止無錨點時錯誤
+        if not point then
+            return
+        end -- 防止無錨點時錯誤
 
         -- Ctrl 按住時吸附網格
         if IsControlKeyDown() then
@@ -261,7 +269,9 @@ end
 
 local function ApplySavedPosition(name)
     local data = movers[name]
-    if not data then return end
+    if not data then
+        return
+    end
 
     local saved = LoadPosition(name)
     if saved then
@@ -286,7 +296,7 @@ end
 --------------------------------------------------------------------------------
 
 ---@type function
-local UpdateEscHandler  -- forward declaration（定義於 ESC 退出支援區段）
+local UpdateEscHandler -- forward declaration（定義於 ESC 退出支援區段）
 
 local function EnterMoveMode()
     if InCombatLockdown() then
@@ -294,7 +304,9 @@ local function EnterMoveMode()
         return
     end
 
-    if isMoving then return end
+    if isMoving then
+        return
+    end
     isMoving = true
 
     ShowGrid()
@@ -306,22 +318,23 @@ local function EnterMoveMode()
 
         if frame and frame:IsShown() then
             -- 同步 mover 大小和位置到目標框架
-            mover:SetSize(
-                math.max(frame:GetWidth(), 40),
-                math.max(frame:GetHeight(), 20)
-            )
+            mover:SetSize(math.max(frame:GetWidth(), 40), math.max(frame:GetHeight(), 20))
             mover:ClearAllPoints()
             mover:SetPoint("CENTER", frame, "CENTER", 0, 0)
             mover:Show()
         end
     end
 
-    LunarUI:Print(L["MoverEnterMode"] or "Move mode — drag blue frames | Ctrl+drag snap | Right-click reset | ESC exit")
+    LunarUI:Print(
+        L["MoverEnterMode"] or "Move mode — drag blue frames | Ctrl+drag snap | Right-click reset | ESC exit"
+    )
     UpdateEscHandler()
 end
 
 local function ExitMoveMode()
-    if not isMoving then return end
+    if not isMoving then
+        return
+    end
     isMoving = false
 
     HideGrid()
@@ -374,7 +387,9 @@ end
     @param label string 顯示名稱（可選）
 ]]
 function LunarUI:RegisterMovableFrame(name, frame, label)
-    if not name or not frame then return end
+    if not name or not frame then
+        return
+    end
 
     LoadFrameMoverSettings()
     CreateMover(name, frame, label)
@@ -407,7 +422,9 @@ function LunarUI:LoadFrameMoverSettings()
 end
 
 function LunarUI.ResetAllPositions()
-    if not LunarUI.db or not LunarUI.db.profile then return end
+    if not LunarUI.db or not LunarUI.db.profile then
+        return
+    end
     LunarUI.db.profile.framePositions = {}
 
     -- 重設所有框架到預設位置

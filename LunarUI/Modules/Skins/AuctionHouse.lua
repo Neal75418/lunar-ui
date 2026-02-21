@@ -11,7 +11,9 @@ local function SkinAuctionHouse()
     local frame = LunarUI:SkinStandardFrame("AuctionHouseFrame", {
         tabProperty = "Tabs",
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- Legacy tab naming fallback
     if not frame.Tabs then

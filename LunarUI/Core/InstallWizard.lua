@@ -167,8 +167,9 @@ local function BuildStep1(parent)
     welcome:SetPoint("TOPLEFT", 0, 0)
     welcome:SetWidth(WIZARD_WIDTH - 60)
     welcome:SetJustifyH("LEFT")
-    welcome:SetText(L["InstallWelcomeBody"] or
-        "Welcome to |cff8882ffLunar|r|cffffffffUI|r!\n\nThis wizard will help you configure the essential settings. You can always change these later via |cff8882ff/lunar config|r.\n"
+    welcome:SetText(
+        L["InstallWelcomeBody"]
+            or "Welcome to |cff8882ffLunar|r|cffffffffUI|r!\n\nThis wizard will help you configure the essential settings. You can always change these later via |cff8882ff/lunar config|r.\n"
     )
     welcome:SetTextColor(0.85, 0.85, 0.90)
 
@@ -207,7 +208,7 @@ local function BuildStep1(parent)
 
     -- 讀取當前 UI 縮放
     local currentScale = UIParent:GetEffectiveScale() or 0.75
-    wizardChoices.uiScale = math.floor(currentScale * 20 + 0.5) / 20  -- 四捨五入到 0.05
+    wizardChoices.uiScale = math.floor(currentScale * 20 + 0.5) / 20 -- 四捨五入到 0.05
 
     slider:SetValue(wizardChoices.uiScale)
     scaleValue:SetText(string.format("%.2f", wizardChoices.uiScale))
@@ -237,7 +238,10 @@ local function BuildStep1(parent)
     hint:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -20)
     hint:SetWidth(WIZARD_WIDTH - 80)
     hint:SetJustifyH("LEFT")
-    hint:SetText(L["InstallUIScaleTip"] or "|cff888888Tip: Higher values = bigger UI elements. The recommended value is 0.75 for 1920x1080.|r")
+    hint:SetText(
+        L["InstallUIScaleTip"]
+            or "|cff888888Tip: Higher values = bigger UI elements. The recommended value is 0.75 for 1920x1080.|r"
+    )
 
     return f
 end
@@ -251,8 +255,9 @@ local function BuildStep2(parent)
     title:SetPoint("TOPLEFT", 0, 0)
     title:SetWidth(WIZARD_WIDTH - 60)
     title:SetJustifyH("LEFT")
-    title:SetText(L["InstallLayoutTitle"] or
-        "Choose your primary role. This adjusts the size and layout of raid/party frames to match your playstyle.\n"
+    title:SetText(
+        L["InstallLayoutTitle"]
+            or "Choose your primary role. This adjusts the size and layout of raid/party frames to match your playstyle.\n"
     )
     title:SetTextColor(0.85, 0.85, 0.90)
 
@@ -282,8 +287,8 @@ local function BuildStep3(parent)
     title:SetPoint("TOPLEFT", 0, 0)
     title:SetWidth(WIZARD_WIDTH - 60)
     title:SetJustifyH("LEFT")
-    title:SetText(L["InstallActionBarTitle"] or
-        "Action Bar Options\n\nConfigure how your action bars behave outside of combat.\n"
+    title:SetText(
+        L["InstallActionBarTitle"] or "Action Bar Options\n\nConfigure how your action bars behave outside of combat.\n"
     )
     title:SetTextColor(0.85, 0.85, 0.90)
 
@@ -307,8 +312,10 @@ local function BuildStep3(parent)
     fadeDesc:SetPoint("TOPLEFT", fadeCheck, "BOTTOMLEFT", 24, -8)
     fadeDesc:SetWidth(WIZARD_WIDTH - 100)
     fadeDesc:SetJustifyH("LEFT")
-    fadeDesc:SetText(L["InstallActionBarFadeDesc"] or
-        "|cff888888Action bars will fade to 30% opacity when you are not in combat, and instantly appear when entering combat or hovering over them.|r")
+    fadeDesc:SetText(
+        L["InstallActionBarFadeDesc"]
+            or "|cff888888Action bars will fade to 30% opacity when you are not in combat, and instantly appear when entering combat or hovering over them.|r"
+    )
 
     return f
 end
@@ -336,8 +343,10 @@ local function BuildStep4(parent)
     hint:SetPoint("BOTTOM", 0, 20)
     hint:SetWidth(WIZARD_WIDTH - 80)
     hint:SetJustifyH("CENTER")
-    hint:SetText(L["InstallSummaryHint"] or
-        "|cff888888Click \"Finish\" to apply settings and reload the UI.\nYou can always reconfigure via |cff8882ff/lunar config|r.|r")
+    hint:SetText(
+        L["InstallSummaryHint"]
+            or '|cff888888Click "Finish" to apply settings and reload the UI.\nYou can always reconfigure via |cff8882ff/lunar config|r.|r'
+    )
 
     return f
 end
@@ -348,7 +357,9 @@ end
 
 local function ApplyWizardSettings()
     local db = LunarUI.db
-    if not db or not db.profile then return end
+    if not db or not db.profile then
+        return
+    end
 
     -- 1. UI 縮放
     UIParent:SetScale(wizardChoices.uiScale)
@@ -386,7 +397,9 @@ end
 --------------------------------------------------------------------------------
 
 local function UpdateStepDisplay()
-    if not wizardFrame then return end
+    if not wizardFrame then
+        return
+    end
 
     -- 隱藏所有步驟
     for i = 1, TOTAL_STEPS do
@@ -407,10 +420,19 @@ local function UpdateStepDisplay()
         local enabledText = L["Enabled"] or "Enabled"
         local disabledText = L["Disabled"] or "Disabled"
         stepFrames[4].summary:SetText(
-            (L["InstallSummary"] or "Your settings summary:") .. "\n\n" ..
-            string.format(L["InstallSummaryScale"] or "|cff8882ffUI Scale:|r %s", string.format("%.2f", wizardChoices.uiScale)) .. "\n" ..
-            string.format(L["InstallSummaryLayout"] or "|cff8882ffLayout:|r %s", layoutLabel) .. "\n" ..
-            string.format(L["InstallSummaryFade"] or "|cff8882ffAction Bar Fade:|r %s", wizardChoices.actionBarFade and enabledText or disabledText)
+            (L["InstallSummary"] or "Your settings summary:")
+                .. "\n\n"
+                .. string.format(
+                    L["InstallSummaryScale"] or "|cff8882ffUI Scale:|r %s",
+                    string.format("%.2f", wizardChoices.uiScale)
+                )
+                .. "\n"
+                .. string.format(L["InstallSummaryLayout"] or "|cff8882ffLayout:|r %s", layoutLabel)
+                .. "\n"
+                .. string.format(
+                    L["InstallSummaryFade"] or "|cff8882ffAction Bar Fade:|r %s",
+                    wizardChoices.actionBarFade and enabledText or disabledText
+                )
         )
     end
 
@@ -456,7 +478,9 @@ end
 
 ---@return Frame
 local function CreateWizardFrame()
-    if wizardFrame then return wizardFrame end
+    if wizardFrame then
+        return wizardFrame
+    end
 
     local f = CreateFrame("Frame", "LunarUIInstallWizard", UIParent, "BackdropTemplate")
     f:SetSize(WIZARD_WIDTH, WIZARD_HEIGHT)
@@ -618,7 +642,9 @@ function LunarUI.CleanupInstallWizard()
 end
 
 function LunarUI:CheckInstallWizard()
-    if not self.db or not self.db.global then return end
+    if not self.db or not self.db.global then
+        return
+    end
 
     if not self.db.global.installComplete then
         -- 延遲顯示，確保所有模組已載入
@@ -631,6 +657,10 @@ function LunarUI:CheckInstallWizard()
 end
 
 LunarUI:RegisterModule("InstallWizard", {
-    onEnable = function() LunarUI:CheckInstallWizard() end,
-    onDisable = function() LunarUI:CleanupInstallWizard() end,
+    onEnable = function()
+        LunarUI:CheckInstallWizard()
+    end,
+    onDisable = function()
+        LunarUI:CleanupInstallWizard()
+    end,
 })

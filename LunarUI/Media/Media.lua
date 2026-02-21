@@ -13,7 +13,9 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local LSM = LibStub("LibSharedMedia-3.0", true)
-if not LSM then return end
+if not LSM then
+    return
+end
 
 --------------------------------------------------------------------------------
 -- Media Paths
@@ -29,34 +31,34 @@ local FONT_PATH = MEDIA_PATH .. "Fonts\\"
 -- Core textures — custom LunarUI paths stored for future asset creation,
 -- effective paths use WoW built-in fallbacks until custom assets are ready.
 local _TEXTURE_CUSTOM = {
-    gradient   = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarGradient",
-    smooth     = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarSmooth",
-    borderInk  = "Interface\\AddOns\\LunarUI\\Media\\Textures\\InkBorder",
+    gradient = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarGradient",
+    smooth = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarSmooth",
+    borderInk = "Interface\\AddOns\\LunarUI\\Media\\Textures\\InkBorder",
     borderGlow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\GlowBorder",
-    parchment  = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Parchment",
-    glow       = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Glow",
-    spark      = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Spark",
+    parchment = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Parchment",
+    glow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Glow",
+    spark = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Spark",
 }
 
 -- Effective textures: built-in paths used at runtime
 local TEXTURES = {
     -- Status bars
-    flat       = "Interface\\Buttons\\WHITE8x8",
-    gradient   = "Interface\\TARGETINGFRAME\\UI-StatusBar",
-    smooth     = "Interface\\TARGETINGFRAME\\UI-StatusBar",
+    flat = "Interface\\Buttons\\WHITE8x8",
+    gradient = "Interface\\TARGETINGFRAME\\UI-StatusBar",
+    smooth = "Interface\\TARGETINGFRAME\\UI-StatusBar",
 
     -- Borders
     borderThin = "Interface\\Buttons\\WHITE8x8",
-    borderInk  = "Interface\\Buttons\\WHITE8x8",
+    borderInk = "Interface\\Buttons\\WHITE8x8",
     borderGlow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
 
     -- Backgrounds
-    parchment  = "Interface\\ACHIEVEMENTFRAME\\UI-Achievement-Parchment-Horizontal",
-    dark       = "Interface\\Buttons\\WHITE8x8",
+    parchment = "Interface\\ACHIEVEMENTFRAME\\UI-Achievement-Parchment-Horizontal",
+    dark = "Interface\\Buttons\\WHITE8x8",
 
     -- Effects
-    glow       = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
-    spark      = "Interface\\Cooldown\\star4",
+    glow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
+    spark = "Interface\\Cooldown\\star4",
 }
 
 --------------------------------------------------------------------------------
@@ -67,12 +69,12 @@ local TEXTURES = {
 -- 基礎 design tokens（bg, border, text 等）已在 Core/Tokens.lua 定義
 -- 此處僅新增 Media 專用的延伸色彩
 local Colors = LunarUI.Colors
-Colors.moonlight       = { 0.85, 0.90, 1.00, 1.0 }      -- Soft blue-white
-Colors.moonGlow        = { 0.70, 0.80, 0.95, 0.8 }      -- Subtle glow
-Colors.nightSky        = { 0.08, 0.08, 0.12, 0.95 }     -- Dark background
-Colors.borderHighlight = { 0.40, 0.45, 0.55, 1.0 }      -- Highlighted border
-Colors.text            = { 0.90, 0.90, 0.88, 1.0 }      -- Off-white text
-Colors.healthLow       = { 0.75, 0.25, 0.20, 1.0 }      -- Muted red
+Colors.moonlight = { 0.85, 0.90, 1.00, 1.0 } -- Soft blue-white
+Colors.moonGlow = { 0.70, 0.80, 0.95, 0.8 } -- Subtle glow
+Colors.nightSky = { 0.08, 0.08, 0.12, 0.95 } -- Dark background
+Colors.borderHighlight = { 0.40, 0.45, 0.55, 1.0 } -- Highlighted border
+Colors.text = { 0.90, 0.90, 0.88, 1.0 } -- Off-white text
+Colors.healthLow = { 0.75, 0.25, 0.20, 1.0 } -- Muted red
 
 -- Class colors (slightly desaturated for Lunar theme)
 Colors.classColors = {
@@ -172,7 +174,9 @@ function LunarUI.GetSelectedFont()
     local fontName = db and db.style and db.style.font
     if fontName and LSM then
         local ok, path = pcall(LSM.Fetch, LSM, "font", fontName)
-        if ok and path then return path end
+        if ok and path then
+            return path
+        end
     end
     return FONTS.normal
 end
@@ -187,14 +191,16 @@ end
 -- Font Registry — 統一字體管理
 --------------------------------------------------------------------------------
 
-local fontRegistry = setmetatable({}, { __mode = "k" })  -- weak keys：框架銷毀時自動回收
+local fontRegistry = setmetatable({}, { __mode = "k" }) -- weak keys：框架銷毀時自動回收
 
 --- 設定 FontString 字體並自動註冊到 registry（供 ApplyFontSettings 批次更新）
 ---@param fs FontString|table
 ---@param size number
 ---@param flags string|nil
 function LunarUI.SetFont(fs, size, flags)
-    if not fs or not fs.SetFont then return end
+    if not fs or not fs.SetFont then
+        return
+    end
     fs:SetFont(LunarUI.GetSelectedFont(), size, flags or "")
     fontRegistry[fs] = true
 end
@@ -225,7 +231,9 @@ function LunarUI.GetSelectedStatusBarTexture()
     local texName = db and db.style and db.style.statusBarTexture
     if texName and LSM then
         local ok, path = pcall(LSM.Fetch, LSM, "statusbar", texName)
-        if ok and path then return path end
+        if ok and path then
+            return path
+        end
     end
     return "Interface\\TargetingFrame\\UI-StatusBar"
 end

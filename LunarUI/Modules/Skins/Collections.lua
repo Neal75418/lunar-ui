@@ -10,9 +10,12 @@ local LunarUI = Engine.LunarUI
 
 local function SkinCollections()
     local frame = LunarUI:SkinStandardFrame("CollectionsJournal", {
-        tabPrefix = "CollectionsJournalTab", tabCount = 5,
+        tabPrefix = "CollectionsJournalTab",
+        tabCount = 5,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 坐騎日誌
     if _G.MountJournal then

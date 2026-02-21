@@ -38,7 +38,7 @@ local MAX_DEBUFFS = 8
 
 -- 倒數計時條
 local BAR_HEIGHT = 4
-local BAR_OFFSET = 1  -- 圖示與計時條間距
+local BAR_OFFSET = 1 -- 圖示與計時條間距
 
 local function LoadSettings()
     ICON_SIZE = LunarUI.GetHUDSetting("auraIconSize", 30)
@@ -63,14 +63,16 @@ local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS
 
 -- 計時條顏色（依剩餘時間）
 local function GetTimerBarColor(remaining, duration)
-    if not remaining or not duration or duration <= 0 then return 0.5, 0.5, 0.5 end
+    if not remaining or not duration or duration <= 0 then
+        return 0.5, 0.5, 0.5
+    end
     local pct = remaining / duration
     if pct > 0.5 then
-        return 0.2, 0.7, 0.2  -- 綠色
+        return 0.2, 0.7, 0.2 -- 綠色
     elseif pct > 0.2 then
-        return 0.9, 0.7, 0.1  -- 黃色
+        return 0.9, 0.7, 0.1 -- 黃色
     else
-        return 0.9, 0.2, 0.2  -- 紅色
+        return 0.9, 0.2, 0.2 -- 紅色
     end
 end
 
@@ -96,7 +98,9 @@ local AURA_THROTTLE = 0.1
 
 local function ShouldShowBuff(name, _duration)
     -- WoW secret value 不能當 table index，用 pcall 保護
-    local ok, isFiltered = pcall(function() return FILTERED_BUFF_NAMES[name] end)
+    local ok, isFiltered = pcall(function()
+        return FILTERED_BUFF_NAMES[name]
+    end)
     if not ok or isFiltered then
         return false
     end
@@ -180,7 +184,13 @@ local function SetupAuraIconInteraction(icon)
         if self.auraData and self.auraData.auraInstanceID then
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             -- 使用 auraInstanceID 而非 index（WoW 12.0+ 支援）
-            pcall(GameTooltip.SetUnitBuffByAuraInstanceID, GameTooltip, "player", self.auraData.auraInstanceID, self.auraData.filter)
+            pcall(
+                GameTooltip.SetUnitBuffByAuraInstanceID,
+                GameTooltip,
+                "player",
+                self.auraData.auraInstanceID,
+                self.auraData.filter
+            )
             GameTooltip:Show()
         end
     end)
@@ -192,7 +202,9 @@ local function SetupAuraIconInteraction(icon)
     -- WoW 12.0: CancelSpellByName 可能已移除，優先使用 auraInstanceID
     icon:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" and self.auraData and self.auraData.filter == "HELPFUL" then
-            if InCombatLockdown() then return end  -- 戰鬥中不可取消
+            if InCombatLockdown() then
+                return
+            end -- 戰鬥中不可取消
 
             local auraData = self.auraData
             -- 優先使用 auraInstanceID（12.0 推薦方式）
@@ -236,8 +248,10 @@ local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY)
         frame = existingFrame
         isReused = true
         -- 清除舊的子物件（避免重載時重複）
-        for _, child in ipairs({frame:GetRegions()}) do
-            if child.lunarLabel then child:Show() end
+        for _, child in ipairs({ frame:GetRegions() }) do
+            if child.lunarLabel then
+                child:Show()
+            end
         end
     else
         frame = CreateFrame("Frame", name, UIParent)
@@ -247,7 +261,7 @@ local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY)
     local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
     frame:SetSize(
         ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-        totalIconHeight * 2 + ICON_SPACING + 16  -- 16 = 標籤高度
+        totalIconHeight * 2 + ICON_SPACING + 16 -- 16 = 標籤高度
     )
     -- 重用舊框架時保留其位置（/reload 時舊框架已在正確位置）
     if not isReused then
@@ -291,9 +305,11 @@ local function SetupFrames()
         local row = math_floor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
         buffIcons[i]:SetPoint(
-            "TOPRIGHT", buffFrame, "TOPRIGHT",
+            "TOPRIGHT",
+            buffFrame,
+            "TOPRIGHT",
             -col * (ICON_SIZE + ICON_SPACING),
-            -(row * (totalIconHeight + ICON_SPACING)) - 16  -- 16 = 標籤下方偏移
+            -(row * (totalIconHeight + ICON_SPACING)) - 16 -- 16 = 標籤下方偏移
         )
     end
 
@@ -303,7 +319,9 @@ local function SetupFrames()
         local row = math_floor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
         debuffIcons[i]:SetPoint(
-            "TOPRIGHT", debuffFrame, "TOPRIGHT",
+            "TOPRIGHT",
+            debuffFrame,
+            "TOPRIGHT",
             -col * (ICON_SIZE + ICON_SPACING),
             -(row * (totalIconHeight + ICON_SPACING)) - 16
         )
@@ -348,7 +366,9 @@ local function UpdateAuraIcon(iconFrame, auraData, _index, filter, isDebuff)
             -- 計時條寬度
             local pct = remaining / duration
             local barWidth = (ICON_SIZE - 2) * pct
-            if barWidth < 1 then barWidth = 1 end
+            if barWidth < 1 then
+                barWidth = 1
+            end
             iconFrame.bar:SetWidth(barWidth)
 
             -- 計時條顏色
@@ -400,7 +420,9 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
 
     for i = 1, 40 do
         local auraOk, auraData = pcall(getDataFn, "player", i)
-        if not auraOk or not auraData then break end
+        if not auraOk or not auraData then
+            break
+        end
 
         local ok, nameStr, durNum = pcall(function()
             return tostring(auraData.name or ""), tonumber(auraData.duration or 0) or 0
@@ -410,7 +432,7 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
 
         local shouldShow
         if isDebuff then
-            shouldShow = true  -- 減益都顯示
+            shouldShow = true -- 減益都顯示
         else
             shouldShow = ShouldShowBuff(name, duration)
         end
@@ -425,7 +447,9 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
 
     -- 戰鬥中若 API 回傳空資料（taint 限制導致），保留現有圖示不清除
     -- 避免 "介面功能因插件而失效" 後所有 buff 圖示消失
-    if visibleIndex == 0 and InCombatLockdown() then return end
+    if visibleIndex == 0 and InCombatLockdown() then
+        return
+    end
 
     -- 隱藏多餘圖示
     for i = visibleIndex + 1, maxIcons do
@@ -437,8 +461,12 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
 end
 
 local function UpdateAuras()
-    if not buffFrame or not debuffFrame then return end
-    if not buffFrame:IsShown() and not debuffFrame:IsShown() then return end
+    if not buffFrame or not debuffFrame then
+        return
+    end
+    if not buffFrame:IsShown() and not debuffFrame:IsShown() then
+        return
+    end
 
     UpdateAuraGroup(buffIcons, MAX_BUFFS, false)
     UpdateAuraGroup(debuffIcons, MAX_DEBUFFS, true)
@@ -451,19 +479,25 @@ local function UpdateTimerBars()
     local function UpdateIconTimers(icons, maxIcons)
         for i = 1, maxIcons do
             local iconFrame = icons[i]
-            if not iconFrame or not iconFrame:IsShown() then break end
-            if not iconFrame.auraData then break end
+            if not iconFrame or not iconFrame:IsShown() then
+                break
+            end
+            if not iconFrame.auraData then
+                break
+            end
 
             -- 從冷卻框架反推持續時間
             local start, dur = iconFrame.cooldown:GetCooldownTimes()
             if start and dur and start > 0 and dur > 0 then
-                start = start / 1000  -- GetCooldownTimes 回傳毫秒
+                start = start / 1000 -- GetCooldownTimes 回傳毫秒
                 dur = dur / 1000
                 local remaining = (start + dur) - now
                 if remaining > 0 then
                     local pct = remaining / dur
                     local barWidth = (ICON_SIZE - 2) * pct
-                    if barWidth < 1 then barWidth = 1 end
+                    if barWidth < 1 then
+                        barWidth = 1
+                    end
                     iconFrame.bar:SetWidth(barWidth)
                     local r, g, b = GetTimerBarColor(remaining, dur)
                     iconFrame.bar:SetVertexColor(r, g, b)
@@ -491,7 +525,9 @@ local function HideBlizzardBuffFrames()
     -- 不使用 hooksecurefunc — hook 在戰鬥中觸發會造成 taint 傳播
     -- 不使用 SetParent（造成 taint）
     -- 不使用 UnregisterAllEvents（無法還原，阻止 toggle 恢復）
-    if InCombatLockdown() then return end
+    if InCombatLockdown() then
+        return
+    end
     local frames = { _G.BuffFrame, _G.DebuffFrame }
     for _, frame in ipairs(frames) do
         if frame then
@@ -510,7 +546,7 @@ end
 -- Forward declarations（實際定義在下方事件處理區段）
 local eventFrame
 local timerElapsed = 0
-local TIMER_UPDATE_INTERVAL = 0.05  -- 計時條 20 FPS
+local TIMER_UPDATE_INTERVAL = 0.05 -- 計時條 20 FPS
 
 local function AuraOnUpdate(_self, elapsed)
     timerElapsed = timerElapsed + elapsed
@@ -521,8 +557,12 @@ local function AuraOnUpdate(_self, elapsed)
 end
 
 local function Initialize()
-    if isInitialized then return end
-    if LunarUI.GetHUDSetting("auraFrames", true) == false then return end
+    if isInitialized then
+        return
+    end
+    if LunarUI.GetHUDSetting("auraFrames", true) == false then
+        return
+    end
 
     LoadSettings()
     HideBlizzardBuffFrames()
@@ -542,8 +582,12 @@ local function Initialize()
     eventFrame:SetScript("OnUpdate", AuraOnUpdate)
 
     -- 位置已同步套用，可以立即顯示
-    if buffFrame then buffFrame:Show() end
-    if debuffFrame then debuffFrame:Show() end
+    if buffFrame then
+        buffFrame:Show()
+    end
+    if debuffFrame then
+        debuffFrame:Show()
+    end
     UpdateAuras()
 end
 
@@ -557,7 +601,9 @@ LunarUI.InitAuraFrames = Initialize
 -- 光環資料節流更新（用 C_Timer 取代 OnUpdate 輪詢）
 local auraUpdateScheduled = false
 local function ScheduleAuraUpdate()
-    if auraUpdateScheduled then return end
+    if auraUpdateScheduled then
+        return
+    end
     auraUpdateScheduled = true
     C_Timer.After(AURA_THROTTLE, function()
         auraUpdateScheduled = false
@@ -568,10 +614,12 @@ local function ScheduleAuraUpdate()
 end
 
 eventFrame = LunarUI.CreateEventHandler(
-    {"PLAYER_ENTERING_WORLD", "UNIT_AURA", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED"},
+    { "PLAYER_ENTERING_WORLD", "UNIT_AURA", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED" },
     function(_self, event, arg1)
         if event == "PLAYER_ENTERING_WORLD" then
-            if LunarUI.GetHUDSetting("auraFrames", true) == false then return end
+            if LunarUI.GetHUDSetting("auraFrames", true) == false then
+                return
+            end
             C_Timer.After(1.0, Initialize)
         elseif event == "UNIT_AURA" then
             if arg1 == "player" and isInitialized then
@@ -580,8 +628,12 @@ eventFrame = LunarUI.CreateEventHandler(
         elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
             -- 戰鬥狀態切換時，確保 LunarUI 框架可見並強制更新
             if isInitialized then
-                if buffFrame and not buffFrame:IsShown() then buffFrame:Show() end
-                if debuffFrame and not debuffFrame:IsShown() then debuffFrame:Show() end
+                if buffFrame and not buffFrame:IsShown() then
+                    buffFrame:Show()
+                end
+                if debuffFrame and not debuffFrame:IsShown() then
+                    debuffFrame:Show()
+                end
                 ScheduleAuraUpdate()
                 -- 離開戰鬥時，重新確保暴雪框架被隱藏
                 -- （戰鬥中 Blizzard 可能改變了框架狀態）
@@ -598,13 +650,21 @@ eventFrame = LunarUI.CreateEventHandler(
 --------------------------------------------------------------------------------
 
 function LunarUI.ShowAuraFrames()
-    if buffFrame then buffFrame:Show() end
-    if debuffFrame then debuffFrame:Show() end
+    if buffFrame then
+        buffFrame:Show()
+    end
+    if debuffFrame then
+        debuffFrame:Show()
+    end
 end
 
 function LunarUI.HideAuraFrames()
-    if buffFrame then buffFrame:Hide() end
-    if debuffFrame then debuffFrame:Hide() end
+    if buffFrame then
+        buffFrame:Hide()
+    end
+    if debuffFrame then
+        debuffFrame:Hide()
+    end
 end
 
 function LunarUI.RefreshAuraFrames()
@@ -649,7 +709,9 @@ local function RelayoutIcons(icons, parentFrame, maxCount)
             local row = math_floor((i - 1) / ICONS_PER_ROW)
             local col = (i - 1) % ICONS_PER_ROW
             icons[i]:SetPoint(
-                "TOPRIGHT", parentFrame, "TOPRIGHT",
+                "TOPRIGHT",
+                parentFrame,
+                "TOPRIGHT",
                 -col * (ICON_SIZE + ICON_SPACING),
                 -(row * (totalIconHeight + ICON_SPACING)) - 16
             )
@@ -658,8 +720,12 @@ local function RelayoutIcons(icons, parentFrame, maxCount)
 end
 
 function LunarUI.RebuildAuraFrames()
-    if not isInitialized then return end
-    if InCombatLockdown() then return end
+    if not isInitialized then
+        return
+    end
+    if InCombatLockdown() then
+        return
+    end
 
     local oldMaxBuffs = #buffIcons
     local oldMaxDebuffs = #debuffIcons
@@ -686,7 +752,9 @@ function LunarUI.RebuildAuraFrames()
         ResizeAuraIcon(buffIcons[i])
     end
     for i = MAX_BUFFS + 1, oldMaxBuffs do
-        if buffIcons[i] then buffIcons[i]:Hide() end
+        if buffIcons[i] then
+            buffIcons[i]:Hide()
+        end
     end
     for i = oldMaxBuffs + 1, MAX_BUFFS do
         buffIcons[i] = CreateAuraIcon(buffFrame, i)
@@ -698,7 +766,9 @@ function LunarUI.RebuildAuraFrames()
         ResizeAuraIcon(debuffIcons[i])
     end
     for i = MAX_DEBUFFS + 1, oldMaxDebuffs do
-        if debuffIcons[i] then debuffIcons[i]:Hide() end
+        if debuffIcons[i] then
+            debuffIcons[i]:Hide()
+        end
     end
     for i = oldMaxDebuffs + 1, MAX_DEBUFFS do
         debuffIcons[i] = CreateAuraIcon(debuffFrame, i)
@@ -709,8 +779,12 @@ function LunarUI.RebuildAuraFrames()
 end
 
 function LunarUI.CleanupAuraFrames()
-    if buffFrame then buffFrame:Hide() end
-    if debuffFrame then debuffFrame:Hide() end
+    if buffFrame then
+        buffFrame:Hide()
+    end
+    if debuffFrame then
+        debuffFrame:Hide()
+    end
 
     -- 還原暴雪框架（恢復 scale / alpha / 可見性）
     if not InCombatLockdown() then
@@ -726,7 +800,9 @@ function LunarUI.CleanupAuraFrames()
     end
 
     -- 停止 OnUpdate 避免空轉（Initialize 會重新設定）
-    if eventFrame then eventFrame:SetScript("OnUpdate", nil) end
+    if eventFrame then
+        eventFrame:SetScript("OnUpdate", nil)
+    end
     timerElapsed = 0
 
     isInitialized = false
@@ -740,8 +816,12 @@ end
 
 function LunarUI.DebugAuraFrames()
     local lines = {}
-    local function add(text) lines[#lines + 1] = text end
-    local function safeNum(val) return tonumber(tostring(val or 0)) or 0 end
+    local function add(text)
+        lines[#lines + 1] = text
+    end
+    local function safeNum(val)
+        return tonumber(tostring(val or 0)) or 0
+    end
 
     add("=== AuraFrames Debug ===")
     add("isInitialized=" .. tostring(isInitialized))
@@ -755,12 +835,24 @@ function LunarUI.DebugAuraFrames()
         local f = info.frame
         if f then
             local shown, visible, alpha, effAlpha, scale, effScale = "?", "?", 0, 0, 0, 0
-            pcall(function() shown = f:IsShown() and "shown" or "HIDDEN" end)
-            pcall(function() visible = f:IsVisible() and "visible" or "INVISIBLE" end)
-            pcall(function() alpha = safeNum(f:GetAlpha()) end)
-            pcall(function() effAlpha = safeNum(f:GetEffectiveAlpha()) end)
-            pcall(function() scale = safeNum(f:GetScale()) end)
-            pcall(function() effScale = safeNum(f:GetEffectiveScale()) end)
+            pcall(function()
+                shown = f:IsShown() and "shown" or "HIDDEN"
+            end)
+            pcall(function()
+                visible = f:IsVisible() and "visible" or "INVISIBLE"
+            end)
+            pcall(function()
+                alpha = safeNum(f:GetAlpha())
+            end)
+            pcall(function()
+                effAlpha = safeNum(f:GetEffectiveAlpha())
+            end)
+            pcall(function()
+                scale = safeNum(f:GetScale())
+            end)
+            pcall(function()
+                effScale = safeNum(f:GetEffectiveScale())
+            end)
             local pos = "?"
             pcall(function()
                 local p, rel, _rp, px, py = f:GetPoint(1)
@@ -772,8 +864,20 @@ function LunarUI.DebugAuraFrames()
                 local pp = f:GetParent()
                 parent = pp and (pp.GetName and pp:GetName() or "unnamed") or "nil"
             end)
-            add(string.format("%s: %s/%s a=%.2f effA=%.2f sc=%.3f effSc=%.4f pos=%s parent=%s",
-                info.name, shown, visible, alpha, effAlpha, scale, effScale, pos, parent))
+            add(
+                string.format(
+                    "%s: %s/%s a=%.2f effA=%.2f sc=%.3f effSc=%.4f pos=%s parent=%s",
+                    info.name,
+                    shown,
+                    visible,
+                    alpha,
+                    effAlpha,
+                    scale,
+                    effScale,
+                    pos,
+                    parent
+                )
+            )
         else
             add(info.name .. ": NIL (frame not created)")
         end
@@ -782,10 +886,14 @@ function LunarUI.DebugAuraFrames()
     -- 圖示可見數量
     local buffCount, debuffCount = 0, 0
     for i = 1, MAX_BUFFS do
-        if buffIcons[i] and buffIcons[i]:IsShown() then buffCount = buffCount + 1 end
+        if buffIcons[i] and buffIcons[i]:IsShown() then
+            buffCount = buffCount + 1
+        end
     end
     for i = 1, MAX_DEBUFFS do
-        if debuffIcons[i] and debuffIcons[i]:IsShown() then debuffCount = debuffCount + 1 end
+        if debuffIcons[i] and debuffIcons[i]:IsShown() then
+            debuffCount = debuffCount + 1
+        end
     end
     add(string.format("Visible icons: buff=%d/%d debuff=%d/%d", buffCount, MAX_BUFFS, debuffCount, MAX_DEBUFFS))
 
@@ -801,20 +909,28 @@ function LunarUI.DebugAuraFrames()
             break
         else
             local name = "?"
-            pcall(function() name = tostring(data.name or "?") end)
+            pcall(function()
+                name = tostring(data.name or "?")
+            end)
             add(string.format("  Buff[%d]: %s", i, name))
         end
     end
 
     -- 暴雪框架狀態
     add("--- Blizzard Frames ---")
-    for _, name in ipairs({"BuffFrame", "DebuffFrame"}) do
+    for _, name in ipairs({ "BuffFrame", "DebuffFrame" }) do
         local f = _G[name]
         if f then
             local shown, alpha, scale = "?", 0, 0
-            pcall(function() shown = f:IsShown() and "shown" or "hidden" end)
-            pcall(function() alpha = safeNum(f:GetAlpha()) end)
-            pcall(function() scale = safeNum(f:GetScale()) end)
+            pcall(function()
+                shown = f:IsShown() and "shown" or "hidden"
+            end)
+            pcall(function()
+                alpha = safeNum(f:GetAlpha())
+            end)
+            pcall(function()
+                scale = safeNum(f:GetScale())
+            end)
             add(string.format("  %s: %s a=%.2f sc=%.4f", name, shown, alpha, scale))
         end
     end

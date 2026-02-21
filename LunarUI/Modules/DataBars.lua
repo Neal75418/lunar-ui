@@ -21,7 +21,7 @@ local L = Engine.L or {}
 -- Constants
 --------------------------------------------------------------------------------
 
-local statusBarTexture  -- lazy: resolved after DB is ready
+local statusBarTexture -- lazy: resolved after DB is ready
 local function GetStatusBarTexture()
     if not statusBarTexture then
         statusBarTexture = LunarUI.GetSelectedStatusBarTexture()
@@ -33,22 +33,22 @@ local floor = math.floor
 
 -- Faction standing colors (matches Blizzard FACTION_BAR_COLORS)
 local STANDING_COLORS = {
-    [1] = { r = 0.80, g = 0.13, b = 0.13 },  -- Hated
-    [2] = { r = 0.80, g = 0.25, b = 0.00 },  -- Hostile
-    [3] = { r = 0.75, g = 0.27, b = 0.00 },  -- Unfriendly
-    [4] = { r = 0.85, g = 0.77, b = 0.36 },  -- Neutral
-    [5] = { r = 0.00, g = 0.67, b = 0.00 },  -- Friendly
-    [6] = { r = 0.00, g = 0.39, b = 0.88 },  -- Honored
-    [7] = { r = 0.64, g = 0.21, b = 0.93 },  -- Revered
-    [8] = { r = 1.00, g = 0.67, b = 0.00 },  -- Exalted
+    [1] = { r = 0.80, g = 0.13, b = 0.13 }, -- Hated
+    [2] = { r = 0.80, g = 0.25, b = 0.00 }, -- Hostile
+    [3] = { r = 0.75, g = 0.27, b = 0.00 }, -- Unfriendly
+    [4] = { r = 0.85, g = 0.77, b = 0.36 }, -- Neutral
+    [5] = { r = 0.00, g = 0.67, b = 0.00 }, -- Friendly
+    [6] = { r = 0.00, g = 0.39, b = 0.88 }, -- Honored
+    [7] = { r = 0.64, g = 0.21, b = 0.93 }, -- Revered
+    [8] = { r = 1.00, g = 0.67, b = 0.00 }, -- Exalted
 }
 
 --------------------------------------------------------------------------------
 -- Module State
 --------------------------------------------------------------------------------
 
-local bars = {}           -- All created DataBar frames
-local eventFrame          -- Shared event handler frame
+local bars = {} -- All created DataBar frames
+local eventFrame -- Shared event handler frame
 
 --------------------------------------------------------------------------------
 -- Helper: Create a single DataBar
@@ -102,7 +102,9 @@ end
 local FormatValue = LunarUI.FormatValue
 
 local function FormatBarText(textFormat, cur, max, extra)
-    if not cur or not max or max == 0 then return "" end
+    if not cur or not max or max == 0 then
+        return ""
+    end
     local pct = floor(cur / max * 100)
 
     if textFormat == "percent" then
@@ -128,7 +130,9 @@ end
 
 local function UpdateExperience()
     local bar = bars.experience
-    if not bar then return end
+    if not bar then
+        return
+    end
 
     local db = LunarUI.db.profile.databars
     if not db or not db.experience or not db.experience.enabled then
@@ -151,7 +155,7 @@ local function UpdateExperience()
 
     bar:SetMinMaxValues(0, max)
     bar:SetValue(cur)
-    bar:SetStatusBarColor(0.58, 0.0, 0.55)  -- Purple
+    bar:SetStatusBarColor(0.58, 0.0, 0.55) -- Purple
 
     -- Rested XP
     local rested = _G.GetXPExhaustion() or 0
@@ -181,7 +185,9 @@ local function UpdateExperience()
 end
 
 local function ExperienceTooltip(bar)
-    if UnitLevel("player") >= (_G.GetMaxPlayerLevel and _G.GetMaxPlayerLevel() or 70) then return end
+    if UnitLevel("player") >= (_G.GetMaxPlayerLevel and _G.GetMaxPlayerLevel() or 70) then
+        return
+    end
 
     local cur = _G.UnitXP("player")
     local max = _G.UnitXPMax("player")
@@ -191,10 +197,28 @@ local function ExperienceTooltip(bar)
     _G.GameTooltip:SetOwner(bar, "ANCHOR_TOP", 0, 4)
     _G.GameTooltip:ClearLines()
     _G.GameTooltip:AddLine(L["Experience"] or "Experience", 0.58, 0.0, 0.55)
-    GameTooltip:AddDoubleLine(L["Current"] or "Current", format("%s / %s (%d%%)", FormatValue(cur), FormatValue(max), pct), 1, 1, 1, 1, 1, 1)
+    GameTooltip:AddDoubleLine(
+        L["Current"] or "Current",
+        format("%s / %s (%d%%)", FormatValue(cur), FormatValue(max), pct),
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    )
     GameTooltip:AddDoubleLine(L["Remaining"] or "Remaining", FormatValue(max - cur), 1, 1, 1, 0.7, 0.7, 0.7)
     if rested > 0 then
-        _G.GameTooltip:AddDoubleLine(L["Rested"] or "Rested", format("%s (%d%%)", FormatValue(rested), floor(rested / max * 100)), 0.0, 0.4, 0.8, 0.0, 0.4, 0.8)
+        _G.GameTooltip:AddDoubleLine(
+            L["Rested"] or "Rested",
+            format("%s (%d%%)", FormatValue(rested), floor(rested / max * 100)),
+            0.0,
+            0.4,
+            0.8,
+            0.0,
+            0.4,
+            0.8
+        )
     end
     _G.GameTooltip:Show()
 end
@@ -205,7 +229,9 @@ end
 
 local function UpdateReputation()
     local bar = bars.reputation
-    if not bar then return end
+    if not bar then
+        return
+    end
 
     local db = LunarUI.db.profile.databars
     if not db or not db.reputation or not db.reputation.enabled then
@@ -258,7 +284,9 @@ local function UpdateReputation()
 
     local cur = barValue - barMin
     local max = barMax - barMin
-    if max <= 0 then max = 1 end
+    if max <= 0 then
+        max = 1
+    end
 
     bar:SetMinMaxValues(0, max)
     bar:SetValue(cur)
@@ -293,7 +321,9 @@ end
 
 local function ReputationTooltip(bar)
     local data = bar._repData
-    if not data then return end
+    if not data then
+        return
+    end
 
     local pct = data.max > 0 and floor(data.cur / data.max * 100) or 0
     local color = STANDING_COLORS[data.standing] or STANDING_COLORS[4]
@@ -309,8 +339,26 @@ local function ReputationTooltip(bar)
         standingLabel = _G["FACTION_STANDING_LABEL" .. (data.standing or 4)] or ""
     end
     _G.GameTooltip:AddDoubleLine(L["Standing"] or "Standing", standingLabel, 1, 1, 1, color.r, color.g, color.b)
-    _G.GameTooltip:AddDoubleLine(L["Current"] or "Current", format("%s / %s (%d%%)", FormatValue(data.cur), FormatValue(data.max), pct), 1, 1, 1, 1, 1, 1)
-    _G.GameTooltip:AddDoubleLine(L["Remaining"] or "Remaining", FormatValue(data.max - data.cur), 1, 1, 1, 0.7, 0.7, 0.7)
+    _G.GameTooltip:AddDoubleLine(
+        L["Current"] or "Current",
+        format("%s / %s (%d%%)", FormatValue(data.cur), FormatValue(data.max), pct),
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    )
+    _G.GameTooltip:AddDoubleLine(
+        L["Remaining"] or "Remaining",
+        FormatValue(data.max - data.cur),
+        1,
+        1,
+        1,
+        0.7,
+        0.7,
+        0.7
+    )
     _G.GameTooltip:Show()
 end
 
@@ -320,7 +368,9 @@ end
 
 local function UpdateHonor()
     local bar = bars.honor
-    if not bar then return end
+    if not bar then
+        return
+    end
 
     local db = LunarUI.db.profile.databars
     if not db or not db.honor or not db.honor.enabled then
@@ -345,7 +395,7 @@ local function UpdateHonor()
 
     bar:SetMinMaxValues(0, max)
     bar:SetValue(cur)
-    bar:SetStatusBarColor(1.0, 0.24, 0.0)  -- Orange-red
+    bar:SetStatusBarColor(1.0, 0.24, 0.0) -- Orange-red
     bar.rested:Hide()
 
     -- Text
@@ -365,15 +415,35 @@ end
 
 local function HonorTooltip(bar)
     local data = bar._honorData
-    if not data then return end
+    if not data then
+        return
+    end
 
     local pct = data.max > 0 and floor(data.cur / data.max * 100) or 0
 
     _G.GameTooltip:SetOwner(bar, "ANCHOR_TOP", 0, 4)
     _G.GameTooltip:ClearLines()
     _G.GameTooltip:AddLine(format("%s %d", L["HonorLevel"] or "Honor Level", data.level), 1.0, 0.24, 0.0)
-    _G.GameTooltip:AddDoubleLine(L["Current"] or "Current", format("%s / %s (%d%%)", FormatValue(data.cur), FormatValue(data.max), pct), 1, 1, 1, 1, 1, 1)
-    _G.GameTooltip:AddDoubleLine(L["Remaining"] or "Remaining", FormatValue(data.max - data.cur), 1, 1, 1, 0.7, 0.7, 0.7)
+    _G.GameTooltip:AddDoubleLine(
+        L["Current"] or "Current",
+        format("%s / %s (%d%%)", FormatValue(data.cur), FormatValue(data.max), pct),
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    )
+    _G.GameTooltip:AddDoubleLine(
+        L["Remaining"] or "Remaining",
+        FormatValue(data.max - data.cur),
+        1,
+        1,
+        1,
+        0.7,
+        0.7,
+        0.7
+    )
     _G.GameTooltip:Show()
 end
 
@@ -383,27 +453,41 @@ end
 
 local function InitializeDataBars()
     local db = LunarUI.db.profile.databars
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
     -- Experience bar
     if db.experience and db.experience.enabled then
         bars.experience = CreateDataBar("Experience", db.experience)
-        bars.experience:SetScript("OnEnter", function(self) ExperienceTooltip(self) end)
-        bars.experience:SetScript("OnLeave", function() _G.GameTooltip:Hide() end)
+        bars.experience:SetScript("OnEnter", function(self)
+            ExperienceTooltip(self)
+        end)
+        bars.experience:SetScript("OnLeave", function()
+            _G.GameTooltip:Hide()
+        end)
     end
 
     -- Reputation bar
     if db.reputation and db.reputation.enabled then
         bars.reputation = CreateDataBar("Reputation", db.reputation)
-        bars.reputation:SetScript("OnEnter", function(self) ReputationTooltip(self) end)
-        bars.reputation:SetScript("OnLeave", function() _G.GameTooltip:Hide() end)
+        bars.reputation:SetScript("OnEnter", function(self)
+            ReputationTooltip(self)
+        end)
+        bars.reputation:SetScript("OnLeave", function()
+            _G.GameTooltip:Hide()
+        end)
     end
 
     -- Honor bar
     if db.honor and db.honor.enabled then
         bars.honor = CreateDataBar("Honor", db.honor)
-        bars.honor:SetScript("OnEnter", function(self) HonorTooltip(self) end)
-        bars.honor:SetScript("OnLeave", function() _G.GameTooltip:Hide() end)
+        bars.honor:SetScript("OnEnter", function(self)
+            HonorTooltip(self)
+        end)
+        bars.honor:SetScript("OnLeave", function()
+            _G.GameTooltip:Hide()
+        end)
     end
 
     -- Event frame for updates
@@ -434,7 +518,6 @@ local function InitializeDataBars()
     UpdateExperience()
     UpdateReputation()
     UpdateHonor()
-
 end
 
 -- Cleanup
@@ -461,6 +544,8 @@ LunarUI.InitializeDataBars = InitializeDataBars
 
 LunarUI:RegisterModule("DataBars", {
     onEnable = InitializeDataBars,
-    onDisable = function() LunarUI.CleanupDataBars() end,
+    onDisable = function()
+        LunarUI.CleanupDataBars()
+    end,
     delay = 0.3,
 })

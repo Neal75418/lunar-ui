@@ -19,7 +19,7 @@ local C = LunarUI.Colors
 --------------------------------------------------------------------------------
 
 local perfFrame = nil
-local updateInterval = 0.5  -- 更新間隔（秒）
+local updateInterval = 0.5 -- 更新間隔（秒）
 local elapsed = 0
 local isInitialized = false
 
@@ -29,9 +29,9 @@ local isInitialized = false
 
 -- 延遲門檻（毫秒）
 local LATENCY_THRESHOLDS = {
-    good = 100,    -- 綠色
-    medium = 200,  -- 黃色
-    bad = 400,     -- 紅色
+    good = 100, -- 綠色
+    medium = 200, -- 黃色
+    bad = 400, -- 紅色
 }
 
 --------------------------------------------------------------------------------
@@ -40,7 +40,9 @@ local LATENCY_THRESHOLDS = {
 
 local FPS_THRESHOLDS = { 60, 30, 15 }
 local LATENCY_THRESHOLDS_LIST = {
-    LATENCY_THRESHOLDS.good, LATENCY_THRESHOLDS.medium, LATENCY_THRESHOLDS.bad
+    LATENCY_THRESHOLDS.good,
+    LATENCY_THRESHOLDS.medium,
+    LATENCY_THRESHOLDS.bad,
 }
 
 local function GetFPSColor(fps)
@@ -57,7 +59,9 @@ end
 
 ---@return Frame
 local function CreatePerfFrame()
-    if perfFrame then return perfFrame end
+    if perfFrame then
+        return perfFrame
+    end
 
     -- 重載時重用現有框架
     local existingFrame = _G["LunarUI_PerformanceMonitor"]
@@ -129,8 +133,22 @@ local function CreatePerfFrame()
         local _, _, homeMs, worldMs = GetNetStats()
 
         GameTooltip:AddDoubleLine("FPS", string.format("%.0f", fps), 0.7, 0.7, 0.7, 1, 1, 1)
-        GameTooltip:AddDoubleLine(L["HomeLatency"] or "Home Latency", string.format("%d ms", homeMs), 0.7, 0.7, 0.7, GetLatencyColor(homeMs))
-        GameTooltip:AddDoubleLine(L["WorldLatency"] or "World Latency", string.format("%d ms", worldMs), 0.7, 0.7, 0.7, GetLatencyColor(worldMs))
+        GameTooltip:AddDoubleLine(
+            L["HomeLatency"] or "Home Latency",
+            string.format("%d ms", homeMs),
+            0.7,
+            0.7,
+            0.7,
+            GetLatencyColor(homeMs)
+        )
+        GameTooltip:AddDoubleLine(
+            L["WorldLatency"] or "World Latency",
+            string.format("%d ms", worldMs),
+            0.7,
+            0.7,
+            0.7,
+            GetLatencyColor(worldMs)
+        )
 
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(L["ShiftDragToMove"] or "Shift+drag to reposition", 0.5, 0.5, 0.5)
@@ -149,7 +167,9 @@ end
 --------------------------------------------------------------------------------
 
 local function UpdatePerformance()
-    if not perfFrame then return end
+    if not perfFrame then
+        return
+    end
 
     -- 取得效能資訊
     local fps = GetFramerate()
@@ -168,11 +188,15 @@ local function UpdatePerformance()
 end
 
 local function StartUpdating()
-    if not perfFrame then return end
+    if not perfFrame then
+        return
+    end
 
     perfFrame:SetScript("OnUpdate", function(_self, delta)
         elapsed = elapsed + delta
-        if elapsed < updateInterval then return end
+        if elapsed < updateInterval then
+            return
+        end
         elapsed = 0
 
         UpdatePerformance()
@@ -194,8 +218,12 @@ end
 --------------------------------------------------------------------------------
 
 local function Initialize()
-    if isInitialized then return end
-    if LunarUI.GetHUDSetting("performanceMonitor", true) == false then return end
+    if isInitialized then
+        return
+    end
+    if LunarUI.GetHUDSetting("performanceMonitor", true) == false then
+        return
+    end
     CreatePerfFrame()
 
     -- 註冊至框架移動器

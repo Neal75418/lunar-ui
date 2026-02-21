@@ -13,7 +13,9 @@ local function SkinSpellbook()
     local frame = LunarUI:SkinStandardFrame("PlayerSpellsFrame", {
         useTabSystem = true,
     }) or LunarUI:SkinStandardFrame("SpellBookFrame")
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 舊版法術書分頁（WoW < 12.0 備用）
     for i = 1, 8 do
@@ -27,8 +29,12 @@ local function SkinSpellbook()
     for i = 1, 2 do
         local prev = _G["SpellBookPrevPageButton" .. i] or _G["SpellBookPrevPageButton"]
         local next = _G["SpellBookNextPageButton" .. i] or _G["SpellBookNextPageButton"]
-        if prev then LunarUI.SkinButton(prev) end
-        if next then LunarUI.SkinButton(next) end
+        if prev then
+            LunarUI.SkinButton(prev)
+        end
+        if next then
+            LunarUI.SkinButton(next)
+        end
     end
     return true
 end

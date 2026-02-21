@@ -15,7 +15,9 @@ local function SkinTalents()
     local frame = LunarUI:SkinStandardFrame("ClassTalentFrame", {
         useTabSystem = true,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 底部按鈕（套用/重設）
     if frame.ApplyButton then

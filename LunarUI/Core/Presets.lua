@@ -41,7 +41,9 @@ end
 function LunarUI:ApplyRolePreset(role)
     role = role or LunarUI.GetCurrentRole()
     local preset = ROLE_PRESETS[role]
-    if not preset or not self.db or not self.db.profile then return end
+    if not preset or not self.db or not self.db.profile then
+        return
+    end
 
     -- 套用 unitframes 預設
     if preset.unitframes then

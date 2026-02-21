@@ -38,7 +38,7 @@ local IsPlayerSpell = IsPlayerSpell
 local ICON_SIZE = 36
 local ICON_SPACING = 4
 local MAX_ICONS = 8
-local UPDATE_INTERVAL = 0.1  -- 更新頻率（秒）
+local UPDATE_INTERVAL = 0.1 -- 更新頻率（秒）
 
 local function LoadSettings()
     ICON_SIZE = LunarUI.GetHUDSetting("cdIconSize", 36)
@@ -51,30 +51,30 @@ end
 local DEFAULT_TRACKED_SPELLS = {
     -- 戰士
     [1] = {
-        100,    -- 衝鋒
-        1719,   -- 魯莽
+        100, -- 衝鋒
+        1719, -- 魯莽
         107574, -- 天神下凡
         227847, -- 劍刃風暴
-        12292,  -- 血怒
-        23920,  -- 法術反射
-        871,    -- 盾牆
-        12975,  -- 破釜沉舟
+        12292, -- 血怒
+        23920, -- 法術反射
+        871, -- 盾牆
+        12975, -- 破釜沉舟
     },
     -- 聖騎士
     [2] = {
-        31884,  -- 復仇之怒
-        31850,  -- 聖佑術
-        642,    -- 聖盾術
-        1022,   -- 保護祝福
-        6940,   -- 犧牲祝福
-        498,    -- 聖佑術
-        31821,  -- 光環精通
-        633,    -- 聖療術
+        31884, -- 復仇之怒
+        31850, -- 聖佑術
+        642, -- 聖盾術
+        1022, -- 保護祝福
+        6940, -- 犧牲祝福
+        498, -- 聖佑術
+        31821, -- 光環精通
+        633, -- 聖療術
     },
     -- 獵人
     [3] = {
         193530, -- 野性面向
-        19574,  -- 狂野怒火
+        19574, -- 狂野怒火
         288613, -- 嗜血術
         186265, -- 靈龜
         109304, -- 意氣風發
@@ -82,36 +82,36 @@ local DEFAULT_TRACKED_SPELLS = {
     },
     -- 盜賊
     [4] = {
-        13750,  -- 腎上腺素激增
-        51690,  -- 影舞
+        13750, -- 腎上腺素激增
+        51690, -- 影舞
         121471, -- 暗影之刃
-        1856,   -- 消失
-        31224,  -- 暗影披風
-        2983,   -- 衝刺
-        5277,   -- 閃避
+        1856, -- 消失
+        31224, -- 暗影披風
+        2983, -- 衝刺
+        5277, -- 閃避
         185311, -- 赤紅乙醇
     },
     -- 牧師
     [5] = {
-        47788,  -- 守護之魂
-        33206,  -- 痛苦鎮壓
-        62618,  -- 力量壁壘
-        64843,  -- 神聖讚美詩
-        10060,  -- 能量灌注
-        8122,   -- 心靈尖嘯
-        34433,  -- 暗影魔
+        47788, -- 守護之魂
+        33206, -- 痛苦鎮壓
+        62618, -- 力量壁壘
+        64843, -- 神聖讚美詩
+        10060, -- 能量灌注
+        8122, -- 心靈尖嘯
+        34433, -- 暗影魔
         228260, -- 虛無噴發
     },
     -- 死亡騎士
     [6] = {
-        47568,  -- 強力符文武器
-        49028,  -- 舞蹈符文武器
-        55233,  -- 吸血鬼之血
-        48792,  -- 冰錮堅韌
-        49576,  -- 死亡之握
-        48707,  -- 反魔法護罩
-        51052,  -- 反魔法地帶
-        42650,  -- 亡者大軍
+        47568, -- 強力符文武器
+        49028, -- 舞蹈符文武器
+        55233, -- 吸血鬼之血
+        48792, -- 冰錮堅韌
+        49576, -- 死亡之握
+        48707, -- 反魔法護罩
+        51052, -- 反魔法地帶
+        42650, -- 亡者大軍
     },
     -- 薩滿
     [7] = {
@@ -119,18 +119,18 @@ local DEFAULT_TRACKED_SPELLS = {
         198067, -- 火元素
         108271, -- 星界轉移
         108281, -- 祖靈指引
-        98008,  -- 靈魂連結圖騰
+        98008, -- 靈魂連結圖騰
         192077, -- 風颯圖騰
-        16191,  -- 法力之潮圖騰
-        79206,  -- 靈行者之賜
+        16191, -- 法力之潮圖騰
+        79206, -- 靈行者之賜
     },
     -- 法師
     [8] = {
-        12472,  -- 冰冷之血
+        12472, -- 冰冷之血
         190319, -- 燃燒
         365350, -- 秘法飛彈
-        45438,  -- 寒冰屏障
-        66,     -- 隱形術
+        45438, -- 寒冰屏障
+        66, -- 隱形術
         235450, -- 熾焰鎧甲
         113724, -- 火焰之環
     },
@@ -140,7 +140,7 @@ local DEFAULT_TRACKED_SPELLS = {
         113860, -- 黑暗靈魂：苦難
         113858, -- 黑暗靈魂：不穩定
         104773, -- 不滅決心
-        48020,  -- 惡魔傳送門
+        48020, -- 惡魔傳送門
         108416, -- 暗門
         333889, -- 靈魂烈焰
     },
@@ -160,11 +160,11 @@ local DEFAULT_TRACKED_SPELLS = {
         194223, -- 化身：叢林之王
         102560, -- 化身：群星之主
         102558, -- 化身：烏索爾之子
-        33891,  -- 化身：生命之樹
-        22812,  -- 乘柱護甲
-        61336,  -- 生存本能
+        33891, -- 化身：生命之樹
+        22812, -- 乘柱護甲
+        61336, -- 生存本能
         106951, -- 乘柱護甲
-        77764,  -- 狂奔突襲
+        77764, -- 狂奔突襲
     },
     -- 惡魔獵人
     [12] = {
@@ -197,8 +197,8 @@ local cooldownIcons = {}
 local trackedSpells = {}
 local updateTimer = 0
 local isInitialized = false
-local spellTextureCache = {}  -- 法術圖示快取，避免重複查詢 API
-local CACHE_MAX_SIZE = 2000   -- 快取上限，防止無限增長（每筆約 32 bytes，2000 筆 ≈ 64KB）
+local spellTextureCache = {} -- 法術圖示快取，避免重複查詢 API
+local CACHE_MAX_SIZE = 2000 -- 快取上限，防止無限增長（每筆約 32 bytes，2000 筆 ≈ 64KB）
 local cacheSize = 0
 
 --------------------------------------------------------------------------------
@@ -342,7 +342,9 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateCooldownFrame()
-    if cooldownFrame then return cooldownFrame end
+    if cooldownFrame then
+        return cooldownFrame
+    end
 
     -- 重載時重用現有框架
     local existingFrame = _G["LunarUI_CooldownTracker"]
@@ -384,7 +386,9 @@ end
 --------------------------------------------------------------------------------
 
 local function UpdateCooldownIcons()
-    if not cooldownFrame or not cooldownFrame:IsShown() then return end
+    if not cooldownFrame or not cooldownFrame:IsShown() then
+        return
+    end
 
     local visibleIndex = 0
     local currentTime = GetTime()
@@ -393,58 +397,58 @@ local function UpdateCooldownIcons()
     for _, spellID in ipairs(trackedSpells) do
         local start, duration = GetSpellCooldownInfo(spellID)
 
-        if duration > 1.5 then  -- 忽略 GCD
+        if duration > 1.5 then -- 忽略 GCD
             local remaining = start + duration - currentTime
 
             if remaining > 0 then
                 visibleIndex = visibleIndex + 1
 
                 if visibleIndex <= MAX_ICONS then
-                        local icon = cooldownIcons[visibleIndex]
-                        if icon then
-                            -- 設定圖示
-                            local texture = GetSpellTexture(spellID)
-                            if texture then
-                                icon.texture:SetTexture(texture)
-                            end
-
-                            -- 設定冷卻
-                            icon.cooldown:SetCooldown(start, duration)
-
-                            -- 設定文字
-                            icon.text:SetText(FormatCooldown(remaining))
-
-                            -- 顏色：根據剩餘時間
-                            if remaining <= 5 then
-                                icon.text:SetTextColor(0.2, 1, 0.2)  -- 綠色：即將完成
-                            elseif remaining <= 15 then
-                                icon.text:SetTextColor(1, 1, 0.2)   -- 黃色：快了
-                            else
-                                icon.text:SetTextColor(1, 1, 1)     -- 白色：還久
-                            end
-
-                            -- 位置
-                            local x = (visibleIndex - 1) * (ICON_SIZE + ICON_SPACING)
-                            icon:ClearAllPoints()
-                            icon:SetPoint("LEFT", cooldownFrame, "LEFT", x, 0)
-                            icon:Show()
-
-                            -- 儲存 spellID 用於閃光
-                            icon.spellID = spellID
-                            icon.wasOnCooldown = true
+                    local icon = cooldownIcons[visibleIndex]
+                    if icon then
+                        -- 設定圖示
+                        local texture = GetSpellTexture(spellID)
+                        if texture then
+                            icon.texture:SetTexture(texture)
                         end
+
+                        -- 設定冷卻
+                        icon.cooldown:SetCooldown(start, duration)
+
+                        -- 設定文字
+                        icon.text:SetText(FormatCooldown(remaining))
+
+                        -- 顏色：根據剩餘時間
+                        if remaining <= 5 then
+                            icon.text:SetTextColor(0.2, 1, 0.2) -- 綠色：即將完成
+                        elseif remaining <= 15 then
+                            icon.text:SetTextColor(1, 1, 0.2) -- 黃色：快了
+                        else
+                            icon.text:SetTextColor(1, 1, 1) -- 白色：還久
+                        end
+
+                        -- 位置
+                        local x = (visibleIndex - 1) * (ICON_SIZE + ICON_SPACING)
+                        icon:ClearAllPoints()
+                        icon:SetPoint("LEFT", cooldownFrame, "LEFT", x, 0)
+                        icon:Show()
+
+                        -- 儲存 spellID 用於閃光
+                        icon.spellID = spellID
+                        icon.wasOnCooldown = true
                     end
-                else
-                    -- 冷卻剛結束，觸發閃光
-                    for i = 1, MAX_ICONS do
-                        local icon = cooldownIcons[i]
-                        if icon and icon.spellID == spellID and icon.wasOnCooldown then
-                            icon.flashAnim:Play()
-                            icon.wasOnCooldown = false
-                        end
+                end
+            else
+                -- 冷卻剛結束，觸發閃光
+                for i = 1, MAX_ICONS do
+                    local icon = cooldownIcons[i]
+                    if icon and icon.spellID == spellID and icon.wasOnCooldown then
+                        icon.flashAnim:Play()
+                        icon.wasOnCooldown = false
                     end
                 end
             end
+        end
     end
 
     -- 隱藏多餘的圖示
@@ -491,8 +495,12 @@ local function CooldownOnUpdate(_self, elapsed)
 end
 
 local function Initialize()
-    if isInitialized then return end
-    if LunarUI.GetHUDSetting("cooldownTracker", true) == false then return end
+    if isInitialized then
+        return
+    end
+    if LunarUI.GetHUDSetting("cooldownTracker", true) == false then
+        return
+    end
 
     LoadSettings()
     CreateCooldownFrame()
@@ -506,7 +514,9 @@ local function Initialize()
     isInitialized = true
 
     -- 啟動 OnUpdate
-    if eventFrame then eventFrame:SetScript("OnUpdate", CooldownOnUpdate) end
+    if eventFrame then
+        eventFrame:SetScript("OnUpdate", CooldownOnUpdate)
+    end
 end
 
 -- 暴露 Initialize 供 Options toggle 即時切換
@@ -517,10 +527,12 @@ LunarUI.InitCooldownTracker = Initialize
 --------------------------------------------------------------------------------
 
 eventFrame = LunarUI.CreateEventHandler(
-    {"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "SPELLS_CHANGED"},
+    { "PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "SPELLS_CHANGED" },
     function(_self, event)
         if event == "PLAYER_ENTERING_WORLD" then
-            if LunarUI.GetHUDSetting("cooldownTracker", true) == false then return end
+            if LunarUI.GetHUDSetting("cooldownTracker", true) == false then
+                return
+            end
             C_Timer.After(1.0, Initialize)
         elseif event == "PLAYER_SPECIALIZATION_CHANGED" or event == "SPELLS_CHANGED" then
             -- 僅在模組初始化後才更新追蹤法術（避免 disable 狀態下無意義的更新）
@@ -553,8 +565,12 @@ function LunarUI.RefreshCooldownTracker()
 end
 
 function LunarUI.RebuildCooldownTracker()
-    if not isInitialized then return end
-    if InCombatLockdown() then return end
+    if not isInitialized then
+        return
+    end
+    if InCombatLockdown() then
+        return
+    end
     local oldMaxIcons = #cooldownIcons
     LoadSettings()
     -- 調整現有圖示大小與內部材質
@@ -623,8 +639,8 @@ function LunarUI.CleanupCooldownTracker()
         eventFrame:SetScript("OnUpdate", nil)
     end
     updateTimer = 0
-    wipe(spellTextureCache)  -- 清理圖示快取
-    wipe(trackedSpells)      -- 清理追蹤列表
+    wipe(spellTextureCache) -- 清理圖示快取
+    wipe(trackedSpells) -- 清理追蹤列表
     cacheSize = 0
     isInitialized = false
     -- 事件註冊保留：OnEvent 已有 isInitialized guard，

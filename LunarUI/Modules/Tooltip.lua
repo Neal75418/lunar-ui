@@ -31,15 +31,15 @@ local function GetLevelDifficultyColor(unitLevel)
     local diff = unitLevel - playerLevel
 
     if diff >= 5 then
-        return 0.9, 0.2, 0.2    -- 紅色（非常高）
+        return 0.9, 0.2, 0.2 -- 紅色（非常高）
     elseif diff >= 3 then
-        return 0.9, 0.5, 0.1    -- 橙色（高）
+        return 0.9, 0.5, 0.1 -- 橙色（高）
     elseif diff >= -2 then
-        return 0.9, 0.9, 0.2    -- 黃色（同級）
+        return 0.9, 0.9, 0.2 -- 黃色（同級）
     elseif diff >= -8 then
-        return 0.2, 0.8, 0.2    -- 綠色（低）
+        return 0.2, 0.8, 0.2 -- 綠色（低）
     else
-        return 0.6, 0.6, 0.6    -- 灰色（極低）
+        return 0.6, 0.6, 0.6 -- 灰色（極低）
     end
 end
 
@@ -50,10 +50,10 @@ end
 local tooltipStyled = false
 
 -- Inspect 快取（避免重複請求）
-local inspectCache = {}  -- { [guid] = { ilvl, spec, time } }
-local INSPECT_CACHE_TTL = 30  -- 快取有效秒數
-local INSPECT_CACHE_MAX = 50  -- 最大快取筆數
-local pendingInspect = nil    -- 目前等待中的 inspect GUID
+local inspectCache = {} -- { [guid] = { ilvl, spec, time } }
+local INSPECT_CACHE_TTL = 30 -- 快取有效秒數
+local INSPECT_CACHE_MAX = 50 -- 最大快取筆數
+local pendingInspect = nil -- 目前等待中的 inspect GUID
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -77,11 +77,11 @@ local function GetUnitColor(unit)
         local reaction = UnitReaction(unit, "player")
         if reaction then
             if reaction >= 5 then
-                return 0.2, 0.8, 0.2  -- 友善
+                return 0.2, 0.8, 0.2 -- 友善
             elseif reaction == 4 then
-                return 1, 1, 0        -- 中立
+                return 1, 1, 0 -- 中立
             else
-                return 0.8, 0.2, 0.2  -- 敵對
+                return 0.8, 0.2, 0.2 -- 敵對
             end
         end
     end
@@ -168,20 +168,30 @@ end
 
 -- 請求 Inspect（含節流：避免滑鼠快速掃過玩家時轟炸伺服器）
 local lastInspectTime = 0
-local INSPECT_THROTTLE = 1.0  -- 最小請求間隔（秒）
+local INSPECT_THROTTLE = 1.0 -- 最小請求間隔（秒）
 
 local function RequestInspect(unit)
     -- if not unit or not UnitIsPlayer(unit) then return end (Caller ensures)
-    if not CanInspect(unit) then return end
-    if InCombatLockdown() then return end
-    if GetTime() - lastInspectTime < INSPECT_THROTTLE then return end
+    if not CanInspect(unit) then
+        return
+    end
+    if InCombatLockdown() then
+        return
+    end
+    if GetTime() - lastInspectTime < INSPECT_THROTTLE then
+        return
+    end
 
     local guid = UnitGUID(unit)
-    if not guid then return end
+    if not guid then
+        return
+    end
 
     -- 檢查快取
     local cached = GetCachedInspectData(guid)
-    if cached then return end
+    if cached then
+        return
+    end
 
     -- 發送 Inspect 請求
     lastInspectTime = GetTime()
@@ -190,8 +200,10 @@ local function RequestInspect(unit)
 end
 
 -- Inspect 回應事件（保留引用以便 Cleanup 解除註冊）
-local inspectEventFrame = LunarUI.CreateEventHandler({"INSPECT_READY"}, function(_self, event, inspectGUID)
-    if event ~= "INSPECT_READY" then return end
+local inspectEventFrame = LunarUI.CreateEventHandler({ "INSPECT_READY" }, function(_self, event, inspectGUID)
+    if event ~= "INSPECT_READY" then
+        return
+    end
 
     -- 確認是我們請求的
     if pendingInspect and pendingInspect == inspectGUID then
@@ -299,11 +311,17 @@ end
 
 local function OnTooltipSetUnit(tooltip)
     local db = LunarUI.db and LunarUI.db.profile.tooltip
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
-    if not tooltip.GetUnit then return end
+    if not tooltip.GetUnit then
+        return
+    end
     local _, unit = tooltip:GetUnit()
-    if not unit then return end
+    if not unit then
+        return
+    end
 
     -- 依單位著色滑鼠提示邊框
     local r, g, b = GetUnitColor(unit)
@@ -336,8 +354,11 @@ local function OnTooltipSetUnit(tooltip)
         if tooltipData and tooltipData.lines then
             for i = 2, #tooltipData.lines do
                 local lineData = tooltipData.lines[i]
-                if lineData and lineData.leftText and
-                   (lineData.leftText:find("Level") or lineData.leftText:find("等級")) then
+                if
+                    lineData
+                    and lineData.leftText
+                    and (lineData.leftText:find("Level") or lineData.leftText:find("等級"))
+                then
                     local fontStr = _G[tooltip:GetName() .. "TextLeft" .. i]
                     if fontStr then
                         fontStr:SetTextColor(GetLevelDifficultyColor(level))
@@ -434,11 +455,17 @@ end
 
 local function OnTooltipSetItem(tooltip)
     local db = LunarUI.db and LunarUI.db.profile.tooltip
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
-    if not tooltip.GetItem then return end
+    if not tooltip.GetItem then
+        return
+    end
     local _, itemLink = tooltip:GetItem()
-    if not itemLink then return end
+    if not itemLink then
+        return
+    end
 
     -- 顯示物品等級
     if db.showItemLevel then
@@ -449,8 +476,11 @@ local function OnTooltipSetItem(tooltip)
             if tooltipData and tooltipData.lines then
                 for i = 2, #tooltipData.lines do
                     local lineData = tooltipData.lines[i]
-                    if lineData and lineData.leftText and
-                       (lineData.leftText:find("Item Level") or lineData.leftText:find("物品等級")) then
+                    if
+                        lineData
+                        and lineData.leftText
+                        and (lineData.leftText:find("Item Level") or lineData.leftText:find("物品等級"))
+                    then
                         found = true
                         break
                     end
@@ -483,21 +513,13 @@ local function OnTooltipSetItem(tooltip)
             local numID = tonumber(itemID)
             if numID then
                 local bagCount = C_Item.GetItemCount(numID, false)
-                local totalCount = C_Item.GetItemCount(numID, true)  -- 含銀行
+                local totalCount = C_Item.GetItemCount(numID, true) -- 含銀行
                 if totalCount and totalCount > 0 then
                     local bankCount = totalCount - bagCount
                     local L = Engine.L or {}
-                    local countText = string.format(
-                        "%s: %d",
-                        L["ItemCount"] or "Count",
-                        bagCount
-                    )
+                    local countText = string.format("%s: %d", L["ItemCount"] or "Count", bagCount)
                     if bankCount > 0 then
-                        countText = countText .. string.format(
-                            "  (%s: %d)",
-                            L["BankTitle"] or "Bank",
-                            bankCount
-                        )
+                        countText = countText .. string.format("  (%s: %d)", L["BankTitle"] or "Bank", bankCount)
                     end
                     tooltip:AddLine("|cff888888" .. countText .. "|r")
                 end
@@ -541,10 +563,16 @@ end
 
 local function OnTooltipSetSpell(tooltip)
     local db = LunarUI.db and LunarUI.db.profile.tooltip
-    if not db or not db.enabled then return end
-    if not db.showSpellID then return end
+    if not db or not db.enabled then
+        return
+    end
+    if not db.showSpellID then
+        return
+    end
 
-    if not tooltip.GetSpell then return end
+    if not tooltip.GetSpell then
+        return
+    end
     local spellID = select(2, tooltip:GetSpell())
     if spellID then
         tooltip:AddLine("|cff888888法術 ID: " .. spellID .. "|r")
@@ -559,7 +587,9 @@ end
 --------------------------------------------------------------------------------
 
 local function AdjustTooltipPosition(tooltip)
-    if not tooltip or not tooltip:IsShown() then return end
+    if not tooltip or not tooltip:IsShown() then
+        return
+    end
 
     local screenWidth = UIParent:GetWidth()
     local screenHeight = UIParent:GetHeight()
@@ -570,7 +600,9 @@ local function AdjustTooltipPosition(tooltip)
     local top = tooltip:GetTop()
     local bottom = tooltip:GetBottom()
 
-    if not left or not right or not top or not bottom then return end
+    if not left or not right or not top or not bottom then
+        return
+    end
 
     local offsetX, offsetY = 0, 0
 
@@ -598,8 +630,12 @@ end
 
 local function SetTooltipPosition()
     local db = LunarUI.db and LunarUI.db.profile.tooltip
-    if not db or not db.enabled then return end
-    if not db.anchorCursor then return end
+    if not db or not db.enabled then
+        return
+    end
+    if not db.anchorCursor then
+        return
+    end
 
     hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
         if db.anchorCursor then
@@ -626,7 +662,9 @@ end
 
 local function InitializeTooltip()
     local db = LunarUI.db and LunarUI.db.profile.tooltip
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
     -- hooks（TooltipDataProcessor / HookScript）無法移除，只註冊一次
     -- 各 callback 內部已有 db.enabled 檢查，toggle off 時自動停止工作

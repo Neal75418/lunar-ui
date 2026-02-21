@@ -26,7 +26,7 @@ end
 -- Constants
 --------------------------------------------------------------------------------
 
-local statusBarTexture  -- lazy: resolved after DB is ready
+local statusBarTexture -- lazy: resolved after DB is ready
 local function GetStatusBarTexture()
     if not statusBarTexture then
         statusBarTexture = LunarUI.GetSelectedStatusBarTexture()
@@ -50,14 +50,18 @@ local CLASSIFICATION_COLORS = {
 
 -- NPC 角色分類色（Caster / Miniboss）
 local NPC_ROLE_COLORS = {
-    caster   = { r = 0.55, g = 0.35, b = 0.85 },  -- 紫色（施法者）
-    miniboss = { r = 0.8,  g = 0.6,  b = 0.2  },  -- 金色（精英/小Boss）
+    caster = { r = 0.55, g = 0.35, b = 0.85 }, -- 紫色（施法者）
+    miniboss = { r = 0.8, g = 0.6, b = 0.2 }, -- 金色（精英/小Boss）
 }
 
 local function GetNPCRoleColor(unit, db)
-    if not unit or UnitIsPlayer(unit) then return nil end
+    if not unit or UnitIsPlayer(unit) then
+        return nil
+    end
     local npcDb = db and db.npcColors
-    if not npcDb or not npcDb.enabled then return nil end
+    if not npcDb or not npcDb.enabled then
+        return nil
+    end
 
     local classification = UnitClassification(unit)
     if classification == "worldboss" or classification == "elite" or classification == "rareelite" then
@@ -65,11 +69,11 @@ local function GetNPCRoleColor(unit, db)
     end
 
     local powerType = UnitPowerType(unit)
-    if powerType == 0 then  -- Mana = 施法者
+    if powerType == 0 then -- Mana = 施法者
         return npcDb.caster or NPC_ROLE_COLORS.caster
     end
 
-    return nil  -- 近戰：保持預設反應色
+    return nil -- 近戰：保持預設反應色
 end
 
 local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS
@@ -97,10 +101,10 @@ end
 
 local function IsImportantTarget(unit)
     local classification = GetUnitClassification(unit)
-    return classification == "worldboss" or
-           classification == "rareelite" or
-           classification == "elite" or
-           classification == "rare"
+    return classification == "worldboss"
+        or classification == "rareelite"
+        or classification == "elite"
+        or classification == "rare"
 end
 
 --------------------------------------------------------------------------------
@@ -152,20 +156,28 @@ local function CreateHealthBar(frame)
                     if (not reaction or reaction <= 4) and not UnitIsTapDenied(unit) then
                         bar:SetStatusBarColor(npcColor.r, npcColor.g, npcColor.b)
                         if bar.bg then
-                            bar.bg:SetVertexColor(npcColor.r * BG_DARKEN, npcColor.g * BG_DARKEN, npcColor.b * BG_DARKEN)
+                            bar.bg:SetVertexColor(
+                                npcColor.r * BG_DARKEN,
+                                npcColor.g * BG_DARKEN,
+                                npcColor.b * BG_DARKEN
+                            )
                         end
                     end
                 end
             end
 
             -- 生命值文字
-            if not healthText then return end
+            if not healthText then
+                return
+            end
             if type(cur) ~= "number" or type(max) ~= "number" then
                 healthText:SetText("")
                 return
             end
             local ok, pct = pcall(function()
-                if not cur or not max or max == 0 then return nil end
+                if not cur or not max or max == 0 then
+                    return nil
+                end
                 return math.floor(cur / max * 100)
             end)
             if not ok or not pct then
@@ -349,7 +361,12 @@ local function CreateNameplateBuffs(frame)
     -- Stealable buffs get a bright border
     buffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
         if button.SetBackdropBorderColor then
-            button:SetBackdropBorderColor(C.stealableBorder[1], C.stealableBorder[2], C.stealableBorder[3], C.stealableBorder[4])
+            button:SetBackdropBorderColor(
+                C.stealableBorder[1],
+                C.stealableBorder[2],
+                C.stealableBorder[3],
+                C.stealableBorder[4]
+            )
         end
     end
 
@@ -370,7 +387,9 @@ local function CreateThreatIndicator(frame)
     threat:SetFrameLevel(frame:GetFrameLevel() + 5)
 
     threat.PostUpdate = function(self, _unit, status, r, g, b)
-        if not self then return end
+        if not self then
+            return
+        end
         if status and status > 0 and r and g and b then
             self:SetBackdropBorderColor(r, g, b, 0.8)
         else
@@ -498,7 +517,7 @@ end
 local function FriendlyNameplateLayout(frame, _unit)
     local db = LunarUI.db and LunarUI.db.profile.nameplates
     local width = db and db.width or 120
-    local height = (db and db.height or 12) * 0.8  -- Slightly smaller
+    local height = (db and db.height or 12) * 0.8 -- Slightly smaller
 
     frame:SetSize(width, height)
 
@@ -540,7 +559,9 @@ end
 
 --[[ Update quest indicator ]]
 local function UpdateQuestIndicator(frame)
-    if not frame or not frame.QuestIndicator or not frame.unit then return end
+    if not frame or not frame.QuestIndicator or not frame.unit then
+        return
+    end
     local isQuest = C_QuestLog.UnitIsRelatedToActiveQuest(frame.unit)
     if isQuest then
         frame.QuestIndicator:Show()
@@ -551,7 +572,9 @@ end
 
 --[[ Update target indicator ]]
 local function UpdateTargetIndicator(frame)
-    if not frame or not frame.TargetIndicator then return end
+    if not frame or not frame.TargetIndicator then
+        return
+    end
 
     if UnitIsUnit(frame.unit, "target") then
         frame.TargetIndicator:SetBackdropBorderColor(1, 1, 1, 1)
@@ -563,7 +586,9 @@ end
 
 --[[ Nameplate callback: OnShow ]]
 local function Nameplate_OnShow(frame)
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- Re-register frame for tracking (removed on hide)
     nameplateFrames[frame] = true
@@ -631,8 +656,8 @@ end
 --------------------------------------------------------------------------------
 
 local stackingFrame = nil
-local STACKING_INTERVAL = 0.1  -- 更新間隔（秒）
-local STACKING_OFFSET = 10     -- 每層偏移量（像素）
+local STACKING_INTERVAL = 0.1 -- 更新間隔（秒）
+local STACKING_OFFSET = 10 -- 每層偏移量（像素）
 
 -- Fix 7: 重用平行陣列，避免每 0.1s 為每個名牌建新 table
 local stackFrames = {}
@@ -650,16 +675,24 @@ end
 local lastTargetNameplate = nil
 
 local function UpdateNameplateStacking()
-    if InCombatLockdown() then return end  -- 12.0: 戰鬥中避免操作名牌子框架
+    if InCombatLockdown() then
+        return
+    end -- 12.0: 戰鬥中避免操作名牌子框架
     local db = LunarUI.db and LunarUI.db.profile.nameplates
-    if not db or not db.stackingDetection then return end
+    if not db or not db.stackingDetection then
+        return
+    end
 
     -- 名牌高度作為重疊閾值
-    local npHeight = (db.height or 8) + 4  -- 名牌高度 + 小間距
+    local npHeight = (db.height or 8) + 4 -- 名牌高度 + 小間距
 
     -- Fix 7: 收集可見名牌到重用的平行陣列，避免每次建新 table
     local count = 0
-    for k = 1, #stackFrames do stackFrames[k] = nil; stackYs[k] = nil; stackOffsets[k] = nil end
+    for k = 1, #stackFrames do
+        stackFrames[k] = nil
+        stackYs[k] = nil
+        stackOffsets[k] = nil
+    end
     for np in pairs(nameplateFrames) do
         if np:IsShown() and np:GetParent() then
             local _, screenY = np:GetCenter()
@@ -702,7 +735,9 @@ local function UpdateNameplateStacking()
     -- 套用偏移
     for i = 1, count do
         local np = stackFrames[i]
-        if not np then break end
+        if not np then
+            break
+        end
         local offset = stackOffsets[i]
         if np._lunarStackOffset ~= offset then
             np._lunarStackOffset = offset
@@ -748,9 +783,13 @@ end
 
 local function StartStackingDetection()
     local db = LunarUI.db and LunarUI.db.profile.nameplates
-    if not db or not db.stackingDetection then return end
+    if not db or not db.stackingDetection then
+        return
+    end
 
-    if stackingFrame then return end
+    if stackingFrame then
+        return
+    end
     stackingFrame = CreateFrame("Frame")
     local elapsed = 0
     stackingFrame:SetScript("OnUpdate", function(_self, dt)
@@ -800,7 +839,9 @@ oUF:RegisterStyle("LunarUI_Nameplate", NameplateLayout)
 
 local function SpawnNameplates()
     local db = LunarUI.db and LunarUI.db.profile.nameplates
-    if not db or not db.enabled then return end
+    if not db or not db.enabled then
+        return
+    end
 
     -- Fix #39: Use event-driven retry for combat lockdown
     if InCombatLockdown() then
@@ -896,6 +937,8 @@ end
 
 LunarUI:RegisterModule("Nameplates", {
     onEnable = SpawnNameplates,
-    onDisable = function() LunarUI.CleanupNameplates() end,
+    onDisable = function()
+        LunarUI.CleanupNameplates()
+    end,
     delay = 0.2,
 })

@@ -10,7 +10,9 @@ local LunarUI = Engine.LunarUI
 local function SkinQuest()
     -- QuestMapFrame（任務地圖/日誌 — 嵌在世界地圖中）
     local frame = _G.QuestMapFrame
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- QuestMapFrame 本身是子框架，skin 其細節面板
     if frame.DetailsFrame then

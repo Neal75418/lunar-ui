@@ -58,16 +58,16 @@ local POWER_TYPE_ESSENCE = Enum.PowerType.Essence or 19
 
 -- 資源顏色
 local RESOURCE_COLORS = {
-    comboPoints = { 0.9, 0.7, 0.2 },      -- 金色
-    runes = { 0.6, 0.2, 0.2 },            -- 深紅
-    runeReady = { 0.8, 0.1, 0.1 },        -- 亮紅
-    soulShards = { 0.6, 0.3, 0.8 },       -- 紫色
-    arcaneCharges = { 0.3, 0.6, 0.9 },    -- 藍色
-    insanity = { 0.6, 0.2, 0.8 },         -- 暗紫
-    holyPower = { 0.9, 0.8, 0.4 },        -- 金黃
-    fury = { 0.8, 0.2, 0.8 },             -- 紫紅
-    pain = { 0.8, 0.4, 0.2 },             -- 橙色
-    essence = { 0.2, 0.6, 0.5 },          -- 青綠
+    comboPoints = { 0.9, 0.7, 0.2 }, -- 金色
+    runes = { 0.6, 0.2, 0.2 }, -- 深紅
+    runeReady = { 0.8, 0.1, 0.1 }, -- 亮紅
+    soulShards = { 0.6, 0.3, 0.8 }, -- 紫色
+    arcaneCharges = { 0.3, 0.6, 0.9 }, -- 藍色
+    insanity = { 0.6, 0.2, 0.8 }, -- 暗紫
+    holyPower = { 0.9, 0.8, 0.4 }, -- 金黃
+    fury = { 0.8, 0.2, 0.8 }, -- 紫紅
+    pain = { 0.8, 0.4, 0.2 }, -- 橙色
+    essence = { 0.2, 0.6, 0.5 }, -- 青綠
 }
 
 -- 框架大小（初始化時從 DB 讀取）
@@ -96,7 +96,7 @@ local _playerClass
 local resourceType
 local maxResources = 0
 local isInitialized = false
-local useBar = false  -- 是否使用進度條而非圖示
+local useBar = false -- 是否使用進度條而非圖示
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -115,27 +115,27 @@ local CLASS_RESOURCE_CONFIG = {
 
     -- 專精依賴的職業
     [CLASS_MONK] = function(specID)
-        if specID == 3 then  -- 風行
+        if specID == 3 then -- 風行
             return POWER_TYPE_COMBO_POINTS, 5, false, RESOURCE_COLORS.comboPoints
         end
         return nil, 0, false, nil
     end,
     [CLASS_MAGE] = function(specID)
-        if specID == 1 then  -- 秘法
+        if specID == 1 then -- 秘法
             return POWER_TYPE_ARCANE_CHARGES, 4, false, RESOURCE_COLORS.arcaneCharges
         end
         return nil, 0, false, nil
     end,
     [CLASS_PRIEST] = function(specID)
-        if specID == 3 then  -- 暗影
+        if specID == 3 then -- 暗影
             return POWER_TYPE_INSANITY, 100, true, RESOURCE_COLORS.insanity
         end
         return nil, 0, false, nil
     end,
     [CLASS_DEMONHUNTER] = function(specID)
-        if specID == 1 then  -- 浩劫
+        if specID == 1 then -- 浩劫
             return POWER_TYPE_FURY, 100, true, RESOURCE_COLORS.fury
-        else  -- 乘禦
+        else -- 乘禦
             return POWER_TYPE_PAIN, 100, true, RESOURCE_COLORS.pain
         end
     end,
@@ -231,7 +231,9 @@ end
 
 ---@return Frame
 local function CreateResourceFrame()
-    if resourceFrame then return resourceFrame end
+    if resourceFrame then
+        return resourceFrame
+    end
 
     -- 重載時重用現有框架
     local existingFrame = _G["LunarUI_ClassResources"]
@@ -293,7 +295,9 @@ local function UpdateResourceIcons(current, max, color)
 end
 
 local function UpdateResourceBar(current, max, color)
-    if not resourceBar then return end
+    if not resourceBar then
+        return
+    end
 
     resourceBar:SetMinMaxValues(0, max)
     resourceBar:SetValue(current)
@@ -302,8 +306,12 @@ local function UpdateResourceBar(current, max, color)
 end
 
 local function UpdateResources()
-    if not resourceFrame or not resourceFrame:IsShown() then return end
-    if not resourceType then return end
+    if not resourceFrame or not resourceFrame:IsShown() then
+        return
+    end
+    if not resourceType then
+        return
+    end
 
     local current, max
 
@@ -391,7 +399,13 @@ local function SetupResourceDisplay()
             if not resourceIcons[i] then
                 resourceIcons[i] = CreateResourceIcon(resourceFrame)
             end
-            resourceIcons[i]:SetPoint("CENTER", resourceFrame, "CENTER", startX + (i - 1) * (ICON_SIZE + ICON_SPACING), 0)
+            resourceIcons[i]:SetPoint(
+                "CENTER",
+                resourceFrame,
+                "CENTER",
+                startX + (i - 1) * (ICON_SIZE + ICON_SPACING),
+                0
+            )
             resourceIcons[i]:Show()
         end
 
@@ -409,40 +423,51 @@ end
 -- 事件處理
 --------------------------------------------------------------------------------
 
-local _eventFrame = LunarUI.CreateEventHandler(
-    {"PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "UNIT_POWER_UPDATE", "UNIT_MAXPOWER", "RUNE_POWER_UPDATE"},
-    function(_self, event, arg1)
-        if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_SPECIALIZATION_CHANGED" then
-            if LunarUI.GetHUDSetting("classResources", true) == false then return end
-            -- 僅在已初始化時處理（避免 disable 狀態下觸發）
-            if not isInitialized and event == "PLAYER_SPECIALIZATION_CHANGED" then
-                return
-            end
-            -- 立即隱藏舊資源，避免專精切換時短暫顯示過期資訊
-            for _, icon in ipairs(resourceIcons) do
-                icon:Hide()
-            end
-            if resourceBar then
-                resourceBar:Hide()
-            end
-            C_Timer.After(0.5, SetupResourceDisplay)
-        elseif event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER" then
-            if arg1 == "player" and isInitialized then
-                UpdateResources()
-            end
-        elseif event == "RUNE_POWER_UPDATE" then
-            if isInitialized then UpdateResources() end
+local _eventFrame = LunarUI.CreateEventHandler({
+    "PLAYER_ENTERING_WORLD",
+    "PLAYER_SPECIALIZATION_CHANGED",
+    "UNIT_POWER_UPDATE",
+    "UNIT_MAXPOWER",
+    "RUNE_POWER_UPDATE",
+}, function(_self, event, arg1)
+    if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_SPECIALIZATION_CHANGED" then
+        if LunarUI.GetHUDSetting("classResources", true) == false then
+            return
+        end
+        -- 僅在已初始化時處理（避免 disable 狀態下觸發）
+        if not isInitialized and event == "PLAYER_SPECIALIZATION_CHANGED" then
+            return
+        end
+        -- 立即隱藏舊資源，避免專精切換時短暫顯示過期資訊
+        for _, icon in ipairs(resourceIcons) do
+            icon:Hide()
+        end
+        if resourceBar then
+            resourceBar:Hide()
+        end
+        C_Timer.After(0.5, SetupResourceDisplay)
+    elseif event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER" then
+        if arg1 == "player" and isInitialized then
+            UpdateResources()
+        end
+    elseif event == "RUNE_POWER_UPDATE" then
+        if isInitialized then
+            UpdateResources()
         end
     end
-)
+end)
 
 --------------------------------------------------------------------------------
 -- 初始化
 --------------------------------------------------------------------------------
 
 local function Initialize()
-    if isInitialized then return end
-    if LunarUI.GetHUDSetting("classResources", true) == false then return end
+    if isInitialized then
+        return
+    end
+    if LunarUI.GetHUDSetting("classResources", true) == false then
+        return
+    end
     LoadSettings()
 
     -- 取得玩家職業
@@ -480,7 +505,9 @@ function LunarUI.RefreshClassResources()
 end
 
 function LunarUI.RebuildClassResources()
-    if InCombatLockdown() then return end
+    if InCombatLockdown() then
+        return
+    end
     LoadSettings()
     SetupResourceDisplay()
 end

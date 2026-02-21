@@ -11,7 +11,9 @@ local function SkinCommunities()
     local frame = LunarUI:SkinStandardFrame("CommunitiesFrame", {
         tabProperty = "Tabs",
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- Portrait and top-level decorations
     if frame.PortraitOverlay then

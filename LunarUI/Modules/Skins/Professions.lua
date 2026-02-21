@@ -12,7 +12,9 @@ local function SkinProfessionsFrame()
         useTabSystem = true,
         textDepth = 3,
     })
-    if not frame then return end
+    if not frame then
+        return
+    end
 
     -- 製造頁面
     if frame.CraftingPage then

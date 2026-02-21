@@ -50,7 +50,7 @@ end
 --------------------------------------------------------------------------------
 
 local debugFrame = nil
-local UPDATE_INTERVAL = 0.1  -- 更新間隔（秒）
+local UPDATE_INTERVAL = 0.1 -- 更新間隔（秒）
 
 --[[
     建立除錯面板
@@ -58,7 +58,9 @@ local UPDATE_INTERVAL = 0.1  -- 更新間隔（秒）
 ]]
 ---@return Frame
 local function CreateDebugFrame()
-    if debugFrame then return debugFrame end
+    if debugFrame then
+        return debugFrame
+    end
 
     -- 重載時重用現有框架
     local existingFrame = _G["LunarUIDebugFrame"]
@@ -75,8 +77,12 @@ local function CreateDebugFrame()
     debugFrame:SetMovable(true)
     debugFrame:EnableMouse(true)
     debugFrame:RegisterForDrag("LeftButton")
-    debugFrame:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    debugFrame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    debugFrame:SetScript("OnDragStart", function(self)
+        self:StartMoving()
+    end)
+    debugFrame:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+    end)
 
     -- 背景樣式
     debugFrame:SetBackdrop({
@@ -108,7 +114,9 @@ local function CreateDebugFrame()
     -- 更新腳本
     debugFrame:SetScript("OnUpdate", function(self, delta)
         self.elapsed = (self.elapsed or 0) + delta
-        if self.elapsed < UPDATE_INTERVAL then return end
+        if self.elapsed < UPDATE_INTERVAL then
+            return
+        end
         self.elapsed = 0
 
         if not LunarUI.db or not LunarUI.db.profile or not LunarUI.db.profile.debug then
