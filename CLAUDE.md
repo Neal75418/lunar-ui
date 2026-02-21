@@ -7,6 +7,7 @@
 - **組成**：`LunarUI/`（主體）、`LunarUI_Options/`（LoadOnDemand 設定介面）
 - **進入點**：`Core/Init.lua` 最先執行，建立 `Engine.LunarUI`
 - **模組存取**：`local _ADDON_NAME, Engine = ...` → `Engine.LunarUI`
+- **Skin 模組**：22 個 Blizzard 介面換膚（`LunarUI/Modules/Skins/`）
 
 ---
 
@@ -73,6 +74,11 @@ LunarUI:RegisterMovableFrame("name", frame, "顯示名稱")
 LunarUI:RegisterSkin("name", "blizzAddonName", function() ... end)
 LunarUI:MarkSkinned(frame)  -- 防重複，已處理則回傳 false
 
+-- SkinStandardFrame 工廠（內建 MarkSkinned 防護）
+-- 回傳 nil = 框架不存在；回傳 frame = 首次 skin 或已 skin
+LunarUI:SkinStandardFrame("FrameName", { tabPrefix = "...", tabCount = N })
+-- ApplySkin 層級也有 skinned[name] 防護，skin 函數最多執行一次（+ 失敗重試一次）
+
 -- 統一字體設定 + 自動註冊到 fontRegistry
 LunarUI.SetFont(fs, size, flags)
 
@@ -88,6 +94,9 @@ LunarUI:ApplyFontSettings()
 - oUF 命名空間為 `LunarUF`（透過 TOC 的 `X-oUF` 設定）
 - LibActionButton：`local LAB = LibStub("LibActionButton-1.0")`
 - 字體統一使用 `LunarUI.SetFont(fs, size, flags)`，禁止硬編碼 `STANDARD_TEXT_FONT`
+- FloatingCombatText 預設 opt-in 關閉（`fctEnabled = false`），`LunarUI.Sanitize(val)` 用 `tonumber(tostring(val))` 打斷 CLEU taint 鏈
+- 事件頻率監控：`/lunar profile events on|off`，純計數 + 每秒速率
+- Skin 標籤 locale key 放 `Options.lua` 的 `local L` 表，**不放** `enUS.lua`/`zhTW.lua`
 
 ---
 
@@ -114,6 +123,17 @@ LunarUI:ApplyFontSettings()
 - 高頻事件用反向映射表 O(1) 查詢（如 `deathUnitMap[unit]` + 惰性重建）
 - 動畫期間快取設定值（如 `cachedFadeDuration`），避免每幀查 DB
 - FontString 用 weak table registry（`__mode = "k"`），框架銷毀時自動回收
+
+---
+
+## 測試框架
+
+- **工具**：busted + luacov，設定檔 `.busted` / `.luacov`
+- **環境模擬**：`spec/wow_mock.lua`（WoW API stub）、`spec/loader.lua`（模擬 addon 載入 `(_ADDON_NAME, Engine)` varargs）
+- **匯出慣例**：`LunarUI.FnName = localFn`，讓 local 純函數可被測試存取
+- **命名衝突**：多模組有同名 local 函數時用前綴區分（如 `BagsGetItemLevel` vs `GetItemLevel`）
+- **Mock 要點**：模組層級有副作用時（`CreateFrame`、`RegisterModule`），需在 spec 內提供完整 stub
+- **驗證**：每次修改後跑 `busted spec/` + `luacheck .` + `stylua --check .`
 
 ---
 
