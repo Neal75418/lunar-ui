@@ -542,6 +542,9 @@ local defaults = {
                 pvp = true,
                 settings = true,
                 trade = true,
+                calendar = true,
+                weeklyrewards = true,
+                addonlist = true,
             },
         },
 

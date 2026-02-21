@@ -114,6 +114,9 @@ local L = {
     skinEncounterJournal = "Encounter Journal",
     skinAuctionHouse = "Auction House",
     skinCommunities = "Communities",
+    skinCalendar = "Calendar",
+    skinWeeklyRewards = "Great Vault",
+    skinAddonList = "Addon List",
 
     -- Profiles
     profiles = "Profiles",
@@ -2304,6 +2307,39 @@ local options = {
                     end,
                     set = function(_, v)
                         GetDB().skins.blizzard.communities = v
+                    end,
+                },
+                calendar = {
+                    order = 16,
+                    type = "toggle",
+                    name = L.skinCalendar,
+                    get = function()
+                        return GetDB().skins.blizzard.calendar
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.calendar = v
+                    end,
+                },
+                weeklyrewards = {
+                    order = 17,
+                    type = "toggle",
+                    name = L.skinWeeklyRewards,
+                    get = function()
+                        return GetDB().skins.blizzard.weeklyrewards
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.weeklyrewards = v
+                    end,
+                },
+                addonlist = {
+                    order = 18,
+                    type = "toggle",
+                    name = L.skinAddonList,
+                    get = function()
+                        return GetDB().skins.blizzard.addonlist
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.addonlist = v
                     end,
                 },
             },

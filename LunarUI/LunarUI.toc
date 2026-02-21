@@ -96,3 +96,6 @@ Modules\Skins\Professions.lua
 Modules\Skins\PVP.lua
 Modules\Skins\Settings.lua
 Modules\Skins\Trade.lua
+Modules\Skins\Calendar.lua
+Modules\Skins\WeeklyRewards.lua
+Modules\Skins\AddonList.lua

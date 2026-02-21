@@ -477,6 +477,21 @@ read_globals = {
     -- === Other Frames ===
     "MerchantFrame",
     "MonkStaggerBar",
+    "CalendarFrame",
+    "CalendarCloseButton",
+    "CalendarPrevMonthButton",
+    "CalendarNextMonthButton",
+    "CalendarCreateEventFrame",
+    "CalendarCreateEventCreateButton",
+    "CalendarCreateEventCloseButton",
+    "CalendarViewEventFrame",
+    "CalendarViewEventCloseButton",
+    "WeeklyRewardsFrame",
+    "AddonList",
+    "AddonListOkayButton",
+    "AddonListCancelButton",
+    "AddonListEnableAllButton",
+    "AddonListDisableAllButton",
 
     -- === Slash Commands (set by wow_api.def.lua) ===
     -- Intentionally in read_globals since main code only reads these
