@@ -49,7 +49,7 @@ graph TB
         DT["DataTexts"]
         Loot["Loot"]
         Auto["Automation"]
-        Skins["Skins ×14"]
+        Skins["Skins ×22"]
     end
 
     subgraph Options["LunarUI_Options<br/>LoadOnDemand"]
@@ -121,7 +121,7 @@ stateDiagram-v2
 |          | DataTexts          | 可自訂的文字資訊覆蓋層                                              |
 |          | Loot               | 拾取框架美化                                                   |
 |          | Automation         | 自動賣灰、自動郵件                                                |
-|          | Skins              | 14 個 Blizzard 介面換膚                                       |
+|          | Skins              | 22 個 Blizzard 介面換膚                                       |
 | **設定**   | LunarUI_Options    | AceConfig 設定介面（LoadOnDemand）                             |
 
 ---
