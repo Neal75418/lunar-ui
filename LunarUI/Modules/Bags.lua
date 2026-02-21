@@ -779,6 +779,44 @@ local function UpdateSlot(button)
 end
 
 --------------------------------------------------------------------------------
+-- 共用搜尋過濾（背包 / 銀行共用）
+--------------------------------------------------------------------------------
+
+local function SearchSlots(searchBoxRef, slotList, errorKey)
+    if not searchBoxRef then
+        return
+    end
+    local text = searchBoxRef:GetText():lower()
+    for _, button in pairs(slotList) do
+        if button and button:IsShown() and button.bag and button.slot then
+            local success, err = pcall(function()
+                local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
+                if itemLink then
+                    local itemName = C_Item.GetItemInfo(itemLink)
+                    if itemName then
+                        if text == "" or itemName:lower():find(text, 1, true) then
+                            button:SetAlpha(1)
+                        else
+                            button:SetAlpha(SEARCH_DIM_ALPHA)
+                        end
+                    else
+                        button:SetAlpha(1)
+                    end
+                else
+                    button:SetAlpha(text == "" and 1 or SEARCH_DIM_ALPHA)
+                end
+            end)
+            if not success then
+                button:SetAlpha(1)
+                if LunarUI:IsDebugMode() then
+                    LunarUI:Debug((L[errorKey] or "Search error: ") .. tostring(err))
+                end
+            end
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
 -- 背包框架建立
 --------------------------------------------------------------------------------
 
@@ -887,40 +925,9 @@ local function CreateBagFrame()
     searchBox:SetSize(120, 20)
     searchBox:SetPoint("TOPRIGHT", closeButton, "TOPLEFT", -8, -2)
 
-    -- 搜尋邏輯（提取為 named function 避免每次按鍵建立 closure）
+    -- 搜尋邏輯（委託共用 SearchSlots）
     local function PerformBagSearch()
-        if not searchBox then
-            return
-        end
-        local text = searchBox:GetText():lower()
-        for _, button in pairs(slots) do
-            if button and button:IsShown() and button.bag and button.slot then
-                local success, err = pcall(function()
-                    local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
-                    if itemLink then
-                        local itemName = C_Item.GetItemInfo(itemLink)
-                        if itemName then
-                            if text == "" or itemName:lower():find(text, 1, true) then
-                                button:SetAlpha(1)
-                            else
-                                button:SetAlpha(SEARCH_DIM_ALPHA)
-                            end
-                        else
-                            button:SetAlpha(1)
-                        end
-                    else
-                        button:SetAlpha(text == "" and 1 or SEARCH_DIM_ALPHA)
-                    end
-                end)
-
-                if not success then
-                    button:SetAlpha(1)
-                    if LunarUI:IsDebugMode() then
-                        LunarUI:Debug((L["BagSearchError"] or "Bag search error: ") .. tostring(err))
-                    end
-                end
-            end
-        end
+        SearchSlots(searchBox, slots, "BagSearchError")
     end
 
     -- 搜尋防抖動：使用 HookScript 保留 SearchBoxTemplate 內建的佔位文字隱藏行為
@@ -1395,40 +1402,10 @@ local function CreateBankFrame()
         reagentSlots[slot] = button
     end
 
-    -- 定義銀行搜尋過濾函數（供 OnTextChanged 與 SetActiveTab 共用）
+    -- 銀行搜尋過濾（委託共用 SearchSlots，供 OnTextChanged 與 SetActiveTab 共用）
     ApplyBankSearch = function()
-        if not bankSearchBox then
-            return
-        end
-        local text = bankSearchBox:GetText():lower()
-        local searchSlots = bankFrame.activeTab == "reagent" and bankFrame.reagentSlots or bankSlots
-        for _, button in pairs(searchSlots) do
-            if button and button:IsShown() then
-                local success, err = pcall(function()
-                    local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
-                    if itemLink then
-                        local itemName = C_Item.GetItemInfo(itemLink)
-                        if itemName then
-                            if text == "" or itemName:lower():find(text, 1, true) then
-                                button:SetAlpha(1)
-                            else
-                                button:SetAlpha(SEARCH_DIM_ALPHA)
-                            end
-                        else
-                            button:SetAlpha(1)
-                        end
-                    else
-                        button:SetAlpha(text == "" and 1 or SEARCH_DIM_ALPHA)
-                    end
-                end)
-                if not success then
-                    button:SetAlpha(1)
-                    if LunarUI:IsDebugMode() then
-                        LunarUI:Debug((L["BankSearchError"] or "Bank search error: ") .. tostring(err))
-                    end
-                end
-            end
-        end
+        local activeSlots = bankFrame.activeTab == "reagent" and bankFrame.reagentSlots or bankSlots
+        SearchSlots(bankSearchBox, activeSlots, "BankSearchError")
     end
 
     -- 頁籤切換邏輯
