@@ -263,6 +263,9 @@ function LunarUI:SkinStandardFrame(frameName, options)
     if not frame or not frame.GetObjectType then
         return nil
     end
+    if not LunarUI.MarkSkinned(frame) then
+        return frame
+    end
     options = options or {}
 
     self:SkinFrame(frame, { textDepth = options.textDepth or 3, noStrip = options.noStrip })
