@@ -39,29 +39,22 @@ function LunarUI:SlashCommand(input)
 
     if not cmd or cmd == "help" then
         self:PrintHelp()
-
     elseif cmd == "toggle" or cmd == "on" or cmd == "off" then
         self:ToggleAddon(cmd)
-
     elseif cmd == "debug" then
         self:ToggleDebug()
-
     elseif cmd == "status" then
         self:PrintStatus()
-
     elseif cmd == "config" or cmd == "options" then
         self:OpenOptions()
-
     elseif cmd == "reset" then
         if args[2] == "all" then
             LunarUI.ResetAllPositions()
         else
             self:ResetPosition()
         end
-
     elseif cmd == "test" then
         self:RunTest(args[2])
-
     elseif cmd == "install" then
         -- 重置安裝完成旗標並重新顯示精靈
         if self.db.global then
@@ -72,69 +65,86 @@ function LunarUI:SlashCommand(input)
         else
             self:Print(_L["InstallWizardUnavailable"] or "Install wizard unavailable")
         end
-
     elseif cmd == "move" then
         LunarUI.ToggleMoveMode()
-
     elseif cmd == "keybind" then
         if self.ToggleKeybindMode then
             self:ToggleKeybindMode()
         else
             self:Print(_L["KeybindModeUnavailable"] or "Keybind mode unavailable")
         end
-
     elseif cmd == "export" then
         if self.ShowExportFrame then
             self:ShowExportFrame()
         else
             self:Print(_L["ExportUnavailable"] or "Export unavailable")
         end
-
     elseif cmd == "import" then
         if self.ShowImportFrame then
             self:ShowImportFrame()
         else
             self:Print(_L["ImportUnavailable"] or "Import unavailable")
         end
-
+    elseif cmd == "profile" then
+        local sub = args[2]
+        if sub == "on" then
+            self:EnableProfiling()
+        elseif sub == "off" then
+            self:DisableProfiling()
+        elseif sub == "show" or not sub then
+            self:PrintProfilingResults()
+        end
     elseif cmd == "debugauras" then
         if self.DebugAuraFrames then
             self.DebugAuraFrames()
         else
             self:Print("DebugAuraFrames not available")
         end
-
     elseif cmd == "debugvigor" then
         local sub = args[2]
         if not sub then
             -- 無參數：執行一次性診斷 + 切換持續監控
             self:DebugVigorFrames()
-            if not self.db.global then self.db.global = {} end
+            if not self.db.global then
+                self.db.global = {}
+            end
             self.db.global._debugVigor = not self.db.global._debugVigor
             if self.db.global._debugVigor then
-                if LunarUI.SetupVigorTrace then LunarUI.SetupVigorTrace() end
-                self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r（VigorTrace/DeepDiag 訊息已啟用）")
+                if LunarUI.SetupVigorTrace then
+                    LunarUI.SetupVigorTrace()
+                end
+                self:Print(
+                    "|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r（VigorTrace/DeepDiag 訊息已啟用）"
+                )
             else
-                if LunarUI.CleanupVigorTrace then LunarUI.CleanupVigorTrace() end
+                if LunarUI.CleanupVigorTrace then
+                    LunarUI.CleanupVigorTrace()
+                end
                 self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
             end
         elseif sub == "on" then
-            if not self.db.global then self.db.global = {} end
+            if not self.db.global then
+                self.db.global = {}
+            end
             self.db.global._debugVigor = true
-            if LunarUI.SetupVigorTrace then LunarUI.SetupVigorTrace() end
+            if LunarUI.SetupVigorTrace then
+                LunarUI.SetupVigorTrace()
+            end
             self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r")
         elseif sub == "off" then
-            if not self.db.global then self.db.global = {} end
+            if not self.db.global then
+                self.db.global = {}
+            end
             self.db.global._debugVigor = false
-            if LunarUI.CleanupVigorTrace then LunarUI.CleanupVigorTrace() end
+            if LunarUI.CleanupVigorTrace then
+                LunarUI.CleanupVigorTrace()
+            end
             self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
         else
             self:DebugVigorFrames()
         end
-
     elseif cmd == "testvigor" then
         self:ToggleTestVigor()
-
     else
         self:Print(string.format(_L["UnknownCommand"] or "Unknown command: %s", cmd))
         self:PrintHelp()
@@ -163,6 +173,7 @@ function LunarUI:PrintHelp()
     self:Print("  |cffffd100/lunar move|r - " .. (L["CmdMove"] or "Toggle frame mover"))
     self:Print("  |cffffd100/lunar reset|r - " .. (L["CmdReset"] or "Reset frame positions"))
     self:Print("  |cffffd100/lunar test|r - " .. (L["CmdTest"] or "Run test"))
+    self:Print("  |cffffd100/lunar profile|r - " .. (L["CmdProfile"] or "Show profiling results"))
 end
 
 --[[
@@ -172,8 +183,22 @@ function LunarUI:PrintStatus()
     local L = Engine.L or {}
     self:Print(L["StatusTitle"] or "|cff8882ffLunarUI Status:|r")
     self:Print("  " .. string.format(L["StatusVersion"] or "Version: %s", self.version))
-    self:Print("  " .. string.format(L["StatusEnabled"] or "Enabled: %s", self.db.profile.enabled and ("|cff00ff00" .. (L["Yes"] or "Yes") .. "|r") or ("|cffff0000" .. (L["No"] or "No") .. "|r")))
-    self:Print("  " .. string.format(L["StatusDebug"] or "Debug: %s", self.db.profile.debug and ("|cff00ff00" .. (L["On"] or "ON") .. "|r") or ("|cffff0000" .. (L["Off"] or "OFF") .. "|r")))
+    self:Print(
+        "  "
+            .. string.format(
+                L["StatusEnabled"] or "Enabled: %s",
+                self.db.profile.enabled and ("|cff00ff00" .. (L["Yes"] or "Yes") .. "|r")
+                    or ("|cffff0000" .. (L["No"] or "No") .. "|r")
+            )
+    )
+    self:Print(
+        "  "
+            .. string.format(
+                L["StatusDebug"] or "Debug: %s",
+                self.db.profile.debug and ("|cff00ff00" .. (L["On"] or "ON") .. "|r")
+                    or ("|cffff0000" .. (L["Off"] or "OFF") .. "|r")
+            )
+    )
 end
 
 --------------------------------------------------------------------------------
@@ -234,14 +259,16 @@ function LunarUI:OpenOptions()
     -- 備用方案：使用暴雪 Settings API（WoW 10.0+）
     if _G.Settings and _G.Settings.OpenToCategory then
         local ok, _err = pcall(_G.Settings.OpenToCategory, "LunarUI")
-        if ok then return end
+        if ok then
+            return
+        end
         -- 如果失敗，嘗試舊版 API
     end
 
     -- 備用方案：舊版介面選項 API
     if _G.InterfaceOptionsFrame_OpenToCategory then
         _G.InterfaceOptionsFrame_OpenToCategory("LunarUI")
-        _G.InterfaceOptionsFrame_OpenToCategory("LunarUI")  -- 呼叫兩次確保打開
+        _G.InterfaceOptionsFrame_OpenToCategory("LunarUI") -- 呼叫兩次確保打開
         return
     end
 
@@ -254,7 +281,9 @@ end
 ]]
 function LunarUI:ResetPosition()
     -- 重置單位框架位置為預設值
-    if not self.db or not self.db.defaults or not self.db.defaults.profile then return end
+    if not self.db or not self.db.defaults or not self.db.defaults.profile then
+        return
+    end
     for unit, data in pairs(self.db.defaults.profile.unitframes) do
         if self.db.profile.unitframes[unit] then
             self.db.profile.unitframes[unit].x = data.x

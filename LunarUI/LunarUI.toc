@@ -41,6 +41,7 @@ Core\Options.lua
 Core\InstallWizard.lua
 Core\Commands.lua
 Core\VigorDebug.lua
+Core\Profiler.lua
 Core\Debug.lua
 Core\Tags.lua
 

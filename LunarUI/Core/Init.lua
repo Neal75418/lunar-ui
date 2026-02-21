@@ -10,13 +10,8 @@ local ADDON_NAME, Engine = ...
 -- 建立 Ace3 插件
 --------------------------------------------------------------------------------
 
-local LunarUI = LibStub("AceAddon-3.0"):NewAddon(
-    ADDON_NAME,
-    "AceConsole-3.0",
-    "AceEvent-3.0",
-    "AceTimer-3.0",
-    "AceHook-3.0"
-)
+local LunarUI =
+    LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "AceHook-3.0")
 
 if not LunarUI then
     print("|cffff0000[LunarUI]|r 插件建立失敗！")
@@ -59,7 +54,12 @@ local function ExecuteModuleCallback(entry)
                 pendingDelayedModules = pendingDelayedModules - 1
                 return
             end
-            local ok, err = pcall(entry.onEnable)
+            local ok, err
+            if LunarUI.ProfileModuleInit then
+                ok, err = LunarUI:ProfileModuleInit(entry.name, entry.onEnable)
+            else
+                ok, err = pcall(entry.onEnable)
+            end
             if not ok then
                 print("|cffff6666[LunarUI]|r Module '" .. (entry.name or "?") .. "' failed: " .. tostring(err))
                 print("|cffff6666[LunarUI]|r Stack trace:")
@@ -72,7 +72,12 @@ local function ExecuteModuleCallback(entry)
             end
         end)
     else
-        local ok, err = pcall(entry.onEnable)
+        local ok, err
+        if LunarUI.ProfileModuleInit then
+            ok, err = LunarUI:ProfileModuleInit(entry.name, entry.onEnable)
+        else
+            ok, err = pcall(entry.onEnable)
+        end
         if not ok then
             print("|cffff6666[LunarUI]|r Module '" .. (entry.name or "?") .. "' failed: " .. tostring(err))
             print("|cffff6666[LunarUI]|r Stack trace:")
@@ -92,7 +97,9 @@ end
         delay      number    onEnable 延遲秒數，預設 0（可選）
 ]]
 function LunarUI:RegisterModule(name, callbacks)
-    if not name or not callbacks then return end
+    if not name or not callbacks then
+        return
+    end
     local entry = {
         name = name,
         onEnable = callbacks.onEnable or function() end,
@@ -198,8 +205,12 @@ local gameMenuHooked = false
 local gameMenuButtonAdded = false
 
 function LunarUI.SetupGameMenuButton()
-    if gameMenuHooked then return end
-    if not _G.GameMenuFrame or not _G.GameMenuFrame.InitButtons then return end
+    if gameMenuHooked then
+        return
+    end
+    if not _G.GameMenuFrame or not _G.GameMenuFrame.InitButtons then
+        return
+    end
     gameMenuHooked = true
 
     -- WoW 11.0+ 使用 GameMenuFrame:AddButton() API
@@ -207,12 +218,16 @@ function LunarUI.SetupGameMenuButton()
     -- 注意：不交換 buttonPool 中的按鈕位置，避免 taint 風險
     hooksecurefunc(_G.GameMenuFrame, "InitButtons", function(self)
         -- 防止重複添加按鈕（InitButtons 可能被多次調用）
-        if gameMenuButtonAdded then return end
+        if gameMenuButtonAdded then
+            return
+        end
         gameMenuButtonAdded = true
 
         self:AddButton("LunarUI", function()
             PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
-            if _G.HideUIPanel then _G.HideUIPanel(_G.GameMenuFrame) end
+            if _G.HideUIPanel then
+                _G.HideUIPanel(_G.GameMenuFrame)
+            end
             local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
             if AceConfigDialog then
                 AceConfigDialog:Open("LunarUI")

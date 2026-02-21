@@ -64,6 +64,7 @@ read_globals = {
     "print",
     "unpack",
     "debugstack",
+    "debugprofilestop",
     "geterrorhandler",
     "seterrorhandler",
     "hooksecurefunc",
