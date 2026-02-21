@@ -87,7 +87,16 @@ function LunarUI:SlashCommand(input)
         end
     elseif cmd == "profile" then
         local sub = args[2]
-        if sub == "on" then
+        if sub == "events" then
+            local sub2 = args[3]
+            if sub2 == "on" then
+                self:EnableEventProfiling()
+            elseif sub2 == "off" then
+                self:DisableEventProfiling()
+            else
+                self:PrintEventTimings()
+            end
+        elseif sub == "on" then
             self:EnableProfiling()
         elseif sub == "off" then
             self:DisableProfiling()
@@ -174,6 +183,7 @@ function LunarUI:PrintHelp()
     self:Print("  |cffffd100/lunar reset|r - " .. (L["CmdReset"] or "Reset frame positions"))
     self:Print("  |cffffd100/lunar test|r - " .. (L["CmdTest"] or "Run test"))
     self:Print("  |cffffd100/lunar profile|r - " .. (L["CmdProfile"] or "Show profiling results"))
+    self:Print("  |cffffd100/lunar profile events|r - " .. (L["CmdProfileEvents"] or "Event frequency monitor"))
 end
 
 --[[
