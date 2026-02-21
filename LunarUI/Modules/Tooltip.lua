@@ -729,6 +729,10 @@ end
 
 -- 匯出
 LunarUI.InitializeTooltip = InitializeTooltip
+LunarUI.GetLevelDifficultyColor = GetLevelDifficultyColor
+LunarUI.GetUnitColor = GetUnitColor
+LunarUI.GetInspectItemLevel = GetInspectItemLevel
+LunarUI.GetInspectSpec = GetInspectSpec
 
 LunarUI:RegisterModule("Tooltip", {
     onEnable = InitializeTooltip,
