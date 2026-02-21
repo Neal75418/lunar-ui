@@ -499,7 +499,7 @@ local defaults = {
             crBarHeight = 10,
 
             -- FloatingCombatText 設定
-            fctEnabled = true,
+            fctEnabled = false,
             fctFontSize = 24,
             fctCritScale = 1.5,
             fctDuration = 1.5,

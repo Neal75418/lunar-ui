@@ -352,6 +352,10 @@ L["HUDCRIconSizeDesc"] = "Pixel size of resource point icons"
 L["HUDCRIconSpacingDesc"] = "Distance between resource points"
 L["HUDCRBarHeight"] = "Bar Height"
 L["HUDCRBarHeightDesc"] = "Height of the resource bar (when using bar display)"
+L["HUDFCTEnabled"] = "Floating Combat Text"
+L["HUDFCTEnabledDesc"] = "Show floating damage/healing numbers (experimental)"
+L["HUDFCTWarning"] =
+    "|cffff6666Warning:|r CLEU environment taint may cause UI errors in rare cases. Disable if you experience issues."
 
 -- Frame Mover Options
 L["FrameMover"] = "Frame Mover"

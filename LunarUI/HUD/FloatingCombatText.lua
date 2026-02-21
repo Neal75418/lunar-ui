@@ -69,9 +69,9 @@ local InQuad = LunarUI.Easing.InQuad
 local function GetSettings()
     local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
     if not db then
-        return true, 24, 1.5, 1.5, true, true, true
+        return false, 24, 1.5, 1.5, true, true, true
     end
-    return db.fctEnabled ~= false,
+    return db.fctEnabled == true,
         db.fctFontSize or 24,
         db.fctCritScale or 1.5,
         db.fctDuration or 1.5,
@@ -399,6 +399,22 @@ end
 --------------------------------------------------------------------------------
 -- 模組註冊
 --------------------------------------------------------------------------------
+
+-- 匯出初始化/清理函數供 Options 即時切換使用
+LunarUI.InitFCT = function()
+    if isEnabled then
+        return
+    end
+    local enabled = GetSettings()
+    if not enabled then
+        return
+    end
+    fctFrame = CreateFCTFrame()
+    fctFrame:Show()
+    isEnabled = true
+end
+
+LunarUI.CleanupFCT = CleanupFCT
 
 LunarUI:RegisterModule("FloatingCombatText", {
     onEnable = function()

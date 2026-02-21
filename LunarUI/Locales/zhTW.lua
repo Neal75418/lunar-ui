@@ -354,6 +354,10 @@ L["HUDCRIconSizeDesc"] = "資源點圖示的像素大小"
 L["HUDCRIconSpacingDesc"] = "資源點之間的距離"
 L["HUDCRBarHeight"] = "條狀高度"
 L["HUDCRBarHeightDesc"] = "資源條的高度（使用條狀顯示時）"
+L["HUDFCTEnabled"] = "浮動戰鬥文字"
+L["HUDFCTEnabledDesc"] = "顯示浮動傷害/治療數字（實驗性功能）"
+L["HUDFCTWarning"] =
+    "|cffff6666警告：|r CLEU 環境 taint 在少數情況下可能導致 UI 錯誤。如遇問題請停用此功能。"
 
 -- 框架移動器選項
 L["FrameMover"] = "框架移動器"

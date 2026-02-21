@@ -663,6 +663,36 @@ local options = {
                             end,
                             width = "full",
                         },
+                        fctEnabled = {
+                            order = 15,
+                            type = "toggle",
+                            name = L["HUDFCTEnabled"],
+                            desc = L["HUDFCTEnabledDesc"],
+                            get = function()
+                                return GetDB().hud.fctEnabled
+                            end,
+                            set = function(_, v)
+                                GetDB().hud.fctEnabled = v
+                                if v then
+                                    if LunarUI.InitFCT then
+                                        LunarUI.InitFCT()
+                                    end
+                                else
+                                    if LunarUI.CleanupFCT then
+                                        LunarUI.CleanupFCT()
+                                    end
+                                end
+                            end,
+                            width = "full",
+                        },
+                        fctWarning = {
+                            order = 16,
+                            type = "description",
+                            name = L["HUDFCTWarning"],
+                            hidden = function()
+                                return not GetDB().hud.fctEnabled
+                            end,
+                        },
                     },
                 },
 

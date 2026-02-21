@@ -64,7 +64,7 @@ HUD\PerformanceMonitor.lua
 HUD\ClassResources.lua
 HUD\CooldownTracker.lua
 HUD\AuraFrames.lua
-# HUD\FloatingCombatText.lua  -- 停用：CLEU 執行環境層級 taint，無 addon 層解法（程式碼已備 Sanitize+佇列機制，待 C_CombatLog API 啟用）
+HUD\FloatingCombatText.lua
 
 # Modules (Non-combat UI)
 Modules\Automation.lua
