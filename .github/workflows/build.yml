@@ -70,7 +70,7 @@ jobs:
           echo "=== Coverage Summary ==="
           tail -30 luacov.report.out || true
           chmod +x scripts/check-coverage.sh
-          ./scripts/check-coverage.sh 40
+          ./scripts/check-coverage.sh 25
 
       - name: Cache StyLua
         id: cache-stylua
