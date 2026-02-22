@@ -741,6 +741,7 @@ LunarUI.TooltipGetItemLevel = GetItemLevel
 LunarUI.GetCachedInspectData = GetCachedInspectData
 LunarUI.CacheInspectData = CacheInspectData
 LunarUI.ClearInspectCache = ClearInspectCache
+LunarUI.RequestInspect = RequestInspect
 
 LunarUI:RegisterModule("Tooltip", {
     onEnable = InitializeTooltip,

@@ -1,7 +1,7 @@
 --[[
     Unit tests for Tooltip module pure functions
     Tests: GetLevelDifficultyColor, GetUnitColor, GetInspectItemLevel, GetInspectSpec,
-           TooltipGetItemLevel, GetCachedInspectData, CacheInspectData
+           TooltipGetItemLevel, GetCachedInspectData, CacheInspectData, RequestInspect
 ]]
 
 require("spec.wow_mock")
@@ -486,5 +486,103 @@ describe("CacheInspectData", function()
         local data = LunarUI.GetCachedInspectData("Player-1234")
         assert.equals(480, data.ilvl)
         assert.is_nil(data.spec)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- RequestInspect
+--------------------------------------------------------------------------------
+
+describe("RequestInspect", function()
+    local notifyCalled
+    -- 使用遞增時間基準，避免跨測試 lastInspectTime 殘留導致節流
+    local timeBase = 100000
+
+    before_each(function()
+        timeBase = timeBase + 100
+        LunarUI.ClearInspectCache()
+        notifyCalled = false
+        _G.CanInspect = function()
+            return true
+        end
+        _G.InCombatLockdown = function()
+            return false
+        end
+        _G.UnitGUID = function()
+            return "Player-5678"
+        end
+        _G.NotifyInspect = function()
+            notifyCalled = true
+        end
+        -- 用遞增時間確保不被前次測試節流
+        _G.GetTime = function()
+            return timeBase
+        end
+        -- 先發一次請求來重置 lastInspectTime
+        LunarUI.RequestInspect("target")
+        notifyCalled = false
+        -- 推進時間超過節流間隔
+        _G.GetTime = function()
+            return timeBase + 2
+        end
+        -- 清除快取
+        LunarUI.ClearInspectCache()
+    end)
+
+    it("calls NotifyInspect when all conditions pass", function()
+        _G.UnitGUID = function()
+            return "Player-NEW"
+        end
+        LunarUI.RequestInspect("target")
+        assert.is_true(notifyCalled)
+    end)
+
+    it("does not call NotifyInspect when CanInspect is false", function()
+        _G.CanInspect = function()
+            return false
+        end
+        LunarUI.RequestInspect("target")
+        assert.is_false(notifyCalled)
+    end)
+
+    it("does not call NotifyInspect in combat", function()
+        _G.InCombatLockdown = function()
+            return true
+        end
+        LunarUI.RequestInspect("target")
+        assert.is_false(notifyCalled)
+    end)
+
+    it("does not call NotifyInspect when guid is nil", function()
+        _G.UnitGUID = function()
+            return nil
+        end
+        LunarUI.RequestInspect("target")
+        assert.is_false(notifyCalled)
+    end)
+
+    it("does not call NotifyInspect when cache hit", function()
+        local guid = "Player-CACHED"
+        _G.UnitGUID = function()
+            return guid
+        end
+        LunarUI.CacheInspectData(guid, 480, "Arcane")
+        LunarUI.RequestInspect("target")
+        assert.is_false(notifyCalled)
+    end)
+
+    it("throttles rapid requests", function()
+        _G.UnitGUID = function()
+            return "Player-A"
+        end
+        LunarUI.RequestInspect("target")
+        assert.is_true(notifyCalled)
+        -- 不推進時間，嘗試第二次請求
+        notifyCalled = false
+        _G.UnitGUID = function()
+            return "Player-B"
+        end
+        LunarUI.RequestInspect("target")
+        assert.is_false(notifyCalled)
     end)
 end)

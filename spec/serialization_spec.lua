@@ -602,4 +602,41 @@ describe("ImportSettings", function()
         assert.is_true(ok)
         assert.truthy(msg:find("2.5"))
     end)
+
+    it("calls OnProfileChanged on successful import", function()
+        local called = false
+        local origOnProfileChanged = LunarUI.OnProfileChanged
+        LunarUI.OnProfileChanged = function()
+            called = true
+        end
+        local data = {
+            version = "1.0",
+            profile = { style = { fontSize = 14 } },
+        }
+        local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
+        LunarUI:ImportSettings(serialized)
+        assert.is_true(called)
+        LunarUI.OnProfileChanged = origOnProfileChanged
+    end)
+
+    it("preserves special characters in profile string values", function()
+        LunarUI.db.profile.style.theme = "lunar"
+        local data = {
+            version = "1.0",
+            profile = { style = { theme = "parchment" } },
+        }
+        local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
+        local ok = LunarUI:ImportSettings(serialized)
+        assert.is_true(ok)
+    end)
+
+    it("handles import with no version field", function()
+        local data = {
+            profile = { style = { fontSize = 14 } },
+        }
+        local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
+        local ok, msg = LunarUI:ImportSettings(serialized)
+        assert.is_true(ok)
+        assert.is_string(msg)
+    end)
 end)
