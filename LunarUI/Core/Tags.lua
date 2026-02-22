@@ -280,3 +280,5 @@ Tags.Events["lunar:group"] = "GROUP_ROSTER_UPDATE"
 -- 匯出輔助函數供其他模組使用
 LunarUI.ShortValue = ShortValue
 LunarUI.AbbreviateName = AbbreviateName
+LunarUI.UnitStatusText = UnitStatusText
+LunarUI.TagMethods = Tags.Methods
