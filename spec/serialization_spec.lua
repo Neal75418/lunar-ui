@@ -1,6 +1,6 @@
 --[[
     Unit tests for LunarUI/Core/Serialization.lua
-    Tests SerializeValue and DeserializeString round-trip integrity
+    Tests SerializeValue, DeserializeString, MergeTable round-trip integrity
 ]]
 
 require("spec.wow_mock")
@@ -638,5 +638,29 @@ describe("ImportSettings", function()
         local ok, msg = LunarUI:ImportSettings(serialized)
         assert.is_true(ok)
         assert.is_string(msg)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- MergeTable type guard
+--------------------------------------------------------------------------------
+
+describe("MergeTable type guard", function()
+    it("handles string source gracefully", function()
+        local target = { a = 1 }
+        LunarUI.MergeTable(target, "not a table", { a = 0 })
+        assert.equals(1, target.a)
+    end)
+
+    it("handles numeric source gracefully", function()
+        local target = { a = 1 }
+        LunarUI.MergeTable(target, 42, { a = 0 })
+        assert.equals(1, target.a)
+    end)
+
+    it("handles boolean source gracefully", function()
+        local target = { a = 1 }
+        LunarUI.MergeTable(target, true, { a = 0 })
+        assert.equals(1, target.a)
     end)
 end)

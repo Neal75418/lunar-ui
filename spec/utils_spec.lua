@@ -1,7 +1,8 @@
 --[[
     Unit tests for LunarUI/Core/Utils.lua
     Tests pure logic utility functions: FormatValue, FormatDuration,
-    StatusColor, ThresholdColor, GetNestedValue, HexToRGB, RGBToHex
+    StatusColor, ThresholdColor, GetNestedValue, HexToRGB, RGBToHex,
+    FormatGameTime, FormatCoordinates, EscapePattern
 ]]
 
 require("spec.wow_mock")
@@ -293,5 +294,87 @@ describe("RGBToHex", function()
 
     it("defaults nil components to 1 (white)", function()
         assert.equals("FFFFFF", LunarUI.RGBToHex(nil, nil, nil))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- FormatGameTime
+--------------------------------------------------------------------------------
+
+describe("FormatGameTime", function()
+    it("formats 24h midnight", function()
+        assert.equals("00:00", LunarUI.FormatGameTime(0, 0, true))
+    end)
+
+    it("formats 24h afternoon", function()
+        assert.equals("14:30", LunarUI.FormatGameTime(14, 30, true))
+    end)
+
+    it("formats 24h with zero-padded hour", function()
+        assert.equals("09:05", LunarUI.FormatGameTime(9, 5, true))
+    end)
+
+    it("formats 12h midnight as 12:00 AM", function()
+        assert.equals("12:00 AM", LunarUI.FormatGameTime(0, 0, false))
+    end)
+
+    it("formats 12h noon as 12:00 PM", function()
+        assert.equals("12:00 PM", LunarUI.FormatGameTime(12, 0, false))
+    end)
+
+    it("formats 12h afternoon", function()
+        assert.equals("1:00 PM", LunarUI.FormatGameTime(13, 0, false))
+    end)
+
+    it("formats 12h morning", function()
+        assert.equals("11:59 AM", LunarUI.FormatGameTime(11, 59, false))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- FormatCoordinates
+--------------------------------------------------------------------------------
+
+describe("FormatCoordinates", function()
+    it("formats typical coordinates", function()
+        assert.equals("45.2, 67.8", LunarUI.FormatCoordinates(45.23, 67.81))
+    end)
+
+    it("formats zero coordinates", function()
+        assert.equals("0.0, 0.0", LunarUI.FormatCoordinates(0, 0))
+    end)
+
+    it("formats max coordinates", function()
+        assert.equals("100.0, 100.0", LunarUI.FormatCoordinates(100, 100))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- EscapePattern
+--------------------------------------------------------------------------------
+
+describe("EscapePattern", function()
+    it("escapes parentheses", function()
+        assert.equals("hello%(world%)", LunarUI.EscapePattern("hello(world)"))
+    end)
+
+    it("escapes percent", function()
+        assert.equals("100%%", LunarUI.EscapePattern("100%"))
+    end)
+
+    it("escapes dots", function()
+        assert.equals("a%.b%.c", LunarUI.EscapePattern("a.b.c"))
+    end)
+
+    it("escapes brackets", function()
+        assert.equals("%[test%]", LunarUI.EscapePattern("[test]"))
+    end)
+
+    it("does not escape plain text", function()
+        assert.equals("hello", LunarUI.EscapePattern("hello"))
+    end)
+
+    it("escapes plus and star", function()
+        assert.equals("a%+b%*c", LunarUI.EscapePattern("a+b*c"))
     end)
 end)
