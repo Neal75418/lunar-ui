@@ -1,6 +1,6 @@
 --[[
     Unit tests for LunarUI/Modules/DataBars.lua
-    Tests pure formatting function: FormatBarText
+    Tests: FormatBarText, GetStatusBarTexture, STANDING_COLORS
 ]]
 
 require("spec.wow_mock")
@@ -15,6 +15,9 @@ LunarUI.Colors = { bgSolid = { 0, 0, 0, 0.8 }, border = { 0, 0, 0, 1 } }
 LunarUI.RegisterModule = function() end
 LunarUI.CreateEventHandler = function()
     return nil
+end
+LunarUI.GetSelectedStatusBarTexture = function()
+    return "Interface\\TargetingFrame\\UI-StatusBar"
 end
 
 loader.loadAddonFile("LunarUI/Modules/DataBars.lua", LunarUI)
@@ -62,5 +65,42 @@ describe("FormatBarText", function()
 
     it("formats default without extra label", function()
         assert.equals("50%", FormatBarText(nil, 50, 100))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- GetStatusBarTexture
+--------------------------------------------------------------------------------
+
+describe("GetStatusBarTexture", function()
+    it("returns texture from GetSelectedStatusBarTexture", function()
+        local result = LunarUI.GetStatusBarTexture()
+        assert.is_not_nil(result)
+    end)
+
+    it("returns same cached value on second call", function()
+        local first = LunarUI.GetStatusBarTexture()
+        local second = LunarUI.GetStatusBarTexture()
+        assert.equals(first, second)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- STANDING_COLORS
+--------------------------------------------------------------------------------
+
+describe("STANDING_COLORS", function()
+    it("has entries for all 8 standings", function()
+        for i = 1, 8 do
+            assert.is_not_nil(LunarUI.STANDING_COLORS[i])
+            assert.is_number(LunarUI.STANDING_COLORS[i].r)
+            assert.is_number(LunarUI.STANDING_COLORS[i].g)
+            assert.is_number(LunarUI.STANDING_COLORS[i].b)
+        end
+    end)
+
+    it("returns nil for non-existent standing", function()
+        assert.is_nil(LunarUI.STANDING_COLORS[0])
+        assert.is_nil(LunarUI.STANDING_COLORS[9])
     end)
 end)
