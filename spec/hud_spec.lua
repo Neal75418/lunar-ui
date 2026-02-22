@@ -1,6 +1,7 @@
 --[[
     Unit tests for HUD module pure functions
-    Tests: FormatCooldown, GetTimerBarColor, Sanitize, ShouldShowBuff, FCTGetSettings
+    Tests: FormatCooldown, GetSpellCooldownInfo, CDGetSpellTexture, IsSpellKnownByPlayer,
+           GetTimerBarColor, Sanitize, ShouldShowBuff, FCTGetSettings
 ]]
 
 require("spec.wow_mock")
@@ -26,6 +27,22 @@ LunarUI_CD.CreateEventHandler = function()
     return nil
 end
 LunarUI_CD.RegisterModule = function() end
+
+-- C_Spell / IsPlayerSpell 在載入時被 local 捕獲，需先設定
+_G.C_Spell = _G.C_Spell or {}
+_G.C_Spell.GetSpellCooldown = _G.C_Spell.GetSpellCooldown or function()
+    return nil
+end
+_G.C_Spell.GetSpellInfo = _G.C_Spell.GetSpellInfo or function()
+    return nil
+end
+_G.C_Spell.IsSpellUsable = _G.C_Spell.IsSpellUsable or function()
+    return false
+end
+_G._mockIsPlayerSpell = false
+_G.IsPlayerSpell = function()
+    return _G._mockIsPlayerSpell
+end
 
 loader.loadAddonFile("LunarUI/HUD/CooldownTracker.lua", LunarUI_CD)
 
@@ -54,6 +71,152 @@ describe("FormatCooldown", function()
 
     it("formats sub-second values", function()
         assert.equals("0.3", FormatCooldown(0.3))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- GetSpellCooldownInfo (CooldownTracker.lua)
+--------------------------------------------------------------------------------
+
+describe("GetSpellCooldownInfo", function()
+    local GetSpellCooldownInfo = LunarUI_CD.GetSpellCooldownInfo
+
+    it("returns start and duration from C_Spell", function()
+        _G.C_Spell.GetSpellCooldown = function(_spellID)
+            return { startTime = 100, duration = 10 }
+        end
+        local start, duration = GetSpellCooldownInfo(12345)
+        assert.equals(100, start)
+        assert.equals(10, duration)
+    end)
+
+    it("returns 0,0 when pcall fails", function()
+        _G.C_Spell.GetSpellCooldown = function()
+            error("spell not found")
+        end
+        local start, duration = GetSpellCooldownInfo(99999)
+        assert.equals(0, start)
+        assert.equals(0, duration)
+    end)
+
+    it("returns 0,0 when spellInfo is nil", function()
+        _G.C_Spell.GetSpellCooldown = function()
+            return nil
+        end
+        local start, duration = GetSpellCooldownInfo(99999)
+        assert.equals(0, start)
+        assert.equals(0, duration)
+    end)
+
+    it("handles secret values via tonumber conversion", function()
+        _G.C_Spell.GetSpellCooldown = function()
+            return { startTime = "500", duration = "15" }
+        end
+        local start, duration = GetSpellCooldownInfo(12345)
+        assert.equals(500, start)
+        assert.equals(15, duration)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- CDGetSpellTexture (CooldownTracker.lua)
+--------------------------------------------------------------------------------
+
+describe("CDGetSpellTexture", function()
+    local CDGetSpellTexture = LunarUI_CD.CDGetSpellTexture
+
+    before_each(function()
+        LunarUI_CD.ClearSpellTextureCache()
+    end)
+
+    it("returns texture for valid spellID", function()
+        _G.C_Spell.GetSpellInfo = function()
+            return { iconID = 123456 }
+        end
+        assert.equals(123456, CDGetSpellTexture(100))
+    end)
+
+    it("returns nil for invalid spellID (negative cache)", function()
+        _G.C_Spell.GetSpellInfo = function()
+            return nil
+        end
+        assert.is_nil(CDGetSpellTexture(99999))
+    end)
+
+    it("returns cached value on second call", function()
+        local callCount = 0
+        _G.C_Spell.GetSpellInfo = function()
+            callCount = callCount + 1
+            return { iconID = 111 }
+        end
+        CDGetSpellTexture(100)
+        CDGetSpellTexture(100)
+        assert.equals(1, callCount)
+    end)
+
+    it("returns nil from negative cache on second call", function()
+        local callCount = 0
+        _G.C_Spell.GetSpellInfo = function()
+            callCount = callCount + 1
+            return nil
+        end
+        CDGetSpellTexture(99999)
+        local result = CDGetSpellTexture(99999)
+        assert.is_nil(result)
+        assert.equals(1, callCount)
+    end)
+
+    it("returns nil for non-number spellID", function()
+        assert.is_nil(CDGetSpellTexture("not a number"))
+        assert.is_nil(CDGetSpellTexture(nil))
+    end)
+
+    it("clears cache via ClearSpellTextureCache", function()
+        _G.C_Spell.GetSpellInfo = function()
+            return { iconID = 222 }
+        end
+        CDGetSpellTexture(100)
+        LunarUI_CD.ClearSpellTextureCache()
+        local callCount = 0
+        _G.C_Spell.GetSpellInfo = function()
+            callCount = callCount + 1
+            return { iconID = 333 }
+        end
+        local result = CDGetSpellTexture(100)
+        assert.equals(333, result)
+        assert.equals(1, callCount)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- IsSpellKnownByPlayer (CooldownTracker.lua)
+--------------------------------------------------------------------------------
+
+describe("IsSpellKnownByPlayer", function()
+    local IsSpellKnownByPlayer = LunarUI_CD.IsSpellKnownByPlayer
+
+    it("returns true when C_Spell.IsSpellUsable returns true", function()
+        _G.C_Spell.IsSpellUsable = function()
+            return true
+        end
+        _G._mockIsPlayerSpell = false
+        assert.is_true(IsSpellKnownByPlayer(100))
+    end)
+
+    it("returns true via IsPlayerSpell fallback", function()
+        _G.C_Spell.IsSpellUsable = function()
+            return false
+        end
+        _G._mockIsPlayerSpell = true
+        assert.is_true(IsSpellKnownByPlayer(100))
+    end)
+
+    it("returns false when both return false", function()
+        _G.C_Spell.IsSpellUsable = function()
+            return false
+        end
+        _G._mockIsPlayerSpell = false
+        assert.is_false(IsSpellKnownByPlayer(100))
     end)
 end)
 

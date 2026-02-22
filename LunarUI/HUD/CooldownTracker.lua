@@ -522,6 +522,14 @@ end
 -- 暴露函數供 Options toggle 即時切換與測試使用
 LunarUI.InitCooldownTracker = Initialize
 LunarUI.FormatCooldown = FormatCooldown
+LunarUI.GetSpellCooldownInfo = GetSpellCooldownInfo
+LunarUI.CDGetSpellTexture = GetSpellTexture
+LunarUI.IsSpellKnownByPlayer = IsSpellKnownByPlayer
+local function ClearSpellTextureCache()
+    wipe(spellTextureCache)
+    cacheSize = 0
+end
+LunarUI.ClearSpellTextureCache = ClearSpellTextureCache
 
 --------------------------------------------------------------------------------
 -- 事件處理
