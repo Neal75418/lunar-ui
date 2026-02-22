@@ -27,7 +27,6 @@ local BORDER_SIZE = 4
 local COORD_UPDATE_INTERVAL = 0.2
 
 local backdropTemplate = LunarUI.backdropTemplate
-local format = string.format
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -78,7 +77,7 @@ local function UpdateCoordinates()
 
     local x, y = GetPlayerCoords()
     if x and y then
-        local coordString = format("%.1f, %.1f", x, y)
+        local coordString = LunarUI.FormatCoordinates(x, y)
         -- 僅在值改變時更新
         if coordString ~= lastCoordString then
             coordText:SetText(coordString)
@@ -135,18 +134,8 @@ local function UpdateClock()
 
     local db = LunarUI.db and LunarUI.db.profile.minimap
     local hour, minute = GetGameTime()
-    local clockString
-
-    if db and db.clockFormat == "12h" then
-        local suffix = hour >= 12 and "PM" or "AM"
-        hour = hour % 12
-        if hour == 0 then
-            hour = 12
-        end
-        clockString = format("%d:%02d %s", hour, minute, suffix)
-    else
-        clockString = format("%02d:%02d", hour, minute)
-    end
+    local is24h = not (db and db.clockFormat == "12h")
+    local clockString = LunarUI.FormatGameTime(hour, minute, is24h)
 
     -- 僅在值改變時更新
     if clockString ~= lastClockString then

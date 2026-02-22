@@ -235,6 +235,48 @@ function LunarUI.GetHUDSetting(key, default)
 end
 
 --------------------------------------------------------------------------------
+-- 格式化工具
+--------------------------------------------------------------------------------
+
+--[[
+    格式化遊戲時間為 12h 或 24h 格式
+    @param hour number - 小時（0-23）
+    @param minute number - 分鐘（0-59）
+    @param is24h boolean - 是否使用 24 小時制
+    @return string - 格式化時間字串
+]]
+function LunarUI.FormatGameTime(hour, minute, is24h)
+    if not is24h then
+        local suffix = hour >= 12 and "PM" or "AM"
+        hour = hour % 12
+        if hour == 0 then
+            hour = 12
+        end
+        return format("%d:%02d %s", hour, minute, suffix)
+    end
+    return format("%02d:%02d", hour, minute)
+end
+
+--[[
+    格式化地圖座標為 "x, y" 字串
+    @param x number - X 座標（0-100）
+    @param y number - Y 座標（0-100）
+    @return string - 格式化座標字串
+]]
+function LunarUI.FormatCoordinates(x, y)
+    return format("%.1f, %.1f", x, y)
+end
+
+--[[
+    轉義 Lua pattern 特殊字元
+    @param str string - 原始字串
+    @return string - 轉義後的字串（可安全用於 gsub pattern）
+]]
+function LunarUI.EscapePattern(str)
+    return str:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+end
+
+--------------------------------------------------------------------------------
 -- 安全呼叫
 --------------------------------------------------------------------------------
 

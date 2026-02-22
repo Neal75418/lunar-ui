@@ -937,7 +937,7 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
                 if keyword and keyword ~= "" then
                     local escaped = escapedKeywordCache[keyword]
                     if not escaped then
-                        escaped = keyword:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+                        escaped = LunarUI.EscapePattern(keyword)
                         escapedKeywordCacheSize = escapedKeywordCacheSize + 1
                         if escapedKeywordCacheSize > KEYWORD_CACHE_MAX then
                             wipe(escapedKeywordCache)

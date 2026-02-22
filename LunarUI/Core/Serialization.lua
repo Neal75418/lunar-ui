@@ -315,6 +315,9 @@ local function MergeTable(target, source, template, extra)
     if not template then
         return
     end
+    if type(source) ~= "table" then
+        return
+    end
     for k, v in pairs(source) do
         local tval = template[k]
         local extraVal = extra and extra[k]
