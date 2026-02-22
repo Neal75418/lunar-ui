@@ -4,7 +4,7 @@
 # 預設門檻: 25%
 set -euo pipefail
 
-THRESHOLD=${1:-29}
+THRESHOLD=${1:-33}
 REPORT="luacov.report.out"
 
 if [ ! -f "$REPORT" ]; then
