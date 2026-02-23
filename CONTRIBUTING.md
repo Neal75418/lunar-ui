@@ -69,7 +69,7 @@ Libs → Locales → Core（Init→Tokens→Defaults→Config→Utils→...）
 
 ### Module 註冊
 
-所有模組透過 `LunarUI:RegisterModule(name, initFunc)` 註冊，在 `PLAYER_ENTERING_WORLD` 時初始化。
+所有模組透過 `LunarUI:RegisterModule(name, callbacks)` 註冊，`callbacks` 為包含 `onEnable`、`onDisable`（可選）、`delay`（可選）的 table。在 Ace3 `OnEnable` 時初始化。
 
 ### Taint 規避
 
@@ -78,7 +78,7 @@ WoW 的安全框架有嚴格的 taint 機制。修改暴雪框架時：
 - 使用 `hooksecurefunc` 而非直接覆寫
 - 戰鬥中不修改框架（`InCombatLockdown()` 檢查）
 - 使用 `pcall` 包裹對暴雪框架的存取
-- 不使用 `rawset` 或 `RegisterStateDriver` 修改安全框架
+- 不使用 `rawset` 修改安全框架
 
 ### Skin 模組
 
@@ -117,7 +117,7 @@ ci: CI/CD 變更
 ## Pull Request
 
 1. Fork 後建立 feature branch
-2. 確認 `luacheck .` 零警告
+2. 確認 `make check` 通過（lint + format + test）
 3. 在遊戲內測試（至少載入 + 基本操作）
 4. 提交 PR 並說明變更內容
 

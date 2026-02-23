@@ -19,10 +19,18 @@ graph LR
         Init["Core/Init.lua"]
         Tokens["Core/Tokens.lua"]
         Defaults["Core/Defaults.lua"]
+        Config["Core/Config.lua"]
         Utils["Core/Utils.lua"]
     end
 
+    subgraph CoreLate["Core 後段"]
+        Presets["Core/Presets.lua"]
+        Serial["Core/Serialization.lua"]
+        Cmds["Core/Commands.lua"]
+    end
+
     subgraph Media["媒體"]
+        CoreMedia["Core/Media.lua"]
         MediaLua["Media/Media.lua"]
     end
 
@@ -34,30 +42,26 @@ graph LR
         Mods["Modules/*"]
     end
 
-    subgraph Late["後載入"]
-        Cmds["Core/Commands.lua"]
-        Serial["Core/Serialization.lua"]
-        Presets["Core/Presets.lua"]
-    end
-
-    Init --> Tokens --> Defaults --> Utils --> MediaLua
+    Init --> Tokens --> Defaults --> Config --> Utils
+    Utils --> Presets --> Serial --> Cmds
+    Cmds --> CoreMedia --> MediaLua
     MediaLua --> UI
-    UI --> Late
 
     style Boot fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
+    style CoreLate fill:#36331b,stroke:#6c7a89,color:#e0e0e0
     style Media fill:#2d1b36,stroke:#6c7a89,color:#e0e0e0
     style UI fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
-    style Late fill:#36331b,stroke:#6c7a89,color:#e0e0e0
 ```
 
 > TOC 載入順序重要 &mdash; 所有模組依賴 `Init.lua` 建立的 Engine。
+> 圖中省略了 Options、InstallWizard、VigorDebug、Profiler、Debug、Tags 等輔助檔案。
 
 ---
 
 ## 模組系統 API
 
 ```lua
--- 註冊模組（Core/Init.lua:68）
+-- 註冊模組（Core/Init.lua:99）
 LunarUI:RegisterModule("ModuleName", {
     onEnable  = function() ... end,
     onDisable = function() ... end,   -- 可選，反向順序執行
@@ -70,9 +74,9 @@ LunarUI:RegisterHUDFrame("FrameName")
 -- 註冊可移動框架 → 納入 /lunar move
 LunarUI:RegisterMovableFrame("name", frame, "顯示名稱")
 
--- 註冊皮膚
-LunarUI:RegisterSkin("name", "blizzAddonName", function() ... end)
-LunarUI:MarkSkinned(frame)  -- 防重複，已處理則回傳 false
+-- 註冊皮膚（dot 語法）
+LunarUI.RegisterSkin("name", "blizzAddonName", function() ... end)
+LunarUI.MarkSkinned(frame)  -- 防重複，已處理則回傳 false
 
 -- SkinStandardFrame 工廠（內建 MarkSkinned 防護）
 -- 回傳 nil = 框架不存在；回傳 frame = 首次 skin 或已 skin
