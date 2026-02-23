@@ -19,7 +19,7 @@ ln -s $(pwd)/LunarUI_Options "/path/to/World of Warcraft/_retail_/Interface/AddO
 
 - **語言**：Lua 5.1（LuaJIT），WoW 12.0.1（Interface: 120001）
 - **縮排**：4 spaces
-- **行寬**：無限制
+- **行寬**：luacheck 無限制；stylua 格式化至 120 欄（`.stylua.toml`）
 - **命名**：
   - 全域函數：`LunarUI.FunctionName` 或 `LunarUI:MethodName`
   - 區域函數：`camelCase`

@@ -15,6 +15,10 @@
 
 ```mermaid
 graph LR
+    subgraph Locale["語系"]
+        L["Locales/enUS.lua<br/>Locales/zhTW.lua"]
+    end
+
     subgraph Boot["啟動"]
         Init["Core/Init.lua"]
         Tokens["Core/Tokens.lua"]
@@ -42,18 +46,19 @@ graph LR
         Mods["Modules/*"]
     end
 
-    Init --> Tokens --> Defaults --> Config --> Utils
+    L --> Init --> Tokens --> Defaults --> Config --> Utils
     Utils --> Presets --> Serial --> Cmds
     Cmds --> CoreMedia --> MediaLua
     MediaLua --> UI
 
+    style Locale fill:#36331b,stroke:#6c7a89,color:#e0e0e0
     style Boot fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
     style CoreLate fill:#36331b,stroke:#6c7a89,color:#e0e0e0
     style Media fill:#2d1b36,stroke:#6c7a89,color:#e0e0e0
     style UI fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
 ```
 
-> TOC 載入順序重要 &mdash; 所有模組依賴 `Init.lua` 建立的 Engine。
+> TOC 載入順序重要 &mdash; Locales 先載入，所有模組依賴 `Init.lua` 建立的 Engine。
 > 圖中省略了 Options、InstallWizard、VigorDebug、Profiler、Debug、Tags 等輔助檔案。
 
 ---
@@ -75,7 +80,7 @@ LunarUI:RegisterHUDFrame("FrameName")
 LunarUI:RegisterMovableFrame("name", frame, "顯示名稱")
 
 -- 註冊皮膚（dot 語法）
-LunarUI.RegisterSkin("name", "blizzAddonName", function() ... end)
+LunarUI.RegisterSkin("name", "loadEvent", function() ... end)
 LunarUI.MarkSkinned(frame)  -- 防重複，已處理則回傳 false
 
 -- SkinStandardFrame 工廠（內建 MarkSkinned 防護）
@@ -96,11 +101,11 @@ LunarUI:ApplyFontSettings()
 
 - 共用資源集中在 `Core/Media.lua`：backdrop 模板、`DEBUFF_TYPE_COLORS`、材質
 - oUF 命名空間為 `LunarUF`（透過 TOC 的 `X-oUF` 設定）
-- LibActionButton：`local LAB = LibStub("LibActionButton-1.0")`
+- LibActionButton：`local LAB = LibStub("LibActionButton-1.0", true)`
 - 字體統一使用 `LunarUI.SetFont(fs, size, flags)`，禁止硬編碼 `STANDARD_TEXT_FONT`
-- FloatingCombatText 預設 opt-in 關閉（`fctEnabled = false`），`LunarUI.Sanitize(val)` 用 `tonumber(tostring(val))` 打斷 CLEU taint 鏈
+- FloatingCombatText 預設 opt-in 關閉（`fctEnabled = false`），`LunarUI.Sanitize(val)` 依型別打斷 CLEU taint 鏈（number → `tonumber(tostring())`、string → `tostring()`、boolean → `val == true`）
 - 事件頻率監控：`/lunar profile events on|off`，純計數 + 每秒速率
-- Skin 標籤 locale key 放 `Options.lua` 的 `local L` 表，**不放** `enUS.lua`/`zhTW.lua`
+- Skin 個別標籤 locale key（如 `skinCharacter`）放 `Options.lua` 的 `local L` 表；通用分類 key（`Skins`、`SkinsDesc`）放 `enUS.lua`/`zhTW.lua`
 
 ---
 
@@ -126,7 +131,7 @@ LunarUI:ApplyFontSettings()
 | 降低 GC 壓力 | 平行陣列取代 table-of-tables | `icons[i]`, `durations[i]` |
 | 批次處理 | 髒旗標 + 批次計時器 | 取代逐事件 closure |
 | 卸載閒置腳本 | 動畫結束即移除 OnUpdate | `SetScript("OnUpdate", nil)` |
-| O(1) 查詢 | 高頻事件用反向映射表 | `deathUnitMap[unit]` + 惰性重建 |
+| O(1) 查詢 | 高頻查詢用快取表 | `spellTextureCache[spellID]` + 上限淘汰 |
 | 快取設定值 | 動畫期間避免每幀查 DB | `cachedFadeDuration` |
 | 自動回收 | FontString weak table registry | `__mode = "k"` |
 

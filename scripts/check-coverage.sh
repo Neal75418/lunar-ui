@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 檢查 luacov 覆蓋率是否達到最低門檻
 # 用法: ./scripts/check-coverage.sh [threshold]
-# 預設門檻: 25%
+# 預設門檻: 33%
 set -euo pipefail
 
 THRESHOLD=${1:-33}

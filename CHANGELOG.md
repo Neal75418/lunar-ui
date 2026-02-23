@@ -169,10 +169,10 @@ LunarUI v1.0.0 — 現代化 WoW UI 替換系統，涵蓋 Unit Frames、Nameplat
   - `HUD/CooldownTracker.lua` &mdash; 技能冷卻追蹤
   - `HUD/AuraFrames.lua` &mdash; Buff / Debuff 顯示框架（含計時條）
 - **Skins** &mdash; 14 個 Blizzard 介面皮膚（角色、法術書、天賦、任務、商人、社群等）
-- **DataBars** &mdash; 經驗值、榮譽、神器能量進度條
+- **DataBars** &mdash; 經驗值、聲望、榮譽進度條
 - **DataTexts** &mdash; 可自訂的文字資訊覆蓋層
 - **Loot** &mdash; 拾取框架美化
-- **Automation** &mdash; 自動賣灰色物品、自動郵件
+- **Automation** &mdash; 自動修裝、戰場自動釋放、成就截圖、自動接受任務
 - **Configuration Import / Export** (`Core/Serialization.lua`)
 - **Layout Presets** (`Core/Presets.lua`) &mdash; DPS / Tank / Healer 佈局預設
 
@@ -311,7 +311,7 @@ LunarUI v1.0.0 — 現代化 WoW UI 替換系統，涵蓋 Unit Frames、Nameplat
 ### Added
 
 - **LunarCore** &mdash; Phase 狀態機（NEW → WAXING → FULL → WANING）
-- **Token System** &mdash; 每 Phase 的 design tokens（alpha / scale / contrast / glowIntensity）
+- **Token System** &mdash; Design tokens + Easing 函數（後續版本簡化為 Colors / ThemeColors / Easing）
 - **Commands** (`/lunar`) &mdash; toggle / phase / debug / status / config / reset / test
 - **Debug Overlay** &mdash; Phase、Tokens、Timer、戰鬥狀態
 - **Phase Indicator HUD** &mdash; 月相視覺指示器
