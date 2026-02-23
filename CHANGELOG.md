@@ -8,6 +8,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) &middot; Versio
 
 ## [Unreleased]
 
+### Added
+
+- **Makefile** &mdash; 標準化開發指令（`make test` / `lint` / `format` / `coverage` / `check`）
+
 ### Fixed
 
 - **UnitFrames Taint Error** &mdash; 更新 oUF 到最新版本修復 WoW 12.0 forbidden table 錯誤
@@ -41,9 +45,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) &middot; Versio
   - **HUD/ClassResources.lua** (1 個修復)
     - PLAYER_SPECIALIZATION_CHANGED 事件缺少 isInitialized guard
 
+- **Serialization.lua** &mdash; `MergeTable` 非 table source 輸入會 crash（新增 type guard）
+
 ### Changed
 
 - 更新介面版本至 120001（支援 WoW Patch 12.0.1）
+- **Utils.lua** &mdash; 從 Minimap/Chat 提取 `FormatGameTime`、`FormatCoordinates`、`EscapePattern` 至 Utils.lua 共用
+- **Minimap.lua** &mdash; `UpdateCoordinates` / `UpdateClock` 改用 `LunarUI.FormatCoordinates()` / `LunarUI.FormatGameTime()`
+- **Chat.lua** &mdash; `CheckKeywordAlert` 改用 `LunarUI.EscapePattern()`
+- 測試數量 354 → 373（+19 tests）
 
 ### Planned
 

@@ -20,7 +20,7 @@ graph TB
         Init["Init.lua<br/>Engine + Module Loader"]
         Tokens["Tokens.lua<br/>Design Tokens + Easing"]
         Config["Config.lua<br/>AceDB Defaults"]
-        Utils["Utils.lua<br/>SafeCall / StripTextures"]
+        Utils["Utils.lua<br/>Utility Functions"]
         Media["Media.lua<br/>LSM + Font Registry"]
         Serial["Serialization.lua<br/>Import / Export"]
         Presets["Presets.lua<br/>Layout Presets"]

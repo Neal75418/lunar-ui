@@ -133,7 +133,7 @@ LunarUI:ApplyFontSettings()
 - **匯出慣例**：`LunarUI.FnName = localFn`，讓 local 純函數可被測試存取
 - **命名衝突**：多模組有同名 local 函數時用前綴區分（如 `BagsGetItemLevel` vs `GetItemLevel`）
 - **Mock 要點**：模組層級有副作用時（`CreateFrame`、`RegisterModule`），需在 spec 內提供完整 stub
-- **驗證**：每次修改後跑 `busted spec/` + `luacheck .` + `stylua --check .`
+- **驗證**：每次修改後跑 `make check`（等同 `luacheck .` + `stylua --check .` + `busted spec/`）
 
 ---
 

@@ -27,7 +27,21 @@ ln -s $(pwd)/LunarUI_Options "/path/to/World of Warcraft/_retail_/Interface/AddO
   - 未使用變數：加 `_` 前綴（如 `_self`, `_event`）
 - **註解語言**：繁體中文
 
-## Linting
+## Development Commands
+
+專案提供 [Makefile](Makefile) 整合所有開發指令：
+
+```bash
+make test         # 執行 busted 單元測試
+make lint         # 執行 luacheck 靜態分析
+make format       # 檢查 stylua 格式
+make format-fix   # 自動修正格式
+make coverage     # 測試 + 覆蓋率報告（含門檻檢查）
+make check        # 一次跑完 lint + format + test
+make locale-check # 檢查語系 key 對稱性
+```
+
+### Linting
 
 專案使用 [luacheck](https://github.com/mpeterv/luacheck) 進行靜態分析。
 
@@ -37,9 +51,11 @@ luarocks install luacheck
 
 # 執行（自動讀取 .luacheckrc）
 luacheck .
+# 或
+make lint
 ```
 
-CI 要求零警告。提交前請確認 `luacheck .` 通過。
+CI 要求零警告。提交前請確認 `make check` 通過。
 
 ## Architecture
 
