@@ -120,24 +120,40 @@ LunarUI:ApplyFontSettings()
 
 ## 效能慣例
 
-- 模組層級 upvalue，避免重複全域查找
-- GC 敏感路徑用平行陣列取代 table-of-tables
-- 髒旗標 + 批次計時器，取代逐事件 closure
-- 不需要時卸載 `OnUpdate`（動畫結束即 `SetScript("OnUpdate", nil)`）
-- 高頻事件用反向映射表 O(1) 查詢（如 `deathUnitMap[unit]` + 惰性重建）
-- 動畫期間快取設定值（如 `cachedFadeDuration`），避免每幀查 DB
-- FontString 用 weak table registry（`__mode = "k"`），框架銷毀時自動回收
+| 技巧 | 做法 | 範例 |
+|:-----|:-----|:-----|
+| 減少全域查找 | 模組層級 upvalue | `local format = string.format` |
+| 降低 GC 壓力 | 平行陣列取代 table-of-tables | `icons[i]`, `durations[i]` |
+| 批次處理 | 髒旗標 + 批次計時器 | 取代逐事件 closure |
+| 卸載閒置腳本 | 動畫結束即移除 OnUpdate | `SetScript("OnUpdate", nil)` |
+| O(1) 查詢 | 高頻事件用反向映射表 | `deathUnitMap[unit]` + 惰性重建 |
+| 快取設定值 | 動畫期間避免每幀查 DB | `cachedFadeDuration` |
+| 自動回收 | FontString weak table registry | `__mode = "k"` |
 
 ---
 
 ## 測試框架
 
-- **工具**：busted + luacov，設定檔 `.busted` / `.luacov`
-- **環境模擬**：`spec/wow_mock.lua`（WoW API stub）、`spec/loader.lua`（模擬 addon 載入 `(_ADDON_NAME, Engine)` varargs）
-- **匯出慣例**：`LunarUI.FnName = localFn`，讓 local 純函數可被測試存取
-- **命名衝突**：多模組有同名 local 函數時用前綴區分（如 `BagsGetItemLevel` vs `GetItemLevel`）
-- **Mock 要點**：模組層級有副作用時（`CreateFrame`、`RegisterModule`），需在 spec 內提供完整 stub
-- **驗證**：每次修改後跑 `make check`（等同 `luacheck .` + `stylua --check .` + `busted spec/`）
+```mermaid
+graph LR
+    Mock["wow_mock.lua<br/>WoW API Stub"] --> Loader["loader.lua<br/>Engine 建立"]
+    Loader --> Spec["*_spec.lua<br/>測試案例"]
+    Spec --> Busted["busted<br/>執行測試"]
+    Busted --> Cov["luacov<br/>覆蓋率報告"]
+
+    style Mock fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
+    style Busted fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
+    style Cov fill:#36331b,stroke:#6c7a89,color:#e0e0e0
+```
+
+| 項目 | 說明 |
+|:-----|:-----|
+| **工具** | busted + luacov，設定檔 `.busted` / `.luacov` |
+| **環境模擬** | `spec/wow_mock.lua`（WoW API stub）、`spec/loader.lua`（模擬 addon 載入 `(_ADDON_NAME, Engine)` varargs） |
+| **匯出慣例** | `LunarUI.FnName = localFn`，讓 local 純函數可被測試存取 |
+| **命名衝突** | 多模組有同名 local 函數時用前綴區分（如 `BagsGetItemLevel` vs `GetItemLevel`） |
+| **Mock 要點** | 模組層級有副作用時（`CreateFrame`、`RegisterModule`），需在 spec 內提供完整 stub |
+| **驗證** | 每次修改後跑 `make check`（等同 `luacheck .` + `stylua --check .` + `busted spec/`） |
 
 ---
 

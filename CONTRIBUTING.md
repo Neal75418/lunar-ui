@@ -61,10 +61,16 @@ CI 要求零警告。提交前請確認 `make check` 通過。
 
 ### TOC 載入順序
 
-```
-Libs → Locales → Core（Init→Tokens→Defaults→Config→Utils→...）
-→ Media → UnitFrames → Nameplates → ActionBars
-→ HUD → Modules → Skins
+```mermaid
+graph LR
+    Libs --> Locales --> Core["Core<br/>Init → Tokens → Defaults → Config → Utils"]
+    Core --> Media
+    Media --> Combat["UnitFrames / Nameplates / ActionBars"]
+    Combat --> HUD["HUD / Modules / Skins"]
+
+    style Core fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
+    style Combat fill:#2d1b36,stroke:#6c7a89,color:#e0e0e0
+    style HUD fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
 ```
 
 ### Module 註冊
@@ -75,10 +81,12 @@ Libs → Locales → Core（Init→Tokens→Defaults→Config→Utils→...）
 
 WoW 的安全框架有嚴格的 taint 機制。修改暴雪框架時：
 
-- 使用 `hooksecurefunc` 而非直接覆寫
-- 戰鬥中不修改框架（`InCombatLockdown()` 檢查）
-- 使用 `pcall` 包裹對暴雪框架的存取
-- 不使用 `rawset` 修改安全框架
+| 情境 | 錯誤做法 | 正確做法 |
+|:-----|:---------|:---------|
+| Hook 全域函數 | 直接覆寫 `_G.Fn` | `hooksecurefunc(obj, "Method", fn)` |
+| 修改框架 | 戰鬥中直接操作 | `if InCombatLockdown() then return end` |
+| 存取安全資料 | 直接存取 | `pcall` 包裹 |
+| 修改屬性 | `rawset` | 避免使用 |
 
 ### Skin 模組
 
@@ -115,6 +123,18 @@ ci: CI/CD 變更
 ```
 
 ## Pull Request
+
+```mermaid
+graph LR
+    A["Fork + Branch"] --> B["開發"]
+    B --> C["make check"]
+    C --> D["遊戲內測試"]
+    D --> E["提交 PR"]
+
+    style A fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
+    style C fill:#36331b,stroke:#6c7a89,color:#e0e0e0
+    style E fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
+```
 
 1. Fork 後建立 feature branch
 2. 確認 `make check` 通過（lint + format + test）

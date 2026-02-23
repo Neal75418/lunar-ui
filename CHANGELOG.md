@@ -4,6 +4,21 @@ All notable changes to LunarUI will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) &middot; Versioning: [SemVer](https://semver.org/spec/v2.0.0.html)
 
+```mermaid
+timeline
+    title LunarUI 版本演進
+    2026-01-27 : v0.1.0 Core + Phase
+               : v0.2.0 UnitFrames
+               : v0.3.0 Nameplates
+               : v0.4.0 ActionBars
+    2026-01-28 : v0.5.0 非戰鬥模組
+               : v0.6.0 Media + Effects
+               : v0.7.0 Options + Wizard
+    2026-02-07 : v0.8.0 HUD + Skins
+               : v0.9.x 字體 + FCT + 穩定性
+    2026-02-09 : v1.0.0 正式版
+```
+
 ---
 
 ## [Unreleased]

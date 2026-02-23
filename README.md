@@ -207,35 +207,29 @@ gantt
 
 LunarUI 使用以下第三方庫（位於 `LunarUI/Libs/`，不納入版本控制）：
 
-### 核心依賴
-- **[oUF](https://github.com/oUF-wow/oUF)** - UnitFrames 和 Nameplates 框架引擎
-  - **重要**：請確保使用最新版本以支援 WoW 12.0
-  - 官方倉庫：https://github.com/oUF-wow/oUF
+| 庫 | 版本 | 用途 | 來源 |
+|:---|:-----|:-----|:-----|
+| **[oUF](https://github.com/oUF-wow/oUF)** | Latest | UnitFrames / Nameplates 引擎 | [GitHub](https://github.com/oUF-wow/oUF) |
+| **[Ace3](https://github.com/WoWUIDev/Ace3)** | r1390 | 框架 / 事件 / DB / 設定 | [GitHub](https://github.com/WoWUIDev/Ace3) |
+| **[LibSharedMedia-3.0](https://www.curseforge.com/wow/addons/libsharedmedia-3-0)** | v11.2.1 | 材質 / 字體管理 | [CurseForge](https://www.curseforge.com/wow/addons/libsharedmedia-3-0) |
+| **[LibActionButton-1.0](https://www.curseforge.com/wow/addons/libactionbutton-1-0)** | v143 | ActionBars 按鈕引擎 | [CurseForge](https://www.curseforge.com/wow/addons/libactionbutton-1-0) |
+| CallbackHandler-1.0 | v8 | 回呼處理 | Ace3 內含 |
+| LibStub | v2 | 庫版本管理 | Ace3 內含 |
 
-### Ace3 系列
-- **[Ace3](https://github.com/WoWUIDev/Ace3)** - WoW 插件開發框架
-  - **當前版本**：Release-r1390 (2026-02-03)
-  - **支援版本**：WoW 12.0.1 (Retail, MoP Classic, Titan Reforged Classic, Classic)
-  - 包含模組：
-    - 核心：AceAddon-3.0, AceDB-3.0, AceDBOptions-3.0
-    - 事件/計時：AceEvent-3.0, AceTimer-3.0
-    - 設定系統：AceConfig-3.0, AceGUI-3.0, AceConsole-3.0
-    - 工具：AceHook-3.0, AceLocale-3.0, AceComm-3.0, AceSerializer-3.0, AceTab-3.0
-  - 官方倉庫：https://github.com/WoWUIDev/Ace3
-  - CurseForge：https://www.curseforge.com/wow/addons/ace3
+<details>
+<summary><strong>Ace3 包含模組</strong></summary>
 
-### 其他
-- **[LibSharedMedia-3.0](https://www.curseforge.com/wow/addons/libsharedmedia-3-0)** - 材質/字體管理
-  - **當前版本**：v11.2.1 (Revision 164, 2026-01-19) ✅
-  - 官方頁面：https://www.curseforge.com/wow/addons/libsharedmedia-3-0
-- **[LibActionButton-1.0](https://www.curseforge.com/wow/addons/libactionbutton-1-0)** - ActionBars 按鈕引擎
-  - **當前版本**：version 143 (支援 WoW 12.0)
-  - 官方頁面：https://www.curseforge.com/wow/addons/libactionbutton-1-0
-- CallbackHandler-1.0 (version 8), LibStub (version 2) - 核心工具庫
+- **核心**：AceAddon-3.0, AceDB-3.0, AceDBOptions-3.0
+- **事件/計時**：AceEvent-3.0, AceTimer-3.0
+- **設定系統**：AceConfig-3.0, AceGUI-3.0, AceConsole-3.0
+- **工具**：AceHook-3.0, AceLocale-3.0, AceComm-3.0, AceSerializer-3.0, AceTab-3.0
 
-### 更新方式
+</details>
 
-#### 更新 oUF
+<details>
+<summary><strong>更新方式</strong></summary>
+
+**oUF**：
 ```bash
 cd LunarUI/Libs
 mv oUF oUF.backup
@@ -244,90 +238,48 @@ rm -rf oUF/.git .gitignore .github
 rm -rf oUF.backup
 ```
 
-#### 更新 Ace3
+**Ace3**：
 ```bash
 cd /tmp
 curl -L -o Ace3.zip "https://github.com/WoWUIDev/Ace3/archive/refs/tags/Release-r1390.zip"
 unzip -q Ace3.zip
 cd /path/to/LunarUI/Libs
-
-# 備份舊版本
-mkdir -p ~/Desktop/Ace3_backup_$(date +%Y%m%d)
-cp -r Ace* CallbackHandler-1.0 LibStub ~/Desktop/Ace3_backup_$(date +%Y%m%d)/
-
-# 刪除舊版本
 rm -rf Ace* CallbackHandler-1.0 LibStub
-
-# 複製新版本
-cp -r /tmp/Ace3-Release-r1390/Ace* \
-      /tmp/Ace3-Release-r1390/CallbackHandler-1.0 \
-      /tmp/Ace3-Release-r1390/LibStub \
-      ./
-
-# 清理
+cp -r /tmp/Ace3-Release-r1390/Ace* /tmp/Ace3-Release-r1390/CallbackHandler-1.0 /tmp/Ace3-Release-r1390/LibStub ./
 rm -rf /tmp/Ace3*
 ```
 
-#### 更新 LibSharedMedia-3.0（手動）
-由於 CurseForge 有下載保護，需要手動更新：
+**LibSharedMedia-3.0**（手動）：從 [CurseForge](https://www.curseforge.com/wow/addons/libsharedmedia-3-0/files) 下載 ZIP，解壓至 `LunarUI/Libs/`。
 
-1. **下載最新版本**：
-   - 訪問：https://www.curseforge.com/wow/addons/libsharedmedia-3-0/files
-   - 點擊 "v11.2.1" 或最新版本
-   - 點擊 "Download" 按鈕下載 ZIP 文件
-
-2. **安裝**：
-   ```bash
-   cd /path/to/LunarUI/Libs
-
-   # 備份舊版本
-   cp -r LibSharedMedia-3.0 ~/Desktop/LibSharedMedia-3.0.backup
-
-   # 刪除舊版本
-   rm -rf LibSharedMedia-3.0
-
-   # 解壓新版本（假設下載到 ~/Downloads）
-   unzip ~/Downloads/LibSharedMedia-3.0-*.zip -d .
-
-   # 驗證版本號（應該顯示 Revision: 165 或更高）
-   head -5 LibSharedMedia-3.0/LibSharedMedia-3.0.lua
-   ```
+</details>
 
 ---
 
 ## Troubleshooting
 
-### Taint 錯誤（"介面功能因插件而失效"）
+```mermaid
+flowchart TD
+    Start["遇到問題"] --> Taint{"Taint 錯誤？<br/>介面功能因插件而失效"}
+    Taint -->|是| Safe["已內建過濾器<br/>可安全忽略"]
+    Taint -->|否| Conflict{"與其他插件衝突？"}
+    Conflict -->|是| Disable["停用衝突插件<br/>UF / ActionBars / Bags / Nameplates"]
+    Conflict -->|否| SkinErr{"Skin 錯誤？"}
+    SkinErr -->|是| DisableSkin["/lunar config → Skins<br/>個別停用"]
+    SkinErr -->|否| Reset["/lunar reset all<br/>或刪除 SavedVariables"]
 
-WoW 的安全框架（secure frames）在被第三方插件修改後會觸發 taint 警告。LunarUI 已內建過濾器抑制已知無害的 taint 錯誤（如 `Scale must be > 0`、`secret number value tainted`）。若仍收到此訊息，通常無功能影響，可安全忽略。
-
-### 與其他插件衝突
-
-LunarUI 替換了多數暴雪 UI 元素。若同時使用其他 UI 替換插件（如 ElvUI、TukUI），可能會發生衝突。建議：
-
-- **單位框架**：停用其他 oUF 佈局或暴雪框架替換插件
-- **動作條**：停用 Bartender4 或 Dominos
-- **背包**：停用 AdiBags 或 Bagnon
-- **名牌**：停用 Plater 或 KuiNameplates
-
-### Skin 錯誤
-
-部分 Blizzard 介面在 WoW 改版後可能變更結構。LunarUI 的 Skin 模組使用 `pcall` 保護，單一 Skin 失敗不會影響其他模組。可在設定中個別停用有問題的 Skin（`/lunar config` → Skins）。
-
-### 重置設定
-
-```bash
-# 重置框架位置
-/lunar reset all
-
-# 重新執行安裝精靈
-/lunar install
-
-# 完全重置（刪除 SavedVariables）
-# 退出 WoW 後刪除：
-# WTF/Account/<帳號>/SavedVariables/LunarUI.lua
-# WTF/Account/<帳號>/SavedVariables/LunarUI.lua.bak
+    style Start fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
+    style Safe fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
+    style Disable fill:#36331b,stroke:#6c7a89,color:#e0e0e0
+    style DisableSkin fill:#36331b,stroke:#6c7a89,color:#e0e0e0
+    style Reset fill:#2d1b36,stroke:#6c7a89,color:#e0e0e0
 ```
+
+| 問題 | 說明 | 解決方式 |
+|:-----|:-----|:---------|
+| **Taint 錯誤** | 安全框架被修改觸發警告 | 內建過濾器已抑制，可安全忽略 |
+| **插件衝突** | 與 ElvUI / Bartender / Dominos / Plater / AdiBags / Bagnon 等重複 | 停用衝突插件的對應模組 |
+| **Skin 錯誤** | Blizzard UI 結構變更 | `/lunar config` → Skins 個別停用 |
+| **重置設定** | 框架位置 / 完整重置 | `/lunar reset all` 或刪除 `WTF/.../LunarUI.lua` |
 
 ---
 
