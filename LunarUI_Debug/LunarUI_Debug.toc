@@ -1,0 +1,11 @@
+## Interface: 120001
+## Title: |cff8882ffLunar|r|cffffffffUI|r Debug
+## Notes: Vigor diagnostics and test tools
+## Notes-zhTW: Vigor 診斷工具和測試模式
+## Author: NealChen
+## Version: 1.0.0
+## Dependencies: LunarUI
+## LoadOnDemand: 1
+## IconTexture: 136057
+
+VigorDebug.lua
