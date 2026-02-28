@@ -142,6 +142,11 @@ function LunarUI:OnEnable()
     -- 註冊斜線命令
     self:RegisterCommands()
 
+    -- 載入 Options 插件以註冊到 Blizzard 介面選項（LoadOnDemand）
+    if not IsAddOnLoaded("LunarUI_Options") then
+        LoadAddOn("LunarUI_Options")
+    end
+
     -- 設置 ESC 主選單按鈕
     self:SetupGameMenuButton()
 
