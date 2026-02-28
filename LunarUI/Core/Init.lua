@@ -143,8 +143,8 @@ function LunarUI:OnEnable()
     self:RegisterCommands()
 
     -- 載入 Options 插件以註冊到 Blizzard 介面選項（LoadOnDemand）
-    if not IsAddOnLoaded("LunarUI_Options") then
-        LoadAddOn("LunarUI_Options")
+    if not C_AddOns.IsAddOnLoaded("LunarUI_Options") then
+        C_AddOns.LoadAddOn("LunarUI_Options")
     end
 
     -- 設置 ESC 主選單按鈕
