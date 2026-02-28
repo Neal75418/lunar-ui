@@ -27,7 +27,7 @@ local L = Engine.L or {}
 --------------------------------------------------------------------------------
 
 local function GetChatDB()
-    return LunarUI.db and LunarUI.db.profile.chat
+    return LunarUI.GetModuleDB("chat")
 end
 
 --------------------------------------------------------------------------------

@@ -49,6 +49,46 @@ local function StripTextures(frame)
 end
 
 --------------------------------------------------------------------------------
+-- Icon Border Helper
+--------------------------------------------------------------------------------
+
+--[[
+    為 Icon 框架建立 LunarUI 風格邊框（避免重複代碼）
+    @param parent Frame - 父框架（slot、button 等）
+    @param options table - 可選參數 { inset = 1, color = {r,g,b,a} }
+    @return Frame|nil - 建立的邊框框架，若已存在或父框架無效則返回 nil
+
+    Usage:
+        LunarUI.CreateIconBorder(slot)
+        LunarUI.CreateIconBorder(button, { inset = 2, color = {1, 0, 0, 1} })
+]]
+function LunarUI.CreateIconBorder(parent, options)
+    if not parent or not BackdropTemplateMixin then
+        return nil
+    end
+
+    -- 防止重複建立
+    if parent._lunarBorder then
+        return nil
+    end
+
+    options = options or {}
+    local inset = options.inset or 1
+    local color = options.color or C.border
+
+    local border = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    border:SetPoint("TOPLEFT", -inset, inset)
+    border:SetPoint("BOTTOMRIGHT", inset, -inset)
+    border:SetBackdrop(LunarUI.iconBackdropTemplate)
+    border:SetBackdropColor(0, 0, 0, 0)
+    border:SetBackdropBorderColor(color[1], color[2], color[3], color[4])
+    border:SetFrameLevel(parent:GetFrameLevel() + 1)
+    parent._lunarBorder = border
+
+    return border
+end
+
+--------------------------------------------------------------------------------
 -- Core Skin Utilities
 --------------------------------------------------------------------------------
 

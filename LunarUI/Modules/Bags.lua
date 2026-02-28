@@ -27,7 +27,7 @@ local bit_band = bit.band -- LuaJIT built-in（LLS 環境限制，快取為 loca
 --------------------------------------------------------------------------------
 
 local function GetBagDB()
-    return LunarUI.db and LunarUI.db.profile.bags
+    return LunarUI.GetModuleDB("bags")
 end
 
 --------------------------------------------------------------------------------

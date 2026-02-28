@@ -6,7 +6,6 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
-local C = LunarUI.Colors
 
 local function SkinCharacterFrame()
     local frame = LunarUI:SkinStandardFrame("CharacterFrame", {
@@ -66,16 +65,7 @@ local function SkinCharacterFrame()
                     slot.IconBorder:SetAlpha(0)
                 end
                 -- 新增 LunarUI 邊框
-                if not slot._lunarBorder and BackdropTemplateMixin then
-                    local border = CreateFrame("Frame", nil, slot, "BackdropTemplate")
-                    border:SetPoint("TOPLEFT", -1, 1)
-                    border:SetPoint("BOTTOMRIGHT", 1, -1)
-                    border:SetBackdrop(LunarUI.iconBackdropTemplate)
-                    border:SetBackdropColor(0, 0, 0, 0)
-                    border:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
-                    border:SetFrameLevel(slot:GetFrameLevel() + 1)
-                    slot._lunarBorder = border
-                end
+                LunarUI.CreateIconBorder(slot)
             end)
         end
     end

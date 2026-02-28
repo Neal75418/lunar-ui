@@ -227,11 +227,27 @@ end
         local size = LunarUI.GetHUDSetting("auraIconSize", 30)
 ]]
 function LunarUI.GetHUDSetting(key, default)
-    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
+    local db = LunarUI.GetModuleDB("hud")
     if db and db[key] ~= nil then
         return db[key]
     end
     return default
+end
+
+--[[
+    統一模組 DB 存取介面（避免重複的 nil 檢查）
+    @param moduleName string - 模組名稱（如 "unitframes", "nameplates", "hud"）
+    @return table|nil - 模組設定表，若不存在則返回 nil
+
+    Usage:
+        local db = LunarUI.GetModuleDB("unitframes")
+        if not db or not db.enabled then return end
+]]
+function LunarUI.GetModuleDB(moduleName)
+    if not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
+    return LunarUI.db.profile[moduleName]
 end
 
 --------------------------------------------------------------------------------

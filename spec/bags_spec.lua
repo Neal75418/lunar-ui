@@ -207,6 +207,8 @@ LunarUI.IsDebugMode = function()
 end
 LunarUI.db = { profile = { bags = { enabled = true, showProfessionColors = true, showUpgradeArrow = true } } }
 
+-- Load Utils.lua first to get GetModuleDB
+loader.loadAddonFile("LunarUI/Core/Utils.lua", LunarUI)
 loader.loadAddonFile("LunarUI/Modules/Bags.lua", LunarUI)
 
 --------------------------------------------------------------------------------
