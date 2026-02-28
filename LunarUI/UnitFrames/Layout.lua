@@ -1374,64 +1374,63 @@ local spawnRetries = 0
 local MAX_SPAWN_RETRIES = 15 -- 最多重試 15 次（3 秒）
 
 -- 生成個人單位框架：player, target, focus, pet, targettarget
+-- Helper function to spawn and anchor a frame (reduces duplication)
+local function SpawnAndAnchorFrame(unit, style, anchorFunc)
+    oUF:SetActiveStyle(style)
+    local frame = oUF:Spawn(unit, style)
+    spawnedFrames[unit] = frame
+    anchorFunc(frame)
+    return frame
+end
+
 local function SpawnPlayerFrames(uf)
     if uf.player.enabled then
-        oUF:SetActiveStyle("LunarUI_Player")
-        spawnedFrames.player = oUF:Spawn("player", "LunarUI_Player")
-        spawnedFrames.player:SetPoint(uf.player.point, UIParent, "CENTER", uf.player.x, uf.player.y)
-
+        local frame = SpawnAndAnchorFrame("player", "LunarUI_Player", function(f)
+            f:SetPoint(uf.player.point, UIParent, "CENTER", uf.player.x, uf.player.y)
+        end)
+        -- Special: Player frame needs delayed show + force update
         C_Timer.After(0.2, function()
-            if spawnedFrames.player then
-                spawnedFrames.player:Show()
-                if spawnedFrames.player.UpdateAllElements then
-                    spawnedFrames.player:UpdateAllElements("ForceUpdate")
+            if frame then
+                frame:Show()
+                if frame.UpdateAllElements then
+                    frame:UpdateAllElements("ForceUpdate")
                 end
             end
         end)
     end
 
     if uf.target.enabled then
-        oUF:SetActiveStyle("LunarUI_Target")
-        spawnedFrames.target = oUF:Spawn("target", "LunarUI_Target")
-        spawnedFrames.target:SetPoint(uf.target.point, UIParent, "CENTER", uf.target.x, uf.target.y)
+        SpawnAndAnchorFrame("target", "LunarUI_Target", function(f)
+            f:SetPoint(uf.target.point, UIParent, "CENTER", uf.target.x, uf.target.y)
+        end)
     end
 
     if uf.focus and uf.focus.enabled then
-        oUF:SetActiveStyle("LunarUI_Focus")
-        spawnedFrames.focus = oUF:Spawn("focus", "LunarUI_Focus")
-        spawnedFrames.focus:SetPoint(
-            uf.focus.point or "CENTER",
-            UIParent,
-            "CENTER",
-            uf.focus.x or -350,
-            uf.focus.y or 200
-        )
+        SpawnAndAnchorFrame("focus", "LunarUI_Focus", function(f)
+            f:SetPoint(uf.focus.point or "CENTER", UIParent, "CENTER", uf.focus.x or -350, uf.focus.y or 200)
+        end)
     end
 
     if uf.pet and uf.pet.enabled then
-        oUF:SetActiveStyle("LunarUI_Pet")
-        spawnedFrames.pet = oUF:Spawn("pet", "LunarUI_Pet")
-        if spawnedFrames.player then
-            spawnedFrames.pet:SetPoint("TOPLEFT", spawnedFrames.player, "BOTTOMLEFT", 0, -8)
-        else
-            spawnedFrames.pet:SetPoint("CENTER", UIParent, "CENTER", uf.pet.x or -200, uf.pet.y or -180)
-        end
+        SpawnAndAnchorFrame("pet", "LunarUI_Pet", function(f)
+            -- Special: Anchor to player if available
+            if spawnedFrames.player then
+                f:SetPoint("TOPLEFT", spawnedFrames.player, "BOTTOMLEFT", 0, -8)
+            else
+                f:SetPoint("CENTER", UIParent, "CENTER", uf.pet.x or -200, uf.pet.y or -180)
+            end
+        end)
     end
 
     if uf.targettarget and uf.targettarget.enabled then
-        oUF:SetActiveStyle("LunarUI_TargetTarget")
-        spawnedFrames.targettarget = oUF:Spawn("targettarget", "LunarUI_TargetTarget")
-        if spawnedFrames.target then
-            spawnedFrames.targettarget:SetPoint("TOPRIGHT", spawnedFrames.target, "BOTTOMRIGHT", 0, -28)
-        else
-            spawnedFrames.targettarget:SetPoint(
-                "CENTER",
-                UIParent,
-                "CENTER",
-                uf.targettarget.x or 280,
-                uf.targettarget.y or -180
-            )
-        end
+        SpawnAndAnchorFrame("targettarget", "LunarUI_TargetTarget", function(f)
+            -- Special: Anchor to target if available
+            if spawnedFrames.target then
+                f:SetPoint("TOPRIGHT", spawnedFrames.target, "BOTTOMRIGHT", 0, -28)
+            else
+                f:SetPoint("CENTER", UIParent, "CENTER", uf.targettarget.x or 280, uf.targettarget.y or -180)
+            end
+        end)
     end
 end
 

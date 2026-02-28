@@ -8,6 +8,27 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 --------------------------------------------------------------------------------
+-- 輔助函數
+--------------------------------------------------------------------------------
+
+--[[
+    安全呼叫可選模組函數（減少重複的存在性檢查）
+    @param funcName string - 函數名稱
+    @param ... any - 函數參數
+    @return boolean - 是否成功執行
+]]
+local function SafeCallModule(funcName, ...)
+    local func = LunarUI[funcName]
+    if func and type(func) == "function" then
+        func(LunarUI, ...)
+        return true
+    end
+    local L = Engine.L or {}
+    LunarUI:Print(L["FeatureUnavailable"] or string.format("Feature unavailable: %s", funcName))
+    return false
+end
+
+--------------------------------------------------------------------------------
 -- 命令註冊
 --------------------------------------------------------------------------------
 
@@ -60,55 +81,35 @@ function LunarUI:SlashCommand(input)
         if self.db.global then
             self.db.global.installComplete = false
         end
-        if self.ShowInstallWizard then
-            self:ShowInstallWizard()
-        else
-            self:Print(_L["InstallWizardUnavailable"] or "Install wizard unavailable")
-        end
+        SafeCallModule("ShowInstallWizard")
     elseif cmd == "move" then
-        LunarUI.ToggleMoveMode()
+        SafeCallModule("ToggleMoveMode")
     elseif cmd == "keybind" then
-        if self.ToggleKeybindMode then
-            self:ToggleKeybindMode()
-        else
-            self:Print(_L["KeybindModeUnavailable"] or "Keybind mode unavailable")
-        end
+        SafeCallModule("ToggleKeybindMode")
     elseif cmd == "export" then
-        if self.ShowExportFrame then
-            self:ShowExportFrame()
-        else
-            self:Print(_L["ExportUnavailable"] or "Export unavailable")
-        end
+        SafeCallModule("ShowExportFrame")
     elseif cmd == "import" then
-        if self.ShowImportFrame then
-            self:ShowImportFrame()
-        else
-            self:Print(_L["ImportUnavailable"] or "Import unavailable")
-        end
+        SafeCallModule("ShowImportFrame")
     elseif cmd == "profile" then
         local sub = args[2]
         if sub == "events" then
             local sub2 = args[3]
             if sub2 == "on" then
-                self:EnableEventProfiling()
+                SafeCallModule("EnableEventProfiling")
             elseif sub2 == "off" then
-                self:DisableEventProfiling()
+                SafeCallModule("DisableEventProfiling")
             else
-                self:PrintEventTimings()
+                SafeCallModule("PrintEventTimings")
             end
         elseif sub == "on" then
-            self:EnableProfiling()
+            SafeCallModule("EnableProfiling")
         elseif sub == "off" then
-            self:DisableProfiling()
+            SafeCallModule("DisableProfiling")
         elseif sub == "show" or not sub then
-            self:PrintProfilingResults()
+            SafeCallModule("PrintProfilingResults")
         end
     elseif cmd == "debugauras" then
-        if self.DebugAuraFrames then
-            self.DebugAuraFrames()
-        else
-            self:Print("DebugAuraFrames not available")
-        end
+        SafeCallModule("DebugAuraFrames")
     elseif cmd == "debugvigor" then
         LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件
         local sub = args[2]
