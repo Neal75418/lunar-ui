@@ -118,6 +118,10 @@ local L = {
     skinWeeklyRewards = "Great Vault",
     skinAddonList = "Addon List",
 
+    -- Frame Mover
+    FrameMover = "Frame Mover",
+    FrameMoverDesc = "Configure frame positioning grid and visual aids",
+
     -- Profiles
     profiles = "Profiles",
     profilesDesc = "Profile management",
