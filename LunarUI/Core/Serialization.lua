@@ -470,7 +470,7 @@ function LunarUI:ShowExportFrame()
 
     -- 建立或顯示匯出視窗
     if not self.exportFrame then
-        local frame = CreateFrame("Frame", "LunarUI_ExportFrame", UIParent, "BackdropTemplate")
+        local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
         frame:SetSize(500, 200)
         frame:SetPoint("CENTER")
         LunarUI.ApplyBackdrop(frame, nil, C.bgSolid)
@@ -534,7 +534,7 @@ end
 function LunarUI:ShowImportFrame()
     -- 建立或顯示匯入視窗
     if not self.importFrame then
-        local frame = CreateFrame("Frame", "LunarUI_ImportFrame", UIParent, "BackdropTemplate")
+        local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
         frame:SetSize(500, 200)
         frame:SetPoint("CENTER")
         LunarUI.ApplyBackdrop(frame, nil, C.bgSolid)

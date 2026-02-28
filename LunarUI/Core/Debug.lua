@@ -62,13 +62,14 @@ local function CreateDebugFrame()
         return debugFrame
     end
 
-    -- 重載時重用現有框架
-    local existingFrame = _G["LunarUIDebugFrame"]
+    -- 重載時重用現有框架（儲存在 LunarUI 命名空間）
+    local existingFrame = LunarUI.DebugFrame
     if existingFrame then
         debugFrame = existingFrame
         debugFrame:SetScript("OnUpdate", nil)
     else
-        debugFrame = CreateFrame("Frame", "LunarUIDebugFrame", UIParent, "BackdropTemplate")
+        debugFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+        LunarUI.DebugFrame = debugFrame
     end
 
     debugFrame:SetSize(200, 80)

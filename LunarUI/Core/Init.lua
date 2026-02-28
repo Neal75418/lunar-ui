@@ -177,6 +177,9 @@ function LunarUI:OnDisable()
     -- 取消所有計時器
     self:CancelAllTimers()
 
+    -- 取消事件註冊（防止記憶體洩漏）
+    self:UnregisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+
     -- 隱藏除錯面板
     if self.HideDebugOverlay then
         self:HideDebugOverlay()

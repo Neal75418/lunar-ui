@@ -80,6 +80,18 @@ if not Tags or not Tags.Methods or not Tags.Events then
     return
 end
 
+-- 安全包裝 tag 函數，避免 WoW API 呼叫失敗導致 oUF 崩潰
+local function SafeTag(func)
+    return function(...)
+        local ok, result = pcall(func, ...)
+        if ok then
+            return result
+        end
+        -- 靜默失敗，返回空字串而非 nil（避免 oUF 內部錯誤）
+        return ""
+    end
+end
+
 -- 單位不可用狀態文字（死亡/鬼魂/離線），回傳 nil 表示單位正常
 local function UnitStatusText(unit)
     if UnitIsDead(unit) then
@@ -94,38 +106,38 @@ local function UnitStatusText(unit)
 end
 
 -- [lunar:health] — 格式化當前血量（12.3K / 1.23M）
-Tags.Methods["lunar:health"] = function(unit)
+Tags.Methods["lunar:health"] = SafeTag(function(unit)
     local status = UnitStatusText(unit)
     if status then
         return status
     end
     return ShortValue(UnitHealth(unit) or 0)
-end
+end)
 Tags.Events["lunar:health"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
 
 -- [lunar:health:percent] — 血量百分比
-Tags.Methods["lunar:health:percent"] = function(unit)
+Tags.Methods["lunar:health:percent"] = SafeTag(function(unit)
     local status = UnitStatusText(unit)
     if status then
         return status
     end
     local pct = UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)
     return format("%d%%", pct or 0)
-end
+end)
 Tags.Events["lunar:health:percent"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
 
 -- [lunar:health:current-max] — "12.3K / 45.6K" 格式
-Tags.Methods["lunar:health:current-max"] = function(unit)
+Tags.Methods["lunar:health:current-max"] = SafeTag(function(unit)
     local status = UnitStatusText(unit)
     if status then
         return status
     end
     return ShortValue(UnitHealth(unit) or 0) .. " / " .. ShortValue(UnitHealthMax(unit) or 0)
-end
+end)
 Tags.Events["lunar:health:current-max"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
 
 -- [lunar:health:deficit] — 血量不足（僅在非滿血時顯示）
-Tags.Methods["lunar:health:deficit"] = function(unit)
+Tags.Methods["lunar:health:deficit"] = SafeTag(function(unit)
     if UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
         return ""
     end
@@ -136,43 +148,43 @@ Tags.Methods["lunar:health:deficit"] = function(unit)
         return ""
     end
     return "-" .. ShortValue(deficit)
-end
+end)
 Tags.Events["lunar:health:deficit"] = "UNIT_HEALTH UNIT_MAXHEALTH"
 
 -- [lunar:power] — 格式化當前能量
-Tags.Methods["lunar:power"] = function(unit)
+Tags.Methods["lunar:power"] = SafeTag(function(unit)
     local max = UnitPowerMax(unit) or 0
     if max == 0 then
         return ""
     end
     local cur = UnitPower(unit) or 0
     return ShortValue(cur)
-end
+end)
 Tags.Events["lunar:power"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER UNIT_DISPLAYPOWER"
 
 -- [lunar:power:percent] — 能量百分比
-Tags.Methods["lunar:power:percent"] = function(unit)
+Tags.Methods["lunar:power:percent"] = SafeTag(function(unit)
     local max = UnitPowerMax(unit) or 0
     if max == 0 then
         return ""
     end
     local cur = UnitPower(unit) or 0
     return format("%d%%", cur / max * 100)
-end
+end)
 Tags.Events["lunar:power:percent"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER UNIT_DISPLAYPOWER"
 
 -- [lunar:name:abbrev] — 縮寫名稱（"Arthas M."）
-Tags.Methods["lunar:name:abbrev"] = function(unit, realUnit)
+Tags.Methods["lunar:name:abbrev"] = SafeTag(function(unit, realUnit)
     local name = UnitName(realUnit or unit)
     if not name then
         return ""
     end
     return AbbreviateName(name)
-end
+end)
 Tags.Events["lunar:name:abbrev"] = "UNIT_NAME_UPDATE"
 
 -- [lunar:name:medium] — 中等長度名稱（截斷至 15 字元，UTF-8 安全）
-Tags.Methods["lunar:name:medium"] = function(unit, realUnit)
+Tags.Methods["lunar:name:medium"] = SafeTag(function(unit, realUnit)
     local name = UnitName(realUnit or unit)
     if not name then
         return ""
@@ -185,11 +197,11 @@ Tags.Methods["lunar:name:medium"] = function(unit, realUnit)
         return name:sub(1, 14) .. "..."
     end
     return name
-end
+end)
 Tags.Events["lunar:name:medium"] = "UNIT_NAME_UPDATE"
 
 -- [lunar:level:smart] — 智慧等級（滿級時隱藏）
-Tags.Methods["lunar:level:smart"] = function(unit)
+Tags.Methods["lunar:level:smart"] = SafeTag(function(unit)
     local level = UnitEffectiveLevel(unit)
     if level <= 0 then
         return "??"
@@ -199,21 +211,21 @@ Tags.Methods["lunar:level:smart"] = function(unit)
         return ""
     end
     return tostring(level)
-end
+end)
 Tags.Events["lunar:level:smart"] = "UNIT_LEVEL PLAYER_LEVEL_UP"
 
 -- [lunar:class] — 職業名稱（本地化）
-Tags.Methods["lunar:class"] = function(unit)
+Tags.Methods["lunar:class"] = SafeTag(function(unit)
     if not UnitIsPlayer(unit) then
         return ""
     end
     local class = UnitClass(unit)
     return class or ""
-end
+end)
 Tags.Events["lunar:class"] = "UNIT_NAME_UPDATE"
 
 -- [lunar:class:color] — 職業色彩前綴（用於著色後續文字）
-Tags.Methods["lunar:class:color"] = function(unit)
+Tags.Methods["lunar:class:color"] = SafeTag(function(unit)
     if not UnitIsPlayer(unit) then
         return ""
     end
@@ -226,11 +238,11 @@ Tags.Methods["lunar:class:color"] = function(unit)
         return ""
     end
     return format("|cff%02x%02x%02x", color.r * 255, color.g * 255, color.b * 255)
-end
+end)
 Tags.Events["lunar:class:color"] = "UNIT_NAME_UPDATE"
 
 -- [lunar:status] — 狀態文字（死亡/鬼魂/離線/暫離）
-Tags.Methods["lunar:status"] = function(unit)
+Tags.Methods["lunar:status"] = SafeTag(function(unit)
     local status = UnitStatusText(unit)
     if status then
         return status
@@ -239,7 +251,7 @@ Tags.Methods["lunar:status"] = function(unit)
         return "|cff999999AFK|r"
     end
     return ""
-end
+end)
 Tags.Events["lunar:status"] = "UNIT_HEALTH UNIT_CONNECTION PLAYER_FLAGS_CHANGED"
 -- PLAYER_FLAGS_CHANGED 可能不帶 unit 參數，需註冊為 SharedEvent
 if Tags.SharedEvents then
@@ -247,7 +259,7 @@ if Tags.SharedEvents then
 end
 
 -- [lunar:role] — 職責圖示文字（T/H/D）
-Tags.Methods["lunar:role"] = function(unit)
+Tags.Methods["lunar:role"] = SafeTag(function(unit)
     local role = UnitGroupRolesAssigned(unit)
     if role == "TANK" then
         return "|cff5555ffT|r"
@@ -259,11 +271,11 @@ Tags.Methods["lunar:role"] = function(unit)
         return "|cffff5555D|r"
     end
     return ""
-end
+end)
 Tags.Events["lunar:role"] = "GROUP_ROSTER_UPDATE"
 
 -- [lunar:group] — 團隊組別編號
-Tags.Methods["lunar:group"] = function(unit)
+Tags.Methods["lunar:group"] = SafeTag(function(unit)
     if not IsInRaid() then
         return ""
     end
@@ -274,7 +286,7 @@ Tags.Methods["lunar:group"] = function(unit)
         end
     end
     return ""
-end
+end)
 Tags.Events["lunar:group"] = "GROUP_ROSTER_UPDATE"
 
 -- 匯出輔助函數供其他模組使用

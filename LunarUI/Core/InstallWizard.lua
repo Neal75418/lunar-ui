@@ -482,7 +482,7 @@ local function CreateWizardFrame()
         return wizardFrame
     end
 
-    local f = CreateFrame("Frame", "LunarUIInstallWizard", UIParent, "BackdropTemplate")
+    local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
     f:SetSize(WIZARD_WIDTH, WIZARD_HEIGHT)
     f:SetPoint("CENTER")
     f:SetFrameStrata("DIALOG")
