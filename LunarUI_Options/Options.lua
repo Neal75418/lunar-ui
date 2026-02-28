@@ -121,6 +121,11 @@ local L = {
     -- Frame Mover
     FrameMover = "Frame Mover",
     FrameMoverDesc = "Configure frame positioning grid and visual aids",
+    FrameMoverSettingsDesc = "Adjust grid snapping and overlay visibility for frame positioning",
+    GridSize = "Grid Size",
+    GridSizeDesc = "Size of the positioning grid in pixels",
+    MoverAlpha = "Overlay Opacity",
+    MoverAlphaDesc = "Opacity of frame mover overlays (0.1 = transparent, 1.0 = opaque)",
 
     -- Profiles
     profiles = "Profiles",
