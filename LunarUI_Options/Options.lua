@@ -133,9 +133,21 @@ local L = {
 }
 
 -- 從主 addon 的 locale 表繼承翻譯（支援 i18n）
-if LunarUI.L then
-    setmetatable(L, { __index = LunarUI.L })
+-- 嘗試多個來源：
+-- 1. LunarUI.L (透過 GetAddon 取得的 addon 對象)
+-- 2. _G.LunarUI.L (全域 LunarUI 對象，應該與 LunarUI 相同)
+-- 延遲取得以確保主插件已完全載入本地化表
+local function GetMainLocale()
+    return LunarUI.L or (_G.LunarUI and _G.LunarUI.L)
 end
+
+-- 設定 metatable 以支援延遲繼承（每次查找時都檢查主插件的本地化表）
+setmetatable(L, {
+    __index = function(_, key)
+        local mainLocale = GetMainLocale()
+        return mainLocale and mainLocale[key]
+    end,
+})
 
 --------------------------------------------------------------------------------
 -- Helper Functions
