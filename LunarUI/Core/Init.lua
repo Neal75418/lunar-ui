@@ -142,9 +142,6 @@ function LunarUI:OnEnable()
     -- 註冊斜線命令
     self:RegisterCommands()
 
-    -- 設置 ESC 選項面板
-    self:SetupOptions()
-
     -- 設置 ESC 主選單按鈕
     self:SetupGameMenuButton()
 

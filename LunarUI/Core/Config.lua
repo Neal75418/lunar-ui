@@ -256,3 +256,43 @@ function LunarUI:ValidateDB()
         self:Print(string.format("|cffff8800[Config]|r Fixed %d invalid setting(s)", fixCount))
     end
 end
+
+--------------------------------------------------------------------------------
+-- HUD 框架註冊系統
+--------------------------------------------------------------------------------
+
+-- HUD 框架自動註冊表（各 HUD 模組初始化時呼叫 RegisterHUDFrame 註冊）
+local hudFrameNames = {}
+
+--[[
+    註冊 HUD 框架以納入全域縮放管理
+    @param name string - 框架的全域名稱（如 "LunarUI_AuraFrames"）
+]]
+function LunarUI:RegisterHUDFrame(name)
+    hudFrameNames[name] = true
+    -- 立即套用縮放至新註冊的框架
+    if self.db and self.db.profile and self.db.profile.hud then
+        local scale = self.db.profile.hud.scale or 1.0
+        local frame = _G[name]
+        if frame then
+            frame:SetScale(scale)
+        end
+    end
+end
+
+--[[
+    套用 HUD 全域縮放至所有已註冊的 HUD 框架
+]]
+function LunarUI:ApplyHUDScale()
+    if not self.db or not self.db.profile or not self.db.profile.hud then
+        return
+    end
+
+    local scale = self.db.profile.hud.scale or 1.0
+    for name in pairs(hudFrameNames) do
+        local frame = _G[name]
+        if frame then
+            frame:SetScale(scale)
+        end
+    end
+end

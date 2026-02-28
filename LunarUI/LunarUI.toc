@@ -37,7 +37,6 @@ Core\Config.lua
 Core\Utils.lua
 Core\Presets.lua
 Core\Serialization.lua
-Core\Options.lua
 Core\InstallWizard.lua
 Core\Commands.lua
 Core\VigorDebug.lua
