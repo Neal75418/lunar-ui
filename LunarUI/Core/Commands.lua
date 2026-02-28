@@ -111,7 +111,7 @@ function LunarUI:SlashCommand(input)
     elseif cmd == "debugauras" then
         SafeCallModule("DebugAuraFrames")
     elseif cmd == "debugvigor" then
-        LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件
+        C_AddOns.LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件
         local sub = args[2]
         if not sub then
             -- 無參數：執行一次性診斷 + 切換持續監控
@@ -155,7 +155,7 @@ function LunarUI:SlashCommand(input)
             self:DebugVigorFrames()
         end
     elseif cmd == "testvigor" then
-        LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件
+        C_AddOns.LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件
         self:ToggleTestVigor()
     else
         self:Print(string.format(_L["UnknownCommand"] or "Unknown command: %s", cmd))

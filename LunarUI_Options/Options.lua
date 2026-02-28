@@ -2857,8 +2857,8 @@ end
 
 local function OpenConfig()
     -- Load the options addon if not loaded
-    if not IsAddOnLoaded("LunarUI_Options") then
-        LoadAddOn("LunarUI_Options")
+    if not C_AddOns.IsAddOnLoaded("LunarUI_Options") then
+        C_AddOns.LoadAddOn("LunarUI_Options")
     end
 
     -- 設定更大的視窗尺寸
