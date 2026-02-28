@@ -22,6 +22,10 @@ end
 _G.LunarUI = LunarUI
 Engine.LunarUI = LunarUI
 
+-- 設定 locale table（Locales 已在 TOC 中先載入）
+-- 必須在此處設定，因為 Locales/enUS.lua 執行時 Engine.LunarUI 還不存在
+LunarUI.L = Engine.L
+
 --------------------------------------------------------------------------------
 -- 插件資訊與常數
 --------------------------------------------------------------------------------
