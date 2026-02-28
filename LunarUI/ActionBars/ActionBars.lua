@@ -701,6 +701,10 @@ local isBarsUnlocked = false -- 解鎖時完全停用淡出
 local fadeInitialized = false
 local fadeState = {} -- { [barKey] = { alpha, targetAlpha, hovered, timer } }
 
+-- 懸停偵測系統（合併後的全域狀態）
+local hoverCheckElapsed = 0
+local barHoverStates = {} -- { [barKey] = { wasHovering = bool } }
+
 local function GetFadeSettings()
     local db = LunarUI.db.profile.actionbars
     return db.fadeEnabled ~= false, db.fadeAlpha or 0.3, db.fadeDelay or 2.0, db.fadeDuration or 0.4
@@ -737,48 +741,129 @@ local fadeAnimFrame = CreateFrame("Frame")
 local fadeAnimActive = false
 local cachedFadeDuration = 0.4 -- 由 StartFadeAnimation 快取，動畫期間設定不會變
 
-local function UpdateFadeAnimations(_self, elapsed)
-    local anyActive = false
-    local fadeDuration = cachedFadeDuration
+-- 前向宣告（UpdateFadeAndHover 需要這些函數）
+local FadeBarTo
+local StartFadeAnimation
 
-    for barKey, state in pairs(fadeState) do
-        if state.alpha ~= state.targetAlpha then
-            anyActive = true
-            local bar = bars[barKey]
-            if bar then
-                local speed = (1.0 / math.max(fadeDuration, 0.05)) * elapsed
-                if state.alpha < state.targetAlpha then
-                    state.alpha = math.min(state.alpha + speed, state.targetAlpha)
-                else
-                    state.alpha = math.max(state.alpha - speed, state.targetAlpha)
+-- 合併的 OnUpdate 處理器：淡出動畫 + 懸停偵測
+local function UpdateFadeAndHover(_self, elapsed)
+    -- 全域淡出設定檢查（只檢查一次）
+    local fadeEnabled, fadeAlpha, fadeDelay = GetFadeSettings()
+
+    -- [分支 1] 淡出動畫（動畫進行中才執行）
+    local anyAnimActive = false
+    if fadeAnimActive and fadeEnabled then
+        local fadeDuration = cachedFadeDuration
+
+        for barKey, state in pairs(fadeState) do
+            if state.alpha ~= state.targetAlpha then
+                anyAnimActive = true
+                local bar = bars[barKey]
+                if bar then
+                    local speed = (1.0 / math.max(fadeDuration, 0.05)) * elapsed
+                    if state.alpha < state.targetAlpha then
+                        state.alpha = math.min(state.alpha + speed, state.targetAlpha)
+                    else
+                        state.alpha = math.max(state.alpha - speed, state.targetAlpha)
+                    end
+                    SetBarAlpha(bar, state.alpha)
                 end
-                SetBarAlpha(bar, state.alpha)
+            end
+        end
+
+        if not anyAnimActive then
+            fadeAnimActive = false
+        end
+    end
+
+    -- [分支 2] 懸停偵測（節流 0.05 秒）
+    if not isInCombat and fadeEnabled and not isBarsUnlocked then
+        hoverCheckElapsed = hoverCheckElapsed + elapsed
+
+        if hoverCheckElapsed >= 0.05 then
+            hoverCheckElapsed = 0
+
+            for barKey, bar in pairs(bars) do
+                if bar and IsBarFadeEnabled(barKey) then
+                    -- 初始化懸停狀態
+                    if not barHoverStates[barKey] then
+                        barHoverStates[barKey] = { wasHovering = false }
+                    end
+                    local hoverState = barHoverStates[barKey]
+
+                    local isHovering = bar:IsMouseOver(8, -8, -8, 8)
+
+                    -- 滑鼠進入
+                    if isHovering and not hoverState.wasHovering then
+                        hoverState.wasHovering = true
+                        if not fadeState[barKey] then
+                            fadeState[barKey] = {
+                                alpha = 1.0,
+                                targetAlpha = 1.0,
+                                hovered = false,
+                                timer = nil,
+                            }
+                        end
+                        fadeState[barKey].hovered = true
+                        if fadeState[barKey].timer then
+                            fadeState[barKey].timer:Cancel()
+                            fadeState[barKey].timer = nil
+                        end
+                        FadeBarTo(barKey, 1.0)
+
+                    -- 滑鼠離開
+                    elseif not isHovering and hoverState.wasHovering then
+                        hoverState.wasHovering = false
+                        if fadeState[barKey] then
+                            fadeState[barKey].hovered = false
+                        end
+                        if fadeState[barKey] and fadeState[barKey].timer then
+                            fadeState[barKey].timer:Cancel()
+                        end
+                        if not fadeState[barKey] then
+                            fadeState[barKey] = {
+                                alpha = 1.0,
+                                targetAlpha = 1.0,
+                                hovered = false,
+                                timer = nil,
+                            }
+                        end
+                        fadeState[barKey].timer = C_Timer.NewTimer(fadeDelay, function()
+                            if not isInCombat and fadeState[barKey] and not fadeState[barKey].hovered then
+                                FadeBarTo(barKey, fadeAlpha)
+                            end
+                            if fadeState[barKey] then
+                                fadeState[barKey].timer = nil
+                            end
+                        end)
+                    end
+                end
             end
         end
     end
 
-    if not anyActive then
-        fadeAnimActive = false
+    -- [自動停止] 無動畫且不在輪詢時
+    if not anyAnimActive and (isInCombat or not fadeEnabled or isBarsUnlocked) then
         fadeAnimFrame:SetScript("OnUpdate", nil)
     end
 end
 
-local function StartFadeAnimation()
+function FadeBarTo(barKey, targetAlpha)
+    if not fadeState[barKey] then
+        fadeState[barKey] = { alpha = 1.0, targetAlpha = 1.0, hovered = false, timer = nil }
+    end
+    fadeState[barKey].targetAlpha = targetAlpha
+    StartFadeAnimation()
+end
+
+function StartFadeAnimation()
     if fadeAnimActive then
         return
     end
     fadeAnimActive = true
     local _, _, _, dur = GetFadeSettings()
     cachedFadeDuration = dur or 0.4
-    fadeAnimFrame:SetScript("OnUpdate", UpdateFadeAnimations)
-end
-
-local function FadeBarTo(barKey, targetAlpha)
-    if not fadeState[barKey] then
-        fadeState[barKey] = { alpha = 1.0, targetAlpha = 1.0, hovered = false, timer = nil }
-    end
-    fadeState[barKey].targetAlpha = targetAlpha
-    StartFadeAnimation()
+    fadeAnimFrame:SetScript("OnUpdate", UpdateFadeAndHover)
 end
 
 local function FadeAllBarsOut()
@@ -805,7 +890,8 @@ local function FadeAllBarsIn()
 end
 
 -- 懸停偵測：使用透明遮罩框架覆蓋整條 bar
-local function SetupBarHoverDetection(bar, barKey)
+-- barKey 不再需要傳入，懸停偵測已整合至全域 UpdateFadeAndHover
+local function SetupBarHoverDetection(bar)
     if not bar or bar._lunarFadeHooked then
         return
     end
@@ -819,63 +905,8 @@ local function SetupBarHoverDetection(bar, barKey)
     hoverFrame:SetFrameLevel(bar:GetFrameLevel() + 50)
     hoverFrame:EnableMouse(false) -- 不攔截點擊
 
-    -- 使用 OnUpdate 檢查滑鼠是否在區域內（不攔截點擊的方式）
-    local hoverCheckElapsed = 0
-    local wasHovering = false
-
-    hoverFrame:SetScript("OnUpdate", function(_self, elapsed)
-        local enabled = GetFadeSettings()
-        if not enabled or isInCombat then
-            return
-        end
-        if not IsBarFadeEnabled(barKey) then
-            return
-        end
-
-        hoverCheckElapsed = hoverCheckElapsed + elapsed
-        if hoverCheckElapsed < 0.05 then
-            return
-        end
-        hoverCheckElapsed = 0
-
-        -- 使用 MouseIsOver 檢查滑鼠位置
-        local isHovering = bar:IsMouseOver(8, -8, -8, 8)
-
-        if isHovering and not wasHovering then
-            -- 滑鼠進入
-            wasHovering = true
-            if not fadeState[barKey] then
-                fadeState[barKey] = { alpha = 1.0, targetAlpha = 1.0, hovered = false, timer = nil }
-            end
-            fadeState[barKey].hovered = true
-            -- 取消延遲淡出計時器
-            if fadeState[barKey].timer then
-                fadeState[barKey].timer:Cancel()
-                fadeState[barKey].timer = nil
-            end
-            FadeBarTo(barKey, 1.0)
-        elseif not isHovering and wasHovering then
-            -- 滑鼠離開
-            wasHovering = false
-            if fadeState[barKey] then
-                fadeState[barKey].hovered = false
-            end
-            -- 延遲淡出
-            local _, fadeAlpha, fadeDelay = GetFadeSettings()
-            if fadeState[barKey] and fadeState[barKey].timer then
-                fadeState[barKey].timer:Cancel()
-            end
-            if not fadeState[barKey] then
-                fadeState[barKey] = { alpha = 1.0, targetAlpha = 1.0, hovered = false, timer = nil }
-            end
-            fadeState[barKey].timer = C_Timer.NewTimer(fadeDelay, function()
-                if not isInCombat and not fadeState[barKey].hovered then
-                    FadeBarTo(barKey, fadeAlpha)
-                end
-                fadeState[barKey].timer = nil
-            end)
-        end
-    end)
+    -- 懸停偵測已整合至 UpdateFadeAndHover 的統一 OnUpdate 中
+    -- 不再需要每個 bar 獨立的 OnUpdate 腳本
 
     bar._lunarHoverFrame = hoverFrame
 end
@@ -921,8 +952,8 @@ local function InitializeFade()
     fadeInitialized = true
 
     -- 為每條 bar 設定懸停偵測
-    for barKey, bar in pairs(bars) do
-        SetupBarHoverDetection(bar, barKey)
+    for _, bar in pairs(bars) do
+        SetupBarHoverDetection(bar)
     end
 
     -- 非戰鬥中立即啟動淡出
@@ -1305,6 +1336,7 @@ local function CleanupActionBars()
         end
     end
     wipe(fadeState)
+    wipe(barHoverStates) -- 清理懸停狀態
     wipe(pendingNormalClear)
     wipe(pendingDesaturate)
 
