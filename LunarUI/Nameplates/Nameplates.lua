@@ -674,25 +674,16 @@ end
 -- Fix 8: 記錄上一個目標名牌，切換時只更新前/後兩個
 local lastTargetNameplate = nil
 
-local function UpdateNameplateStacking()
-    if InCombatLockdown() then
-        return
-    end -- 12.0: 戰鬥中避免操作名牌子框架
-    local db = LunarUI.db and LunarUI.db.profile.nameplates
-    if not db or not db.stackingDetection then
-        return
-    end
-
-    -- 名牌高度作為重疊閾值
-    local npHeight = (db.height or 8) + 4 -- 名牌高度 + 小間距
-
-    -- Fix 7: 收集可見名牌到重用的平行陣列，避免每次建新 table
-    local count = 0
+-- 收集可見名牌到重用陣列
+local function CollectVisibleNameplates()
+    -- 清理重用陣列
     for k = 1, #stackFrames do
         stackFrames[k] = nil
         stackYs[k] = nil
         stackOffsets[k] = nil
     end
+
+    local count = 0
     for np in pairs(nameplateFrames) do
         if np:IsShown() and np:GetParent() then
             local _, screenY = np:GetCenter()
@@ -707,7 +698,11 @@ local function UpdateNameplateStacking()
         end
     end
 
-    -- 按 Y 座標排序（由下到上）— 簡單插入排序，名牌數量通常 < 30
+    return count
+end
+
+-- 按 Y 座標排序（由下到上）—— 簡單插入排序，名牌數量通常 < 30
+local function SortNameplatesByY(count)
     for i = 2, count do
         local keyFrame = stackFrames[i]
         local keyY = stackYs[i]
@@ -722,8 +717,10 @@ local function UpdateNameplateStacking()
         stackYs[j + 1] = keyY
         stackOffsets[j + 1] = 0
     end
+end
 
-    -- 偵測重疊並計算偏移（使用固定閾值）
+-- 偵測重疊並計算偏移（使用固定閾值）
+local function DetectOverlaps(count, npHeight)
     for i = 2, count do
         local effectivePrevY = stackYs[i - 1] + stackOffsets[i - 1]
         local dy = stackYs[i] - effectivePrevY
@@ -731,8 +728,10 @@ local function UpdateNameplateStacking()
             stackOffsets[i] = stackOffsets[i - 1] + STACKING_OFFSET
         end
     end
+end
 
-    -- 套用偏移
+-- 套用堆疊偏移到名牌元素
+local function ApplyStackOffsets(count)
     for i = 1, count do
         local np = stackFrames[i]
         if not np then
@@ -741,8 +740,6 @@ local function UpdateNameplateStacking()
         local offset = stackOffsets[i]
         if np._lunarStackOffset ~= offset then
             np._lunarStackOffset = offset
-            -- 偏移整個名牌的子元素（名稱/光環等在上方，不受影響）
-            -- 直接調整名牌的 Y 偏移
             local parent = np:GetParent()
             if parent and np.SetPoint then
                 -- oUF 名牌由暴雪 NamePlate 框架管理位置
@@ -778,6 +775,28 @@ local function UpdateNameplateStacking()
                 end
             end
         end
+    end
+end
+
+-- 主協調器：名牌堆疊偵測與調整
+local function UpdateNameplateStacking()
+    if InCombatLockdown() then
+        return
+    end
+    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    if not db or not db.stackingDetection then
+        return
+    end
+
+    -- 名牌高度作為重疊閾值
+    local npHeight = (db.height or 8) + 4
+
+    -- 執行堆疊調整流程
+    local count = CollectVisibleNameplates()
+    if count > 1 then
+        SortNameplatesByY(count)
+        DetectOverlaps(count, npHeight)
+        ApplyStackOffsets(count)
     end
 end
 
