@@ -187,6 +187,7 @@ function LunarUI:OnDisable()
     self:CancelAllTimers()
 
     -- 取消事件註冊（防止記憶體洩漏）
+    -- Config.lua:43 註冊的專精切換事件
     self:UnregisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 
     -- 隱藏除錯面板
