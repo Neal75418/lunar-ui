@@ -267,3 +267,202 @@ describe("GetConfigValue", function()
         assert.is_nil(LunarUI:GetConfigValue("hud", "scale"))
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- OnProfileChanged
+--------------------------------------------------------------------------------
+
+describe("OnProfileChanged", function()
+    it("calls ApplyHUDScale if available", function()
+        local called = false
+        local origApply = LunarUI.ApplyHUDScale
+        LunarUI.ApplyHUDScale = function()
+            called = true
+        end
+        local origPrint = LunarUI.Print
+        LunarUI.Print = function() end
+
+        LunarUI:OnProfileChanged()
+        assert.is_true(called)
+
+        LunarUI.ApplyHUDScale = origApply
+        LunarUI.Print = origPrint
+    end)
+
+    it("prints profile changed message", function()
+        local printed = nil
+        local origPrint = LunarUI.Print
+        LunarUI.Print = function(_self, msg)
+            printed = msg
+        end
+
+        LunarUI:OnProfileChanged()
+        assert.is_not_nil(printed)
+
+        LunarUI.Print = origPrint
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- RegisterHUDFrame
+--------------------------------------------------------------------------------
+
+describe("RegisterHUDFrame", function()
+    it("registers frame name and applies scale", function()
+        local mockFrame = {
+            _scale = 1,
+            SetScale = function(self, s)
+                self._scale = s
+            end,
+        }
+        _G["LunarUI_TestHUDFrame"] = mockFrame
+
+        LunarUI.db = { profile = { hud = { scale = 1.5 } } }
+        LunarUI:RegisterHUDFrame("LunarUI_TestHUDFrame")
+        assert.equals(1.5, mockFrame._scale)
+
+        _G["LunarUI_TestHUDFrame"] = nil
+    end)
+
+    it("handles missing frame gracefully", function()
+        LunarUI.db = { profile = { hud = { scale = 1.5 } } }
+        assert.has_no_errors(function()
+            LunarUI:RegisterHUDFrame("LunarUI_NonExistentFrame")
+        end)
+    end)
+
+    it("handles nil db gracefully", function()
+        local origDB = LunarUI.db
+        LunarUI.db = nil
+        assert.has_no_errors(function()
+            LunarUI:RegisterHUDFrame("LunarUI_SomeFrame")
+        end)
+        LunarUI.db = origDB
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- ApplyHUDScale
+--------------------------------------------------------------------------------
+
+describe("ApplyHUDScale", function()
+    it("applies scale to registered HUD frames", function()
+        local mockFrame = {
+            _scale = 1,
+            SetScale = function(self, s)
+                self._scale = s
+            end,
+        }
+        _G["LunarUI_TestScaleFrame"] = mockFrame
+
+        LunarUI.db = { profile = { hud = { scale = 1.5 } } }
+        LunarUI:RegisterHUDFrame("LunarUI_TestScaleFrame")
+        -- Reset and re-apply
+        mockFrame._scale = 1
+        LunarUI.db.profile.hud.scale = 2.0
+        LunarUI:ApplyHUDScale()
+        assert.equals(2.0, mockFrame._scale)
+
+        _G["LunarUI_TestScaleFrame"] = nil
+    end)
+
+    it("handles nil db gracefully", function()
+        local origDB = LunarUI.db
+        LunarUI.db = nil
+        assert.has_no_errors(function()
+            LunarUI:ApplyHUDScale()
+        end)
+        LunarUI.db = origDB
+    end)
+
+    it("uses default scale 1.0 when not set", function()
+        local mockFrame = {
+            _scale = 2,
+            SetScale = function(self, s)
+                self._scale = s
+            end,
+        }
+        _G["LunarUI_TestDefaultScale"] = mockFrame
+
+        LunarUI.db = { profile = { hud = {} } }
+        LunarUI:RegisterHUDFrame("LunarUI_TestDefaultScale")
+        assert.equals(1.0, mockFrame._scale)
+
+        _G["LunarUI_TestDefaultScale"] = nil
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- ValidateDB (additional edge cases)
+--------------------------------------------------------------------------------
+
+describe("ValidateDB edge cases", function()
+    it("handles nil db gracefully", function()
+        local origDB = LunarUI.db
+        LunarUI.db = nil
+        assert.has_no_errors(function()
+            LunarUI:ValidateDB()
+        end)
+        LunarUI.db = origDB
+    end)
+
+    it("fixes wrong type for string field (number where string expected)", function()
+        LunarUI.db = {
+            profile = {
+                style = { theme = 123, fontSize = 12, borderStyle = "ink" },
+                -- Need other modules to exist for the loop
+                hud = defaults.profile.hud,
+                actionbars = defaults.profile.actionbars,
+                minimap = defaults.profile.minimap,
+                bags = defaults.profile.bags,
+                chat = defaults.profile.chat,
+                nameplates = defaults.profile.nameplates,
+                auraFilters = defaults.profile.auraFilters,
+                frameMover = defaults.profile.frameMover,
+            },
+            global = {},
+            char = {},
+        }
+        LunarUI:ValidateDB()
+        assert.equals("lunar", LunarUI.db.profile.style.theme)
+    end)
+
+    it("fixes boolean type violation", function()
+        -- No boolean rules in current config, but ensure the branch is safe
+        LunarUI.db = {
+            profile = {
+                hud = defaults.profile.hud,
+                actionbars = defaults.profile.actionbars,
+                minimap = defaults.profile.minimap,
+                bags = defaults.profile.bags,
+                chat = defaults.profile.chat,
+                style = defaults.profile.style,
+                nameplates = defaults.profile.nameplates,
+                auraFilters = defaults.profile.auraFilters,
+                frameMover = defaults.profile.frameMover,
+            },
+            global = {},
+            char = {},
+        }
+        assert.has_no_errors(function()
+            LunarUI:ValidateDB()
+        end)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- OnDisable
+--------------------------------------------------------------------------------
+
+describe("OnDisable", function()
+    it("unregisters PLAYER_SPECIALIZATION_CHANGED event", function()
+        local unregistered = nil
+        local origUnreg = LunarUI.UnregisterEvent
+        LunarUI.UnregisterEvent = function(_self, event)
+            unregistered = event
+        end
+        LunarUI:OnDisable()
+        assert.equals("PLAYER_SPECIALIZATION_CHANGED", unregistered)
+        LunarUI.UnregisterEvent = origUnreg
+    end)
+end)

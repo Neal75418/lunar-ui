@@ -8,6 +8,46 @@
 require("spec.wow_mock")
 local loader = require("spec.loader")
 
+-- Mock CreateFrame for CreateEventHandler
+local MockFrame = {
+    _events = {},
+    _scripts = {},
+}
+function MockFrame:RegisterEvent(event)
+    self._events[event] = true
+end
+function MockFrame:SetScript(name, fn)
+    self._scripts[name] = fn
+end
+_G.CreateFrame = function()
+    return setmetatable({
+        _events = {},
+        _scripts = {},
+    }, { __index = MockFrame })
+end
+
+-- Mock GameTooltip for ShowTooltip
+_G.GameTooltip = {
+    _owner = nil,
+    _lines = {},
+    _shown = false,
+    SetOwner = function(self, owner, anchor, x, y)
+        self._owner = owner
+        self._anchor = anchor
+        self._x = x
+        self._y = y
+    end,
+    ClearLines = function(self)
+        self._lines = {}
+    end,
+    AddLine = function(self, text, r, g, b)
+        table.insert(self._lines, { text = text, r = r, g = g, b = b })
+    end,
+    Show = function(self)
+        self._shown = true
+    end,
+}
+
 local LunarUI = {}
 loader.loadAddonFile("LunarUI/Core/Utils.lua", LunarUI)
 
@@ -176,7 +216,21 @@ describe("ThresholdColor", function()
             assert.equals(0.2, b)
         end)
 
-        it("returns red for high values", function()
+        it("returns yellow for medium values", function()
+            local r, g, b = LunarUI.ThresholdColor(150, { 100, 200, 400 }, false)
+            assert.equals(0.9, r)
+            assert.equals(0.9, g)
+            assert.equals(0.2, b)
+        end)
+
+        it("returns orange for high values", function()
+            local r, g, b = LunarUI.ThresholdColor(300, { 100, 200, 400 }, false)
+            assert.equals(0.9, r)
+            assert.equals(0.5, g)
+            assert.equals(0.1, b)
+        end)
+
+        it("returns red for very high values", function()
             local r, g, b = LunarUI.ThresholdColor(500, { 100, 200, 400 }, false)
             assert.equals(0.9, r)
             assert.equals(0.2, g)
@@ -424,5 +478,152 @@ describe("GetModuleDB", function()
         }
         assert.same({ enabled = true }, LunarUI.GetModuleDB("unitframes"))
         assert.same({ scale = 1.2 }, LunarUI.GetModuleDB("minimap"))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- GetHUDSetting
+--------------------------------------------------------------------------------
+
+describe("GetHUDSetting", function()
+    local savedDB
+
+    before_each(function()
+        savedDB = LunarUI.db
+    end)
+
+    after_each(function()
+        LunarUI.db = savedDB
+    end)
+
+    it("returns value from hud config", function()
+        LunarUI.db = { profile = { hud = { auraIconSize = 40 } } }
+        assert.equals(40, LunarUI.GetHUDSetting("auraIconSize", 30))
+    end)
+
+    it("returns default when key is missing", function()
+        LunarUI.db = { profile = { hud = {} } }
+        assert.equals(30, LunarUI.GetHUDSetting("auraIconSize", 30))
+    end)
+
+    it("returns default when hud module is nil", function()
+        LunarUI.db = { profile = {} }
+        assert.equals(30, LunarUI.GetHUDSetting("auraIconSize", 30))
+    end)
+
+    it("returns default when db is nil", function()
+        LunarUI.db = nil
+        assert.equals(30, LunarUI.GetHUDSetting("auraIconSize", 30))
+    end)
+
+    it("returns false value (not default) when key exists as false", function()
+        LunarUI.db = { profile = { hud = { showAuras = false } } }
+        assert.equals(false, LunarUI.GetHUDSetting("showAuras", true))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- SafeCall
+--------------------------------------------------------------------------------
+
+describe("SafeCall", function()
+    it("returns true for successful call", function()
+        local result = LunarUI.SafeCall(function() end)
+        assert.is_true(result)
+    end)
+
+    it("returns false for erroring call", function()
+        local result = LunarUI.SafeCall(function()
+            error("boom")
+        end)
+        assert.is_false(result)
+    end)
+
+    it("calls Debug when available and function errors", function()
+        local debugMsg = nil
+        LunarUI.Debug = function(_self, msg)
+            debugMsg = msg
+        end
+        LunarUI.SafeCall(function()
+            error("test error")
+        end, "TestContext")
+        assert.is_not_nil(debugMsg)
+        assert.truthy(debugMsg:match("TestContext"))
+        LunarUI.Debug = nil
+    end)
+
+    it("does not call Debug on success", function()
+        local called = false
+        LunarUI.Debug = function()
+            called = true
+        end
+        LunarUI.SafeCall(function() end, "TestContext")
+        assert.is_false(called)
+        LunarUI.Debug = nil
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- CreateEventHandler
+--------------------------------------------------------------------------------
+
+describe("CreateEventHandler", function()
+    it("registers events and sets script", function()
+        local callback = function() end
+        local frame = LunarUI.CreateEventHandler({ "PLAYER_ENTERING_WORLD", "ZONE_CHANGED" }, callback)
+        assert.is_not_nil(frame)
+        assert.is_true(frame._events["PLAYER_ENTERING_WORLD"])
+        assert.is_true(frame._events["ZONE_CHANGED"])
+        assert.equals(callback, frame._scripts["OnEvent"])
+    end)
+
+    it("handles empty event list", function()
+        local frame = LunarUI.CreateEventHandler({}, function() end)
+        assert.is_not_nil(frame)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- ShowTooltip
+--------------------------------------------------------------------------------
+
+describe("ShowTooltip", function()
+    before_each(function()
+        _G.GameTooltip._lines = {}
+        _G.GameTooltip._shown = false
+        _G.GameTooltip._owner = nil
+    end)
+
+    it("shows tooltip with title and lines", function()
+        local owner = {}
+        LunarUI.ShowTooltip(owner, "Test Title", {
+            "Simple line",
+            { "Colored line", 1, 0.8, 0 },
+        })
+        assert.equals(owner, _G.GameTooltip._owner)
+        assert.is_true(_G.GameTooltip._shown)
+        assert.equals(3, #_G.GameTooltip._lines)
+        -- Title
+        assert.equals("Test Title", _G.GameTooltip._lines[1].text)
+        assert.equals(1, _G.GameTooltip._lines[1].r)
+        -- Simple line (gray)
+        assert.equals("Simple line", _G.GameTooltip._lines[2].text)
+        assert.equals(0.7, _G.GameTooltip._lines[2].r)
+        -- Colored line
+        assert.equals("Colored line", _G.GameTooltip._lines[3].text)
+        assert.equals(1, _G.GameTooltip._lines[3].r)
+        assert.equals(0.8, _G.GameTooltip._lines[3].g)
+    end)
+
+    it("shows tooltip without title", function()
+        LunarUI.ShowTooltip({}, nil, { "Line 1" })
+        assert.equals(1, #_G.GameTooltip._lines)
+        assert.equals("Line 1", _G.GameTooltip._lines[1].text)
+    end)
+
+    it("shows tooltip without lines", function()
+        LunarUI.ShowTooltip({}, "Title Only", nil)
+        assert.equals(1, #_G.GameTooltip._lines)
+        assert.equals("Title Only", _G.GameTooltip._lines[1].text)
     end)
 end)

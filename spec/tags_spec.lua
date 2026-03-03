@@ -425,10 +425,12 @@ describe("Tag lunar:name:abbrev", function()
 
     it("returns empty for nil name", function()
         _G._mockUnit.name = nil
+        local origUnitName = _G.UnitName
         _G.UnitName = function()
             return nil
         end
         assert.equals("", tag("player"))
+        _G.UnitName = origUnitName
     end)
 end)
 
@@ -452,6 +454,34 @@ describe("Tag lunar:name:medium", function()
         _G._mockUnit.name = "VeryLongCharacterName"
         local result = tag("player")
         assert.equals("VeryLongCharac...", result)
+    end)
+
+    it("truncates via sub fallback when utf8sub is nil", function()
+        -- 載入一個沒有 string.utf8sub 的 Tags.lua 實例
+        local orig_utf8sub = _G.string.utf8sub
+        _G.string.utf8sub = nil
+
+        -- 確保 UnitName mock 正確（避免被前面測試污染）
+        local origUnitName = _G.UnitName
+        _G.UnitName = function()
+            return _G._mockUnit.name
+        end
+
+        local testLunarUI = {}
+        local testEngine = {
+            oUF = {
+                Tags = { Methods = {}, Events = {}, SharedEvents = {} },
+            },
+        }
+        loader.loadAddonFile("LunarUI/Core/Tags.lua", testLunarUI, testEngine)
+
+        _G._mockUnit.name = "VeryLongCharacterName"
+        local tag2 = testLunarUI.TagMethods["lunar:name:medium"]
+        local result = tag2("player")
+        assert.equals("VeryLongCharac...", result)
+
+        _G.string.utf8sub = orig_utf8sub
+        _G.UnitName = origUnitName
     end)
 
     it("returns empty for nil name", function()
@@ -589,6 +619,89 @@ describe("Tag lunar:role", function()
 
     it("returns empty for NONE", function()
         assert.equals("", tag("player"))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- Tag: lunar:group
+--------------------------------------------------------------------------------
+
+describe("Tag lunar:group", function()
+    before_each(function()
+        resetMockUnit()
+    end)
+
+    it("returns empty when not in raid", function()
+        -- 原始載入的 IsInRaid 回傳 false，直接用原始 tag
+        local tag = TagMethods["lunar:group"]
+        assert.equals("", tag("player"))
+    end)
+
+    it("returns group number when in raid", function()
+        -- Tags.lua 用 local 捕獲 API，需載入新實例才能用 raid mocks
+        local origIsInRaid = _G.IsInRaid
+        local origGetNum = _G.GetNumGroupMembers
+        local origUnitIsUnit = _G.UnitIsUnit
+        local origGetRaid = _G.GetRaidRosterInfo
+
+        _G.IsInRaid = function()
+            return true
+        end
+        _G.GetNumGroupMembers = function()
+            return 5
+        end
+        _G.UnitIsUnit = function(_u1, u2)
+            return u2 == "raid2"
+        end
+        _G.GetRaidRosterInfo = function(i)
+            if i == 2 then
+                return "Arthas", nil, 3
+            end
+            return nil
+        end
+
+        local testLunarUI = {}
+        local testEngine = {
+            oUF = { Tags = { Methods = {}, Events = {}, SharedEvents = {} } },
+        }
+        loader.loadAddonFile("LunarUI/Core/Tags.lua", testLunarUI, testEngine)
+
+        local raidTag = testLunarUI.TagMethods["lunar:group"]
+        assert.equals("3", raidTag("player"))
+
+        _G.IsInRaid = origIsInRaid
+        _G.GetNumGroupMembers = origGetNum
+        _G.UnitIsUnit = origUnitIsUnit
+        _G.GetRaidRosterInfo = origGetRaid
+    end)
+
+    it("returns empty when unit not found in raid", function()
+        local origIsInRaid = _G.IsInRaid
+        local origGetNum = _G.GetNumGroupMembers
+        local origUnitIsUnit = _G.UnitIsUnit
+
+        _G.IsInRaid = function()
+            return true
+        end
+        _G.GetNumGroupMembers = function()
+            return 2
+        end
+        _G.UnitIsUnit = function()
+            return false
+        end
+
+        local testLunarUI = {}
+        local testEngine = {
+            oUF = { Tags = { Methods = {}, Events = {}, SharedEvents = {} } },
+        }
+        loader.loadAddonFile("LunarUI/Core/Tags.lua", testLunarUI, testEngine)
+
+        local raidTag = testLunarUI.TagMethods["lunar:group"]
+        assert.equals("", raidTag("player"))
+
+        _G.IsInRaid = origIsInRaid
+        _G.GetNumGroupMembers = origGetNum
+        _G.UnitIsUnit = origUnitIsUnit
     end)
 end)
 
