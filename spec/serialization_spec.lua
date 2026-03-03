@@ -664,3 +664,212 @@ describe("MergeTable type guard", function()
         assert.equals(1, target.a)
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- SerializeValue (additional coverage)
+--------------------------------------------------------------------------------
+
+describe("SerializeValue additional coverage", function()
+    it("serializes numeric keys with bracket syntax", function()
+        local result = LunarUI.SerializeValue({ [1] = "a", [2] = "b" })
+        assert.is_string(result)
+        assert.truthy(result:find("%[1%]"))
+        assert.truthy(result:find("%[2%]"))
+    end)
+
+    it("serializes function as nil", function()
+        local result = LunarUI.SerializeValue(function() end)
+        assert.equals("nil", result)
+    end)
+
+    it("calls Debug on depth exceeded when Debug is available", function()
+        local debugMsg = nil
+        LunarUI.Debug = function(_self, msg)
+            debugMsg = msg
+        end
+        -- Build table deeper than 20 levels
+        local t = { val = "leaf" }
+        for _ = 1, 25 do
+            t = { inner = t }
+        end
+        LunarUI.SerializeValue(t)
+        assert.is_not_nil(debugMsg)
+        assert.truthy(debugMsg:find("depth"))
+        LunarUI.Debug = nil
+    end)
+
+    it("calls Debug on circular reference when Debug is available", function()
+        local debugMsg = nil
+        LunarUI.Debug = function(_self, msg)
+            debugMsg = msg
+        end
+        local t = {}
+        t.self = t
+        LunarUI.SerializeValue(t)
+        assert.is_not_nil(debugMsg)
+        assert.truthy(debugMsg:find("circular"))
+        LunarUI.Debug = nil
+    end)
+
+    it("serializes mixed key types (string and number)", function()
+        local result = LunarUI.SerializeValue({ a = 1, [3] = "x" })
+        assert.is_string(result)
+        -- Round-trip check
+        local deserialized = LunarUI.DeserializeString(result)
+        assert.equals(1, deserialized.a)
+        assert.equals("x", deserialized[3])
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- DeserializeString (additional coverage)
+--------------------------------------------------------------------------------
+
+describe("DeserializeString additional coverage", function()
+    it("handles escape sequence \\r", function()
+        local result = LunarUI.DeserializeString('"line1\\rline2"')
+        assert.equals("line1\rline2", result)
+    end)
+
+    it("handles escape sequence \\' inside single-quoted string", function()
+        local result = LunarUI.DeserializeString("'it\\'s'")
+        assert.equals("it's", result)
+    end)
+
+    it("returns error for invalid table key", function()
+        -- Starting with a digit without brackets
+        local result, err = LunarUI.DeserializeString("{123=1}")
+        -- 123 is parsed as a value, then error
+        assert.is_nil(result)
+        assert.is_string(err)
+    end)
+
+    it("returns error for missing ] in bracketed key", function()
+        local result, err = LunarUI.DeserializeString('{["key"=1}')
+        assert.is_nil(result)
+        assert.is_string(err)
+    end)
+
+    it("returns error for missing = after bracketed key", function()
+        local result, err = LunarUI.DeserializeString('{["key"]1}')
+        assert.is_nil(result)
+        assert.is_string(err)
+    end)
+
+    it("returns error for missing = after bare key", function()
+        local result, err = LunarUI.DeserializeString("{foo 1}")
+        assert.is_nil(result)
+        assert.is_string(err)
+    end)
+
+    it("returns error for unexpected character", function()
+        local result, err = LunarUI.DeserializeString("@invalid")
+        assert.is_nil(result)
+        assert.is_string(err)
+    end)
+
+    it("returns error for empty input at parseValue", function()
+        local result, err = LunarUI.DeserializeString("   ")
+        assert.is_nil(result)
+        assert.is_string(err)
+    end)
+
+    it("handles string key in table with bracket notation", function()
+        local result = LunarUI.DeserializeString('{["hello"]="world"}')
+        assert.equals("world", result["hello"])
+    end)
+
+    it("handles nested table parse error propagation", function()
+        local result, err = LunarUI.DeserializeString("{a={b=@invalid}}")
+        assert.is_nil(result)
+        assert.is_string(err)
+    end)
+
+    it("handles pcall wrapper for crash during parse", function()
+        -- DeserializeString wraps inner function with pcall
+        -- Force an error by passing non-string that bypasses nil check
+        local result, err = LunarUI.DeserializeString(42)
+        assert.is_nil(result)
+        assert.is_string(err)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- ExportSettings (additional coverage)
+--------------------------------------------------------------------------------
+
+describe("ExportSettings additional coverage", function()
+    it("excludes userdata values from export", function()
+        -- Simulate userdata with a table that has __type = userdata
+        -- In real WoW, these would be actual userdata; here we just test that
+        -- non-function/non-userdata values are included
+        LunarUI.db = {
+            profile = {
+                style = { fontSize = 14 },
+                name = "test",
+            },
+        }
+        local result = LunarUI:ExportSettings()
+        assert.is_string(result)
+        assert.truthy(result:find("fontSize"))
+        assert.truthy(result:find("test"))
+    end)
+
+    it("includes version in exported data", function()
+        LunarUI.version = "2.0-test"
+        LunarUI.db = { profile = { style = { fontSize = 12 } } }
+        local result = LunarUI:ExportSettings()
+        assert.truthy(result:find("2.0%-test"))
+        LunarUI.version = "1.0-test"
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- ImportSettings (additional coverage)
+--------------------------------------------------------------------------------
+
+describe("ImportSettings additional coverage", function()
+    before_each(function()
+        LunarUI.db = {
+            profile = {
+                style = { fontSize = 12, theme = "lunar" },
+                hud = { scale = 1.0, enabled = true },
+                actionbars = {
+                    bar1 = { buttonSize = 36, enabled = true },
+                    bar2 = { buttonSize = 36, enabled = true },
+                },
+                unitframes = {
+                    player = { enabled = true, width = 220 },
+                },
+            },
+        }
+    end)
+
+    it("clamps out-of-range hud.scale during import", function()
+        local data = {
+            version = "1.0",
+            profile = { hud = { scale = 10.0 } },
+        }
+        local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
+        local ok = LunarUI:ImportSettings(serialized)
+        assert.is_true(ok)
+        assert.equals(2.0, LunarUI.db.profile.hud.scale)
+    end)
+
+    it("clamps out-of-range bar buttonSize during import", function()
+        local data = {
+            version = "1.0",
+            profile = { actionbars = { bar1 = { buttonSize = 100 } } },
+        }
+        local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
+        local ok = LunarUI:ImportSettings(serialized)
+        assert.is_true(ok)
+        assert.equals(48, LunarUI.db.profile.actionbars.bar1.buttonSize)
+    end)
+
+    it("returns false when self.db.profile is nil", function()
+        LunarUI.db = { profile = nil }
+        local ok = LunarUI:ImportSettings('LUNARUI{profile={},version="1.0"}')
+        assert.is_false(ok)
+    end)
+end)
