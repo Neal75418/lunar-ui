@@ -55,6 +55,10 @@ function LunarUI:InitDB()
     end)
 end
 
+function LunarUI:OnDisable()
+    self:UnregisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+end
+
 --[[
     設定檔變更回呼
 ]]
