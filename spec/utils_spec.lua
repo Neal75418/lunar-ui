@@ -378,3 +378,51 @@ describe("EscapePattern", function()
         assert.equals("a%+b%*c", LunarUI.EscapePattern("a+b*c"))
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- GetModuleDB
+--------------------------------------------------------------------------------
+
+describe("GetModuleDB", function()
+    local savedDB
+
+    before_each(function()
+        savedDB = LunarUI.db
+    end)
+
+    after_each(function()
+        LunarUI.db = savedDB
+    end)
+
+    it("returns module profile data", function()
+        LunarUI.db = { profile = { chat = { fontSize = 14 } } }
+        local result = LunarUI.GetModuleDB("chat")
+        assert.same({ fontSize = 14 }, result)
+    end)
+
+    it("returns nil for missing module key", function()
+        LunarUI.db = { profile = {} }
+        assert.is_nil(LunarUI.GetModuleDB("nonexistent"))
+    end)
+
+    it("returns nil when db is nil", function()
+        LunarUI.db = nil
+        assert.is_nil(LunarUI.GetModuleDB("chat"))
+    end)
+
+    it("returns nil when profile is nil", function()
+        LunarUI.db = { profile = nil }
+        assert.is_nil(LunarUI.GetModuleDB("chat"))
+    end)
+
+    it("returns correct data for different modules", function()
+        LunarUI.db = {
+            profile = {
+                unitframes = { enabled = true },
+                minimap = { scale = 1.2 },
+            },
+        }
+        assert.same({ enabled = true }, LunarUI.GetModuleDB("unitframes"))
+        assert.same({ scale = 1.2 }, LunarUI.GetModuleDB("minimap"))
+    end)
+end)

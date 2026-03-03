@@ -591,3 +591,83 @@ describe("Tag lunar:role", function()
         assert.equals("", tag("player"))
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- SafeTag pcall 保護
+-- Tags.lua 在載入時用 local 捕獲 WoW API（upvalue），因此需要在載入前
+-- 設定 error-throwing mock，再載入一個新的 Tags.lua 實例來驗證 pcall 保護
+--------------------------------------------------------------------------------
+
+describe("SafeTag protection", function()
+    it("returns empty string when UnitHealth throws error at load time", function()
+        -- 儲存原始 mock 並替換為 error-throwing 版本
+        local origUnitHealth = _G.UnitHealth
+        _G.UnitHealth = function()
+            error("forbidden table access")
+        end
+
+        -- 載入新的 Tags.lua 實例（捕獲 error-throwing UnitHealth）
+        local testLunarUI = {}
+        local testEngine = {
+            oUF = {
+                Tags = { Methods = {}, Events = {}, SharedEvents = {} },
+            },
+        }
+        loader.loadAddonFile("LunarUI/Core/Tags.lua", testLunarUI, testEngine)
+
+        -- SafeTag 應該保護 pcall，回傳 "" 而非崩潰
+        local tag = testLunarUI.TagMethods["lunar:health"]
+        assert.equals("", tag("player"))
+
+        -- 還原
+        _G.UnitHealth = origUnitHealth
+    end)
+
+    it("returns empty string when UnitName throws error at load time", function()
+        local origUnitName = _G.UnitName
+        _G.UnitName = function()
+            error("unit not found")
+        end
+
+        local testLunarUI = {}
+        local testEngine = {
+            oUF = {
+                Tags = { Methods = {}, Events = {}, SharedEvents = {} },
+            },
+        }
+        loader.loadAddonFile("LunarUI/Core/Tags.lua", testLunarUI, testEngine)
+
+        local tag = testLunarUI.TagMethods["lunar:name:abbrev"]
+        assert.equals("", tag("player"))
+
+        _G.UnitName = origUnitName
+    end)
+
+    it("returns empty string when UnitClass throws error at load time", function()
+        local origUnitClass = _G.UnitClass
+        _G.UnitClass = function()
+            error("class unavailable")
+        end
+
+        local testLunarUI = {}
+        local testEngine = {
+            oUF = {
+                Tags = { Methods = {}, Events = {}, SharedEvents = {} },
+            },
+        }
+        loader.loadAddonFile("LunarUI/Core/Tags.lua", testLunarUI, testEngine)
+
+        local tag = testLunarUI.TagMethods["lunar:class"]
+        assert.equals("", tag("player"))
+
+        _G.UnitClass = origUnitClass
+    end)
+
+    it("normal instance tags still work correctly", function()
+        -- 確認原始載入的 tags 仍正常工作
+        resetMockUnit()
+        local tag = TagMethods["lunar:health"]
+        _G._mockUnit.health = 5000
+        assert.equals("5.0K", tag("player"))
+    end)
+end)
