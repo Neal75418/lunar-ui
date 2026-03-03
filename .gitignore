@@ -19,6 +19,8 @@ Desktop.ini
 
 # Lua
 *.luac
+luacov.stats.out
+luacov.report.out
 
 # Old source directory (migrated to LunarUI/)
 src/
