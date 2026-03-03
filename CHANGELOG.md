@@ -17,6 +17,8 @@ timeline
     2026-02-07 : v0.8.0 HUD + Skins
                : v0.9.x 字體 + FCT + 穩定性
     2026-02-09 : v1.0.0 正式版
+    2026-02-28 : Code Review + 重構
+               : 文件整理
 ```
 
 ---
@@ -26,6 +28,7 @@ timeline
 ### Added
 
 - **Makefile** &mdash; 標準化開發指令（`make test` / `lint` / `format` / `coverage` / `check`）
+- **LunarUI_Debug** &mdash; VigorDebug 診斷工具抽取為 LoadOnDemand 獨立插件，`/lunar debugvigor` 時自動載入
 
 ### Fixed
 
@@ -61,6 +64,11 @@ timeline
     - PLAYER_SPECIALIZATION_CHANGED 事件缺少 isInitialized guard
 
 - **Serialization.lua** &mdash; `MergeTable` 非 table source 輸入會 crash（新增 type guard）
+- **本地化** &mdash; 修復 FrameMover 選項缺少的語系字串、Options locale 繼承問題
+- **C_AddOns** &mdash; 全面更新為 `C_AddOns` 命名空間 API（WoW 12.0 相容性）
+- **Init.lua** &mdash; 啟動時預載 LunarUI_Options 以註冊暴雪 ESC 設定面板入口
+- **Tags.lua** &mdash; 所有 tag 方法加入 SafeTag pcall 安全包裝，防止 oUF 崩潰
+- **Config.lua** &mdash; OnDisable 加入 UnregisterEvent 事件清理，防止記憶體洩漏
 
 ### Changed
 
@@ -68,6 +76,12 @@ timeline
 - **Utils.lua** &mdash; 從 Minimap/Chat 提取 `FormatGameTime`、`FormatCoordinates`、`EscapePattern` 至 Utils.lua 共用
 - **Minimap.lua** &mdash; `UpdateCoordinates` / `UpdateClock` 改用 `LunarUI.FormatCoordinates()` / `LunarUI.FormatGameTime()`
 - **Chat.lua** &mdash; `CheckKeywordAlert` 改用 `LunarUI.EscapePattern()`
+- **Core** &mdash; 移除 `Core/Options.lua`（1,587 行），HUD 方法遷移至 Config.lua；LunarUI_Options 為唯一 Options provider
+- **Core** &mdash; 提取 `GetModuleDB()` / `CreateIconBorder()` 共用工具函數至 Utils.lua / Skins.lua
+- **ActionBars** &mdash; 合併 N 個獨立 hoverFrame OnUpdate 為單一 handler，減少 87.5% 無謂輪詢
+- **ActionBars** &mdash; 拆分 `UpdateFadeAndHover`（101 行）為 `UpdateFadeAnimation` + `UpdateHoverDetection` + 協調器
+- **Nameplates** &mdash; 拆分 `UpdateNameplateStacking`（106 行）為 `CollectVisibleNameplates` + `SortNameplatesByY` + `DetectOverlaps` + `ApplyStackOffsets` + 協調器
+- **UnitFrames / Commands** &mdash; 減少重複代碼，提取共用模式
 - 測試數量 354 → 373（+19 tests）
 
 ### Planned

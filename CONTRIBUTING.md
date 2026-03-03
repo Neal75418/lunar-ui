@@ -1,6 +1,19 @@
 # Contributing to LunarUI
 
-## Development Setup
+## 📋 前置需求
+
+| 工具           | 用途     | 安裝方式                                                                                         |
+|:-------------|:-------|:---------------------------------------------------------------------------------------------|
+| **Lua 5.1**  | 執行環境   | `brew install lua@5.1`                                                                       |
+| **LuaRocks** | 套件管理   | `brew install luarocks`                                                                      |
+| **busted**   | 單元測試   | `luarocks install busted`                                                                    |
+| **luacheck** | 靜態分析   | `luarocks install luacheck`                                                                  |
+| **luacov**   | 覆蓋率報告  | `luarocks install luacov`                                                                    |
+| **StyLua**   | 程式碼格式化 | `cargo install stylua` 或 [GitHub Releases](https://github.com/JohnnyMorganz/StyLua/releases) |
+
+---
+
+## 🚀 Development Setup
 
 ```bash
 git clone https://github.com/Neal75418/lunar-ui.git
@@ -11,23 +24,32 @@ cd lunar-ui
 Symlink 到 WoW AddOns 目錄：
 
 ```bash
-ln -s $(pwd)/LunarUI "/path/to/World of Warcraft/_retail_/Interface/AddOns/LunarUI"
-ln -s $(pwd)/LunarUI_Options "/path/to/World of Warcraft/_retail_/Interface/AddOns/LunarUI_Options"
+ADDONS="/path/to/World of Warcraft/_retail_/Interface/AddOns"
+ln -s "$(pwd)/LunarUI" "$ADDONS/LunarUI"
+ln -s "$(pwd)/LunarUI_Options" "$ADDONS/LunarUI_Options"
+ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 ```
 
-## Code Style
+---
+
+## 🎨 Code Style
 
 - **語言**：Lua 5.1（LuaJIT），WoW 12.0.1（Interface: 120001）
 - **縮排**：4 spaces
-- **行寬**：luacheck 無限制；stylua 格式化至 120 欄（`.stylua.toml`）
+- **行寬**：luacheck 無限制；StyLua 格式化至 120 欄（`.stylua.toml`）
 - **命名**：
   - 全域函數：`LunarUI.FunctionName` 或 `LunarUI:MethodName`
   - 區域函數：`camelCase`
   - 常數表：`UPPER_SNAKE_CASE`
-  - 未使用變數：加 `_` 前綴（如 `_self`, `_event`）
+  - 未使用變數：加 `_` 前綴（如 `_self`、`_event`）
 - **註解語言**：繁體中文
+- **字體**：統一使用 `LunarUI.SetFont(fs, size, flags)`，禁止硬編碼 `STANDARD_TEXT_FONT`
+- **DB 存取**：使用 `LunarUI.GetModuleDB(key)` 取代 `LunarUI.db and LunarUI.db.profile.xxx`
+- **匯出慣例**：`LunarUI.FnName = localFn`，讓 local 純函數可被測試存取
 
-## Development Commands
+---
+
+## 🔨 Development Commands
 
 專案提供 [Makefile](Makefile) 整合所有開發指令：
 
@@ -41,56 +63,57 @@ make check        # 一次跑完 lint + format + test
 make locale-check # 檢查語系 key 對稱性
 ```
 
-### Linting
-
-專案使用 [luacheck](https://github.com/mpeterv/luacheck) 進行靜態分析。
-
-```bash
-# 安裝
-luarocks install luacheck
-
-# 執行（自動讀取 .luacheckrc）
-luacheck .
-# 或
-make lint
-```
-
 CI 要求零警告。提交前請確認 `make check` 通過。
 
-## Architecture
+---
+
+## 🏗️ Architecture
 
 ### TOC 載入順序
 
 ```mermaid
 graph LR
     Libs --> Locales --> Core["Core<br/>Init → Tokens → Defaults → Config → Utils"]
-    Core --> Media
+    Core --> CoreLate["Core 後段<br/>Presets → Serial → Wizard → Commands"]
+    CoreLate --> Media
     Media --> Combat["UnitFrames / Nameplates / ActionBars"]
     Combat --> HUD["HUD / Modules / Skins"]
 
     style Core fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
+    style CoreLate fill:#36331b,stroke:#6c7a89,color:#e0e0e0
     style Combat fill:#2d1b36,stroke:#6c7a89,color:#e0e0e0
     style HUD fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
 ```
 
+> 載入順序重要 — Locales 先於所有模組，所有模組依賴 `Init.lua` 建立的 Engine。
+
 ### Module 註冊
 
-所有模組透過 `LunarUI:RegisterModule(name, callbacks)` 註冊，`callbacks` 為包含 `onEnable`、`onDisable`（可選）、`delay`（可選）的 table。在 Ace3 `OnEnable` 時初始化。
+所有模組透過 `LunarUI:RegisterModule(name, callbacks)` 註冊：
+
+```lua
+LunarUI:RegisterModule("ModuleName", {
+    onEnable  = function() ... end,
+    onDisable = function() ... end,   -- 可選，反向順序執行
+    delay     = 0.5,                  -- 可選，延遲初始化（秒）
+})
+```
 
 ### Taint 規避
 
-WoW 的安全框架有嚴格的 taint 機制。修改暴雪框架時：
+WoW 的安全框架有嚴格的 taint 機制。詳細規則參考 [CLAUDE.md](CLAUDE.md) 的 Taint 避免模式表格。
 
-| 情境 | 錯誤做法 | 正確做法 |
-|:-----|:---------|:---------|
-| Hook 全域函數 | 直接覆寫 `_G.Fn` | `hooksecurefunc(obj, "Method", fn)` |
-| 修改框架 | 戰鬥中直接操作 | `if InCombatLockdown() then return end` |
-| 存取安全資料 | 直接存取 | `pcall` 包裹 |
-| 修改屬性 | `rawset` | 避免使用 |
+核心原則：
+
+| 情境        | 錯誤做法         | 正確做法                                    |
+|:----------|:-------------|:----------------------------------------|
+| Hook 全域函數 | 直接覆寫 `_G.Fn` | `hooksecurefunc(obj, "Method", fn)`     |
+| 修改框架      | 戰鬥中直接操作      | `if InCombatLockdown() then return end` |
+| 存取安全資料    | 直接存取         | `pcall` 包裹                              |
 
 ### Skin 模組
 
-新增 Skin 的模式：
+新增 Skin 的標準模式：
 
 ```lua
 local function SkinMyFrame()
@@ -100,29 +123,46 @@ local function SkinMyFrame()
     return true
 end
 
--- 對於延遲載入 addon：
+-- 延遲載入的 Blizzard addon：
 LunarUI.RegisterSkin("myframe", "Blizzard_MyAddon", SkinMyFrame)
 
--- 對於 PLAYER_ENTERING_WORLD 時已存在的框架：
+-- PLAYER_ENTERING_WORLD 時已存在的框架：
 LunarUI.RegisterSkin("myframe", "PLAYER_ENTERING_WORLD", SkinMyFrame)
 ```
 
-## Commit Convention
+---
+
+## 🧪 測試
+
+| 項目          | 說明                                                                                      |
+|:------------|:----------------------------------------------------------------------------------------|
+| **工具**      | busted + luacov，設定檔 `.busted` / `.luacov`                                               |
+| **環境模擬**    | `spec/wow_mock.lua`（WoW API stub）、`spec/loader.lua`（模擬 `(_ADDON_NAME, Engine)` varargs） |
+| **匯出慣例**    | `LunarUI.FnName = localFn`，讓 local 純函數可被測試存取                                            |
+| **命名衝突**    | 多模組有同名 local 函數時用前綴區分（如 `BagsGetItemLevel` vs `GetItemLevel`）                           |
+| **Mock 要點** | 模組層級有副作用時（`CreateFrame`、`RegisterModule`），需在 spec 內提供完整 stub                            |
+
+---
+
+## 📝 Commit Convention
 
 使用 [Conventional Commits](https://www.conventionalcommits.org/)：
 
 ```
-feat: 新增功能
-fix: 修正錯誤
+feat:     新增功能
+fix:      修正錯誤
 refactor: 重構（不改變行為）
-style: 格式調整
-perf: 效能改善
-docs: 文件更新
-chore: 維護任務
-ci: CI/CD 變更
+style:    格式調整
+perf:     效能改善
+docs:     文件更新
+test:     測試相關
+chore:    維護任務
+ci:       CI/CD 變更
 ```
 
-## Pull Request
+---
+
+## 🔀 Pull Request
 
 ```mermaid
 graph LR
@@ -141,6 +181,8 @@ graph LR
 3. 在遊戲內測試（至少載入 + 基本操作）
 4. 提交 PR 並說明變更內容
 
-## License
+---
+
+## 📜 License
 
 貢獻的程式碼將以 [GPL-3.0](LICENSE) 授權釋出。

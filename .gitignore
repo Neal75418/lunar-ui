@@ -4,6 +4,9 @@
 .vscode/
 *.code-workspace
 
+# Claude Code
+.agent/
+
 # macOS
 .DS_Store
 .AppleDouble

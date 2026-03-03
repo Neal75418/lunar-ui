@@ -278,7 +278,9 @@
       "Libs",
       ".release"
     ],
-    "library": []
+    "library": [
+      "wow_api.def.lua"
+    ]
   },
   "hint": {
     "enable": true,

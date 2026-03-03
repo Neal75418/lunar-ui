@@ -20,7 +20,7 @@ exclude_files = {
 }
 
 -- wow_api.def.lua is a stub file for IDE autocomplete — suppress all warnings
-files["LunarUI/wow_api.def.lua"] = {
+files["wow_api.def.lua"] = {
     allow_defined = true,
     allow_defined_top = true,
     ignore = { "" },  -- ignore everything (stub definitions)

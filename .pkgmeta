@@ -34,12 +34,17 @@ ignore:
   - .github
   - .idea
   - .vscode
+  - .agent
   - "*.md"
   - scripts/
+  - spec/
   - docs/
+  - Makefile
+  - wow_api.def.lua
 
 move-folders:
   LunarUI_Options: LunarUI_Options
+  LunarUI_Debug: LunarUI_Debug
 
 manual-changelog:
   filename: CHANGELOG.md
