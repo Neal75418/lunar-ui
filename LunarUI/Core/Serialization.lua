@@ -152,8 +152,14 @@ local function DeserializeStringInner(str)
     ---@type function
     local parseValue
 
+    local MAX_PARSE_DEPTH = 20
+
     -- 輔助函數：解析表格
-    local function parseTable()
+    local function parseTable(depth)
+        depth = depth or 0
+        if depth > MAX_PARSE_DEPTH then
+            return nil, "表格巢狀深度超過 " .. MAX_PARSE_DEPTH .. " 層"
+        end
         if str:sub(pos, pos) ~= "{" then
             return nil, "預期表格"
         end
@@ -176,7 +182,7 @@ local function DeserializeStringInner(str)
             if c == "[" then
                 pos = pos + 1
                 skipWhitespace()
-                local keyVal, err = parseValue()
+                local keyVal, err = parseValue(depth + 1)
                 if err then
                     return nil, err
                 end
@@ -209,7 +215,7 @@ local function DeserializeStringInner(str)
 
             -- 解析值
             skipWhitespace()
-            local value, err = parseValue()
+            local value, err = parseValue(depth + 1)
             if err then
                 return nil, err
             end
@@ -228,7 +234,7 @@ local function DeserializeStringInner(str)
     end
 
     -- 主要值解析器
-    parseValue = function()
+    parseValue = function(depth)
         skipWhitespace()
         if pos > len then
             return nil, "輸入意外結束"
@@ -243,7 +249,7 @@ local function DeserializeStringInner(str)
 
         -- 表格
         if c == "{" then
-            return parseTable()
+            return parseTable(depth)
         end
 
         -- 數字（包含負數）
@@ -334,20 +340,29 @@ local function MergeTable(target, source, template, extra)
 end
 
 -- 裁剪關鍵數值至安全範圍（防止惡意或損壞的匯入字串導致 UI 異常）
+-- 使用 Config.lua 匯出的 VALIDATION_RULES 確保驗證規則同步
 local function ClampImportedValues(profile)
-    if profile.style and type(profile.style.fontSize) == "number" then
-        profile.style.fontSize = math.max(8, math.min(24, profile.style.fontSize))
+    local rules = LunarUI.VALIDATION_RULES
+    if not rules then
+        return
     end
-    if profile.hud and type(profile.hud.scale) == "number" then
-        profile.hud.scale = math.max(0.5, math.min(2.0, profile.hud.scale))
+
+    for _, rule in ipairs(rules) do
+        if rule.type == "number" and rule.min and rule.max then
+            local parent, key, value = LunarUI.resolveDBPath(profile, rule.path)
+            if parent and type(value) == "number" then
+                parent[key] = math.max(rule.min, math.min(rule.max, value))
+            end
+        end
     end
+
     -- 驗證每個動作條的 buttonSize（範圍與 Options 面板一致）
     if profile.actionbars then
         for i = 1, 6 do
             local barKey = "bar" .. i
             if profile.actionbars[barKey] and type(profile.actionbars[barKey].buttonSize) == "number" then
                 profile.actionbars[barKey].buttonSize =
-                    math.max(24, math.min(48, profile.actionbars[barKey].buttonSize))
+                    math.max(16, math.min(64, profile.actionbars[barKey].buttonSize))
             end
         end
     end

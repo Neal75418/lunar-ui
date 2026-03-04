@@ -805,7 +805,9 @@ local function AddEmojisToMessage(_self, _event, msg, ...)
     end
 
     -- 單一 gsub + table lookup 取代逐一迴圈
-    local newMsg = msg:gsub(EMOJI_PATTERN, EMOJI_MAP)
+    local newMsg = msg:gsub(EMOJI_PATTERN, function(m)
+        return EMOJI_MAP[m] or m
+    end)
 
     if newMsg ~= msg then
         return false, newMsg, ...

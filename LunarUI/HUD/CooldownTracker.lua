@@ -254,9 +254,8 @@ local function GetSpellTexture(spellID)
         spellTextureCache[spellID] = texture
         cacheSize = cacheSize + 1
     else
-        -- 負面快取：避免重複查詢無效法術
+        -- 負面快取：避免重複查詢無效法術（不計入 cacheSize，避免佔用有效快取容量）
         spellTextureCache[spellID] = INVALID_TEXTURE
-        cacheSize = cacheSize + 1
     end
 
     return texture

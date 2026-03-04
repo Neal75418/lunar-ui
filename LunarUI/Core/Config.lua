@@ -55,10 +55,6 @@ function LunarUI:InitDB()
     end)
 end
 
-function LunarUI:OnDisable()
-    self:UnregisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-end
-
 --[[
     設定檔變更回呼
 ]]
@@ -200,7 +196,8 @@ local function resolveDBPath(db, path)
     return parent, key, parent[key]
 end
 
--- 曝露供單元測試使用
+-- 曝露供單元測試和 Serialization.lua 共用
+LunarUI.VALIDATION_RULES = VALIDATION_RULES
 LunarUI.resolveDBPath = resolveDBPath
 
 function LunarUI:ValidateDB()

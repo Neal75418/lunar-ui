@@ -15,6 +15,29 @@ local LunarUI = {
     },
 }
 
+-- ClampImportedValues 依賴 Config.lua 匯出的 VALIDATION_RULES 和 resolveDBPath
+-- 在測試環境中直接設定，模擬 Config.lua 的匯出
+LunarUI.VALIDATION_RULES = {
+    { path = "hud.scale", type = "number", min = 0.5, max = 2.0 },
+    { path = "hud.auraIconSize", type = "number", min = 10, max = 80 },
+    { path = "hud.cdIconSize", type = "number", min = 10, max = 80 },
+    { path = "style.fontSize", type = "number", min = 6, max = 32 },
+    { path = "actionbars.buttonSize", type = "number", min = 16, max = 64 },
+}
+
+LunarUI.resolveDBPath = function(db, path)
+    local parts = { strsplit(".", path) }
+    local parent = db
+    for i = 1, #parts - 1 do
+        parent = parent[parts[i]]
+        if type(parent) ~= "table" then
+            return nil, nil, nil
+        end
+    end
+    local key = parts[#parts]
+    return parent, key, parent[key]
+end
+
 -- Stub WoW frame creation functions (not needed for serialize/deserialize logic)
 _G.CreateFrame = function()
     return {
@@ -413,16 +436,16 @@ end)
 --------------------------------------------------------------------------------
 
 describe("ClampImportedValues", function()
-    it("clamps fontSize below 8 to 8", function()
+    it("clamps fontSize below min to min", function()
         local profile = { style = { fontSize = 4 } }
         LunarUI.ClampImportedValues(profile)
-        assert.equals(8, profile.style.fontSize)
+        assert.equals(6, profile.style.fontSize)
     end)
 
-    it("clamps fontSize above 24 to 24", function()
+    it("clamps fontSize above max to max", function()
         local profile = { style = { fontSize = 50 } }
         LunarUI.ClampImportedValues(profile)
-        assert.equals(24, profile.style.fontSize)
+        assert.equals(32, profile.style.fontSize)
     end)
 
     it("leaves fontSize in range unchanged", function()
@@ -443,16 +466,16 @@ describe("ClampImportedValues", function()
         assert.equals(2.0, profile.hud.scale)
     end)
 
-    it("clamps bar buttonSize below 24 to 24", function()
+    it("clamps bar buttonSize below 16 to 16", function()
         local profile = { actionbars = { bar1 = { buttonSize = 10 } } }
         LunarUI.ClampImportedValues(profile)
-        assert.equals(24, profile.actionbars.bar1.buttonSize)
+        assert.equals(16, profile.actionbars.bar1.buttonSize)
     end)
 
-    it("clamps bar buttonSize above 48 to 48", function()
+    it("clamps bar buttonSize above 64 to 64", function()
         local profile = { actionbars = { bar3 = { buttonSize = 100 } } }
         LunarUI.ClampImportedValues(profile)
-        assert.equals(48, profile.actionbars.bar3.buttonSize)
+        assert.equals(64, profile.actionbars.bar3.buttonSize)
     end)
 
     it("does nothing when profile has no style/hud/actionbars", function()
@@ -579,7 +602,7 @@ describe("ImportSettings", function()
         local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
         local ok = LunarUI:ImportSettings(serialized)
         assert.is_true(ok)
-        assert.equals(24, LunarUI.db.profile.style.fontSize)
+        assert.equals(32, LunarUI.db.profile.style.fontSize)
     end)
 
     it("skips unknown keys not in defaults template", function()
@@ -726,6 +749,15 @@ end)
 --------------------------------------------------------------------------------
 
 describe("DeserializeString additional coverage", function()
+    it("returns error for deeply nested tables exceeding depth limit", function()
+        -- 建構超過 20 層巢狀的序列化字串
+        local nested = string.rep("{a=", 25) .. "1" .. string.rep("}", 25)
+        local result, err = LunarUI.DeserializeString(nested)
+        assert.is_nil(result)
+        assert.is_string(err)
+        assert.truthy(err:find("巢狀深度"))
+    end)
+
     it("handles escape sequence \\r", function()
         local result = LunarUI.DeserializeString('"line1\\rline2"')
         assert.equals("line1\rline2", result)
@@ -864,7 +896,7 @@ describe("ImportSettings additional coverage", function()
         local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
         local ok = LunarUI:ImportSettings(serialized)
         assert.is_true(ok)
-        assert.equals(48, LunarUI.db.profile.actionbars.bar1.buttonSize)
+        assert.equals(64, LunarUI.db.profile.actionbars.bar1.buttonSize)
     end)
 
     it("returns false when self.db.profile is nil", function()

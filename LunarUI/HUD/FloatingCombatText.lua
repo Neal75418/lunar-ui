@@ -394,6 +394,7 @@ local function CleanupFCT()
     end
     isEnabled = false
     playerGUID = nil
+    poolExhaustedLogged = false
 end
 
 --------------------------------------------------------------------------------

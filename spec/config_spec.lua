@@ -455,14 +455,16 @@ end)
 --------------------------------------------------------------------------------
 
 describe("OnDisable", function()
-    it("unregisters PLAYER_SPECIALIZATION_CHANGED event", function()
-        local unregistered = nil
-        local origUnreg = LunarUI.UnregisterEvent
-        LunarUI.UnregisterEvent = function(_self, event)
-            unregistered = event
-        end
-        LunarUI:OnDisable()
-        assert.equals("PLAYER_SPECIALIZATION_CHANGED", unregistered)
-        LunarUI.UnregisterEvent = origUnreg
+    it("is NOT defined in Config.lua (handled by Init.lua to avoid shadowing)", function()
+        -- Config.lua 不應定義 OnDisable，否則會覆蓋 Init.lua 的完整清理邏輯
+        -- Init.lua:185 已包含 UnregisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+        -- 設定 sentinel 函數，模擬 Init.lua 的 OnDisable
+        local sentinel = function() end
+        LunarUI.OnDisable = sentinel
+
+        -- 重新載入 Config.lua，確認它不會覆蓋 sentinel
+        loader.loadAddonFile("LunarUI/Core/Config.lua", LunarUI, { _defaults = defaults })
+
+        assert.equals(sentinel, LunarUI.OnDisable)
     end)
 end)

@@ -95,7 +95,7 @@ end
 
 local function GetCachedInspectData(guid)
     local data = inspectCache[guid]
-    if data and (GetTime() - data.time) < INSPECT_CACHE_TTL then
+    if data and (GetTime() - data.time) <= INSPECT_CACHE_TTL then
         return data
     end
     return nil
