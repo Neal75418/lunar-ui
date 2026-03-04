@@ -125,9 +125,13 @@ local function CreateDebugFrame()
             return
         end
 
-        -- FPS/記憶體
-        local fps = GetFramerate()
-        local mem = collectgarbage("count") / 1024
+        -- FPS/記憶體（pcall 保護避免 API 不可用時崩潰）
+        local ok, fps = pcall(GetFramerate)
+        if not ok then
+            fps = 0
+        end
+        local ok2, mem = pcall(collectgarbage, "count")
+        mem = ok2 and mem / 1024 or 0
         self.perfText:SetText(string.format("FPS: %.0f  記憶體: %.1f MB", fps, mem))
 
         -- 更新戰鬥狀態

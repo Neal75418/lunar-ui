@@ -129,8 +129,14 @@ local function CreatePerfFrame()
         GameTooltip:SetText(L["PerfMonitorTitle"] or "|cff8882ffLunarUI|r Performance Monitor")
         GameTooltip:AddLine(" ")
 
-        local fps = GetFramerate()
-        local _, _, homeMs, worldMs = GetNetStats()
+        local ok, fps = pcall(GetFramerate)
+        if not ok then
+            fps = 0
+        end
+        local ok2, _, _, homeMs, worldMs = pcall(GetNetStats)
+        if not ok2 then
+            homeMs, worldMs = 0, 0
+        end
 
         GameTooltip:AddDoubleLine("FPS", string.format("%.0f", fps), 0.7, 0.7, 0.7, 1, 1, 1)
         GameTooltip:AddDoubleLine(
@@ -171,9 +177,15 @@ local function UpdatePerformance()
         return
     end
 
-    -- 取得效能資訊
-    local fps = GetFramerate()
-    local _, _, homeMs, worldMs = GetNetStats()
+    -- 取得效能資訊（pcall 保護避免 API 不可用時崩潰）
+    local ok, fps = pcall(GetFramerate)
+    if not ok then
+        fps = 0
+    end
+    local ok2, _, _, homeMs, worldMs = pcall(GetNetStats)
+    if not ok2 then
+        homeMs, worldMs = 0, 0
+    end
 
     -- 更新 FPS（僅顯示數字，標籤獨立）
     local r, g, b = GetFPSColor(fps)

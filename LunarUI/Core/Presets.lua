@@ -29,7 +29,8 @@ local ROLE_PRESETS = BuildRolePresets()
 function LunarUI.GetCurrentRole()
     local specIndex = GetSpecialization()
     if specIndex then
-        return GetSpecializationRole(specIndex) or "DAMAGER"
+        local ok, role = pcall(GetSpecializationRole, specIndex)
+        return (ok and role) or "DAMAGER"
     end
     return "DAMAGER"
 end
