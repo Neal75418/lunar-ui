@@ -5,9 +5,34 @@
 
 -- Lua 5.1/5.4 compatibility
 local unpack = table.unpack or unpack -- luacheck: ignore 143
+_G.unpack = unpack
+
+-- Lua 5.3+ string.format compatibility: %d/%x/%o require integer arguments
+-- WoW uses Lua 5.1 where floats are silently truncated; replicate that behavior
+local _origFormat = string.format
+local function wowFormat(fmt, ...) -- luacheck: ignore 211
+    if type(fmt) ~= "string" then
+        return _origFormat(fmt, ...)
+    end
+    local args = { ... }
+    local n = select("#", ...)
+    local i = 0
+    -- Count format specifiers in order, floor numeric args for integer-type specs
+    fmt:gsub("%%[-+ #0]*%d*%.?%d*([diouxXcsqeEfgGaAp%%])", function(spec)
+        if spec == "%" then
+            return
+        end
+        i = i + 1
+        if i <= n and type(args[i]) == "number" and spec:match("[diouxX]") then
+            args[i] = math.floor(args[i])
+        end
+    end)
+    return _origFormat(fmt, unpack(args, 1, n))
+end
 
 -- Math aliases (WoW exposes these as globals)
-_G.format = string.format
+_G.format = wowFormat
+string.format = wowFormat -- luacheck: ignore 122 -- override so both format() and (""):format() work
 _G.floor = math.floor
 _G.ceil = math.ceil
 _G.abs = math.abs
