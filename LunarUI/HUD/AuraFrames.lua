@@ -333,6 +333,7 @@ end
 --------------------------------------------------------------------------------
 
 local function UpdateAuraIcon(iconFrame, auraData, _index, filter, isDebuff)
+    -- tostring/tonumber 斷開 Aura API taint 鏈（呼叫者已 pcall 保護 API 呼叫本身）
     local name = tostring(auraData.name or "")
     local iconTexture = auraData.icon
     local count = tonumber(tostring(auraData.applications or 0)) or 0
@@ -424,11 +425,11 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
             break
         end
 
-        local ok, nameStr, durNum = pcall(function()
-            return tostring(auraData.name or ""), tonumber(auraData.duration or 0) or 0
-        end)
-        local name = ok and nameStr or ""
-        local duration = ok and durNum or 0
+        -- taint 安全：tostring/tonumber 會斷開 CLEU/Aura API 回傳值的 taint 鏈
+        -- （與 FloatingCombatText.lua 的 Sanitize() 原理相同）
+        -- API 呼叫本身已被上方的 pcall 保護，此處只是純值轉換，不會拋出例外
+        local name = tostring(auraData.name or "")
+        local duration = tonumber(auraData.duration or 0) or 0
 
         local shouldShow
         if isDebuff then
@@ -546,7 +547,7 @@ end
 -- Forward declarations（實際定義在下方事件處理區段）
 local eventFrame
 local timerElapsed = 0
-local TIMER_UPDATE_INTERVAL = 0.05 -- 計時條 20 FPS
+local TIMER_UPDATE_INTERVAL = 0.1 -- 計時條 10 FPS（視覺無差異，減少 50% CPU）
 
 local function AuraOnUpdate(_self, elapsed)
     timerElapsed = timerElapsed + elapsed

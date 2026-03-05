@@ -274,11 +274,21 @@ local function OnCombatLogEvent()
         return
     end
 
-    -- 一次擷取所有值，透過 Sanitize 斷開 taint
-    local info = { CombatLogGetCurrentEventInfo() }
-    local event = Sanitize(info[2])
-    local sourceGUID = Sanitize(info[4])
-    local destGUID = Sanitize(info[8])
+    -- 一次性解構所有需要的欄位（零分配、單次呼叫）
+    -- CombatLogGetCurrentEventInfo() 回傳值索引：
+    -- 1=timestamp, 2=subevent, 4=sourceGUID, 8=destGUID
+    -- SWING_DAMAGE: 12=amount, 18=critical
+    -- SPELL_DAMAGE/HEAL: 15=amount, 21=critical (damage) / 18=critical (heal)
+    local _, subevent, _, sourceGUID, _, _, _, destGUID, _, _, _, a12, _, _, a15, _, _, a18, _, _, a21 =
+        CombatLogGetCurrentEventInfo()
+
+    local event = Sanitize(subevent)
+    if not DAMAGE_EVENTS[event] and not HEAL_EVENTS[event] then
+        return
+    end
+
+    sourceGUID = Sanitize(sourceGUID)
+    destGUID = Sanitize(destGUID)
 
     if not playerGUID then
         playerGUID = UnitGUID("player")
@@ -292,11 +302,11 @@ local function OnCombatLogEvent()
     if DAMAGE_EVENTS[event] then
         local amount, critical
         if event == "SWING_DAMAGE" then
-            amount = Sanitize(info[12])
-            critical = Sanitize(info[18])
+            amount = Sanitize(a12)
+            critical = Sanitize(a18)
         else
-            amount = Sanitize(info[15])
-            critical = Sanitize(info[21])
+            amount = Sanitize(a15)
+            critical = Sanitize(a21)
         end
 
         if type(amount) ~= "number" then
@@ -309,8 +319,8 @@ local function OnCombatLogEvent()
             pendingTexts[#pendingTexts + 1] = { amount, critical, "damage_in" }
         end
     elseif HEAL_EVENTS[event] then
-        local amount = Sanitize(info[15])
-        local critical = Sanitize(info[18])
+        local amount = Sanitize(a15)
+        local critical = Sanitize(a18)
 
         if type(amount) ~= "number" then
             return

@@ -15,6 +15,14 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local C = LunarUI.Colors
 
+-- 效能：快取全域變數（PostUpdate / GetNPCRoleColor hot path）
+local UnitIsPlayer = UnitIsPlayer
+local UnitReaction = UnitReaction
+local UnitClassification = UnitClassification
+local UnitPowerType = UnitPowerType
+local math_floor = math.floor
+local string_format = string.format
+
 -- Wait for oUF
 -- oUF is exposed as LunarUF via X-oUF TOC header
 local oUF = Engine.oUF or _G.LunarUF or _G.oUF
@@ -170,26 +178,17 @@ local function CreateHealthBar(frame)
             if not healthText then
                 return
             end
-            if type(cur) ~= "number" or type(max) ~= "number" then
+            if type(cur) ~= "number" or type(max) ~= "number" or max == 0 then
                 healthText:SetText("")
                 return
             end
-            local ok, pct = pcall(function()
-                if not cur or not max or max == 0 then
-                    return nil
-                end
-                return math.floor(cur / max * 100)
-            end)
-            if not ok or not pct then
-                healthText:SetText("")
-                return
-            end
+            local pct = math_floor(cur / max * 100)
             if fmt == "percent" then
-                healthText:SetText(pct .. "%")
+                healthText:SetText(string_format("%d%%", pct))
             elseif fmt == "current" then
                 healthText:SetText(LunarUI.FormatValue(cur))
             elseif fmt == "both" then
-                healthText:SetText(LunarUI.FormatValue(cur) .. " - " .. pct .. "%")
+                healthText:SetText(string_format("%s - %d%%", LunarUI.FormatValue(cur), pct))
             end
         end
     end
@@ -917,16 +916,24 @@ local function SpawnNameplates()
         end)
     end
 
-    -- 任務狀態變更時更新任務圖示
+    -- 任務狀態變更時更新任務圖示（throttle 避免連續觸發）
     if not nameplateQuestFrame then
         nameplateQuestFrame = CreateFrame("Frame")
         nameplateQuestFrame:RegisterEvent("QUEST_LOG_UPDATE")
+        local questUpdatePending = false
         nameplateQuestFrame:SetScript("OnEvent", function()
-            for np in pairs(nameplateFrames) do
-                if np:IsShown() then
-                    UpdateQuestIndicator(np)
-                end
+            if questUpdatePending then
+                return
             end
+            questUpdatePending = true
+            C_Timer.After(0.5, function()
+                questUpdatePending = false
+                for np in pairs(nameplateFrames) do
+                    if np:IsShown() then
+                        UpdateQuestIndicator(np)
+                    end
+                end
+            end)
         end)
     end
 end

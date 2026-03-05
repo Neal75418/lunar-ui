@@ -21,6 +21,14 @@ end
 -- 常數與共用資源
 --------------------------------------------------------------------------------
 
+-- 效能：快取 PostUpdate hot path 使用的全域變數
+local UnitIsPlayer = UnitIsPlayer
+local UnitReaction = UnitReaction
+local UnitClass = UnitClass
+local RAID_CLASS_COLORS = RAID_CLASS_COLORS
+local math_floor = math.floor
+local string_format = string.format
+
 -- 前向宣告（供後續函數使用）
 local spawnedFrames = {}
 local combatWaitFrame -- 戰鬥等待框架（重用避免洩漏）
@@ -902,7 +910,7 @@ local function CreateAlternativePower(frame)
     altPower.PostUpdate = function(element, _unit, cur, _min, max)
         if element.text then
             if max and max > 0 then
-                element.text:SetText(math.floor(cur / max * 100 + 0.5) .. "%")
+                element.text:SetText(string_format("%d%%", math_floor(cur / max * 100 + 0.5)))
             else
                 element.text:SetText("")
             end
