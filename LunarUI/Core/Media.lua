@@ -52,42 +52,13 @@ LunarUI.textures = {
     glow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
 }
 
---- 取得使用者選定的狀態條材質（若未配置則回傳預設值）
-function LunarUI.GetSelectedStatusBarTexture()
-    local db = LunarUI.db and LunarUI.db.profile
-    if db and db.statusBarTexture then
-        return db.statusBarTexture
-    end
-    return LunarUI.textures.statusBar
-end
-
 --------------------------------------------------------------------------------
 -- 輔助函數
 --------------------------------------------------------------------------------
 
 --[[
-    風格化圖示（裁切邊緣、設定繪製層）
-    @param icon 圖示材質
-    @param inset 邊緣內縮（預設：1）
-]]
-function LunarUI.StyleIcon(icon, inset)
-    if not icon then
-        return
-    end
-
-    inset = inset or 1
-
-    icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
-    icon:SetDrawLayer("ARTWORK")
-    icon:ClearAllPoints()
-    icon:SetPoint("TOPLEFT", inset, -inset)
-    icon:SetPoint("BOTTOMRIGHT", -inset, inset)
-end
-
---[[
     物品品質顏色（集中定義，避免重複）
     Usage: local color = LunarUI.QUALITY_COLORS[quality]
-           local color = LunarUI.GetQualityColor(quality)
 ]]
 LunarUI.QUALITY_COLORS = {
     [0] = { 0.62, 0.62, 0.62 }, -- 粗糙（Poor）
@@ -100,15 +71,6 @@ LunarUI.QUALITY_COLORS = {
     [7] = { 0.00, 0.80, 0.98 }, -- 傳家寶（Heirloom）
     [8] = { 0.00, 0.80, 1.00 }, -- WoW 代幣（Token）
 }
-
---[[
-    取得物品品質顏色
-    @param quality 物品品質（0-8）
-    @return table 顏色值 {r, g, b}
-]]
-function LunarUI.GetQualityColor(quality)
-    return LunarUI.QUALITY_COLORS[quality] or LunarUI.QUALITY_COLORS[1]
-end
 
 --------------------------------------------------------------------------------
 -- 光環按鈕風格化

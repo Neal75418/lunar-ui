@@ -249,30 +249,6 @@ end
 -- 暴露 Initialize 供 Options toggle 即時切換
 LunarUI.InitPerformanceMonitor = Initialize
 
--- 匯出函數
-function LunarUI.ShowPerformanceMonitor()
-    if not perfFrame then
-        perfFrame = CreatePerfFrame()
-    end
-    perfFrame:Show()
-    StartUpdating()
-end
-
-function LunarUI.HidePerformanceMonitor()
-    if perfFrame then
-        perfFrame:Hide()
-        StopUpdating()
-    end
-end
-
-function LunarUI.TogglePerformanceMonitor()
-    if perfFrame and perfFrame:IsShown() then
-        LunarUI.HidePerformanceMonitor()
-    else
-        LunarUI.ShowPerformanceMonitor()
-    end
-end
-
 -- 清理函數
 function LunarUI.CleanupPerformanceMonitor()
     StopUpdating()

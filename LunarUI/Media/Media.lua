@@ -181,12 +181,6 @@ function LunarUI.GetSelectedFont()
     return FONTS.normal
 end
 
--- Get user-selected font size from db
-function LunarUI.GetSelectedFontSize()
-    local db = LunarUI.db and LunarUI.db.profile
-    return db and db.style and db.style.fontSize or 12
-end
-
 --------------------------------------------------------------------------------
 -- Font Registry — 統一字體管理
 --------------------------------------------------------------------------------
