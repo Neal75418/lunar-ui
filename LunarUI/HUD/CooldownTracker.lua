@@ -239,9 +239,9 @@ local function GetSpellTexture(spellID)
         return cached
     end
 
-    -- 查詢並快取
-    local info = C_Spell.GetSpellInfo(spellID)
-    local texture = info and info.iconID or nil
+    -- 查詢並快取（pcall 防護 C_Spell API 可能不存在或回傳異常）
+    local ok, info = pcall(C_Spell.GetSpellInfo, spellID)
+    local texture = ok and info and info.iconID or nil
 
     -- 快取已滿時清空（在插入前檢查）
     if cacheSize >= CACHE_MAX_SIZE then

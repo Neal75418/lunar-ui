@@ -42,6 +42,80 @@ function LunarUI:RegisterCommands()
 end
 
 --------------------------------------------------------------------------------
+-- 命令 Dispatch Table
+--------------------------------------------------------------------------------
+
+-- 直接呼叫 self:Method() 的簡單命令
+local SELF_COMMANDS = {
+    help = "PrintHelp",
+    debug = "ToggleDebug",
+    status = "PrintStatus",
+    config = "OpenOptions",
+    options = "OpenOptions",
+}
+
+-- 呼叫 SafeCallModule() 的簡單命令
+local MODULE_COMMANDS = {
+    move = "ToggleMoveMode",
+    keybind = "ToggleKeybindMode",
+    export = "ShowExportFrame",
+    import = "ShowImportFrame",
+    debugauras = "DebugAuraFrames",
+    debugmicro = "DebugMicroButtons",
+}
+
+--------------------------------------------------------------------------------
+-- 子命令處理函數
+--------------------------------------------------------------------------------
+
+local function HandleProfile(sub, sub2)
+    if sub == "events" then
+        local EVENT_PROFILE_ACTIONS = { on = "EnableEventProfiling", off = "DisableEventProfiling" }
+        SafeCallModule(EVENT_PROFILE_ACTIONS[sub2] or "PrintEventTimings")
+    elseif sub == "on" then
+        SafeCallModule("EnableProfiling")
+    elseif sub == "off" then
+        SafeCallModule("DisableProfiling")
+    elseif sub == "show" or not sub then
+        SafeCallModule("PrintProfilingResults")
+    end
+end
+
+local function HandleDebugVigor(self, sub)
+    C_AddOns.LoadAddOn("LunarUI_Debug")
+
+    -- 未知子命令或無參數時先執行一次性診斷
+    if not sub or (sub ~= "on" and sub ~= "off") then
+        self:DebugVigorFrames()
+    end
+
+    -- 純診斷指令（非 on/off/toggle）就結束
+    if sub and sub ~= "on" and sub ~= "off" then
+        return
+    end
+
+    -- 設定持續監控狀態
+    if not self.db.global then
+        self.db.global = {}
+    end
+
+    local enable = sub == "on" or (not sub and not self.db.global._debugVigor)
+    self.db.global._debugVigor = enable
+
+    if enable then
+        if LunarUI.SetupVigorTrace then
+            LunarUI.SetupVigorTrace()
+        end
+        self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r")
+    else
+        if LunarUI.CleanupVigorTrace then
+            LunarUI.CleanupVigorTrace()
+        end
+        self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
+    end
+end
+
+--------------------------------------------------------------------------------
 -- 命令處理
 --------------------------------------------------------------------------------
 
@@ -58,16 +132,29 @@ function LunarUI:SlashCommand(input)
 
     local cmd = args[1]
 
-    if not cmd or cmd == "help" then
+    -- 無參數 → 顯示說明
+    if not cmd then
         self:PrintHelp()
-    elseif cmd == "toggle" or cmd == "on" or cmd == "off" then
+        return
+    end
+
+    -- 簡單方法呼叫
+    local method = SELF_COMMANDS[cmd]
+    if method then
+        self[method](self)
+        return
+    end
+
+    -- 簡單模組呼叫
+    local moduleFn = MODULE_COMMANDS[cmd]
+    if moduleFn then
+        SafeCallModule(moduleFn)
+        return
+    end
+
+    -- 需要子命令的命令
+    if cmd == "toggle" or cmd == "on" or cmd == "off" then
         self:ToggleAddon(cmd)
-    elseif cmd == "debug" then
-        self:ToggleDebug()
-    elseif cmd == "status" then
-        self:PrintStatus()
-    elseif cmd == "config" or cmd == "options" then
-        self:OpenOptions()
     elseif cmd == "reset" then
         if args[2] == "all" then
             LunarUI.ResetAllPositions()
@@ -77,72 +164,16 @@ function LunarUI:SlashCommand(input)
     elseif cmd == "test" then
         self:RunTest(args[2])
     elseif cmd == "install" then
-        -- 重置安裝完成旗標並重新顯示精靈
         if self.db.global then
             self.db.global.installComplete = false
         end
         SafeCallModule("ShowInstallWizard")
-    elseif cmd == "move" then
-        SafeCallModule("ToggleMoveMode")
-    elseif cmd == "keybind" then
-        SafeCallModule("ToggleKeybindMode")
-    elseif cmd == "export" then
-        SafeCallModule("ShowExportFrame")
-    elseif cmd == "import" then
-        SafeCallModule("ShowImportFrame")
     elseif cmd == "profile" then
-        local sub = args[2]
-        if sub == "events" then
-            local sub2 = args[3]
-            if sub2 == "on" then
-                SafeCallModule("EnableEventProfiling")
-            elseif sub2 == "off" then
-                SafeCallModule("DisableEventProfiling")
-            else
-                SafeCallModule("PrintEventTimings")
-            end
-        elseif sub == "on" then
-            SafeCallModule("EnableProfiling")
-        elseif sub == "off" then
-            SafeCallModule("DisableProfiling")
-        elseif sub == "show" or not sub then
-            SafeCallModule("PrintProfilingResults")
-        end
-    elseif cmd == "debugauras" then
-        SafeCallModule("DebugAuraFrames")
-    elseif cmd == "debugmicro" then
-        SafeCallModule("DebugMicroButtons")
+        HandleProfile(args[2], args[3])
     elseif cmd == "debugvigor" then
-        C_AddOns.LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件
-        local sub = args[2]
-        if sub and sub ~= "on" and sub ~= "off" then
-            -- 未知子命令：僅執行一次性診斷
-            self:DebugVigorFrames()
-        else
-            -- 無參數時先執行一次性診斷
-            if not sub then
-                self:DebugVigorFrames()
-            end
-            -- 設定持續監控狀態
-            if not self.db.global then
-                self.db.global = {}
-            end
-            local enable = sub == "on" or (not sub and not self.db.global._debugVigor)
-            self.db.global._debugVigor = enable
-            if enable then
-                if LunarUI.SetupVigorTrace then
-                    LunarUI.SetupVigorTrace()
-                end
-                self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r")
-            else
-                if LunarUI.CleanupVigorTrace then
-                    LunarUI.CleanupVigorTrace()
-                end
-                self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
-            end
-        end
+        HandleDebugVigor(self, args[2])
     elseif cmd == "testvigor" then
-        C_AddOns.LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件
+        C_AddOns.LoadAddOn("LunarUI_Debug")
         self:ToggleTestVigor()
     else
         self:Print(string.format(_L["UnknownCommand"] or "Unknown command: %s", cmd))

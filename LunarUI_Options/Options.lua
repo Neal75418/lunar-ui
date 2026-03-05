@@ -153,9 +153,14 @@ setmetatable(L, {
 -- Helper Functions
 --------------------------------------------------------------------------------
 
--- Fix #26: Add nil check for database access
+-- Fix #26: DB 未載入時回傳 nil（AceDB 保證 Options panel 開啟時 DB 一定存在）
+local getDBWarned = false
 local function GetDB()
     if not LunarUI or not LunarUI.db or not LunarUI.db.profile then
+        if not getDBWarned then
+            getDBWarned = true
+            LunarUI:Print("|cffff0000[Options] DB not ready — settings may not save|r")
+        end
         return nil
     end
     return LunarUI.db.profile
