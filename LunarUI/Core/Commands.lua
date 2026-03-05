@@ -113,46 +113,31 @@ function LunarUI:SlashCommand(input)
     elseif cmd == "debugvigor" then
         C_AddOns.LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件
         local sub = args[2]
-        if not sub then
-            -- 無參數：執行一次性診斷 + 切換持續監控
+        if sub and sub ~= "on" and sub ~= "off" then
+            -- 未知子命令：僅執行一次性診斷
             self:DebugVigorFrames()
+        else
+            -- 無參數時先執行一次性診斷
+            if not sub then
+                self:DebugVigorFrames()
+            end
+            -- 設定持續監控狀態
             if not self.db.global then
                 self.db.global = {}
             end
-            self.db.global._debugVigor = not self.db.global._debugVigor
-            if self.db.global._debugVigor then
+            local enable = sub == "on" or (not sub and not self.db.global._debugVigor)
+            self.db.global._debugVigor = enable
+            if enable then
                 if LunarUI.SetupVigorTrace then
                     LunarUI.SetupVigorTrace()
                 end
-                self:Print(
-                    "|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r（VigorTrace/DeepDiag 訊息已啟用）"
-                )
+                self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r")
             else
                 if LunarUI.CleanupVigorTrace then
                     LunarUI.CleanupVigorTrace()
                 end
                 self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
             end
-        elseif sub == "on" then
-            if not self.db.global then
-                self.db.global = {}
-            end
-            self.db.global._debugVigor = true
-            if LunarUI.SetupVigorTrace then
-                LunarUI.SetupVigorTrace()
-            end
-            self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r")
-        elseif sub == "off" then
-            if not self.db.global then
-                self.db.global = {}
-            end
-            self.db.global._debugVigor = false
-            if LunarUI.CleanupVigorTrace then
-                LunarUI.CleanupVigorTrace()
-            end
-            self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
-        else
-            self:DebugVigorFrames()
         end
     elseif cmd == "testvigor" then
         C_AddOns.LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件

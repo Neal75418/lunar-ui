@@ -476,6 +476,66 @@ end
 -- 主框架建立
 --------------------------------------------------------------------------------
 
+-- 建立導航按鈕列（Skip / Back / Next）
+local function CreateNavigationButtons(f)
+    local skipBtn = CreateWizardButton(f, L["InstallBtnSkip"] or "Skip", 80)
+    skipBtn:SetPoint("BOTTOM", f, "BOTTOM", -130, 15)
+    skipBtn:SetScript("OnClick", function()
+        if LunarUI.db and LunarUI.db.global then
+            LunarUI.db.global.installComplete = true
+            LunarUI.db.global.installVersion = LunarUI.version
+        end
+        f:Hide()
+        LunarUI:Print(L["InstallSkipped"] or "Setup skipped. Use |cff8882ff/lunar config|r to configure later.")
+    end)
+
+    local prevBtn = CreateWizardButton(f, L["InstallBtnBack"] or "Back")
+    prevBtn:SetPoint("BOTTOM", f, "BOTTOM", -20, 15)
+    prevBtn:SetScript("OnClick", function()
+        if currentStep > 1 then
+            currentStep = currentStep - 1
+            UpdateStepDisplay()
+        end
+    end)
+    f.prevBtn = prevBtn
+
+    local nextBtn = CreateWizardButton(f, L["InstallBtnNext"] or "Next")
+    nextBtn:SetPoint("BOTTOM", f, "BOTTOM", 110, 15)
+    nextBtn:SetScript("OnClick", function()
+        if currentStep < TOTAL_STEPS then
+            currentStep = currentStep + 1
+            UpdateStepDisplay()
+        else
+            ApplyWizardSettings()
+            f:Hide()
+            EnsureReloadDialog()
+            StaticPopup_Show("LUNARUI_INSTALL_RELOAD")
+        end
+    end)
+    f.nextBtn = nextBtn
+end
+
+-- 建立右上角關閉按鈕
+local function CreateCloseButton(f)
+    local closeBtn = CreateFrame("Button", nil, f)
+    closeBtn:SetSize(20, 20)
+    closeBtn:SetPoint("TOPRIGHT", -5, -5)
+    closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY")
+    LunarUI.SetFont(closeBtn.text, 14, "OUTLINE")
+    closeBtn.text:SetPoint("CENTER")
+    closeBtn.text:SetText("×")
+    closeBtn.text:SetTextColor(0.6, 0.5, 0.5)
+    closeBtn:SetScript("OnEnter", function()
+        closeBtn.text:SetTextColor(1, 0.4, 0.4)
+    end)
+    closeBtn:SetScript("OnLeave", function()
+        closeBtn.text:SetTextColor(0.6, 0.5, 0.5)
+    end)
+    closeBtn:SetScript("OnClick", function()
+        f:Hide()
+    end)
+end
+
 ---@return Frame
 local function CreateWizardFrame()
     if wizardFrame then
@@ -544,63 +604,9 @@ local function CreateWizardFrame()
     BuildStep3(f)
     BuildStep4(f)
 
-    -- 下方按鈕列
-    local skipBtn = CreateWizardButton(f, L["InstallBtnSkip"] or "Skip", 80)
-    skipBtn:SetPoint("BOTTOM", f, "BOTTOM", -130, 15)
-    skipBtn:SetScript("OnClick", function()
-        -- 跳過但仍標記為完成
-        if LunarUI.db and LunarUI.db.global then
-            LunarUI.db.global.installComplete = true
-            LunarUI.db.global.installVersion = LunarUI.version
-        end
-        f:Hide()
-        LunarUI:Print(L["InstallSkipped"] or "Setup skipped. Use |cff8882ff/lunar config|r to configure later.")
-    end)
-
-    local prevBtn = CreateWizardButton(f, L["InstallBtnBack"] or "Back")
-    prevBtn:SetPoint("BOTTOM", f, "BOTTOM", -20, 15)
-    prevBtn:SetScript("OnClick", function()
-        if currentStep > 1 then
-            currentStep = currentStep - 1
-            UpdateStepDisplay()
-        end
-    end)
-    f.prevBtn = prevBtn
-
-    local nextBtn = CreateWizardButton(f, L["InstallBtnNext"] or "Next")
-    nextBtn:SetPoint("BOTTOM", f, "BOTTOM", 110, 15)
-    nextBtn:SetScript("OnClick", function()
-        if currentStep < TOTAL_STEPS then
-            currentStep = currentStep + 1
-            UpdateStepDisplay()
-        else
-            -- 最後一步：套用設定並顯示重載確認
-            ApplyWizardSettings()
-            f:Hide()
-            EnsureReloadDialog()
-            StaticPopup_Show("LUNARUI_INSTALL_RELOAD")
-        end
-    end)
-    f.nextBtn = nextBtn
-
-    -- 關閉按鈕（右上角 X）
-    local closeBtn = CreateFrame("Button", nil, f)
-    closeBtn:SetSize(20, 20)
-    closeBtn:SetPoint("TOPRIGHT", -5, -5)
-    closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(closeBtn.text, 14, "OUTLINE")
-    closeBtn.text:SetPoint("CENTER")
-    closeBtn.text:SetText("×")
-    closeBtn.text:SetTextColor(0.6, 0.5, 0.5)
-    closeBtn:SetScript("OnEnter", function()
-        closeBtn.text:SetTextColor(1, 0.4, 0.4)
-    end)
-    closeBtn:SetScript("OnLeave", function()
-        closeBtn.text:SetTextColor(0.6, 0.5, 0.5)
-    end)
-    closeBtn:SetScript("OnClick", function()
-        f:Hide()
-    end)
+    -- 下方導航按鈕與關閉按鈕
+    CreateNavigationButtons(f)
+    CreateCloseButton(f)
 
     wizardFrame = f
     return f

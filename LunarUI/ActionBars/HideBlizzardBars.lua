@@ -21,11 +21,7 @@ local function HideFrameSafely(frame)
     end
     pcall(function()
         frame:SetAlpha(0)
-    end)
-    pcall(function()
         frame:EnableMouse(false)
-    end)
-    pcall(function()
         frame:EnableKeyboard(false)
     end)
 end
@@ -170,26 +166,8 @@ local function InstallScaleErrorFilter()
     seterrorhandler(scaleErrorFilter)
 end
 
-local function HideBlizzardBars()
-    -- 戰鬥中不修改框架以避免 taint
-    if InCombatLockdown() then
-        return
-    end
-
-    -- 安裝 SetScale 錯誤過濾器（首次呼叫即安裝，確保在錯誤發生前就位）
-    InstallScaleErrorFilter()
-
-    -- testvigor 模式：暫停所有隱藏操作，讓暴雪動作條完全顯示
-    -- 用於診斷 vigor bar 不可見是否由隱藏操作引起的 taint 所導致
-    if LunarUI.db and LunarUI.db.global and LunarUI.db.global._testVigorMode then
-        return
-    end
-
-    -- WoW 12.0 完全重新設計動作條
-    -- 獅鷲/翼手龍圖案現在在 MainMenuBarArtFrame 的 Lua 屬性中
-    -- 使用安全的隱藏方式（只設透明度）
-
-    -- 主要動作條框架
+-- 隱藏主動作條及 ArtFrame 裝飾（獅鷲獸/背景/頁碼等）
+local function HideMainActionBar()
     local primaryFrames = {
         "MainMenuBar",
         "MainMenuBarArtFrame",
@@ -197,74 +175,69 @@ local function HideBlizzardBars()
     }
     HideFramesByName(primaryFrames, HideFrameRecursive)
 
-    -- 重要：WoW 現代版本的獅鷲獸是透過 Lua 屬性存取
-    -- 不是全域名稱，必須直接從 MainMenuBarArtFrame 取得
-    -- 使用帶 hook 的永久隱藏，防止暴雪代碼重新顯示
-    if MainMenuBarArtFrame then
-        -- 獅鷲裝飾（左右兩側）- 使用多種方法強制隱藏
-        if MainMenuBarArtFrame.LeftEndCap then
-            HideFrameSafely(MainMenuBarArtFrame.LeftEndCap)
-            HideTextureForcefully(MainMenuBarArtFrame.LeftEndCap)
-        end
-        if MainMenuBarArtFrame.RightEndCap then
-            HideFrameSafely(MainMenuBarArtFrame.RightEndCap)
-            HideTextureForcefully(MainMenuBarArtFrame.RightEndCap)
-        end
-        -- 頁碼
-        if MainMenuBarArtFrame.PageNumber then
-            HideFrameSafely(MainMenuBarArtFrame.PageNumber)
-        end
-        -- 背景
-        if MainMenuBarArtFrame.Background then
-            HideFrameSafely(MainMenuBarArtFrame.Background)
-        end
-        -- 其他子元素
-        if MainMenuBarArtFrame.BackgroundLarge then
-            HideFrameSafely(MainMenuBarArtFrame.BackgroundLarge)
-        end
-        if MainMenuBarArtFrame.BackgroundSmall then
-            HideFrameSafely(MainMenuBarArtFrame.BackgroundSmall)
-        end
+    -- WoW 現代版本的獅鷲獸是透過 Lua 屬性存取，必須直接從 MainMenuBarArtFrame 取得
+    if not MainMenuBarArtFrame then
+        return
+    end
 
-        -- 遍歷所有 Lua 屬性，隱藏所有可能的子框架/材質
-        for _, value in pairs(MainMenuBarArtFrame) do
-            if type(value) == "table" and value.SetAlpha then
-                pcall(function()
-                    value:SetAlpha(0)
-                end)
-            end
-        end
+    -- 獅鷲裝飾（左右兩側）- 使用多種方法強制隱藏
+    if MainMenuBarArtFrame.LeftEndCap then
+        HideFrameSafely(MainMenuBarArtFrame.LeftEndCap)
+        HideTextureForcefully(MainMenuBarArtFrame.LeftEndCap)
+    end
+    if MainMenuBarArtFrame.RightEndCap then
+        HideFrameSafely(MainMenuBarArtFrame.RightEndCap)
+        HideTextureForcefully(MainMenuBarArtFrame.RightEndCap)
+    end
 
-        -- 遍歷所有區域（材質），包括獅鷲獸材質
-        local regions = { MainMenuBarArtFrame:GetRegions() }
-        for _, region in ipairs(regions) do
-            if region and region.SetAlpha then
+    -- 頁碼、背景、其他子元素
+    local namedElements = { "PageNumber", "Background", "BackgroundLarge", "BackgroundSmall" }
+    for _, elemName in ipairs(namedElements) do
+        if MainMenuBarArtFrame[elemName] then
+            HideFrameSafely(MainMenuBarArtFrame[elemName])
+        end
+    end
+
+    -- 遍歷所有 Lua 屬性，隱藏所有可能的子框架/材質
+    for _, value in pairs(MainMenuBarArtFrame) do
+        if type(value) == "table" and value.SetAlpha then
+            pcall(function()
+                value:SetAlpha(0)
+            end)
+        end
+    end
+
+    -- 遍歷所有區域（材質），包括獅鷲獸材質
+    local regions = { MainMenuBarArtFrame:GetRegions() }
+    for _, region in ipairs(regions) do
+        if region then
+            if region.SetAlpha then
                 pcall(function()
                     region:SetAlpha(0)
                 end)
             end
-            -- 如果是材質，也嘗試隱藏
-            if region and region.Hide then
+            if region.Hide then
                 pcall(function()
                     region:Hide()
                 end)
             end
         end
+    end
 
-        -- 遍歷所有子框架（使用 select 安全遍歷，避免 nil gap）
-        local artChildCount = select("#", MainMenuBarArtFrame:GetChildren())
-        if artChildCount > 0 then
-            local children = { MainMenuBarArtFrame:GetChildren() }
-            for i = 1, artChildCount do
-                local child = children[i]
-                if child then
-                    HideFrameRecursive(child)
-                end
+    -- 遍歷所有子框架（使用 select 安全遍歷，避免 nil gap）
+    local artChildCount = select("#", MainMenuBarArtFrame:GetChildren())
+    if artChildCount > 0 then
+        local children = { MainMenuBarArtFrame:GetChildren() }
+        for i = 1, artChildCount do
+            if children[i] then
+                HideFrameRecursive(children[i])
             end
         end
     end
+end
 
-    -- 隱藏所有多重動作條並永久隱藏
+-- 隱藏多重動作條、WoW 12.0 動作條、容器
+local function HideMultiActionBars()
     local barsToHide = {
         "MultiBarBottomLeft",
         "MultiBarBottomRight",
@@ -281,7 +254,7 @@ local function HideBlizzardBars()
         end
     end
 
-    -- 隱藏 WoW 12.0 動作條（ActionBar1-8）
+    -- WoW 12.0 動作條（ActionBar1-8）
     for i = 1, 8 do
         local bar = _G["ActionBar" .. i]
         if bar then
@@ -290,7 +263,6 @@ local function HideBlizzardBars()
     end
 
     -- WoW TWW: 新的動作條容器系統
-    -- MainActionBarButtonContainer 包含動作條按鈕
     for i = 1, 12 do
         local container = _G["MainActionBarButtonContainer" .. i]
         if container then
@@ -298,16 +270,16 @@ local function HideBlizzardBars()
         end
     end
 
-    -- 隱藏主動作條容器（可能包含獅鷲）
-    local actionBarContainers = {
+    HideFramesByName({
         "MainActionBarButtonContainer",
         "MainActionBarContainerFrame",
         "MainMenuBarVehicleLeaveButton",
-    }
-    HideFramesByName(actionBarContainers, HideFrameRecursive)
+    }, HideFrameRecursive)
+end
 
-    -- 隱藏舊版獅鷲裝飾（跨 WoW 版本的所有可能框架名稱）
-    -- 這些是舊版的全域名稱，保留以相容舊版本
+-- 隱藏舊版裝飾、狀態條、姿態條、寵物條、WoW 12.0 特定框架
+local function HideBarDecorations()
+    -- 舊版獅鷲裝飾（跨 WoW 版本的所有可能框架名稱）
     local artFrames = {
         "MainMenuBarLeftEndCap",
         "MainMenuBarRightEndCap",
@@ -320,43 +292,30 @@ local function HideBlizzardBars()
         "MainMenuBarTexture3",
         "MainMenuExpBar",
         "ReputationWatchBar",
-        -- WoW 12.0 新名稱
         "MainMenuBarBackgroundArt",
         "MainMenuBarBackground",
     }
     HideFramesByName(artFrames, HideFrameRecursive)
 
-    -- 隱藏狀態追蹤條（經驗/聲望/榮譽）
+    -- 狀態追蹤條（經驗/聲望/榮譽）
     if StatusTrackingBarManager then
         HideFrameRecursive(StatusTrackingBarManager)
     end
-
-    -- 隱藏姿態條
     if StanceBar then
         HideFrameSafely(StanceBar)
     end
-
-    -- 隱藏寵物條
     if PetActionBar then
         HideFrameSafely(PetActionBar)
     end
 
-    -- 注意：MicroButtonAndBagsBar 和 BagsBar 保持可見
-    -- LunarUI 僅替換背包，不替換微型選單
-
-    -- 隱藏 WoW 12.0 特定框架
+    -- WoW 12.0 特定框架
     -- 注意：OverrideActionBar 不隱藏，由暴雪管理（飛龍騎術等）
-    -- bar1 會在覆蓋條啟動時自動隱藏
     -- 注意：MainMenuBarManager 不隱藏！它管理 encounter bar / widget bar 生命週期
-    -- 永久 hook SetAlpha(0) 會阻止 WoW C++ 側在 EncounterBar 中生成 vigor widget
-    local wow12Frames = {
+    HideFramesByName({
         "PossessActionBar",
-        -- WoW 12.0 獅鷲相關框架
         "MainMenuBarArtFrame",
         "MainMenuBarArtFrameBackground",
-        -- 注意：MicroMenu 保持可見
-    }
-    HideFramesByName(wow12Frames, HideFrameSafely)
+    }, HideFrameSafely)
 
     -- WoW 12.0 TWW: 嘗試更多可能的獅鷲容器
     local gryphonContainers = {
@@ -365,7 +324,6 @@ local function HideBlizzardBars()
         "MainMenuBarArtFrame.BarArt",
     }
     for _, path in ipairs(gryphonContainers) do
-        -- 嘗試從路徑獲取框架
         local frame = MainMenuBarArtFrame
         if frame then
             local parts = { strsplit(".", path) }
@@ -383,9 +341,8 @@ local function HideBlizzardBars()
         end
     end
 
-    -- 直接嘗試常見的 EndCap 材質
+    -- 遍歷 MainMenuBarArtFrame 所有以 EndCap/Gryphon/Art/Background 命名的子元素
     if MainMenuBarArtFrame then
-        -- 遍歷所有以 EndCap 或 Gryphon 命名的子元素
         for key, value in pairs(MainMenuBarArtFrame) do
             if
                 type(key) == "string"
@@ -406,8 +363,10 @@ local function HideBlizzardBars()
             end
         end
     end
+end
 
-    -- 隱藏動作按鈕（使用 SetAlpha(0) 避免 taint）
+-- 隱藏動作按鈕與 MultiBar 按鈕
+local function HideActionButtons()
     for i = 1, 12 do
         local button = _G["ActionButton" .. i]
         if button then
@@ -415,7 +374,6 @@ local function HideBlizzardBars()
         end
     end
 
-    -- 隱藏 MultiBar 按鈕
     local multiBarNames =
         { "MultiBarBottomLeftButton", "MultiBarBottomRightButton", "MultiBarRightButton", "MultiBarLeftButton" }
     for _, barPrefix in ipairs(multiBarNames) do
@@ -427,28 +385,37 @@ local function HideBlizzardBars()
         end
     end
 
-    -- 隱藏獅鷲/EndCap 框架（WoW 12.0 中 MainMenuBarArtFrame 已不存在）
-    -- 注意：MicroButtonAndBagsBar 保持可見（LunarUI 不替換微型選單）
-    local gryphonFrameNames = {
+    -- 獅鷲/EndCap 框架（重複呼叫以確保跨版本相容）
+    HideFramesByName({
         "MainMenuBarArtFrameBackground",
         "MainMenuBarArtFrame",
-    }
-    HideFramesByName(gryphonFrameNames, HideFrameSafely)
+    }, HideFrameSafely)
 
-    -- 注意：OverrideActionBar 及其 EndCap 不再隱藏，由暴雪管理
-
-    -- 隱藏 WoW 12.0 編輯模式框架
-    local editModeFrames = {
+    -- WoW 12.0 編輯模式框架
+    HideFramesByName({
         "EditModeExpandedActionBarFrame",
         "QuickKeybindFrame",
-    }
-    HideFramesByName(editModeFrames, HideFrameSafely)
+    }, HideFrameSafely)
+end
 
-    -- 注意：移除了 _G 迭代，因為過度搜尋可能導致 taint
-    -- 上面已經明確列出所有需要隱藏的框架
+local function HideBlizzardBars()
+    -- 戰鬥中不修改框架以避免 taint
+    if InCombatLockdown() then
+        return
+    end
 
-    -- 注意：微型按鈕（角色、法術書、天賦等）保持可見
-    -- LunarUI 不替換微型選單
+    -- 安裝 SetScale 錯誤過濾器（首次呼叫即安裝，確保在錯誤發生前就位）
+    InstallScaleErrorFilter()
+
+    -- testvigor 模式：暫停所有隱藏操作，讓暴雪動作條完全顯示
+    if LunarUI.db and LunarUI.db.global and LunarUI.db.global._testVigorMode then
+        return
+    end
+
+    HideMainActionBar()
+    HideMultiActionBars()
+    HideBarDecorations()
+    HideActionButtons()
 
     -- MainMenuBarManager：完全不觸碰！
     -- 它管理 encounter bar / UIWidgetPowerBarContainerFrame 的生命週期，

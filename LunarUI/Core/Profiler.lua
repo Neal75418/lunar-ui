@@ -15,6 +15,12 @@ local LunarUI = Engine.LunarUI
 local profilingEnabled = false
 local moduleTimings = {} -- { name = string, initTime = number }
 
+-- 效能門檻常數（用於顏色標示）
+local INIT_CRIT_MS = 50 -- 模組初始化：紅色門檻
+local INIT_WARN_MS = 10 -- 模組初始化：黃色門檻
+local EVENT_RATE_CRIT = 100 -- 事件頻率：紅色門檻（次/秒）
+local EVENT_RATE_WARN = 30 -- 事件頻率：黃色門檻（次/秒）
+
 --------------------------------------------------------------------------------
 -- 計時工具
 --------------------------------------------------------------------------------
@@ -78,8 +84,9 @@ function LunarUI:PrintProfilingResults()
     local totalInit = 0
     for _, m in ipairs(moduleTimings) do
         totalInit = totalInit + m.initTime
-        -- 顏色標示：> 50ms 紅色、> 10ms 黃色、其餘綠色
-        local color = m.initTime > 50 and "|cffff4444" or m.initTime > 10 and "|cffffcc00" or "|cff00ff00"
+        local color = m.initTime > INIT_CRIT_MS and "|cffff4444"
+            or m.initTime > INIT_WARN_MS and "|cffffcc00"
+            or "|cff00ff00"
         self:Print(string.format("  %s%-25s %.2f ms|r", color, m.name, m.initTime))
     end
     self:Print(string.format("  |cffffffff--- Total: %.2f ms (%d modules)|r", totalInit, #moduleTimings))
@@ -213,8 +220,7 @@ function LunarUI:PrintEventTimings()
 
     for _, e in ipairs(sorted) do
         local rate = elapsed > 0 and (e.count / elapsed) or 0
-        -- 顏色標示：> 100/sec 紅色、> 30/sec 黃色、其餘綠色
-        local color = rate > 100 and "|cffff4444" or rate > 30 and "|cffffcc00" or "|cff00ff00"
+        local color = rate > EVENT_RATE_CRIT and "|cffff4444" or rate > EVENT_RATE_WARN and "|cffffcc00" or "|cff00ff00"
         self:Print(string.format("  %s%-35s %6d fires  (%.1f/sec)|r", color, e.event, e.count, rate))
     end
 end

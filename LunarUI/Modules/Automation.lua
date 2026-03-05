@@ -19,10 +19,14 @@ local function GetAutoConfig()
 end
 
 --------------------------------------------------------------------------------
--- 自動修裝
+-- 統一事件 dispatcher
 --------------------------------------------------------------------------------
 
-local autoRepairFrame = CreateFrame("Frame")
+local automationFrame = CreateFrame("Frame")
+
+--------------------------------------------------------------------------------
+-- 自動修裝
+--------------------------------------------------------------------------------
 
 local function OnMerchantShow()
     local cfg = GetAutoConfig()
@@ -66,8 +70,6 @@ end
 -- 戰場自動釋放靈魂
 --------------------------------------------------------------------------------
 
-local autoReleaseFrame = CreateFrame("Frame")
-
 local function OnPlayerDead()
     local cfg = GetAutoConfig()
     if not cfg or not cfg.autoRelease then
@@ -90,8 +92,6 @@ end
 -- 成就截圖
 --------------------------------------------------------------------------------
 
-local achievementFrame = CreateFrame("Frame")
-
 local function OnAchievementEarned(_self, _event)
     local cfg = GetAutoConfig()
     if not cfg or not cfg.autoScreenshot then
@@ -107,8 +107,6 @@ end
 --------------------------------------------------------------------------------
 -- 自動接受/繳交任務
 --------------------------------------------------------------------------------
-
-local autoQuestFrame = CreateFrame("Frame")
 
 local function OnQuestDetail()
     local cfg = GetAutoConfig()
@@ -144,8 +142,6 @@ end
 -- 自動接受副本/戰場佇列
 --------------------------------------------------------------------------------
 
-local autoQueueFrame = CreateFrame("Frame")
-
 local function OnLFGProposalShow()
     local cfg = GetAutoConfig()
     if not cfg or not cfg.autoAcceptQueue then
@@ -153,6 +149,20 @@ local function OnLFGProposalShow()
     end
     AcceptProposal()
 end
+
+--------------------------------------------------------------------------------
+-- 事件路由表
+--------------------------------------------------------------------------------
+
+local EVENT_HANDLERS = {
+    MERCHANT_SHOW = OnMerchantShow,
+    PLAYER_DEAD = OnPlayerDead,
+    ACHIEVEMENT_EARNED = OnAchievementEarned,
+    QUEST_DETAIL = OnQuestDetail,
+    QUEST_PROGRESS = OnQuestProgress,
+    QUEST_COMPLETE = OnQuestComplete,
+    LFG_PROPOSAL_SHOW = OnLFGProposalShow,
+}
 
 --------------------------------------------------------------------------------
 -- 初始化與清理
@@ -163,52 +173,20 @@ function LunarUI:InitAutomation()
         return
     end
 
-    -- 自動修裝
-    autoRepairFrame:RegisterEvent("MERCHANT_SHOW")
-    autoRepairFrame:SetScript("OnEvent", OnMerchantShow)
-
-    -- 自動釋放靈魂
-    autoReleaseFrame:RegisterEvent("PLAYER_DEAD")
-    autoReleaseFrame:SetScript("OnEvent", OnPlayerDead)
-
-    -- 成就截圖
-    achievementFrame:RegisterEvent("ACHIEVEMENT_EARNED")
-    achievementFrame:SetScript("OnEvent", OnAchievementEarned)
-
-    -- 自動接受/繳交任務
-    autoQuestFrame:RegisterEvent("QUEST_DETAIL")
-    autoQuestFrame:RegisterEvent("QUEST_PROGRESS")
-    autoQuestFrame:RegisterEvent("QUEST_COMPLETE")
-    autoQuestFrame:SetScript("OnEvent", function(_self, event)
-        if event == "QUEST_DETAIL" then
-            OnQuestDetail()
-        elseif event == "QUEST_PROGRESS" then
-            OnQuestProgress()
-        elseif event == "QUEST_COMPLETE" then
-            OnQuestComplete()
+    for event in pairs(EVENT_HANDLERS) do
+        automationFrame:RegisterEvent(event)
+    end
+    automationFrame:SetScript("OnEvent", function(_self, event, ...)
+        local handler = EVENT_HANDLERS[event]
+        if handler then
+            handler(_self, event, ...)
         end
     end)
-
-    -- 自動接受副本/戰場佇列
-    autoQueueFrame:RegisterEvent("LFG_PROPOSAL_SHOW")
-    autoQueueFrame:SetScript("OnEvent", OnLFGProposalShow)
 end
 
 function LunarUI.CleanupAutomation()
-    autoRepairFrame:UnregisterAllEvents()
-    autoRepairFrame:SetScript("OnEvent", nil)
-
-    autoReleaseFrame:UnregisterAllEvents()
-    autoReleaseFrame:SetScript("OnEvent", nil)
-
-    achievementFrame:UnregisterAllEvents()
-    achievementFrame:SetScript("OnEvent", nil)
-
-    autoQuestFrame:UnregisterAllEvents()
-    autoQuestFrame:SetScript("OnEvent", nil)
-
-    autoQueueFrame:UnregisterAllEvents()
-    autoQueueFrame:SetScript("OnEvent", nil)
+    automationFrame:UnregisterAllEvents()
+    automationFrame:SetScript("OnEvent", nil)
 end
 
 LunarUI:RegisterModule("Automation", {
