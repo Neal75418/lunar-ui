@@ -110,6 +110,8 @@ function LunarUI:SlashCommand(input)
         end
     elseif cmd == "debugauras" then
         SafeCallModule("DebugAuraFrames")
+    elseif cmd == "debugmicro" then
+        SafeCallModule("DebugMicroButtons")
     elseif cmd == "debugvigor" then
         C_AddOns.LoadAddOn("LunarUI_Debug") -- 動態載入 debug 插件
         local sub = args[2]

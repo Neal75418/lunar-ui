@@ -63,6 +63,7 @@ local VIGOR_PROTECTED_FRAMES = {
     ["PlayerPowerBarAlt"] = true,
     ["UIWidgetPowerBarContainerFrame"] = true,
     ["EncounterBar"] = true,
+    ["MicroMenu"] = true, -- ActionBars 模組會重新定位微型選單按鈕
 }
 
 -- 遞迴隱藏框架及其所有子框架/區域
@@ -76,10 +77,20 @@ local function HideFrameRecursive(frame)
     if frame == OverrideActionBar then
         return true
     end
-    -- 保護飛行活力條框架
-    local frameName = frame:GetName()
-    if frameName and VIGOR_PROTECTED_FRAMES[frameName] then
+    -- 保護微型選單（ActionBars 模組會重新定位按鈕）
+    -- MicroMenu 用物件比對（GetName() 可能為 nil），個別按鈕用名稱比對
+    if _G.MicroMenu and frame == _G.MicroMenu then
         return true
+    end
+    local frameName = frame:GetName()
+    if frameName then
+        if VIGOR_PROTECTED_FRAMES[frameName] then
+            return true
+        end
+        -- 微型按鈕（CharacterMicroButton 等）可能是 MainMenuBar 的直接子 frame
+        if frameName:find("MicroButton") then
+            return true
+        end
     end
 
     -- 先遞迴子框架，判斷是否有保護後代
@@ -167,13 +178,13 @@ local function InstallScaleErrorFilter()
 end
 
 -- 隱藏主動作條及 ArtFrame 裝飾（獅鷲獸/背景/頁碼等）
+-- 微型按鈕已由 ActionBars 模組 SetParent 至自訂框架，不在 MainMenuBar 子樹中
 local function HideMainActionBar()
-    local primaryFrames = {
+    HideFramesByName({
         "MainMenuBar",
         "MainMenuBarArtFrame",
         "MainMenuBarArtFrameBackground",
-    }
-    HideFramesByName(primaryFrames, HideFrameRecursive)
+    }, HideFrameRecursive)
 
     -- WoW 現代版本的獅鷲獸是透過 Lua 屬性存取，必須直接從 MainMenuBarArtFrame 取得
     if not MainMenuBarArtFrame then

@@ -1232,12 +1232,16 @@ local function CreateMicroBar()
     -- 儲存按鈕參照以供清理用
     microBar._buttons = MICRO_BUTTONS
 
-    -- 重新排列微型按鈕
+    -- 重新掛載並排列微型按鈕
+    -- SetParent 切斷 MicroMenu→MainMenuBar 的 alpha 繼承鏈，
+    -- 使 HideBlizzardBars 對 MainMenuBar 的 SetAlpha(0) 不再連帶隱藏按鈕。
+    -- 非戰鬥狀態下 SetParent 不會 taint 安全框架（ElvUI 等主流 addon 亦採用此做法）。
     for i, btn in ipairs(MICRO_BUTTONS) do
-        -- 不使用 SetParent（會造成 taint），僅重新定位按鈕
+        btn:SetParent(microBar)
         btn:ClearAllPoints()
         btn:SetPoint("LEFT", microBar, "LEFT", (i - 1) * (btnWidth + spacing), 0)
         btn:SetSize(btnWidth, btnHeight)
+        btn:SetAlpha(1)
         btn:Show()
 
         -- 隱藏暴雪裝飾材質
@@ -1252,18 +1256,18 @@ local function CreateMicroBar()
         end
     end
 
-    -- 不使用 Hide()（會連帶隱藏子按鈕）也不用 SetParent（造成 taint）
-    -- 將 MicroMenu 移至螢幕外，按鈕仍以 SetPoint 錨定至 microBar 正常顯示
+    -- 按鈕已 SetParent 到 microBar，MicroMenu 現在是空殼
+    -- 隱藏 MicroMenu 避免在原始位置顯示空框架
     if _G.MicroMenu then
-        _G.MicroMenu:ClearAllPoints()
-        _G.MicroMenu:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", -9999, -9999)
+        _G.MicroMenu:SetAlpha(0)
         _G.MicroMenu:EnableMouse(false)
-        -- Hook Layout 防止暴雪代碼重新排列按鈕位置
+        -- Hook Layout 防止暴雪代碼在動態事件中重新排列按鈕位置
         if _G.MicroMenu.Layout and not microMenuLayoutHooked then
             microMenuLayoutHooked = true
             hooksecurefunc(_G.MicroMenu, "Layout", function()
                 if bars.microBar and bars.microBar._buttons and not InCombatLockdown() then
                     for idx, mbtn in ipairs(bars.microBar._buttons) do
+                        mbtn:SetParent(bars.microBar)
                         mbtn:ClearAllPoints()
                         mbtn:SetPoint("LEFT", bars.microBar, "LEFT", (idx - 1) * (btnWidth + spacing), 0)
                     end
@@ -1278,13 +1282,16 @@ end
 -- 微型按鈕列清理
 local function CleanupMicroBar()
     if bars.microBar then
+        -- 還原按鈕到 MicroMenu（Layout hook 因 bars.microBar=nil 自動停止介入）
+        if bars.microBar._buttons and _G.MicroMenu and not InCombatLockdown() then
+            for _, btn in ipairs(bars.microBar._buttons) do
+                btn:SetParent(_G.MicroMenu)
+            end
+            _G.MicroMenu:SetAlpha(1)
+            _G.MicroMenu:EnableMouse(true)
+        end
         bars.microBar:Hide()
         bars.microBar = nil
-        -- 還原 MicroMenu（Layout hook 因 bars.microBar=nil 自動停止介入）
-        if _G.MicroMenu and not InCombatLockdown() then
-            _G.MicroMenu:EnableMouse(true)
-            -- 完整恢復 MicroMenu 位置與按鈕佈局需 /reload
-        end
     end
 end
 
@@ -1399,6 +1406,88 @@ local function CleanupActionBars()
     -- 清理 Vigor debug trace
     if LunarUI.CleanupVigorTrace then
         LunarUI.CleanupVigorTrace()
+    end
+end
+
+-- 微型按鈕診斷（/lunar debugmicro）
+function LunarUI:DebugMicroButtons()
+    self:Print("|cff8882ff=== MicroButton Debug ===|r")
+
+    -- 檢查 microBar 狀態
+    local mb = bars.microBar
+    self:Print(string.format("  LunarUI_MicroBar: %s", mb and "exists" or "|cffff0000nil|r"))
+    if mb then
+        self:Print(
+            string.format(
+                "    shown=%s alpha=%.2f buttons=%d",
+                tostring(mb:IsShown()),
+                mb:GetAlpha(),
+                mb._buttons and #mb._buttons or 0
+            )
+        )
+    end
+
+    -- 檢查第一個按鈕的狀態和 parent chain
+    local testBtn = _G.CharacterMicroButton
+    if not testBtn then
+        self:Print("  CharacterMicroButton: |cffff0000not found|r")
+        return
+    end
+
+    self:Print(
+        string.format(
+            "  CharacterMicroButton: shown=%s visible=%s alpha=%.2f",
+            tostring(testBtn:IsShown()),
+            tostring(testBtn:IsVisible()),
+            testBtn:GetAlpha()
+        )
+    )
+
+    -- 走訪 parent chain
+    self:Print("  Parent chain:")
+    local frame = testBtn
+    local depth = 0
+    while frame do
+        local name = frame:GetName() or "(anonymous)"
+        local shown = frame:IsShown()
+        local visible = frame:IsVisible()
+        local alpha = frame:GetAlpha()
+        local x, y = frame:GetCenter()
+        local color = (not shown or not visible or alpha < 0.01) and "|cffff4444" or "|cff00ff00"
+        self:Print(
+            string.format(
+                "    %s%s%s|r shown=%s visible=%s alpha=%.2f pos=(%.0f,%.0f)",
+                string.rep("  ", depth),
+                color,
+                name,
+                tostring(shown),
+                tostring(visible),
+                alpha,
+                x or 0,
+                y or 0
+            )
+        )
+        frame = frame:GetParent()
+        depth = depth + 1
+        if depth > 10 then
+            break
+        end
+    end
+
+    -- 檢查 MicroMenu
+    if _G.MicroMenu then
+        local mm = _G.MicroMenu
+        self:Print(
+            string.format(
+                "  MicroMenu: name=%s shown=%s visible=%s alpha=%.2f",
+                mm:GetName() or "nil",
+                tostring(mm:IsShown()),
+                tostring(mm:IsVisible()),
+                mm:GetAlpha()
+            )
+        )
+    else
+        self:Print("  MicroMenu: |cffff0000nil|r")
     end
 end
 
