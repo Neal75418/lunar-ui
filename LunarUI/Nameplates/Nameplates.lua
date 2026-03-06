@@ -940,6 +940,9 @@ end
 
 -- Export
 LunarUI.SpawnNameplates = SpawnNameplates
+LunarUI.CLASSIFICATION_COLORS = CLASSIFICATION_COLORS
+LunarUI.NPC_ROLE_COLORS = NPC_ROLE_COLORS
+LunarUI.GetNPCRoleColor = GetNPCRoleColor
 
 -- Fix #35: Cleanup function to prevent memory leaks on disable/reload
 function LunarUI.CleanupNameplates()
