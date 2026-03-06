@@ -6,28 +6,25 @@
 require("spec.wow_mock")
 local loader = require("spec.loader")
 
--- Mock WoW APIs
-local MockFrame = {}
-MockFrame.__index = MockFrame
+-- Mock CreateFrame with backdrop capture for assertion
+local mock_frame = require("spec.mock_frame")
+local MediaMock = setmetatable({}, { __index = mock_frame.MockFrame })
+MediaMock.__index = MediaMock
 
 local lastBackdrop, lastBGColor, lastBorderColor
-function MockFrame:SetBackdrop(bd)
+function MediaMock:SetBackdrop(bd)
     lastBackdrop = bd
 end
-function MockFrame:SetBackdropColor(r, g, b, a)
+function MediaMock:SetBackdropColor(r, g, b, a)
     lastBGColor = { r, g, b, a }
 end
-function MockFrame:SetBackdropBorderColor(r, g, b, a)
+function MediaMock:SetBackdropBorderColor(r, g, b, a)
     lastBorderColor = { r, g, b, a }
 end
-function MockFrame:SetAllPoints() end
-function MockFrame:SetPoint() end
-function MockFrame:GetFrameLevel()
+function MediaMock:GetFrameLevel()
     return 2
 end
-function MockFrame:SetFrameLevel() end
-function MockFrame:SetTexCoord() end
-function MockFrame:OnBackdropLoaded() end
+function MediaMock:OnBackdropLoaded() end
 
 _G.BackdropTemplateMixin = { OnBackdropLoaded = function() end }
 _G.Mixin = function(frame, mixin)
@@ -37,7 +34,7 @@ _G.Mixin = function(frame, mixin)
 end
 
 _G.CreateFrame = function()
-    return setmetatable({}, { __index = MockFrame })
+    return setmetatable({}, { __index = MediaMock })
 end
 
 local LunarUI = {
@@ -128,19 +125,19 @@ describe("CreateBackdrop", function()
     end)
 
     it("returns a frame", function()
-        local parent = setmetatable({}, { __index = MockFrame })
+        local parent = setmetatable({}, { __index = MediaMock })
         local backdrop = LunarUI.CreateBackdrop(parent)
         assert.truthy(backdrop)
     end)
 
     it("sets parent.Backdrop reference", function()
-        local parent = setmetatable({}, { __index = MockFrame })
+        local parent = setmetatable({}, { __index = MediaMock })
         local backdrop = LunarUI.CreateBackdrop(parent)
         assert.equals(backdrop, parent.Backdrop)
     end)
 
     it("applies bg and border colors from Colors", function()
-        local parent = setmetatable({}, { __index = MockFrame })
+        local parent = setmetatable({}, { __index = MediaMock })
         LunarUI.CreateBackdrop(parent)
         assert.truthy(lastBGColor)
         assert.near(0.05, lastBGColor[1], 0.01)
@@ -149,7 +146,7 @@ describe("CreateBackdrop", function()
     end)
 
     it("uses custom borderColor when provided", function()
-        local parent = setmetatable({}, { __index = MockFrame })
+        local parent = setmetatable({}, { __index = MediaMock })
         LunarUI.CreateBackdrop(parent, { borderColor = { 1, 0, 0, 1 } })
         assert.near(1, lastBorderColor[1], 0.01)
         assert.near(0, lastBorderColor[2], 0.01)
@@ -168,13 +165,13 @@ describe("ApplyBackdrop", function()
     end)
 
     it("applies backdrop template to frame", function()
-        local frame = setmetatable({}, { __index = MockFrame })
+        local frame = setmetatable({}, { __index = MediaMock })
         LunarUI.ApplyBackdrop(frame)
         assert.equals(LunarUI.backdropTemplate, lastBackdrop)
     end)
 
     it("uses custom colors when provided", function()
-        local frame = setmetatable({}, { __index = MockFrame })
+        local frame = setmetatable({}, { __index = MediaMock })
         LunarUI.ApplyBackdrop(frame, nil, { 1, 0, 0, 1 }, { 0, 1, 0, 1 })
         assert.near(1, lastBGColor[1], 0.01)
         assert.near(0, lastBorderColor[1], 0.01)
@@ -182,7 +179,7 @@ describe("ApplyBackdrop", function()
     end)
 
     it("defaults alpha to 1 when not specified", function()
-        local frame = setmetatable({}, { __index = MockFrame })
+        local frame = setmetatable({}, { __index = MediaMock })
         LunarUI.ApplyBackdrop(frame, nil, { 0.5, 0.5, 0.5 })
         assert.near(1, lastBGColor[4], 0.01)
     end)
@@ -194,7 +191,7 @@ end)
 
 describe("StyleAuraButton", function()
     it("applies backdrop to button with BackdropTemplateMixin", function()
-        local button = setmetatable({}, { __index = MockFrame })
+        local button = setmetatable({}, { __index = MediaMock })
         LunarUI.StyleAuraButton(button)
         assert.truthy(lastBackdrop)
     end)
@@ -206,8 +203,8 @@ describe("StyleAuraButton", function()
                 SetTexCoord = function()
                     texCoordCalled = true
                 end,
-            }, { __index = MockFrame }),
-        }, { __index = MockFrame })
+            }, { __index = MediaMock }),
+        }, { __index = MediaMock })
         LunarUI.StyleAuraButton(button)
         assert.is_true(texCoordCalled)
     end)
@@ -219,8 +216,8 @@ describe("StyleAuraButton", function()
             fontCalled = true
         end
         local button = setmetatable({
-            Count = setmetatable({}, { __index = MockFrame }),
-        }, { __index = MockFrame })
+            Count = setmetatable({}, { __index = MediaMock }),
+        }, { __index = MediaMock })
         LunarUI.StyleAuraButton(button)
         assert.is_true(fontCalled)
         LunarUI.SetFont = origSetFont

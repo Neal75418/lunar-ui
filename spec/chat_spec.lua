@@ -70,84 +70,9 @@ _G.ChatFrame_AddMessageEventFilter = function(event, func)
     registeredFilters[#registeredFilters + 1] = { event = event, func = func }
 end
 
--- Mock CreateFrame
-local MockFrame = {}
-MockFrame.__index = MockFrame
-function MockFrame:SetSize() end
-function MockFrame:SetPoint() end
-function MockFrame:SetFrameStrata() end
-function MockFrame:SetMovable() end
-function MockFrame:EnableMouse() end
-function MockFrame:RegisterForDrag() end
-function MockFrame:SetClampedToScreen() end
-function MockFrame:SetScript() end
-function MockFrame:HookScript() end
-function MockFrame:SetAllPoints() end
-function MockFrame:SetAlpha() end
-function MockFrame:GetAlpha()
-    return 1
-end
-function MockFrame:SetTexture() end
-function MockFrame:SetTextColor() end
-function MockFrame:SetText() end
-function MockFrame:SetFont() end
-function MockFrame:SetWidth() end
-function MockFrame:SetHeight() end
-function MockFrame:ClearAllPoints() end
-function MockFrame:Hide() end
-function MockFrame:Show() end
-function MockFrame:IsShown()
-    return true
-end
-function MockFrame:GetFrameLevel()
-    return 1
-end
-function MockFrame:SetFrameLevel() end
-function MockFrame:SetBackdrop() end
-function MockFrame:SetBackdropColor() end
-function MockFrame:SetBackdropBorderColor() end
-function MockFrame:SetMultiLine() end
-function MockFrame:SetMaxLetters() end
-function MockFrame:SetAutoFocus() end
-function MockFrame:SetFocus() end
-function MockFrame:HighlightText() end
-function MockFrame:EnableMouseWheel() end
-function MockFrame:GetName()
-    return "ChatFrame1"
-end
-function MockFrame:GetFont()
-    return "Fonts\\FRIZQT__.TTF", 12, ""
-end
-function MockFrame:GetWidth()
-    return 400
-end
-function MockFrame:GetNumMessages()
-    return 0
-end
-function MockFrame:GetMessageInfo()
-    return nil
-end
-function MockFrame:SetScrollChild() end
-function MockFrame:IsMouseOver()
-    return false
-end
-function MockFrame:CreateTexture()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateFontString()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateAnimationGroup()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateAnimation()
-    return setmetatable({}, { __index = MockFrame })
-end
-
-_G.CreateFrame = function()
-    return setmetatable({}, { __index = MockFrame })
-end
-_G.UIParent = setmetatable({}, { __index = MockFrame })
+-- Mock CreateFrame with chat-specific defaults
+local mock_frame = require("spec.mock_frame")
+local MockFrame = mock_frame.MockFrame
 
 -- Mock chat frames
 for i = 1, 7 do

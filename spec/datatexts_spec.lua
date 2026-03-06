@@ -88,39 +88,7 @@ _G.GameTooltip = {
     Hide = function() end,
 }
 
--- MockFrame
-local MockFrame = {}
-MockFrame.__index = MockFrame
-function MockFrame:SetSize() end
-function MockFrame:SetPoint() end
-function MockFrame:SetFrameStrata() end
-function MockFrame:SetFrameLevel() end
-function MockFrame:EnableMouse() end
-function MockFrame:RegisterForClicks() end
-function MockFrame:SetScript() end
-function MockFrame:SetBackdrop() end
-function MockFrame:SetBackdropColor() end
-function MockFrame:SetBackdropBorderColor() end
-function MockFrame:Hide() end
-function MockFrame:Show() end
-function MockFrame:RegisterEvent() end
-function MockFrame:UnregisterAllEvents() end
-function MockFrame:SetText() end
-function MockFrame:SetTextColor() end
-function MockFrame:SetFont() end
-function MockFrame:SetAllPoints() end
-function MockFrame:SetColorTexture() end
-function MockFrame:CreateTexture()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateFontString()
-    return setmetatable({ SetText = function() end, SetTextColor = function() end }, { __index = MockFrame })
-end
-
-_G.CreateFrame = function()
-    return setmetatable({}, { __index = MockFrame })
-end
-_G.UIParent = setmetatable({}, { __index = MockFrame })
+require("spec.mock_frame")
 
 -- Track module registration
 local registeredModules = {}

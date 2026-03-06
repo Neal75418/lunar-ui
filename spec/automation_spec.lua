@@ -56,30 +56,26 @@ _G.C_Timer = {
 }
 
 -- Mock CreateFrame with event tracking
-local MockFrame = {}
-MockFrame.__index = MockFrame
-function MockFrame:SetSize() end
-function MockFrame:SetPoint() end
-function MockFrame:SetScript(name, fn)
+local mock_frame = require("spec.mock_frame")
+local AutoMock = setmetatable({}, { __index = mock_frame.MockFrame })
+AutoMock.__index = AutoMock
+function AutoMock:SetScript(name, fn)
     self["_script_" .. name] = fn
 end
-function MockFrame:Hide() end
-function MockFrame:Show() end
-function MockFrame:RegisterEvent(event)
+function AutoMock:RegisterEvent(event)
     self._events = self._events or {}
     self._events[event] = true
 end
-function MockFrame:UnregisterAllEvents()
+function AutoMock:UnregisterAllEvents()
     self._events = {}
 end
-function MockFrame:GetRegisteredEvents()
+function AutoMock:GetRegisteredEvents()
     return self._events or {}
 end
-
 _G.CreateFrame = function()
-    return setmetatable({ _events = {} }, { __index = MockFrame })
+    return setmetatable({ _events = {} }, { __index = AutoMock })
 end
-_G.UIParent = setmetatable({}, { __index = MockFrame })
+_G.UIParent = setmetatable({}, { __index = AutoMock })
 
 local automationDB = {
     autoRepair = true,

@@ -29,76 +29,22 @@ _G.GameTooltip = {
     Hide = function() end,
 }
 
--- MockFrame
-local MockFrame = {}
-MockFrame.__index = MockFrame
-
+-- Mock CreateFrame with event tracking
+local mock_frame = require("spec.mock_frame")
 local registeredEvents = {}
-
-function MockFrame:SetSize() end
-function MockFrame:SetPoint() end
-function MockFrame:SetFrameStrata() end
-function MockFrame:SetFrameLevel() end
-function MockFrame:SetClampedToScreen() end
-function MockFrame:SetMovable() end
-function MockFrame:EnableMouse() end
-function MockFrame:RegisterForDrag() end
-function MockFrame:RegisterForClicks() end
-function MockFrame:SetScript() end
-function MockFrame:HookScript() end
-function MockFrame:SetBackdrop() end
-function MockFrame:SetBackdropColor() end
-function MockFrame:SetBackdropBorderColor() end
-function MockFrame:SetAllPoints() end
-function MockFrame:Hide() end
-function MockFrame:Show() end
-function MockFrame:IsShown()
-    return true
-end
-function MockFrame:GetFrameLevel()
-    return 1
-end
-function MockFrame:GetWidth()
-    return 200
-end
-function MockFrame:GetHeight()
-    return 100
-end
-function MockFrame:GetEffectiveScale()
-    return 1
-end
-function MockFrame:ClearAllPoints() end
-function MockFrame:SetHeight() end
-function MockFrame:SetWidth() end
-function MockFrame:SetTexture() end
-function MockFrame:SetVertexColor() end
-function MockFrame:SetTexCoord() end
-function MockFrame:SetText() end
-function MockFrame:SetTextColor() end
-function MockFrame:SetFont() end
-function MockFrame:SetJustifyH() end
-function MockFrame:SetWordWrap() end
-function MockFrame:SetNormalTexture() end
-function MockFrame:SetPushedTexture() end
-function MockFrame:SetHighlightTexture() end
-function MockFrame:CreateTexture()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateFontString()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:RegisterEvent(event)
+local LootMock = setmetatable({}, { __index = mock_frame.MockFrame })
+LootMock.__index = LootMock
+function LootMock:RegisterEvent(event)
     registeredEvents[event] = true
 end
-function MockFrame:UnregisterAllEvents()
+function LootMock:UnregisterAllEvents()
     wipe(registeredEvents)
 end
-
 _G.CreateFrame = function()
-    return setmetatable({}, { __index = MockFrame })
+    return setmetatable({}, { __index = LootMock })
 end
-_G.UIParent = setmetatable({}, { __index = MockFrame })
-_G.LootFrame = setmetatable({ Show = function() end }, { __index = MockFrame })
+_G.UIParent = setmetatable({}, { __index = LootMock })
+_G.LootFrame = setmetatable({ Show = function() end }, { __index = LootMock })
 
 -- Track module registration
 local registeredModules = {}

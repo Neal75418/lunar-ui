@@ -27,72 +27,30 @@ _G.GameTooltip = {
     Hide = function() end,
 }
 
--- MockFrame
-local MockFrame = {}
-MockFrame.__index = MockFrame
-
-function MockFrame:SetSize() end
-function MockFrame:SetPoint(...)
+-- Mock CreateFrame with point tracking for frame mover tests
+local mock_frame = require("spec.mock_frame")
+local MoverMock = setmetatable({}, { __index = mock_frame.MockFrame })
+MoverMock.__index = MoverMock
+function MoverMock:SetPoint(...)
     self._points = self._points or {}
     self._points[#self._points + 1] = { ... }
 end
-function MockFrame:GetPoint(i)
+function MoverMock:GetPoint(i)
     if self._points and self._points[i] then
         return unpack(self._points[i])
     end
     return "CENTER", nil, "CENTER", 0, 0
 end
-function MockFrame:GetNumPoints()
+function MoverMock:GetNumPoints()
     return self._points and #self._points or 1
 end
-function MockFrame:ClearAllPoints()
+function MoverMock:ClearAllPoints()
     self._points = {}
 end
-function MockFrame:SetFrameStrata() end
-function MockFrame:SetFrameLevel() end
-function MockFrame:SetMovable() end
-function MockFrame:EnableMouse() end
-function MockFrame:EnableKeyboard() end
-function MockFrame:RegisterForDrag() end
-function MockFrame:SetClampedToScreen() end
-function MockFrame:SetScript() end
-function MockFrame:HookScript() end
-function MockFrame:SetBackdrop() end
-function MockFrame:SetBackdropColor() end
-function MockFrame:SetBackdropBorderColor() end
-function MockFrame:SetAllPoints() end
-function MockFrame:Hide() end
-function MockFrame:Show() end
-function MockFrame:IsShown()
-    return true
-end
-function MockFrame:GetFrameLevel()
-    return 1
-end
-function MockFrame:GetWidth()
-    return 200
-end
-function MockFrame:GetHeight()
-    return 100
-end
-function MockFrame:SetPropagateKeyboardInput() end
-function MockFrame:StartMoving() end
-function MockFrame:StopMovingOrSizing() end
-function MockFrame:SetTexture() end
-function MockFrame:SetVertexColor() end
-function MockFrame:SetText() end
-function MockFrame:SetTextColor() end
-function MockFrame:CreateTexture()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateFontString()
-    return setmetatable({}, { __index = MockFrame })
-end
-
 _G.CreateFrame = function()
-    return setmetatable({}, { __index = MockFrame })
+    return setmetatable({}, { __index = MoverMock })
 end
-_G.UIParent = setmetatable({}, { __index = MockFrame })
+_G.UIParent = setmetatable({}, { __index = MoverMock })
 
 -- Track prints
 local printLog = {}
@@ -178,14 +136,14 @@ describe("Frame registration", function()
     end)
 
     it("registers a movable frame without error", function()
-        local frame = setmetatable({}, { __index = MockFrame })
+        local frame = setmetatable({}, { __index = MoverMock })
         assert.has_no.errors(function()
             LunarUI:RegisterMovableFrame("test", frame, "Test Frame")
         end)
     end)
 
     it("ignores nil name", function()
-        local frame = setmetatable({}, { __index = MockFrame })
+        local frame = setmetatable({}, { __index = MoverMock })
         assert.has_no.errors(function()
             LunarUI:RegisterMovableFrame(nil, frame, "Test")
         end)
@@ -198,7 +156,7 @@ describe("Frame registration", function()
     end)
 
     it("unregisters a movable frame", function()
-        local frame = setmetatable({}, { __index = MockFrame })
+        local frame = setmetatable({}, { __index = MoverMock })
         LunarUI:RegisterMovableFrame("test", frame, "Test")
         assert.has_no.errors(function()
             LunarUI:UnregisterMovableFrame("test")

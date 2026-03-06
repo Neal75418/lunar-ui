@@ -46,61 +46,7 @@ _G.C_Spell = {
     end,
 }
 
--- Mock CreateFrame for cooldown tracker frames
-local MockFrame = {}
-MockFrame.__index = MockFrame
-function MockFrame:SetSize() end
-function MockFrame:SetPoint() end
-function MockFrame:SetFrameStrata() end
-function MockFrame:SetMovable() end
-function MockFrame:EnableMouse() end
-function MockFrame:RegisterForDrag() end
-function MockFrame:SetClampedToScreen() end
-function MockFrame:SetScript() end
-function MockFrame:SetAllPoints() end
-function MockFrame:SetDrawEdge() end
-function MockFrame:SetSwipeColor() end
-function MockFrame:SetAlpha() end
-function MockFrame:SetTexture() end
-function MockFrame:SetTexCoord() end
-function MockFrame:SetBlendMode() end
-function MockFrame:SetTextColor() end
-function MockFrame:SetText() end
-function MockFrame:SetFromAlpha() end
-function MockFrame:SetToAlpha() end
-function MockFrame:SetDuration() end
-function MockFrame:SetOrder() end
-function MockFrame:Play() end
-function MockFrame:ClearAllPoints() end
-function MockFrame:SetWidth() end
-function MockFrame:StartMoving() end
-function MockFrame:StopMovingOrSizing() end
-function MockFrame:Hide() end
-function MockFrame:Show() end
-function MockFrame:IsShown()
-    return true
-end
-function MockFrame:SetCooldown() end
-function MockFrame:CreateTexture()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateFontString()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateAnimationGroup()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateAnimation()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:SetBackdrop() end
-function MockFrame:SetBackdropColor() end
-function MockFrame:SetBackdropBorderColor() end
-
-_G.CreateFrame = function()
-    return setmetatable({}, { __index = MockFrame })
-end
-_G.UIParent = setmetatable({}, { __index = MockFrame })
+require("spec.mock_frame")
 
 local LunarUI = {
     Colors = {

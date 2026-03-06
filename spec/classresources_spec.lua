@@ -55,58 +55,7 @@ _G.Enum = {
     },
 }
 
--- Mock CreateFrame
-local MockFrame = {}
-MockFrame.__index = MockFrame
-function MockFrame:SetSize() end
-function MockFrame:SetPoint() end
-function MockFrame:SetFrameStrata() end
-function MockFrame:SetMovable() end
-function MockFrame:EnableMouse() end
-function MockFrame:RegisterForDrag() end
-function MockFrame:SetClampedToScreen() end
-function MockFrame:SetScript() end
-function MockFrame:SetAllPoints() end
-function MockFrame:SetAlpha() end
-function MockFrame:SetTexture() end
-function MockFrame:SetTexCoord() end
-function MockFrame:SetBlendMode() end
-function MockFrame:SetTextColor() end
-function MockFrame:SetText() end
-function MockFrame:SetFormattedText() end
-function MockFrame:ClearAllPoints() end
-function MockFrame:StartMoving() end
-function MockFrame:StopMovingOrSizing() end
-function MockFrame:Hide() end
-function MockFrame:Show() end
-function MockFrame:IsShown()
-    return true
-end
-function MockFrame:GetFrameLevel()
-    return 1
-end
-function MockFrame:SetFrameLevel() end
-function MockFrame:SetMinMaxValues() end
-function MockFrame:SetValue() end
-function MockFrame:SetStatusBarTexture() end
-function MockFrame:SetStatusBarColor() end
-function MockFrame:SetVertexColor() end
-function MockFrame:SetBackdrop() end
-function MockFrame:SetBackdropColor() end
-function MockFrame:SetBackdropBorderColor() end
-function MockFrame:RegisterEvent() end
-function MockFrame:UnregisterAllEvents() end
-function MockFrame:CreateTexture()
-    return setmetatable({}, { __index = MockFrame })
-end
-function MockFrame:CreateFontString()
-    return setmetatable({}, { __index = MockFrame })
-end
-
-_G.CreateFrame = function()
-    return setmetatable({}, { __index = MockFrame })
-end
-_G.UIParent = setmetatable({}, { __index = MockFrame })
+require("spec.mock_frame")
 
 local LunarUI = {
     Colors = {

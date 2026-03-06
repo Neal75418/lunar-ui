@@ -14,36 +14,23 @@ _G.InCombatLockdown = function()
     return false
 end
 
--- MockFrame
-local MockFrame = {}
-MockFrame.__index = MockFrame
-function MockFrame:SetSize() end
-function MockFrame:SetPoint() end
-function MockFrame:SetFrameStrata() end
-function MockFrame:SetMovable() end
-function MockFrame:EnableMouse() end
-function MockFrame:RegisterForDrag() end
-function MockFrame:SetScript() end
-function MockFrame:SetBackdrop() end
-function MockFrame:SetBackdropColor() end
-function MockFrame:SetBackdropBorderColor() end
-function MockFrame:Hide()
+-- Mock CreateFrame with visibility tracking for debug overlay tests
+local mock_frame = require("spec.mock_frame")
+local DebugMock = setmetatable({}, { __index = mock_frame.MockFrame })
+DebugMock.__index = DebugMock
+function DebugMock:Hide()
     self._shown = false
 end
-function MockFrame:Show()
+function DebugMock:Show()
     self._shown = true
 end
-function MockFrame:IsShown()
+function DebugMock:IsShown()
     return self._shown or false
 end
-function MockFrame:CreateFontString()
-    return setmetatable({ SetText = function() end, SetPoint = function() end }, { __index = MockFrame })
-end
-
 _G.CreateFrame = function()
-    return setmetatable({}, { __index = MockFrame })
+    return setmetatable({}, { __index = DebugMock })
 end
-_G.UIParent = setmetatable({}, { __index = MockFrame })
+_G.UIParent = setmetatable({}, { __index = DebugMock })
 
 -- Track print output
 local printLog = {}

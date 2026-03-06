@@ -12,17 +12,15 @@ _G.debugprofilestop = function()
     return timestampValue
 end
 
--- Mock CreateFrame for event profiling
-local MockFrame = {}
-MockFrame.__index = MockFrame
-function MockFrame:RegisterEvent() end
-function MockFrame:UnregisterAllEvents() end
-function MockFrame:SetScript(_, handler)
+-- Mock CreateFrame with SetScript that stores handler for event profiling
+local mock_frame = require("spec.mock_frame")
+local ProfilerMock = setmetatable({}, { __index = mock_frame.MockFrame })
+ProfilerMock.__index = ProfilerMock
+function ProfilerMock:SetScript(_, handler)
     self._onEvent = handler
 end
-
 _G.CreateFrame = function()
-    return setmetatable({}, { __index = MockFrame })
+    return setmetatable({}, { __index = ProfilerMock })
 end
 
 -- Track print output
