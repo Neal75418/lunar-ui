@@ -990,19 +990,6 @@ local function InitializeFade()
     end
 end
 
--- 匯出更新函數（供 Config 面板即時更新）
-function LunarUI.UpdateActionBarFade()
-    local enabled = GetFadeSettings()
-    if enabled then
-        if not isInCombat then
-            FadeAllBarsOut()
-        end
-    else
-        -- 停用時恢復全部透明度
-        FadeAllBarsIn()
-    end
-end
-
 --------------------------------------------------------------------------------
 -- 快捷鍵模式
 --------------------------------------------------------------------------------

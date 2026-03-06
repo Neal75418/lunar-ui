@@ -1,8 +1,7 @@
 --[[
     Unit tests for LunarUI/HUD/CooldownTracker.lua
     Tests FormatCooldown, GetSpellTexture cache, GetSpellCooldownInfo,
-    IsSpellKnownByPlayer, AddTrackedSpell, RemoveTrackedSpell,
-    Show/Hide/Cleanup functions
+    IsSpellKnownByPlayer, Rebuild/Cleanup functions
 ]]
 
 require("spec.wow_mock")
@@ -315,62 +314,6 @@ describe("IsSpellKnownByPlayer", function()
 
     it("returns false when neither API returns true", function()
         assert.is_falsy(LunarUI.IsSpellKnownByPlayer(99999))
-    end)
-end)
-
---------------------------------------------------------------------------------
--- AddTrackedSpell / RemoveTrackedSpell
---------------------------------------------------------------------------------
-
-describe("AddTrackedSpell", function()
-    it("adds a spell ID to tracked list", function()
-        -- RefreshCooldownTracker will call SetupTrackedSpells + UpdateCooldownIcons
-        -- but we can test AddTrackedSpell directly
-        assert.has_no_errors(function()
-            LunarUI.AddTrackedSpell(12345)
-        end)
-    end)
-
-    it("ignores non-number input", function()
-        assert.has_no_errors(function()
-            LunarUI.AddTrackedSpell("not a number")
-            LunarUI.AddTrackedSpell(nil)
-        end)
-    end)
-end)
-
-describe("RemoveTrackedSpell", function()
-    it("removes a tracked spell ID", function()
-        LunarUI.AddTrackedSpell(54321)
-        assert.has_no_errors(function()
-            LunarUI.RemoveTrackedSpell(54321)
-        end)
-    end)
-
-    it("does nothing for non-existent spell", function()
-        assert.has_no_errors(function()
-            LunarUI.RemoveTrackedSpell(0)
-        end)
-    end)
-end)
-
---------------------------------------------------------------------------------
--- ShowCooldownTracker / HideCooldownTracker
---------------------------------------------------------------------------------
-
-describe("ShowCooldownTracker", function()
-    it("does not error when cooldownFrame is nil", function()
-        assert.has_no_errors(function()
-            LunarUI.ShowCooldownTracker()
-        end)
-    end)
-end)
-
-describe("HideCooldownTracker", function()
-    it("does not error when cooldownFrame is nil", function()
-        assert.has_no_errors(function()
-            LunarUI.HideCooldownTracker()
-        end)
     end)
 end)
 

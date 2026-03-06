@@ -652,28 +652,6 @@ eventFrame = LunarUI.CreateEventHandler(
 -- 匯出函數
 --------------------------------------------------------------------------------
 
-function LunarUI.ShowAuraFrames()
-    if buffFrame then
-        buffFrame:Show()
-    end
-    if debuffFrame then
-        debuffFrame:Show()
-    end
-end
-
-function LunarUI.HideAuraFrames()
-    if buffFrame then
-        buffFrame:Hide()
-    end
-    if debuffFrame then
-        debuffFrame:Hide()
-    end
-end
-
-function LunarUI.RefreshAuraFrames()
-    UpdateAuras()
-end
-
 -- 調整單個圖示的大小與內部元素
 local function ResizeAuraIcon(icon)
     local totalHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT

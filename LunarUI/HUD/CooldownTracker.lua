@@ -21,7 +21,6 @@ local math_ceil = math.ceil
 local math_floor = math.floor
 local string_format = string.format
 local table_insert = table.insert
-local table_remove = table.remove
 local ipairs = ipairs
 local type = type
 local wipe = wipe
@@ -555,23 +554,6 @@ eventFrame = LunarUI.CreateEventHandler(
 -- 匯出函數
 --------------------------------------------------------------------------------
 
-function LunarUI.ShowCooldownTracker()
-    if cooldownFrame then
-        cooldownFrame:Show()
-    end
-end
-
-function LunarUI.HideCooldownTracker()
-    if cooldownFrame then
-        cooldownFrame:Hide()
-    end
-end
-
-function LunarUI.RefreshCooldownTracker()
-    SetupTrackedSpells()
-    UpdateCooldownIcons()
-end
-
 function LunarUI.RebuildCooldownTracker()
     if not isInitialized then
         return
@@ -618,23 +600,6 @@ function LunarUI.RebuildCooldownTracker()
         cooldownFrame:SetSize(MAX_ICONS * (ICON_SIZE + ICON_SPACING) - ICON_SPACING, ICON_SIZE + 10)
     end
     UpdateCooldownIcons()
-end
-
--- 新增自訂追蹤技能
-function LunarUI.AddTrackedSpell(spellID)
-    if type(spellID) == "number" then
-        table_insert(trackedSpells, spellID)
-    end
-end
-
--- 移除追蹤技能
-function LunarUI.RemoveTrackedSpell(spellID)
-    for i, id in ipairs(trackedSpells) do
-        if id == spellID then
-            table_remove(trackedSpells, i)
-            return
-        end
-    end
 end
 
 -- 清理函數

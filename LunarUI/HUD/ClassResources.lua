@@ -487,23 +487,6 @@ end
 -- 暴露 Initialize 供 Options toggle 即時切換
 LunarUI.InitClassResources = Initialize
 
--- 匯出函數
-function LunarUI.ShowClassResources()
-    if resourceFrame then
-        resourceFrame:Show()
-    end
-end
-
-function LunarUI.HideClassResources()
-    if resourceFrame then
-        resourceFrame:Hide()
-    end
-end
-
-function LunarUI.RefreshClassResources()
-    SetupResourceDisplay()
-end
-
 function LunarUI.RebuildClassResources()
     if InCombatLockdown() then
         return

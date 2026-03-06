@@ -157,13 +157,7 @@ describe("ClassResources lifecycle", function()
         assert.is_function(LunarUI.CleanupClassResources)
     end)
 
-    it("exports Show/Hide functions", function()
-        assert.is_function(LunarUI.ShowClassResources)
-        assert.is_function(LunarUI.HideClassResources)
-    end)
-
-    it("exports Refresh/Rebuild functions", function()
-        assert.is_function(LunarUI.RefreshClassResources)
+    it("exports Rebuild function", function()
         assert.is_function(LunarUI.RebuildClassResources)
     end)
 
@@ -182,13 +176,6 @@ describe("ClassResources lifecycle", function()
     it("Cleanup does not error when not initialized", function()
         assert.has_no_errors(function()
             LunarUI.CleanupClassResources()
-        end)
-    end)
-
-    it("Show/Hide do not error when frame is nil", function()
-        assert.has_no_errors(function()
-            LunarUI.ShowClassResources()
-            LunarUI.HideClassResources()
         end)
     end)
 

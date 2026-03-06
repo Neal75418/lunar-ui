@@ -1,7 +1,7 @@
 --[[
     Unit tests for LunarUI/Modules/Skins.lua
-    Tests: CreateIconBorder, StripTextures, SetFont*, MarkSkinned, RegisterSkin,
-           SkinScrollBar, SkinEditBox
+    Tests: CreateIconBorder, StripTextures, SetFontLight, MarkSkinned, RegisterSkin,
+           SkinEditBox
 ]]
 
 require("spec.wow_mock")
@@ -318,34 +318,6 @@ describe("SetFontLight", function()
     end)
 end)
 
-describe("SetFontSecondary", function()
-    it("sets text color to light gray", function()
-        local fs = MockFontString()
-        LunarUI.SetFontSecondary(fs)
-        assert.same({ 0.9, 0.9, 0.9, 1 }, fs._textColor)
-    end)
-
-    it("handles nil safely", function()
-        assert.has_no_errors(function()
-            LunarUI.SetFontSecondary(nil)
-        end)
-    end)
-end)
-
-describe("SetFontMuted", function()
-    it("sets text color to muted gray", function()
-        local fs = MockFontString()
-        LunarUI.SetFontMuted(fs)
-        assert.same({ 0.7, 0.7, 0.7, 1 }, fs._textColor)
-    end)
-
-    it("handles nil safely", function()
-        assert.has_no_errors(function()
-            LunarUI.SetFontMuted(nil)
-        end)
-    end)
-end)
-
 --------------------------------------------------------------------------------
 -- MarkSkinned
 --------------------------------------------------------------------------------
@@ -364,25 +336,6 @@ describe("MarkSkinned", function()
 
     it("returns false for nil frame", function()
         assert.is_false(LunarUI.MarkSkinned(nil))
-    end)
-end)
-
---------------------------------------------------------------------------------
--- SkinScrollBar
---------------------------------------------------------------------------------
-
-describe("SkinScrollBar", function()
-    it("handles nil safely", function()
-        assert.has_no_errors(function()
-            LunarUI.SkinScrollBar(nil)
-        end)
-    end)
-
-    it("strips textures from scrollbar", function()
-        local tex = MockTexture("BACKGROUND")
-        local frame = MockFrame({ regions = { tex } })
-        LunarUI.SkinScrollBar(frame)
-        assert.equals(0, tex._alpha)
     end)
 end)
 

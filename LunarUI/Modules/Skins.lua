@@ -175,20 +175,6 @@ function LunarUI.SetFontLight(fontString)
     end
 end
 
---- 設定 FontString 為次要顏色（灰白色）
-function LunarUI.SetFontSecondary(fontString)
-    if fontString and fontString.SetTextColor then
-        fontString:SetTextColor(0.9, 0.9, 0.9, 1)
-    end
-end
-
---- 設定 FontString 為柔和顏色（用於次要資訊）
-function LunarUI.SetFontMuted(fontString)
-    if fontString and fontString.SetTextColor then
-        fontString:SetTextColor(0.7, 0.7, 0.7, 1)
-    end
-end
-
 --- 替換按鈕樣式
 function LunarUI.SkinButton(btn)
     if not btn then
@@ -350,14 +336,6 @@ function LunarUI:SkinStandardFrame(frameName, options)
     end
 
     return frame
-end
-
---- 替換捲軸條
-function LunarUI.SkinScrollBar(scrollBar)
-    if not scrollBar then
-        return
-    end
-    StripTextures(scrollBar)
 end
 
 --- 替換編輯框樣式
