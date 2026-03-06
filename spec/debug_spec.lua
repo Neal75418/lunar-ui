@@ -143,35 +143,33 @@ end)
 --------------------------------------------------------------------------------
 
 describe("Debug overlay", function()
-    before_each(function()
-        -- Reset DebugFrame to force recreation
-        LunarUI.DebugFrame = nil
-    end)
+    -- NOTE: CreateDebugFrame 使用 module-local upvalue 快取，無法從外部重置。
+    -- 測試依序執行：先建立、再顯示/隱藏。
 
-    it("UpdateDebugOverlay shows frame when debug on", function()
+    it("UpdateDebugOverlay creates and shows frame when debug on", function()
         LunarUI.db.profile.debug = true
         LunarUI.UpdateDebugOverlay()
-        -- Should not error
-        assert.is_function(LunarUI.UpdateDebugOverlay)
+        assert.truthy(LunarUI.DebugFrame)
+        assert.is_true(LunarUI.DebugFrame:IsShown())
     end)
 
     it("UpdateDebugOverlay hides frame when debug off", function()
         LunarUI.db.profile.debug = false
-        assert.has_no.errors(function()
-            LunarUI.UpdateDebugOverlay()
-        end)
+        LunarUI.UpdateDebugOverlay()
+        assert.truthy(LunarUI.DebugFrame)
+        assert.is_false(LunarUI.DebugFrame:IsShown())
     end)
 
-    it("ShowDebugOverlay does not error", function()
-        assert.has_no.errors(function()
-            LunarUI.ShowDebugOverlay()
-        end)
+    it("ShowDebugOverlay shows frame", function()
+        LunarUI.ShowDebugOverlay()
+        assert.truthy(LunarUI.DebugFrame)
+        assert.is_true(LunarUI.DebugFrame:IsShown())
     end)
 
-    it("HideDebugOverlay does not error when no frame", function()
-        assert.has_no.errors(function()
-            LunarUI.HideDebugOverlay()
-        end)
+    it("HideDebugOverlay hides frame", function()
+        LunarUI.HideDebugOverlay()
+        assert.truthy(LunarUI.DebugFrame)
+        assert.is_false(LunarUI.DebugFrame:IsShown())
     end)
 
     it("exports all overlay functions", function()
