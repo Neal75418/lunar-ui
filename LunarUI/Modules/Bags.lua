@@ -2257,6 +2257,11 @@ function LunarUI.CleanupBags()
     eventFrame:UnregisterAllEvents()
     CloseBags()
     CloseBank()
+    -- 清理快取，避免 re-enable 時殘留 stale entries
+    wipe(itemLevelCache)
+    wipe(equipmentTypeCache)
+    itemLevelCacheMeta.n = 0
+    equipmentTypeCacheMeta.n = 0
 end
 
 -- 匯出

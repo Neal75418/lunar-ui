@@ -1230,6 +1230,9 @@ local function CleanupChat()
         end
     end
     wipe(savedAddMessageFuncs)
+    -- 清理 keyword escaped pattern 快取
+    wipe(escapedKeywordCache)
+    escapedKeywordCacheSize = 0
 end
 
 -- 匯出
