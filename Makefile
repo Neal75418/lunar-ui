@@ -26,7 +26,7 @@ format-fix:
 coverage:
 	busted --coverage spec/ && luacov
 	@tail -30 luacov.report.out 2>/dev/null || true
-	@./scripts/check-coverage.sh 33
+	@./scripts/check-coverage.sh 43
 
 check: lint format test
 
