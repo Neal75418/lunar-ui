@@ -63,6 +63,8 @@ timeline
   - **HUD/ClassResources.lua** (1 個修復)
     - PLAYER_SPECIALIZATION_CHANGED 事件缺少 isInitialized guard
 
+- **Bags/Chat Cleanup** &mdash; 補齊 `CleanupBags()` 和 `CleanupChat()` 缺漏的框架引用清理（事件框架、計時器 nil 化）
+- **Debug Overlay Tests** &mdash; 修正 module-local upvalue 快取導致的測試失敗，改為循序測試策略
 - **Serialization.lua** &mdash; `MergeTable` 非 table source 輸入會 crash（新增 type guard）
 - **本地化** &mdash; 修復 FrameMover 選項缺少的語系字串、Options locale 繼承問題
 - **C_AddOns** &mdash; 全面更新為 `C_AddOns` 命名空間 API（WoW 12.0 相容性）
@@ -82,7 +84,15 @@ timeline
 - **ActionBars** &mdash; 拆分 `UpdateFadeAndHover`（101 行）為 `UpdateFadeAnimation` + `UpdateHoverDetection` + 協調器
 - **Nameplates** &mdash; 拆分 `UpdateNameplateStacking`（106 行）為 `CollectVisibleNameplates` + `SortNameplatesByY` + `DetectOverlaps` + `ApplyStackOffsets` + 協調器
 - **UnitFrames / Commands** &mdash; 減少重複代碼，提取共用模式
-- 測試數量 354 → 373（+19 tests）
+- **測試基礎設施** &mdash; 提取共用 `spec/mock_frame.lua` MockFrame 模組，消除 7 個 spec 檔案的重複 mock 定義
+- **Nameplates** &mdash; 匯出 `CLASSIFICATION_COLORS`、`NPC_ROLE_COLORS`、`GetNPCRoleColor` 供測試存取
+- 測試數量 354 → 920（+566 tests）
+  - `spec/defaults_spec.lua` &mdash; 134 tests，驗證 Defaults.lua 全部 16 模組 key、11 unit type、enum 值、型別一致性
+  - `spec/presets_spec.lua` &mdash; 18 tests，驗證 GetCurrentRole / ApplyRolePreset 角色預設系統
+  - `spec/layout_spec.lua` &mdash; 35 tests，驗證 GetAuraSortFunction（4 sort methods × 正反向 + nil safety）、RebuildAuraFilterCache
+  - `spec/actionbars_spec.lua` &mdash; 10 tests，ActionBars exports 與 lifecycle smoke test
+  - `spec/nameplates_spec.lua` &mdash; 22 tests，CLASSIFICATION_COLORS / NPC_ROLE_COLORS 結構驗證 + GetNPCRoleColor 決策邏輯
+- CI 覆蓋率門檻 33% → 43%
 
 ### Planned
 
