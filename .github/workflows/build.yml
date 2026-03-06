@@ -11,6 +11,9 @@ on:
     branches:
       - main
 
+env:
+  STYLUA_VERSION: "2.0.2"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,15 +38,10 @@ jobs:
           done
           echo "All TOC files valid!"
 
-      - name: Check Lua syntax
+      - name: Install system dependencies
         run: |
-          echo "Checking Lua syntax..."
-          sudo apt-get update && sudo apt-get install -y lua5.1
-          find . -name "*.lua" -not -path "./*/Libs/*" | while read file; do
-            echo "Checking $file"
-            luac5.1 -p "$file" || exit 1
-          done
-          echo "All Lua files have valid syntax!"
+          sudo apt-get update
+          sudo apt-get install -y luarocks
 
       - name: Cache luarocks packages
         uses: actions/cache@v4
@@ -52,19 +50,23 @@ jobs:
             ~/.luarocks
             /usr/local/lib/luarocks
             /usr/local/share/lua
+            /usr/local/bin/luacheck
+            /usr/local/bin/busted
+            /usr/local/bin/luacov
           key: luarocks-${{ runner.os }}-${{ hashFiles('.busted', '.luacheckrc') }}
           restore-keys: luarocks-${{ runner.os }}-
 
-      - name: Lint with luacheck
+      - name: Install luarocks packages
         run: |
-          sudo apt-get install -y luarocks
-          sudo luarocks install luacheck
-          luacheck .
+          command -v luacheck || sudo luarocks install luacheck
+          command -v busted || sudo luarocks install busted
+          luarocks show luacov > /dev/null 2>&1 || sudo luarocks install luacov
+
+      - name: Lint with luacheck
+        run: luacheck .
 
       - name: Run unit tests with coverage
         run: |
-          sudo luarocks install busted
-          sudo luarocks install luacov
           busted --coverage spec/
           luacov
           echo "=== Coverage Summary ==="
@@ -72,17 +74,25 @@ jobs:
           chmod +x scripts/check-coverage.sh
           ./scripts/check-coverage.sh 43
 
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: luacov.report.out
+          retention-days: 14
+
       - name: Cache StyLua
         id: cache-stylua
         uses: actions/cache@v4
         with:
           path: ./stylua
-          key: stylua-${{ runner.os }}-latest
+          key: stylua-${{ runner.os }}-v${{ env.STYLUA_VERSION }}
 
       - name: Check formatting with StyLua
         run: |
           if [ ! -f ./stylua ]; then
-            curl -sSL https://github.com/JohnnyMorganz/StyLua/releases/latest/download/stylua-linux-x86_64.zip -o stylua.zip
+            curl -sSL "https://github.com/JohnnyMorganz/StyLua/releases/download/v${STYLUA_VERSION}/stylua-linux-x86_64.zip" -o stylua.zip
             unzip -q stylua.zip
             chmod +x stylua
           fi
@@ -94,7 +104,12 @@ jobs:
           ./scripts/check-locale-keys.sh
 
       - name: Package addon (dry run)
+        id: package
         uses: BigWigsMods/packager@v2
-        continue-on-error: true  # Don't fail build if packaging has issues (externals may be unavailable)
+        continue-on-error: true
         with:
-          args: -d -z  # Dry run, skip externals
+          args: -d -z
+
+      - name: Warn if packaging failed
+        if: steps.package.outcome == 'failure'
+        run: echo "::warning::Addon packaging dry-run failed — check externals"
