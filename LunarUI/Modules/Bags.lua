@@ -368,6 +368,22 @@ local function HideSlotTooltip()
     GameTooltip:Hide()
 end
 
+-- 物品格子點擊處理（template 預設 handler 依賴原生 ContainerFrame parent，無法在自訂框架下運作）
+local function OnSlotClick(self, button)
+    local bag, slot = self:GetBagID(), self:GetID()
+    if button == "RightButton" then
+        C_Container.UseContainerItem(bag, slot)
+    else
+        if IsShiftKeyDown() then
+            local link = C_Container.GetContainerItemLink(bag, slot)
+            if link and ChatEdit_InsertLink and ChatEdit_InsertLink(link) then
+                return
+            end
+        end
+        C_Container.PickupContainerItem(bag, slot)
+    end
+end
+
 -- 隱藏格子上的所有指示器（重構：避免重複代碼）
 local function HideAllSlotIndicators(button)
     if button.ilvlText then
@@ -400,6 +416,7 @@ end
 local function SetupSlotBase(button, bag, slot)
     button.bag = bag
     button.slot = slot
+    button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     -- 移除預設材質
     local normalTexture = button:GetNormalTexture()
@@ -490,9 +507,14 @@ local function SetupSlotBase(button, bag, slot)
         return self.bag
     end
 
-    -- 覆寫 tooltip
+    -- 覆寫 tooltip 與點擊
     button:SetScript("OnEnter", ShowSlotTooltip)
     button:SetScript("OnLeave", HideSlotTooltip)
+    button:SetScript("OnClick", OnSlotClick)
+    button:RegisterForDrag("LeftButton")
+    button:SetScript("OnDragStart", function(self)
+        C_Container.PickupContainerItem(self:GetBagID(), self:GetID())
+    end)
     button.OnEnter = ShowSlotTooltip
     button.OnLeave = HideSlotTooltip
     button.UpdateTooltip = ShowSlotTooltip
@@ -970,6 +992,7 @@ local function CreateBagFrame()
     local slotContainer = CreateFrame("Frame", nil, bagFrame)
     slotContainer:SetPoint("TOPLEFT", PADDING, -HEADER_HEIGHT)
     slotContainer:SetPoint("BOTTOMRIGHT", -PADDING, FOOTER_HEIGHT)
+    slotContainer:EnableMouse(false) -- 讓滑鼠事件穿透到子按鈕
     bagFrame.slotContainer = slotContainer
 
     -- 收集所有格子的 bag/slot 資料（支援反轉順序）
@@ -1068,93 +1091,11 @@ local function UpdateBankSlot(button)
     if containerInfo then
         local itemLink = C_Container.GetContainerItemLink(bag, slot)
         local quality = containerInfo.quality or 0
-
-        -- 設定物品圖示
-        local icon = button.icon or _G[button:GetName() .. "IconTexture"]
-        if icon and containerInfo.iconFileID then
-            icon:SetTexture(containerInfo.iconFileID)
-            icon:Show()
-        end
-
-        -- 設定物品數量
-        local count = containerInfo.stackCount or 0
-        if count > 1 then
-            button.Count:SetText(count)
-            button.Count:Show()
-        else
-            button.Count:Hide()
-        end
-
-        -- 依品質設定邊框顏色
-        if button.LunarBorder then
-            if quality and ITEM_QUALITY_COLORS[quality] then
-                local color = ITEM_QUALITY_COLORS[quality]
-                button.LunarBorder:SetBackdropBorderColor(color[1], color[2], color[3], 1)
-            else
-                button.LunarBorder:SetBackdropBorderColor(
-                    BORDER_COLOR_DEFAULT[1],
-                    BORDER_COLOR_DEFAULT[2],
-                    BORDER_COLOR_DEFAULT[3],
-                    1
-                )
-            end
-        end
-
-        -- 顯示裝備物品等級（支援門檻設定）
-        if button.ilvlText then
-            if (not db or db.showItemLevel ~= false) and IsEquipment(itemLink) then
-                local ilvl = GetItemLevel(itemLink)
-                local threshold = (db and db.ilvlThreshold) or 1
-                if ilvl and ilvl >= threshold then
-                    button.ilvlText:SetText(ilvl)
-                    button.ilvlText:Show()
-                else
-                    button.ilvlText:Hide()
-                end
-            else
-                button.ilvlText:Hide()
-            end
-        end
-
-        -- 綁定類型文字（BoE/BoP/BoU）
-        if button.bindText then
-            if db and db.showBindType and itemLink then
-                local bindType = select(14, C_Item.GetItemInfo(itemLink))
-                -- bindType 可能為 nil 若物品未載入
-                if bindType and bindType == 2 then
-                    button.bindText:SetText(L["BoE"] or "BoE")
-                    button.bindText:SetTextColor(0.1, 1, 0.1)
-                    button.bindText:Show()
-                elseif bindType and bindType == 3 then
-                    button.bindText:SetText(L["BoU"] or "BoU")
-                    button.bindText:SetTextColor(0.9, 0.6, 0.2)
-                    button.bindText:Show()
-                else
-                    button.bindText:Hide()
-                end
-            else
-                button.bindText:Hide()
-            end
-        end
+        UpdateSlotVisuals(button, containerInfo, quality)
+        UpdateSlotText(button, db, itemLink)
+        -- 銀行格子不需要 UpdateSlotEffects（無冷卻、新物品發光、垃圾/任務/升級指示）
     else
-        -- 空格子
-        local icon = button.icon or _G[button:GetName() .. "IconTexture"]
-        if icon then
-            icon:SetTexture(nil)
-        end
-        if button.Count then
-            button.Count:Hide()
-        end
-        if button.LunarBorder then
-            button.LunarBorder:SetBackdropBorderColor(
-                BORDER_COLOR_DEFAULT[1],
-                BORDER_COLOR_DEFAULT[2],
-                BORDER_COLOR_DEFAULT[3],
-                0.5
-            )
-        end
-        -- 使用輔助函數隱藏所有指示器
-        HideAllSlotIndicators(button)
+        ClearSlot(button, db, bag)
     end
 end
 
@@ -1326,12 +1267,14 @@ local function CreateBankFrame()
     local slotContainer = CreateFrame("Frame", nil, bankFrame)
     slotContainer:SetPoint("TOPLEFT", PADDING, -HEADER_HEIGHT)
     slotContainer:SetPoint("BOTTOMRIGHT", -PADDING, FOOTER_HEIGHT)
+    slotContainer:EnableMouse(false) -- 讓滑鼠事件穿透到子按鈕
     bankFrame.slotContainer = slotContainer
 
     -- 格子容器（材料銀行）
     local reagentContainer = CreateFrame("Frame", nil, bankFrame)
     reagentContainer:SetPoint("TOPLEFT", PADDING, -HEADER_HEIGHT)
     reagentContainer:SetPoint("BOTTOMRIGHT", -PADDING, FOOTER_HEIGHT)
+    reagentContainer:EnableMouse(false) -- 讓滑鼠事件穿透到子按鈕
     reagentContainer:Hide()
     bankFrame.reagentContainer = reagentContainer
 
@@ -1824,6 +1767,7 @@ local function CloseBags()
     if bagFrame then
         bagFrame:Hide()
         isOpen = false
+        isSorting = false -- 防禦性重設：排序中關閉背包時 BAG_UPDATE_DELAYED 可能不觸發
         -- 取消搜尋計時器避免洩漏
         if searchTimer then
             searchTimer:Cancel()
@@ -1891,6 +1835,11 @@ function LunarUI.RebuildBags()
             end
         end
     end
+
+    -- 清除銀行批次更新佇列，防止 C_Timer.After 回呼存取已清除的框架
+    wipe(bankUpdateQueue)
+    bankUpdateInProgress = false
+    isSorting = false
 
     -- 隱藏主框架（但不 SetParent(nil)，保留供子框架重新 reparent）
     if bagFrame then

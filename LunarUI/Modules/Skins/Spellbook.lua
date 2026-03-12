@@ -36,6 +36,19 @@ local function SkinSpellbook()
             LunarUI.SkinButton(next)
         end
     end
+
+    -- WoW 12.0: 天賦整合至 PlayerSpellsFrame，skin 天賦子框架的按鈕
+    -- （Blizzard_ClassTalentUI 可能不再獨立存在，因此在此一併處理）
+    local talentsFrame = frame.TalentsFrame or frame.ClassTalentFrame or _G["ClassTalentFrame"]
+    if talentsFrame then
+        if talentsFrame.ApplyButton then
+            LunarUI.SkinButton(talentsFrame.ApplyButton)
+        end
+        if talentsFrame.UndoButton then
+            LunarUI.SkinButton(talentsFrame.UndoButton)
+        end
+    end
+
     return true
 end
 
