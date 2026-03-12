@@ -288,6 +288,7 @@ read_globals = {
     "FCF_GetCurrentChatFrame",
     "ChatEdit_ActivateChat",
     "ChatEdit_DeactivateChat",
+    "ChatEdit_InsertLink",
     "ChatFrameChannelButton",
     "ChatFrameMenuButton",
     "ChatFrame_AddMessageEventFilter",
