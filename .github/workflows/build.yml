@@ -7,15 +7,32 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - "*.md"
+      - "docs/**"
+      - ".editorconfig"
+      - ".luarc.json"
+      - "LICENSE"
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "*.md"
+      - "docs/**"
+      - ".editorconfig"
+      - ".luarc.json"
+      - "LICENSE"
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   STYLUA_VERSION: "2.0.2"
 
 jobs:
-  build:
+  lint:
+    name: Lint & Format
     runs-on: ubuntu-latest
 
     steps:
@@ -51,39 +68,16 @@ jobs:
             /usr/local/lib/luarocks
             /usr/local/share/lua
             /usr/local/bin/luacheck
-            /usr/local/bin/busted
-            /usr/local/bin/luacov
-          key: luarocks-${{ runner.os }}-${{ hashFiles('.busted', '.luacheckrc') }}
-          restore-keys: luarocks-${{ runner.os }}-
+          key: luarocks-lint-${{ runner.os }}-${{ hashFiles('.luacheckrc') }}
+          restore-keys: luarocks-lint-${{ runner.os }}-
 
-      - name: Install luarocks packages
-        run: |
-          command -v luacheck || sudo luarocks install luacheck
-          command -v busted || sudo luarocks install busted
-          luarocks show luacov > /dev/null 2>&1 || sudo luarocks install luacov
+      - name: Install luacheck
+        run: command -v luacheck || sudo luarocks install luacheck
 
       - name: Lint with luacheck
         run: luacheck .
 
-      - name: Run unit tests with coverage
-        run: |
-          busted --coverage spec/
-          luacov
-          echo "=== Coverage Summary ==="
-          tail -30 luacov.report.out || true
-          chmod +x scripts/check-coverage.sh
-          ./scripts/check-coverage.sh 43
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: luacov.report.out
-          retention-days: 14
-
       - name: Cache StyLua
-        id: cache-stylua
         uses: actions/cache@v4
         with:
           path: ./stylua
@@ -99,9 +93,61 @@ jobs:
           ./stylua --check --glob '**/*.lua' --glob '!LunarUI/Libs/**' .
 
       - name: Lint locale key parity
+        run: ./scripts/check-locale-keys.sh
+
+  test:
+    name: Test & Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install system dependencies
         run: |
-          chmod +x scripts/check-locale-keys.sh
-          ./scripts/check-locale-keys.sh
+          sudo apt-get update
+          sudo apt-get install -y luarocks
+
+      - name: Cache luarocks packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.luarocks
+            /usr/local/lib/luarocks
+            /usr/local/share/lua
+            /usr/local/bin/busted
+            /usr/local/bin/luacov
+          key: luarocks-test-${{ runner.os }}-${{ hashFiles('.busted') }}
+          restore-keys: luarocks-test-${{ runner.os }}-
+
+      - name: Install test tools
+        run: |
+          command -v busted || sudo luarocks install busted
+          luarocks show luacov > /dev/null 2>&1 || sudo luarocks install luacov
+
+      - name: Run unit tests with coverage
+        run: |
+          busted --coverage spec/
+          luacov
+          echo "=== Coverage Summary ==="
+          tail -30 luacov.report.out || true
+          ./scripts/check-coverage.sh 43
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: luacov.report.out
+          retention-days: 14
+
+  package:
+    name: Package (dry run)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
       - name: Package addon (dry run)
         id: package

@@ -8,11 +8,53 @@ on:
     tags:
       - 'v*'  # Trigger on version tags (e.g., v0.7.0)
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false  # 不取消進行中的 release
+
 permissions:
   contents: write
 
 jobs:
+  validate:
+    name: Validate before release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y luarocks
+
+      - name: Cache luarocks packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.luarocks
+            /usr/local/lib/luarocks
+            /usr/local/share/lua
+            /usr/local/bin/luacheck
+            /usr/local/bin/busted
+          key: luarocks-release-${{ runner.os }}-${{ hashFiles('.busted', '.luacheckrc') }}
+          restore-keys: luarocks-release-${{ runner.os }}-
+
+      - name: Install luarocks packages
+        run: |
+          command -v luacheck || sudo luarocks install luacheck
+          command -v busted || sudo luarocks install busted
+
+      - name: Lint with luacheck
+        run: luacheck .
+
+      - name: Run unit tests
+        run: busted spec/
+
   release:
+    name: Package & Publish
+    needs: validate
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +71,7 @@ jobs:
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: LunarUI-release
           path: .release/

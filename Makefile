@@ -28,7 +28,7 @@ coverage:
 	@tail -30 luacov.report.out 2>/dev/null || true
 	@./scripts/check-coverage.sh 43
 
-check: lint format test
+check: lint format locale-check test
 
 locale-check:
 	./scripts/check-locale-keys.sh
