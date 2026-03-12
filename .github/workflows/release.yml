@@ -30,7 +30,7 @@ jobs:
           sudo apt-get install -y luarocks
 
       - name: Cache luarocks packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.luarocks
@@ -70,7 +70,7 @@ jobs:
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: LunarUI-release
           path: .release/

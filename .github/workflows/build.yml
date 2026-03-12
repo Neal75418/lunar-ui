@@ -61,7 +61,7 @@ jobs:
           sudo apt-get install -y luarocks
 
       - name: Cache luarocks packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.luarocks
@@ -78,7 +78,7 @@ jobs:
         run: luacheck .
 
       - name: Cache StyLua
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./stylua
           key: stylua-${{ runner.os }}-v${{ env.STYLUA_VERSION }}
@@ -109,7 +109,7 @@ jobs:
           sudo apt-get install -y luarocks
 
       - name: Cache luarocks packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.luarocks
@@ -134,7 +134,7 @@ jobs:
 
       - name: Upload coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: luacov.report.out
