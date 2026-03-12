@@ -36,15 +36,14 @@ jobs:
             ~/.luarocks
             /usr/local/lib/luarocks
             /usr/local/share/lua
-            /usr/local/bin/luacheck
-            /usr/local/bin/busted
+            /usr/local/lib/lua
           key: luarocks-release-${{ runner.os }}-${{ hashFiles('.busted', '.luacheckrc') }}
           restore-keys: luarocks-release-${{ runner.os }}-
 
       - name: Install luarocks packages
         run: |
-          command -v luacheck || sudo luarocks install luacheck
-          command -v busted || sudo luarocks install busted
+          luarocks show luacheck > /dev/null 2>&1 || sudo luarocks install luacheck
+          luarocks show busted > /dev/null 2>&1 || sudo luarocks install busted
 
       - name: Lint with luacheck
         run: luacheck .

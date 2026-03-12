@@ -67,12 +67,12 @@ jobs:
             ~/.luarocks
             /usr/local/lib/luarocks
             /usr/local/share/lua
-            /usr/local/bin/luacheck
+            /usr/local/lib/lua
           key: luarocks-lint-${{ runner.os }}-${{ hashFiles('.luacheckrc') }}
           restore-keys: luarocks-lint-${{ runner.os }}-
 
       - name: Install luacheck
-        run: command -v luacheck || sudo luarocks install luacheck
+        run: luarocks show luacheck > /dev/null 2>&1 || sudo luarocks install luacheck
 
       - name: Lint with luacheck
         run: luacheck .
@@ -115,14 +115,13 @@ jobs:
             ~/.luarocks
             /usr/local/lib/luarocks
             /usr/local/share/lua
-            /usr/local/bin/busted
-            /usr/local/bin/luacov
+            /usr/local/lib/lua
           key: luarocks-test-${{ runner.os }}-${{ hashFiles('.busted') }}
           restore-keys: luarocks-test-${{ runner.os }}-
 
       - name: Install test tools
         run: |
-          command -v busted || sudo luarocks install busted
+          luarocks show busted > /dev/null 2>&1 || sudo luarocks install busted
           luarocks show luacov > /dev/null 2>&1 || sudo luarocks install luacov
 
       - name: Run unit tests with coverage
