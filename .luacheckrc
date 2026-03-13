@@ -26,6 +26,13 @@ files["wow_api.def.lua"] = {
     ignore = { "" },  -- ignore everything (stub definitions)
 }
 
+-- busted.def.lua is an EmmyLua type definition file — not real code
+files["spec/busted.def.lua"] = {
+    allow_defined = true,
+    allow_defined_top = true,
+    ignore = { "" },
+}
+
 -- WoW API globals (read_globals = read-only access, globals = read+write)
 globals = {
     -- Addon globals that are legitimately mutated
