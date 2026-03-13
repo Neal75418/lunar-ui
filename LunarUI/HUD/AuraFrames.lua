@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local, undefined-global
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if, unused-local, undefined-global
 --[[
     LunarUI - Buff/Debuff 框架（重新設計）
     在螢幕上顯示玩家的增益和減益效果
@@ -571,10 +571,10 @@ local function Initialize()
 
     -- 註冊至框架移動器（支援拖曳定位）
     if buffFrame then
-        LunarUI:RegisterMovableFrame("BuffFrame", buffFrame, "增益框架")
+        LunarUI.RegisterMovableFrame("BuffFrame", buffFrame, "增益框架")
     end
     if debuffFrame then
-        LunarUI:RegisterMovableFrame("DebuffFrame", debuffFrame, "減益框架")
+        LunarUI.RegisterMovableFrame("DebuffFrame", debuffFrame, "減益框架")
     end
 
     isInitialized = true

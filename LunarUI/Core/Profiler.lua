@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - 效能分析器
     可選的模組初始化計時與事件處理器效能追蹤
@@ -43,7 +43,7 @@ end
     @param initFunc function - 模組的 onEnable 函數
     @return boolean, string|nil - pcall 的返回值
 ]]
-function LunarUI:ProfileModuleInit(name, initFunc)
+function LunarUI.ProfileModuleInit(name, initFunc)
     if not profilingEnabled then
         return pcall(initFunc)
     end
@@ -107,7 +107,7 @@ function LunarUI:DisableProfiling()
     self:Print("|cff8882ff[Profiler]|r Profiling |cffff0000OFF|r")
 end
 
-function LunarUI:IsProfilingEnabled()
+function LunarUI.IsProfilingEnabled()
     return profilingEnabled
 end
 

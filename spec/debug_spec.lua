@@ -1,3 +1,4 @@
+---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for LunarUI/Core/Debug.lua
     Tests debug output, warn/error, and debug overlay

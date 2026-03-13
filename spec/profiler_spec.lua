@@ -1,3 +1,4 @@
+---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for LunarUI/Core/Profiler.lua
     Tests profiling enable/disable, module init timing, event profiling, and output
@@ -45,18 +46,18 @@ describe("Profiler enable/disable", function()
     end)
 
     it("starts disabled", function()
-        assert.is_false(LunarUI:IsProfilingEnabled())
+        assert.is_false(LunarUI.IsProfilingEnabled())
     end)
 
     it("enables profiling", function()
         LunarUI:EnableProfiling()
-        assert.is_true(LunarUI:IsProfilingEnabled())
+        assert.is_true(LunarUI.IsProfilingEnabled())
     end)
 
     it("disables profiling", function()
         LunarUI:EnableProfiling()
         LunarUI:DisableProfiling()
-        assert.is_false(LunarUI:IsProfilingEnabled())
+        assert.is_false(LunarUI.IsProfilingEnabled())
     end)
 
     it("prints message on enable", function()
@@ -83,7 +84,7 @@ describe("ProfileModuleInit", function()
 
     it("calls initFunc via pcall when profiling disabled", function()
         local called = false
-        local ok = LunarUI:ProfileModuleInit("TestModule", function()
+        local ok = LunarUI.ProfileModuleInit("TestModule", function()
             called = true
         end)
         assert.is_true(called)
@@ -93,7 +94,7 @@ describe("ProfileModuleInit", function()
     it("records timing when profiling enabled", function()
         LunarUI:EnableProfiling()
         timestampValue = 1000
-        LunarUI:ProfileModuleInit("FastModule", function()
+        LunarUI.ProfileModuleInit("FastModule", function()
             timestampValue = 2000 -- 1ms elapsed (1000 μs / 1000)
         end)
         -- Verify by printing results
@@ -109,7 +110,7 @@ describe("ProfileModuleInit", function()
 
     it("catches errors from initFunc", function()
         LunarUI:EnableProfiling()
-        local ok, err = LunarUI:ProfileModuleInit("BadModule", function()
+        local ok, err = LunarUI.ProfileModuleInit("BadModule", function()
             error("test error")
         end)
         assert.is_false(ok)
@@ -139,12 +140,12 @@ describe("PrintProfilingResults", function()
         LunarUI:EnableProfiling()
         -- Module 1: 5ms
         timestampValue = 0
-        LunarUI:ProfileModuleInit("SlowModule", function()
+        LunarUI.ProfileModuleInit("SlowModule", function()
             timestampValue = 5000
         end)
         -- Module 2: 50ms
         timestampValue = 10000
-        LunarUI:ProfileModuleInit("SlowerModule", function()
+        LunarUI.ProfileModuleInit("SlowerModule", function()
             timestampValue = 60000
         end)
 
@@ -169,7 +170,7 @@ describe("PrintProfilingResults", function()
     it("shows total line", function()
         LunarUI:EnableProfiling()
         timestampValue = 0
-        LunarUI:ProfileModuleInit("M1", function()
+        LunarUI.ProfileModuleInit("M1", function()
             timestampValue = 1000
         end)
         wipe(printLog)

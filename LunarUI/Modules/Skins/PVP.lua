@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - Skin: PVP Frame
     Reskin PVPUIFrame (PVP 面板) with LunarUI theme

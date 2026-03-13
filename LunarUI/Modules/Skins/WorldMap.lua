@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - Skin: World Map
     Reskin WorldMapFrame (世界地圖) with LunarUI theme

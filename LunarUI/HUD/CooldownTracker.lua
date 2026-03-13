@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - 冷卻追蹤器
     監控重要技能冷卻並顯示於螢幕
@@ -506,7 +506,7 @@ local function Initialize()
 
     -- 註冊至框架移動器
     if cooldownFrame then
-        LunarUI:RegisterMovableFrame("CooldownTracker", cooldownFrame, "冷卻追蹤")
+        LunarUI.RegisterMovableFrame("CooldownTracker", cooldownFrame, "冷卻追蹤")
     end
 
     isInitialized = true

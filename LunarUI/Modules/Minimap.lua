@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - 小地圖模組
     Lunar 主題風格的統一小地圖
@@ -1133,7 +1133,7 @@ local function InitializeMinimap()
 
     -- 註冊至框架移動器
     if minimapFrame then
-        LunarUI:RegisterMovableFrame("Minimap", minimapFrame, "小地圖")
+        LunarUI.RegisterMovableFrame("Minimap", minimapFrame, "小地圖")
     end
 
     -- 建立指示器（必須在 ApplyIconSettings 之前，否則自訂指示器框架尚未建立）

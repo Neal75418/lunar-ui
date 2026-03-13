@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - 現代化戰鬥 UI 系統
     使用 Ace3 框架的核心初始化模組
@@ -60,7 +60,7 @@ local function ExecuteModuleCallback(entry)
             end
             local ok, err
             if LunarUI.ProfileModuleInit then
-                ok, err = LunarUI:ProfileModuleInit(entry.name, entry.onEnable)
+                ok, err = LunarUI.ProfileModuleInit(entry.name, entry.onEnable)
             else
                 ok, err = pcall(entry.onEnable)
             end
@@ -78,7 +78,7 @@ local function ExecuteModuleCallback(entry)
     else
         local ok, err
         if LunarUI.ProfileModuleInit then
-            ok, err = LunarUI:ProfileModuleInit(entry.name, entry.onEnable)
+            ok, err = LunarUI.ProfileModuleInit(entry.name, entry.onEnable)
         else
             ok, err = pcall(entry.onEnable)
         end

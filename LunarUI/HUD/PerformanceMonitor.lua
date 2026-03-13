@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - 效能監控
     顯示 FPS 與延遲資訊
@@ -239,7 +239,7 @@ local function Initialize()
     CreatePerfFrame()
 
     -- 註冊至框架移動器
-    LunarUI:RegisterMovableFrame("PerformanceMonitor", perfFrame, "效能監控")
+    LunarUI.RegisterMovableFrame("PerformanceMonitor", perfFrame, "效能監控")
 
     -- 啟動更新
     StartUpdating()

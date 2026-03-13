@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, need-check-nil, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, return-type-mismatch, unnecessary-if
 --[[
     LunarUI Options
     Configuration interface using AceConfig-3.0
@@ -1917,7 +1917,7 @@ local options = {
                         end
                         GetDB().frameMover.gridSize = v
                         if LunarUI.LoadFrameMoverSettings then
-                            LunarUI:LoadFrameMoverSettings()
+                            LunarUI.LoadFrameMoverSettings()
                         end
                     end,
                     width = "full",
@@ -1939,7 +1939,7 @@ local options = {
                         end
                         GetDB().frameMover.moverAlpha = v
                         if LunarUI.LoadFrameMoverSettings then
-                            LunarUI:LoadFrameMoverSettings()
+                            LunarUI.LoadFrameMoverSettings()
                         end
                     end,
                     width = "full",

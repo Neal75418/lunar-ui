@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - Floating Combat Text
     輕量級浮動戰鬥數字
@@ -374,7 +374,7 @@ local function CreateFCTFrame()
 
     -- 納入 HUD 縮放和框架移動
     LunarUI:RegisterHUDFrame("LunarUI_FCT")
-    LunarUI:RegisterMovableFrame("fct", fctFrame, "Floating Combat Text")
+    LunarUI.RegisterMovableFrame("fct", fctFrame, "Floating Combat Text")
 
     return fctFrame
 end

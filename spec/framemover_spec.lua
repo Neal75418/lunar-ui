@@ -1,3 +1,4 @@
+---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for LunarUI/Modules/FrameMover.lua
     Tests frame registration, move mode, position save/load, and reset
@@ -138,34 +139,34 @@ describe("Frame registration", function()
     it("registers a movable frame without error", function()
         local frame = setmetatable({}, { __index = MoverMock })
         assert.has_no.errors(function()
-            LunarUI:RegisterMovableFrame("test", frame, "Test Frame")
+            LunarUI.RegisterMovableFrame("test", frame, "Test Frame")
         end)
     end)
 
     it("ignores nil name", function()
         local frame = setmetatable({}, { __index = MoverMock })
         assert.has_no.errors(function()
-            LunarUI:RegisterMovableFrame(nil, frame, "Test")
+            LunarUI.RegisterMovableFrame(nil, frame, "Test")
         end)
     end)
 
     it("ignores nil frame", function()
         assert.has_no.errors(function()
-            LunarUI:RegisterMovableFrame("test", nil, "Test")
+            LunarUI.RegisterMovableFrame("test", nil, "Test")
         end)
     end)
 
     it("unregisters a movable frame", function()
         local frame = setmetatable({}, { __index = MoverMock })
-        LunarUI:RegisterMovableFrame("test", frame, "Test")
+        LunarUI.RegisterMovableFrame("test", frame, "Test")
         assert.has_no.errors(function()
-            LunarUI:UnregisterMovableFrame("test")
+            LunarUI.UnregisterMovableFrame("test")
         end)
     end)
 
     it("unregister is safe for non-existing name", function()
         assert.has_no.errors(function()
-            LunarUI:UnregisterMovableFrame("nonexistent")
+            LunarUI.UnregisterMovableFrame("nonexistent")
         end)
     end)
 end)

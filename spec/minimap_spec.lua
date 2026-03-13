@@ -1,3 +1,4 @@
+---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for LunarUI/Modules/Minimap.lua
     Tests lifecycle, coordinate helpers, cleanup

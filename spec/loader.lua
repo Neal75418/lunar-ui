@@ -1,3 +1,4 @@
+---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Addon File Loader for busted tests
     Simulates WoW's addon loading environment by providing
@@ -9,7 +10,7 @@ local M = {}
 --- Load a LunarUI addon source file with mocked addon environment
 --- @param filepath string - Relative path from project root (e.g., "LunarUI/Core/Utils.lua")
 --- @param LunarUI table - The LunarUI addon table to populate
---- @param extraEngine table|nil - Additional Engine fields to inject
+--- @param extraEngine? table - Additional Engine fields to inject
 --- @return table Engine - The Engine table used during loading
 function M.loadAddonFile(filepath, LunarUI, extraEngine)
     local Engine = { LunarUI = LunarUI }

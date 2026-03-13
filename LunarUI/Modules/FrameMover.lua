@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unused-local, deprecated
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if, unused-local, deprecated
 --[[
     LunarUI - 框架移動器
     統一的 UI 框架位置管理系統
@@ -386,7 +386,7 @@ end
     @param frame Frame 目標框架
     @param label string 顯示名稱（可選）
 ]]
-function LunarUI:RegisterMovableFrame(name, frame, label)
+function LunarUI.RegisterMovableFrame(name, frame, label)
     if not name or not frame then
         return
     end
@@ -402,7 +402,7 @@ end
     取消註冊可移動框架
     @param name string 識別名稱
 ]]
-function LunarUI:UnregisterMovableFrame(name)
+function LunarUI.UnregisterMovableFrame(name)
     if movers[name] then
         movers[name].mover:Hide()
         movers[name] = nil
@@ -417,7 +417,7 @@ LunarUI.ToggleMoveMode = ToggleMoveMode
 LunarUI.EnterMoveMode = EnterMoveMode
 LunarUI.ExitMoveMode = ExitMoveMode
 
-function LunarUI:LoadFrameMoverSettings()
+function LunarUI.LoadFrameMoverSettings()
     LoadFrameMoverSettings()
 end
 

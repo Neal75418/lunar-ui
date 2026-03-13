@@ -15,6 +15,7 @@ local _rv = ...
 --------------------------------------------------------------------------------
 
 ---@class LibStub
+---@overload fun(name: string, silent?: boolean): any
 ---@field GetLibrary fun(self: LibStub, name: string, silent?: boolean): table
 ---@field NewLibrary fun(self: LibStub, name: string, minor: number): table?
 LibStub = {}
@@ -699,7 +700,7 @@ function GetNumShapeshiftForms()
     return _rv
 end
 ---@param index number
----@return string, any, boolean, boolean
+---@return string?, any, boolean, boolean
 function GetShapeshiftFormInfo(index)
     return _rv
 end
@@ -1022,21 +1023,21 @@ end
 --------------------------------------------------------------------------------
 -- Action bar frames
 --------------------------------------------------------------------------------
----@type Frame
+---@type Frame?
 StatusTrackingBarManager = {}
----@type Frame
+---@type Frame?
 StanceBar = {}
 ---@type Frame
 StanceButton1 = {}
----@type Frame
+---@type Frame?
 PetActionBar = {}
 ---@type Frame
 PetActionButton1 = {}
 ---@type Frame
 MainMenuBar = {}
----@type Frame
+---@type Frame?
 MainMenuBarArtFrame = {}
----@type Frame
+---@type Frame?
 MainMenuBarArtFrameBackground = {}
 ---@type Frame
 OverrideActionBar = {}
@@ -1068,9 +1069,9 @@ CharacterBag2Slot = {}
 CharacterBag3Slot = {}
 ---@type Frame
 MainMenuBarBackpackButton = {}
----@type Frame
+---@type Frame?
 ExtraActionBarFrame = {}
----@type Frame
+---@type Frame?
 ExtraActionButton1 = {}
 ---@type Frame
 MainMenuBarManager = {}
@@ -1080,9 +1081,9 @@ PossessActionBar = {}
 MainStatusTrackingBarContainer = {}
 ---@type Frame
 SecondaryStatusTrackingBarContainer = {}
----@type Frame
+---@type Frame?
 ZoneAbilityFrame = {}
----@type Frame
+---@type Frame?
 MicroMenu = {}
 ---@type Frame
 EncounterBar = {}
@@ -1172,6 +1173,11 @@ function ChatEdit_ActivateChat(editBox)
 end
 ---@param editBox any
 function ChatEdit_DeactivateChat(editBox)
+    return _rv
+end
+---@param link string
+---@return boolean
+function ChatEdit_InsertLink(link)
     return _rv
 end
 ---@param event string
@@ -1316,7 +1322,7 @@ end
 function debugstack(coroutine, start, count)
     return _rv
 end
----@return function
+---@return function?
 function geterrorhandler()
     return _rv
 end
@@ -1674,5 +1680,81 @@ MonkStaggerBar = {}
 -- Screenshot
 --------------------------------------------------------------------------------
 function Screenshot()
+    return _rv
+end
+
+--------------------------------------------------------------------------------
+-- Player state
+--------------------------------------------------------------------------------
+---@return boolean
+function IsMounted()
+    return _rv
+end
+---@return boolean
+function IsFlying()
+    return _rv
+end
+---@return boolean
+function IsFalling()
+    return _rv
+end
+---@return boolean
+function HasOverrideActionBar()
+    return _rv
+end
+---@return boolean
+function HasVehicleActionBar()
+    return _rv
+end
+---@return number
+function GetBonusBarIndex()
+    return _rv
+end
+
+--------------------------------------------------------------------------------
+-- Power bar / UI widgets
+--------------------------------------------------------------------------------
+---@param unit? string
+---@return any
+function UnitPowerBarAlt_GetCurrentPowerBar(unit)
+    return _rv
+end
+---@param barID any
+---@return any
+function UnitPowerBarAltStatus_GetPowerBarInfo(barID)
+    return _rv
+end
+
+--------------------------------------------------------------------------------
+-- C_UIWidgetManager
+--------------------------------------------------------------------------------
+C_UIWidgetManager = {}
+---@param setID number
+---@return table
+function C_UIWidgetManager.GetAllWidgetsBySetID(setID)
+    return _rv
+end
+---@param widgetID number
+---@return table?
+function C_UIWidgetManager.GetStatusBarWidgetVisualizationInfo(widgetID)
+    return _rv
+end
+---@param widgetID number
+---@return table?
+function C_UIWidgetManager.GetIconAndTextWidgetVisualizationInfo(widgetID)
+    return _rv
+end
+
+--------------------------------------------------------------------------------
+-- C_PlayerInfo
+--------------------------------------------------------------------------------
+C_PlayerInfo = {}
+---@return boolean
+function C_PlayerInfo.IsPlayerNPERestricted()
+    return _rv
+end
+---@param unit? string
+---@return table?
+function C_PlayerInfo.GetPlayerMythicPlusRatingSummary(unit)
     return _rv
 end

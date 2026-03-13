@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - 動作條
     基於 LibActionButton 的動作條系統，具有月相感知
@@ -80,6 +80,7 @@ end
 -- 模組狀態
 --------------------------------------------------------------------------------
 
+---@type table<string, Frame?>
 local bars = {}
 local buttons = {}
 local keybindMode = false
@@ -298,6 +299,7 @@ local function StyleButtonOverlays(button, pushedTexture, highlightTexture, chec
     end
 end
 
+---@param button any
 local function StyleButton(button)
     if not button then
         return
@@ -539,6 +541,8 @@ local function CreateActionBar(id, page)
 end
 
 -- 更新單個姿態按鈕的圖標和狀態
+---@param button any
+---@param index number
 local function UpdateStanceButton(button, index)
     if not button then
         return
@@ -727,6 +731,8 @@ local function IsBarFadeEnabled(barKey)
     return true -- 預設跟隨全域設定
 end
 
+---@param bar Frame?
+---@param alpha number
 local function SetBarAlpha(bar, alpha)
     if not bar then
         return
@@ -742,7 +748,9 @@ local fadeAnimActive = false
 local cachedFadeDuration = 0.4 -- 由 StartFadeAnimation 快取，動畫期間設定不會變
 
 -- 前向宣告（UpdateFadeAndHover 需要這些函數）
+---@type fun(barKey: string, targetAlpha: number)
 local FadeBarTo
+---@type fun()
 local StartFadeAnimation
 
 -- 淡出動畫處理器（線性插值）
@@ -791,7 +799,7 @@ local function UpdateHoverDetection(fadeEnabled, fadeAlpha, fadeDelay, elapsed)
     hoverCheckElapsed = 0
 
     for barKey, bar in pairs(bars) do
-        if bar and IsBarFadeEnabled(barKey) then
+        if IsBarFadeEnabled(barKey) then
             -- 初始化懸停狀態
             if not barHoverStates[barKey] then
                 barHoverStates[barKey] = { wasHovering = false }
@@ -889,8 +897,8 @@ local function FadeAllBarsOut()
         return
     end
 
-    for barKey, bar in pairs(bars) do
-        if bar and IsBarFadeEnabled(barKey) then
+    for barKey in pairs(bars) do
+        if IsBarFadeEnabled(barKey) then
             if not fadeState[barKey] or not fadeState[barKey].hovered then
                 FadeBarTo(barKey, targetAlpha)
             end
@@ -899,15 +907,14 @@ local function FadeAllBarsOut()
 end
 
 local function FadeAllBarsIn()
-    for barKey, bar in pairs(bars) do
-        if bar then
-            FadeBarTo(barKey, 1.0)
-        end
+    for barKey in pairs(bars) do
+        FadeBarTo(barKey, 1.0)
     end
 end
 
 -- 懸停偵測：使用透明遮罩框架覆蓋整條 bar
 -- barKey 不再需要傳入，懸停偵測已整合至全域 UpdateFadeAndHover
+---@param bar Frame?
 local function SetupBarHoverDetection(bar)
     if not bar or bar._lunarFadeHooked then
         return
@@ -1006,8 +1013,8 @@ local function EnterKeybindMode()
 
     for _name, button in pairs(buttons) do
         -- 跳過無法獨立綁定的 bar（如 bar2 主動作條第二頁）
-        local barId = button and button:GetParent() and button:GetParent().id
-        if button and (not barId or BINDING_FORMATS[barId]) then
+        local barId = button:GetParent() and button:GetParent().id
+        if not barId or BINDING_FORMATS[barId] then
             -- 高亮按鈕
             if button.LunarBorder then
                 button.LunarBorder:SetBackdropBorderColor(unpack(C.highlightBlue))
@@ -1047,16 +1054,14 @@ local function ExitKeybindMode()
     keybindMode = false
 
     for _name, button in pairs(buttons) do
-        if button then
-            -- 重設邊框
-            if button.LunarBorder then
-                button.LunarBorder:SetBackdropBorderColor(unpack(C.border))
-            end
-
-            -- 停用鍵盤
-            button:EnableKeyboard(false)
-            button:SetScript("OnKeyDown", nil)
+        -- 重設邊框
+        if button.LunarBorder then
+            button.LunarBorder:SetBackdropBorderColor(unpack(C.border))
         end
+
+        -- 停用鍵盤
+        button:EnableKeyboard(false)
+        button:SetScript("OnKeyDown", nil)
     end
 
     local msg = L["KeybindDisabled"] or "Keybind mode disabled."
@@ -1097,7 +1102,7 @@ local function StyleExtraActionButton()
 
     -- 遍歷區域，隱藏裝飾材質
     for _, region in ipairs({ extra:GetRegions() }) do
-        if region and region:IsObjectType("Texture") then
+        if region:IsObjectType("Texture") then
             local atlas = region.GetAtlas and region:GetAtlas()
             -- 保留按鈕圖示本身，隱藏背景裝飾
             if atlas and (atlas:find("ExtraAbility") or atlas:find("extraability")) then
@@ -1233,7 +1238,7 @@ local function CreateMicroBar()
 
         -- 隱藏暴雪裝飾材質
         for _, region in ipairs({ btn:GetRegions() }) do
-            if region and region:IsObjectType("Texture") then
+            if region:IsObjectType("Texture") then
                 local texName = region:GetDebugName() or ""
                 -- 保留圖示材質，隱藏背景/邊框/發光
                 if texName:find("Background") or texName:find("Flash") or texName:find("Highlight") then
@@ -1341,7 +1346,7 @@ local function CleanupActionBars()
 
     -- 清理淡出計時器
     for _, state in pairs(fadeState) do
-        if state and state.timer then
+        if state.timer then
             state.timer:Cancel()
             state.timer = nil
         end

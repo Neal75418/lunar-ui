@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - 職業資源條
     顯示職業特定資源（連擊點、符文、碎片等）
@@ -478,7 +478,7 @@ local function Initialize()
 
     -- 註冊至框架移動器
     if resourceFrame then
-        LunarUI:RegisterMovableFrame("ClassResources", resourceFrame, "職業資源")
+        LunarUI.RegisterMovableFrame("ClassResources", resourceFrame, "職業資源")
     end
 
     isInitialized = true
