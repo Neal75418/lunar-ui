@@ -5,7 +5,7 @@
 - **平台**：WoW 12.0.1（Interface: 120001），Lua 5.1（LuaJIT）
 - **架構**：Ace3 + oUF + LibActionButton + LibSharedMedia
 - **組成**：
-  - `LunarUI/` &mdash; 主插件（60 個 Lua 檔案，~28,000 行）
+  - `LunarUI/` &mdash; 主插件（59 個 Lua 檔案，~26,000 行）
   - `LunarUI_Options/` &mdash; LoadOnDemand 設定介面
   - `LunarUI_Debug/` &mdash; LoadOnDemand 診斷工具（`/lunar debugvigor` 時自動載入）
 - **進入點**：`Core/Init.lua` 最先執行，建立 `Engine.LunarUI`
@@ -81,8 +81,8 @@ LunarUI:RegisterModule("ModuleName", {
 -- 註冊 HUD 框架 → 自動納入 ApplyHUDScale（Config.lua）
 LunarUI:RegisterHUDFrame("FrameName")
 
--- 註冊可移動框架 → 納入 /lunar move
-LunarUI:RegisterMovableFrame("name", frame, "顯示名稱")
+-- 註冊可移動框架 → 納入 /lunar move（dot 語法）
+LunarUI.RegisterMovableFrame("name", frame, "顯示名稱")
 
 -- 註冊皮膚（dot 語法）
 LunarUI.RegisterSkin("name", "loadEvent", function() ... end)
@@ -122,6 +122,8 @@ LunarUI.CreateIconBorder(parent, options)
 - 事件頻率監控：`/lunar profile events on|off`，純計數 + 每秒速率
 - Skin 個別標籤 locale key（如 `skinCharacter`）放 `Options.lua` 的 `local L` 表；通用分類 key（`Skins`、`SkinsDesc`）放 `enUS.lua`/`zhTW.lua`
 - WoW 12.0 addon API 使用 `C_AddOns` 命名空間（如 `C_AddOns.LoadAddOn`）
+- 所有 `.lua` 檔案第一行統一加入 `---@diagnostic disable:` 抑制 EmmyLua Analyzer 已知誤報
+- 型別定義檔：`wow_api.def.lua`（WoW API stub）、`spec/busted.def.lua`（busted/luassert stub），皆以 `---@meta` 標記
 
 ---
 
@@ -159,11 +161,13 @@ LunarUI.CreateIconBorder(parent, options)
 
 ```mermaid
 graph LR
+    TypeDef["wow_api.def.lua / busted.def.lua<br/>EmmyLua 型別定義"] -.-> Mock
     Mock["wow_mock.lua<br/>WoW API Stub"] --> Loader["loader.lua<br/>Engine 建立"]
-    Loader --> Spec["*_spec.lua<br/>測試案例"]
+    Loader --> Spec["*_spec.lua<br/>測試案例（28 檔 / 920 tests）"]
     Spec --> Busted["busted<br/>執行測試"]
-    Busted --> Cov["luacov<br/>覆蓋率報告"]
+    Busted --> Cov["luacov<br/>覆蓋率報告（門檻 43%）"]
 
+    style TypeDef fill:#2d2d44,stroke:#6c7a89,color:#e0e0e0
     style Mock fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
     style Busted fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
     style Cov fill:#36331b,stroke:#6c7a89,color:#e0e0e0

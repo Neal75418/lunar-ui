@@ -19,6 +19,7 @@ timeline
     2026-02-09 : v1.0.0 正式版
     2026-02-28 : Code Review + 重構
                : 文件整理
+    2026-03-10 : EmmyLua + CI 改善
 ```
 
 ---
@@ -29,6 +30,9 @@ timeline
 
 - **Makefile** &mdash; 標準化開發指令（`make test` / `lint` / `format` / `coverage` / `check`）
 - **LunarUI_Debug** &mdash; VigorDebug 診斷工具抽取為 LoadOnDemand 獨立插件，`/lunar debugvigor` 時自動載入
+- **EmmyLua 型別定義** &mdash; `wow_api.def.lua`（WoW API 完整 stub）、`spec/busted.def.lua`（busted/luassert stub），以 `---@meta` 標記
+- **EmmyLua 診斷抑制** &mdash; 全部 92 個 `.lua` 檔案第一行統一加入 `---@diagnostic disable:` header，消除 IDE 已知誤報
+- **`.emmyrc.json`** &mdash; EmmyLua Analyzer 專案設定（`wow_api.def.lua` 納入 workspace library）
 
 ### Fixed
 
@@ -71,6 +75,8 @@ timeline
 - **Init.lua** &mdash; 啟動時預載 LunarUI_Options 以註冊暴雪 ESC 設定面板入口
 - **Tags.lua** &mdash; 所有 tag 方法加入 SafeTag pcall 安全包裝，防止 oUF 崩潰
 - **Config.lua** &mdash; OnDisable 加入 UnregisterEvent 事件清理，防止記憶體洩漏
+- **Bags.lua** &mdash; 物品格子加入 `RegisterForClicks("LeftButtonUp", "RightButtonUp")`，修復右鍵無法使用物品
+- **CI** &mdash; `.luacheckrc` 新增 `busted.def.lua` 排除規則，修復 luacheck 13 個 stub 檔案誤報
 
 ### Changed
 
@@ -93,6 +99,8 @@ timeline
   - `spec/actionbars_spec.lua` &mdash; 10 tests，ActionBars exports 與 lifecycle smoke test
   - `spec/nameplates_spec.lua` &mdash; 22 tests，CLASSIFICATION_COLORS / NPC_ROLE_COLORS 結構驗證 + GetNPCRoleColor 決策邏輯
 - CI 覆蓋率門檻 33% → 43%
+- **self→dot 重構** &mdash; 純函數由 `LunarUI:Fn()` 改為 `LunarUI.Fn()`（`RegisterMovableFrame`、`RegisterSkin`、`MarkSkinned`、`SetFont`、`GetModuleDB` 等）
+- **nil-guard 清理** &mdash; 移除 `pairs()` 迴圈中冗餘的 nil 檢查（Lua 保證 key/value 皆非 nil）
 
 ### Planned
 
@@ -267,7 +275,7 @@ LunarUI v1.0.0 — 現代化 WoW UI 替換系統，涵蓋 Unit Frames、Nameplat
   - LibSharedMedia-3.0 註冊（材質、邊框、字體）
   - Lunar 色票 + Phase 專用色彩
   - Backdrop 模板 + 材質 / 字體 getter
-- **Phase Glow Effects** (`Effects/PhaseGlow.lua`)
+- **Phase Glow Effects** (`Effects/PhaseGlow.lua`) *(後續版本移除)*
   - Moonlight glow（FULL phase）
   - Pulse 動畫 + 三種 glow 類型（simple / corner / edge）
   - 可選螢幕 moonlight overlay

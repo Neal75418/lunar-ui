@@ -187,7 +187,7 @@ stateDiagram-v2
     WANING : 緩慢退場、回顧、收尾
 ```
 
-> Phase 架構已完成，視覺過渡動畫尚在開發中。
+> Phase 架構已完成，視覺過渡效果計劃中。
 
 ---
 
@@ -406,7 +406,7 @@ gantt
     Nameplates                    :done, m3, 2026-01-27, 1d
     ActionBars                    :done, m4, 2026-01-27, 1d
     非戰鬥模組                     :done, m5, 2026-01-28, 1d
-    Media + Effects               :done, m6, 2026-01-28, 1d
+    Media                         :done, m6, 2026-01-28, 1d
     Options + Wizard              :done, m7, 2026-01-28, 1d
 
     section Stability
@@ -416,7 +416,8 @@ gantt
 
     section Polish
     Code Review + 重構             :done, m11, 2026-02-28, 5d
-    完整風格套件                    :active, m12, 2026-03-01, 14d
+    EmmyLua + CI 改善              :done, m12, 2026-03-10, 3d
+    完整風格套件                    :active, m13, 2026-03-01, 14d
 ```
 
 ---

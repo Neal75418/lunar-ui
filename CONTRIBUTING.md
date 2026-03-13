@@ -46,6 +46,8 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 - **字體**：統一使用 `LunarUI.SetFont(fs, size, flags)`，禁止硬編碼 `STANDARD_TEXT_FONT`
 - **DB 存取**：使用 `LunarUI.GetModuleDB(key)` 取代 `LunarUI.db and LunarUI.db.profile.xxx`
 - **匯出慣例**：`LunarUI.FnName = localFn`，讓 local 純函數可被測試存取
+- **EmmyLua 診斷**：所有 `.lua` 檔案第一行加 `---@diagnostic disable:` 抑制已知誤報
+- **型別定義**：`wow_api.def.lua`、`spec/busted.def.lua` 以 `---@meta` 標記，提供 IDE 補全
 
 ---
 
