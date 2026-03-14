@@ -21,18 +21,19 @@ exit_code=0
 
 if [ -n "$en_only" ]; then
     echo "ERROR: Keys in enUS.lua missing from zhTW.lua:"
-    echo "$en_only" | sed 's/^/  /'
+    echo "  ${en_only//$'\n'/$'\n'  }"
     exit_code=1
 fi
 
 if [ -n "$zh_only" ]; then
     echo "ERROR: Keys in zhTW.lua missing from enUS.lua:"
-    echo "$zh_only" | sed 's/^/  /'
+    echo "  ${zh_only//$'\n'/$'\n'  }"
     exit_code=1
 fi
 
 if [ $exit_code -eq 0 ]; then
-    key_count=$(echo "$en_keys" | wc -l | tr -d ' ')
+    key_count=$(echo "$en_keys" | wc -l)
+    key_count=${key_count// /}
     echo "Locale key parity check passed! ($key_count keys)"
 fi
 
