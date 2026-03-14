@@ -20,11 +20,20 @@ timeline
     2026-02-28 : Code Review + 重構
                : 文件整理
     2026-03-10 : EmmyLua + CI 改善
+    2026-03-12 : v1.1.0 品質強化
 ```
 
 ---
 
 ## [Unreleased]
+
+### Planned
+
+- Custom moon phase textures (hand-drawn)
+
+---
+
+## [1.1.0] &mdash; 2026-03-12
 
 ### Added
 
@@ -101,10 +110,6 @@ timeline
 - CI 覆蓋率門檻 33% → 43%
 - **self→dot 重構** &mdash; 純函數由 `LunarUI:Fn()` 改為 `LunarUI.Fn()`（`RegisterMovableFrame`、`RegisterSkin`、`MarkSkinned`、`SetFont`、`GetModuleDB` 等）
 - **nil-guard 清理** &mdash; 移除 `pairs()` 迴圈中冗餘的 nil 檢查（Lua 保證 key/value 皆非 nil）
-
-### Planned
-
-- Custom moon phase textures (hand-drawn)
 
 ---
 
@@ -353,7 +358,8 @@ LunarUI v1.0.0 — 現代化 WoW UI 替換系統，涵蓋 Unit Frames、Nameplat
 ---
 
 <!-- Link references -->
-[Unreleased]: https://github.com/Neal75418/lunar-ui/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Neal75418/lunar-ui/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Neal75418/lunar-ui/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Neal75418/lunar-ui/compare/v0.9.2...v1.0.0
 [0.9.2]: https://github.com/Neal75418/lunar-ui/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/Neal75418/lunar-ui/compare/v0.9.0...v0.9.1
