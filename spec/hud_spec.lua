@@ -29,7 +29,9 @@ LunarUI_CD.CreateEventHandler = function()
 end
 LunarUI_CD.RegisterModule = function() end
 LunarUI_CD.GetModuleDB = function(key)
-    if not LunarUI_CD.db or not LunarUI_CD.db.profile then return nil end
+    if not LunarUI_CD.db or not LunarUI_CD.db.profile then
+        return nil
+    end
     return LunarUI_CD.db.profile[key]
 end
 
@@ -238,7 +240,9 @@ LunarUI_AF.GetHUDSetting = function()
 end
 LunarUI_AF.RegisterModule = function() end
 LunarUI_AF.GetModuleDB = function(key)
-    if not LunarUI_AF.db or not LunarUI_AF.db.profile then return nil end
+    if not LunarUI_AF.db or not LunarUI_AF.db.profile then
+        return nil
+    end
     return LunarUI_AF.db.profile[key]
 end
 LunarUI_AF.CreateEventHandler = function()
@@ -316,7 +320,9 @@ LunarUI_FCT.db = { profile = { hud = { fctEnabled = false } } }
 LunarUI_FCT.Easing = { OutQuad = function() end, InQuad = function() end }
 LunarUI_FCT.RegisterModule = function() end
 LunarUI_FCT.GetModuleDB = function(key)
-    if not LunarUI_FCT.db or not LunarUI_FCT.db.profile then return nil end
+    if not LunarUI_FCT.db or not LunarUI_FCT.db.profile then
+        return nil
+    end
     return LunarUI_FCT.db.profile[key]
 end
 LunarUI_FCT.CreateEventHandler = function()

@@ -140,7 +140,9 @@ local LunarUI = {
     },
 }
 LunarUI.GetModuleDB = function(key)
-    if not LunarUI.db or not LunarUI.db.profile then return nil end
+    if not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
     return LunarUI.db.profile[key]
 end
 
@@ -211,7 +213,9 @@ describe("Minimap config guard", function()
             RegisterMovableFrame = function() end,
             RegisterModule = function() end,
             Print = function() end,
-            GetModuleDB = function() return nil end,
+            GetModuleDB = function()
+                return nil
+            end,
             db = nil,
         }
         loader.loadAddonFile("LunarUI/Modules/Minimap.lua", testLunarUI)
@@ -239,7 +243,9 @@ describe("Minimap config guard", function()
             db = { profile = { minimap = { enabled = false } } },
         }
         testLunarUI.GetModuleDB = function(key)
-            if not testLunarUI.db or not testLunarUI.db.profile then return nil end
+            if not testLunarUI.db or not testLunarUI.db.profile then
+                return nil
+            end
             return testLunarUI.db.profile[key]
         end
         loader.loadAddonFile("LunarUI/Modules/Minimap.lua", testLunarUI)

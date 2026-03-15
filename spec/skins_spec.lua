@@ -189,7 +189,9 @@ function LunarUI:RegisterModule(_name, _callbacks) end
 function LunarUI.SetFont(_fontString, _size, _flags) end
 function LunarUI.ApplyBackdrop(_frame) end
 LunarUI.GetModuleDB = function(key)
-    if not LunarUI.db or not LunarUI.db.profile then return nil end
+    if not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
     return LunarUI.db.profile[key]
 end
 
