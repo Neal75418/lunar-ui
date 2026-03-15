@@ -67,7 +67,7 @@ local InQuad = LunarUI.Easing.InQuad
 --------------------------------------------------------------------------------
 
 local function GetSettings()
-    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.hud
+    local db = LunarUI.GetModuleDB("hud")
     if not db then
         return false, 24, 1.5, 1.5, true, true, true
     end

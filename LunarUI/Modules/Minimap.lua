@@ -132,7 +132,7 @@ local function UpdateClock()
         return
     end
 
-    local db = LunarUI.db and LunarUI.db.profile.minimap
+    local db = LunarUI.GetModuleDB("minimap")
     local hour, minute = GetGameTime()
     local is24h = not (db and db.clockFormat == "12h")
     local clockString = LunarUI.FormatGameTime(hour, minute, is24h)
@@ -578,7 +578,7 @@ local function HideBlizzardMinimapElements()
             Minimap_ZoomOut()
         end
         -- 縮放自動重置計時器
-        local db = LunarUI.db and LunarUI.db.profile.minimap
+        local db = LunarUI.GetModuleDB("minimap")
         local delay = db and db.resetZoomTimer or 0
         if delay > 0 then
             if zoomResetHandle then
@@ -593,7 +593,7 @@ local function HideBlizzardMinimapElements()
 end
 
 local function CreateMinimapFrame()
-    local db = LunarUI.db and LunarUI.db.profile.minimap
+    local db = LunarUI.GetModuleDB("minimap")
     if not db or not db.enabled then
         return
     end
@@ -885,7 +885,7 @@ end
 local SELF_MANAGED_ICONS = { mail = true, difficulty = true }
 
 local function ApplyIconSettings()
-    local db = LunarUI.db and LunarUI.db.profile.minimap
+    local db = LunarUI.GetModuleDB("minimap")
     if not db or not db.icons then
         return
     end
@@ -961,7 +961,7 @@ local function FadeTo(frame, targetAlpha, duration)
 end
 
 local function ApplyMouseFade()
-    local db = LunarUI.db and LunarUI.db.profile.minimap
+    local db = LunarUI.GetModuleDB("minimap")
     if not db or not minimapFrame then
         return
     end
@@ -1001,7 +1001,7 @@ end
 --------------------------------------------------------------------------------
 
 local function ApplyPinScale()
-    local db = LunarUI.db and LunarUI.db.profile.minimap
+    local db = LunarUI.GetModuleDB("minimap")
     local scale = db and db.pinScale or 1.0
     if Minimap.SetPinScale then
         Minimap:SetPinScale(scale)
@@ -1013,7 +1013,7 @@ end
 --------------------------------------------------------------------------------
 
 function LunarUI.RefreshMinimap()
-    local db = LunarUI.db and LunarUI.db.profile.minimap
+    local db = LunarUI.GetModuleDB("minimap")
     if not db or not minimapFrame then
         return
     end
@@ -1090,7 +1090,7 @@ local function InitializeMinimap()
     if isInitialized then
         return
     end
-    local db = LunarUI.db and LunarUI.db.profile.minimap
+    local db = LunarUI.GetModuleDB("minimap")
     if not db or not db.enabled then
         return
     end

@@ -151,7 +151,7 @@ end
 function LunarUI.UpdateDebugOverlay()
     local frame = CreateDebugFrame()
 
-    if LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
+    if LunarUI.GetModuleDB("debug") then
         frame:Show()
     else
         frame:Hide()

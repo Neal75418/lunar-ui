@@ -81,6 +81,10 @@ local LunarUI = {
         registeredModules[name] = config
     end,
 }
+LunarUI.GetModuleDB = function(key)
+    if not LunarUI.db or not LunarUI.db.profile then return nil end
+    return LunarUI.db.profile[key]
+end
 
 loader.loadAddonFile("LunarUI/Modules/Loot.lua", LunarUI)
 

@@ -28,6 +28,10 @@ LunarUI_CD.CreateEventHandler = function()
     return nil
 end
 LunarUI_CD.RegisterModule = function() end
+LunarUI_CD.GetModuleDB = function(key)
+    if not LunarUI_CD.db or not LunarUI_CD.db.profile then return nil end
+    return LunarUI_CD.db.profile[key]
+end
 
 -- C_Spell / IsPlayerSpell 在載入時被 local 捕獲，需先設定
 _G.C_Spell = _G.C_Spell or {}
@@ -233,6 +237,10 @@ LunarUI_AF.GetHUDSetting = function()
     return true
 end
 LunarUI_AF.RegisterModule = function() end
+LunarUI_AF.GetModuleDB = function(key)
+    if not LunarUI_AF.db or not LunarUI_AF.db.profile then return nil end
+    return LunarUI_AF.db.profile[key]
+end
 LunarUI_AF.CreateEventHandler = function()
     return nil
 end
@@ -307,6 +315,10 @@ local LunarUI_FCT = {}
 LunarUI_FCT.db = { profile = { hud = { fctEnabled = false } } }
 LunarUI_FCT.Easing = { OutQuad = function() end, InQuad = function() end }
 LunarUI_FCT.RegisterModule = function() end
+LunarUI_FCT.GetModuleDB = function(key)
+    if not LunarUI_FCT.db or not LunarUI_FCT.db.profile then return nil end
+    return LunarUI_FCT.db.profile[key]
+end
 LunarUI_FCT.CreateEventHandler = function()
     return nil
 end

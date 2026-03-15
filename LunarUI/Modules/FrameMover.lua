@@ -28,7 +28,7 @@ local MOVER_BORDER_COLOR = { 0.4, 0.6, 1.0 }
 local MOVER_TEXT_COLOR = { 1, 1, 1, 0.9 }
 
 local function LoadFrameMoverSettings()
-    local db = LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.frameMover
+    local db = LunarUI.GetModuleDB("frameMover")
     if db then
         GRID_SIZE = db.gridSize or 10
         MOVER_ALPHA = db.moverAlpha or 0.6

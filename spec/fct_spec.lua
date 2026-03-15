@@ -65,6 +65,10 @@ local LunarUI = {
     Print = function() end,
     db = nil, -- will be set per-test
 }
+LunarUI.GetModuleDB = function(key)
+    if not LunarUI.db or not LunarUI.db.profile then return nil end
+    return LunarUI.db.profile[key]
+end
 
 loader.loadAddonFile("LunarUI/HUD/FloatingCombatText.lua", LunarUI)
 

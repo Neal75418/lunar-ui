@@ -330,7 +330,8 @@ end
 local function CreateCastbar(frame, unit)
     local isPlayer = (unit == "player")
     local unitKey = unit and unit:gsub("%d+$", "") or "player"
-    local ufDB = LunarUI.db and LunarUI.db.profile.unitframes[unitKey]
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local ufDB = ufAll and ufAll[unitKey]
     local cbDB = ufDB and ufDB.castbar or {}
     local cbHeight = cbDB.height or 16
 
@@ -972,7 +973,8 @@ end
 --[[ 角色肖像（2D 職業圖示 / 3D 模型）]]
 local function CreatePortrait(frame, unit)
     local unitKey = unit and unit:gsub("%d+$", "") or "player"
-    local ufDB = LunarUI.db and LunarUI.db.profile.unitframes[unitKey]
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local ufDB = ufAll and ufAll[unitKey]
     if not ufDB or not ufDB.showPortrait then
         return
     end

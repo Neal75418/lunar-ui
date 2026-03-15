@@ -121,7 +121,7 @@ end
 
 --[[ Health Bar ]]
 local function CreateHealthBar(frame)
-    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    local db = LunarUI.GetModuleDB("nameplates")
 
     local health = CreateFrame("StatusBar", nil, frame)
     health:SetStatusBarTexture(GetStatusBarTexture())
@@ -329,7 +329,7 @@ end
 
 --[[ Buffs (enemy nameplates — stealable/important buffs) ]]
 local function CreateNameplateBuffs(frame)
-    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    local db = LunarUI.GetModuleDB("nameplates")
     local enemyDb = db and db.enemy
     local buffSize = enemyDb and enemyDb.buffSize or 14
     local maxBuffs = enemyDb and enemyDb.maxBuffs or 4
@@ -469,7 +469,7 @@ local nameplateFrames = setmetatable({}, { __mode = "k" })
 
 --[[ Enemy Nameplate Layout ]]
 local function EnemyNameplateLayout(frame, _unit)
-    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    local db = LunarUI.GetModuleDB("nameplates")
     local width = db and db.width or 120
     local height = db and db.height or 12
 
@@ -514,7 +514,7 @@ end
 
 --[[ Friendly Nameplate Layout ]]
 local function FriendlyNameplateLayout(frame, _unit)
-    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    local db = LunarUI.GetModuleDB("nameplates")
     local width = db and db.width or 120
     local height = (db and db.height or 12) * 0.8 -- Slightly smaller
 
@@ -604,7 +604,7 @@ local function Nameplate_OnShow(frame)
     -- Update classification highlight + glow
     if frame.unit then
         local classification = GetUnitClassification(frame.unit)
-        local db = LunarUI.db and LunarUI.db.profile.nameplates
+        local db = LunarUI.GetModuleDB("nameplates")
         local isImportant = IsImportantTarget(frame.unit)
 
         if db and db.highlight then
@@ -782,7 +782,7 @@ local function UpdateNameplateStacking()
     if InCombatLockdown() then
         return
     end
-    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    local db = LunarUI.GetModuleDB("nameplates")
     if not db or not db.stackingDetection then
         return
     end
@@ -800,7 +800,7 @@ local function UpdateNameplateStacking()
 end
 
 local function StartStackingDetection()
-    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    local db = LunarUI.GetModuleDB("nameplates")
     if not db or not db.stackingDetection then
         return
     end
@@ -856,7 +856,7 @@ end
 oUF:RegisterStyle("LunarUI_Nameplate", NameplateLayout)
 
 local function SpawnNameplates()
-    local db = LunarUI.db and LunarUI.db.profile.nameplates
+    local db = LunarUI.GetModuleDB("nameplates")
     if not db or not db.enabled then
         return
     end

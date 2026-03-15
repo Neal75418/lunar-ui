@@ -310,8 +310,8 @@ local eventFrame = CreateFrame("Frame")
 local function OnEvent(_self, event)
     if event == "LOOT_OPENED" then
         -- Check if module is enabled
-        local db = LunarUI.db and LunarUI.db.profile
-        if not db or not db.loot or not db.loot.enabled then
+        local db = LunarUI.GetModuleDB("loot")
+        if not db or not db.enabled then
             return
         end
 
@@ -334,8 +334,8 @@ local function OnEvent(_self, event)
 
         UpdateLootFrame()
     elseif event == "LOOT_SLOT_CLEARED" then
-        local db = LunarUI.db and LunarUI.db.profile
-        if not db or not db.loot or not db.loot.enabled then
+        local db = LunarUI.GetModuleDB("loot")
+        if not db or not db.enabled then
             return
         end
         UpdateLootFrame()
@@ -365,8 +365,8 @@ local function HookBlizzardLoot()
     -- 改用 SetAlpha(0) 讓框架不可見
     if _G.LootFrame and _G.LootFrame.Show then
         hooksecurefunc(_G.LootFrame, "Show", function(self)
-            local db = LunarUI.db and LunarUI.db.profile
-            if db and db.loot and db.loot.enabled then
+            local db = LunarUI.GetModuleDB("loot")
+            if db and db.enabled then
                 if not InCombatLockdown() then
                     self:Hide()
                 else
@@ -382,8 +382,8 @@ end
 --------------------------------------------------------------------------------
 
 local function InitializeLoot()
-    local db = LunarUI.db and LunarUI.db.profile
-    if not db or not db.loot or not db.loot.enabled then
+    local db = LunarUI.GetModuleDB("loot")
+    if not db or not db.enabled then
         return
     end
 

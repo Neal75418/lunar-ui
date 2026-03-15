@@ -12,10 +12,7 @@ local LunarUI = Engine.LunarUI
 --------------------------------------------------------------------------------
 
 local function GetAutoConfig()
-    if LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.automation then
-        return LunarUI.db.profile.automation
-    end
-    return nil
+    return LunarUI.GetModuleDB("automation")
 end
 
 --------------------------------------------------------------------------------

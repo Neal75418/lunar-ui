@@ -170,8 +170,8 @@ end
 
 -- Get user-selected font from LSM (reads db.profile.style.font)
 function LunarUI.GetSelectedFont()
-    local db = LunarUI.db and LunarUI.db.profile
-    local fontName = db and db.style and db.style.font
+    local db = LunarUI.GetModuleDB("style")
+    local fontName = db and db.font
     if fontName and LSM then
         local ok, path = pcall(LSM.Fetch, LSM, "font", fontName)
         if ok and path then
@@ -221,8 +221,8 @@ end
 
 -- Get user-selected statusbar texture from LSM (reads db.profile.style.statusBarTexture)
 function LunarUI.GetSelectedStatusBarTexture()
-    local db = LunarUI.db and LunarUI.db.profile
-    local texName = db and db.style and db.style.statusBarTexture
+    local db = LunarUI.GetModuleDB("style")
+    local texName = db and db.statusBarTexture
     if texName and LSM then
         local ok, path = pcall(LSM.Fetch, LSM, "statusbar", texName)
         if ok and path then

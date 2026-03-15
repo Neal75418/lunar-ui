@@ -625,7 +625,7 @@ local function InitializeDataTexts()
         LunarUI.CleanupDataTexts()
     end
 
-    local db = LunarUI.db and LunarUI.db.profile.datatexts
+    local db = LunarUI.GetModuleDB("datatexts")
     if not db or not db.enabled then
         return
     end

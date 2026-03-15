@@ -314,7 +314,7 @@ end
 --------------------------------------------------------------------------------
 
 local function OnTooltipSetUnit(tooltip)
-    local db = LunarUI.db and LunarUI.db.profile.tooltip
+    local db = LunarUI.GetModuleDB("tooltip")
     if not db or not db.enabled then
         return
     end
@@ -458,7 +458,7 @@ end
 --------------------------------------------------------------------------------
 
 local function OnTooltipSetItem(tooltip)
-    local db = LunarUI.db and LunarUI.db.profile.tooltip
+    local db = LunarUI.GetModuleDB("tooltip")
     if not db or not db.enabled then
         return
     end
@@ -566,7 +566,7 @@ end
 --------------------------------------------------------------------------------
 
 local function OnTooltipSetSpell(tooltip)
-    local db = LunarUI.db and LunarUI.db.profile.tooltip
+    local db = LunarUI.GetModuleDB("tooltip")
     if not db or not db.enabled then
         return
     end
@@ -633,7 +633,7 @@ local function AdjustTooltipPosition(tooltip)
 end
 
 local function SetTooltipPosition()
-    local db = LunarUI.db and LunarUI.db.profile.tooltip
+    local db = LunarUI.GetModuleDB("tooltip")
     if not db or not db.enabled then
         return
     end
@@ -665,7 +665,7 @@ end
 --------------------------------------------------------------------------------
 
 local function InitializeTooltip()
-    local db = LunarUI.db and LunarUI.db.profile.tooltip
+    local db = LunarUI.GetModuleDB("tooltip")
     if not db or not db.enabled then
         return
     end

@@ -395,7 +395,7 @@ end
 
 --- 載入所有已註冊的 skin
 local function LoadAllSkins()
-    local db = LunarUI.db and LunarUI.db.profile.skins
+    local db = LunarUI.GetModuleDB("skins")
     local retryList = {}
     for name, skin in pairs(skins) do
         if IsSkinEnabled(db, name) and skin.event == "PLAYER_ENTERING_WORLD" then
@@ -408,7 +408,7 @@ local function LoadAllSkins()
     -- 延遲重試失敗的 skins（等待 frame 建立完成）
     if #retryList > 0 then
         C_Timer.After(3.0, function()
-            local retryDb = LunarUI.db and LunarUI.db.profile.skins
+            local retryDb = LunarUI.GetModuleDB("skins")
             for _, name in ipairs(retryList) do
                 if not skinned[name] and IsSkinEnabled(retryDb, name) then
                     ApplySkin(name)
@@ -420,7 +420,7 @@ end
 
 --- 處理延遲載入的 skin（透過 ADDON_LOADED）
 local function OnAddonLoaded(_event, addonName)
-    local db = LunarUI.db and LunarUI.db.profile.skins
+    local db = LunarUI.GetModuleDB("skins")
     for name, skin in pairs(skins) do
         if not skinned[name] and skin.event == addonName and IsSkinEnabled(db, name) then
             ApplySkin(name)
@@ -433,7 +433,7 @@ end
 --------------------------------------------------------------------------------
 
 local function InitializeSkins()
-    local db = LunarUI.db and LunarUI.db.profile.skins
+    local db = LunarUI.GetModuleDB("skins")
     if not db or not db.enabled then
         return
     end
