@@ -160,7 +160,7 @@ local function UpdateExperience()
     -- Rested XP
     local rested = _G.GetXPExhaustion() or 0
     if rested > 0 then
-        local restedWidth = bar:GetWidth() * (rested / max)
+        local restedWidth = bar:GetWidth() * (math.min(rested, max - cur) / max)
         if restedWidth < 2 then
             bar.rested:Hide()
         else

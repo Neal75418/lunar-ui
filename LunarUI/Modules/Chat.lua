@@ -338,10 +338,17 @@ local function StyleChatFrame(chatFrame)
         end
     end
 
-    -- 樣式化按鈕框架
+    -- 樣式化按鈕框架：隱藏捲動/最小化按鈕，但保留 resize 子元素
     local buttonFrame = _G[name .. "ButtonFrame"]
     if buttonFrame then
-        buttonFrame:Hide()
+        LunarUI.StripTextures(buttonFrame)
+        for _, child in pairs({ buttonFrame:GetChildren() }) do
+            local childName = child:GetName() or ""
+            if not childName:lower():find("resize") then
+                child:SetAlpha(0)
+                child:EnableMouse(false)
+            end
+        end
     end
 
     -- 樣式化標籤
