@@ -66,11 +66,15 @@ local VIGOR_PROTECTED_FRAMES = {
     ["MicroMenu"] = true, -- ActionBars 模組會重新定位微型選單按鈕
 }
 
--- Edit Mode 保護框架：不能設 SetAlpha(0)
--- Edit Mode 透過 secureexecuterange 對系統框架計算 scale，
--- 若框架 alpha=0，計算結果會是 0 或負數，觸發 "Scale must be > 0" 錯誤。
--- 此錯誤在 secureexecuterange 內發生，seterrorhandler 無法攔截。
--- 解法：保持這些框架 alpha=1，只隱藏其子框架（按鈕）和材質。
+-- 隱藏用父框架：將 MultiBar 框架 SetParent 至此隱藏框架
+-- Edit Mode 的 secureexecuterange 對 IsVisible()=false 的框架可能跳過 scale 計算
+-- 此策略與 ElvUI 相同：不修改框架自身屬性（避免 taint），只透過父框架隱藏
+local HiddenBarParent = CreateFrame("Frame", "LunarUIHiddenBars", UIParent)
+HiddenBarParent:SetAllPoints()
+HiddenBarParent:Hide()
+
+-- Edit Mode 保護框架：HideFrameRecursive 遇到這些框架時不設 SetAlpha(0)
+-- 改為 SetParent(HiddenBarParent)，讓 Edit Mode 看不到它們
 local EDIT_MODE_PROTECTED_FRAMES = {
     ["MultiBarBottomLeft"] = true,
     ["MultiBarBottomRight"] = true,
@@ -122,11 +126,16 @@ local function HideFrameRecursive(frame)
         end
     end
 
-    -- Edit Mode 保護框架：不設 SetAlpha(0)，避免 secureexecuterange 計算出 scale=0
+    -- Edit Mode 保護框架：SetParent 至隱藏父框架（避免 secureexecuterange scale=0 錯誤）
     local isEditModeProtected = frameName and EDIT_MODE_PROTECTED_FRAMES[frameName]
 
-    if hasProtectedDescendant or isEditModeProtected then
-        -- 有保護後代或 Edit Mode 保護：只隱藏自身材質，保持 alpha=1
+    if isEditModeProtected then
+        -- MultiBar 框架：移到隱藏父框架，不觸碰自身屬性
+        pcall(function()
+            frame:SetParent(HiddenBarParent)
+        end)
+    elseif hasProtectedDescendant then
+        -- 有保護後代：只隱藏自身材質，保持 alpha=1 讓後代可見
         HideFrameRegions(frame)
         pcall(function()
             frame:EnableMouse(false)
@@ -164,7 +173,6 @@ end
 -- 以上皆為 UI addon 修改 Blizzard 框架的正常副作用，無功能影響
 local scaleErrorFilter -- 當前安裝的過濾函數引用（用於避免自我鏈接）
 local taintEventsUnregistered = false
-local errorHandlerHooked = false
 local function InstallScaleErrorFilter()
     -- 抑制 "介面功能因插件而失效" 黃字訊息（ADDON_ACTION_BLOCKED 事件）
     -- Blizzard 在 UIParent 的 OnEvent 處理此事件並顯示警告
@@ -175,18 +183,9 @@ local function InstallScaleErrorFilter()
         UIParent:UnregisterEvent("ADDON_ACTION_FORBIDDEN")
     end
 
-    -- Hook seterrorhandler：當任何 addon 安裝新的 error handler 時自動重裝我們的過濾器
-    -- 確保我們永遠是最外層 handler（第一個被呼叫）
-    -- BugSack/BugGrabber 等 addon 可能在我們之後安裝 handler，會把我們的過濾器包在裡面
-    -- 導致它們先看到錯誤、先顯示彈窗，然後才傳給我們的過濾器（為時已晚）
-    if not errorHandlerHooked then
-        errorHandlerHooked = true
-        hooksecurefunc("seterrorhandler", function(handler)
-            if handler ~= scaleErrorFilter then
-                C_Timer.After(0, InstallScaleErrorFilter)
-            end
-        end)
-    end
+    -- 注意：hooksecurefunc("seterrorhandler") 被 WoW 禁止，不能 hook error handler 的安裝
+    -- secureexecuterange 內的錯誤也繞過 seterrorhandler，此過濾器只能攔截一般 Lua 錯誤
+    -- Edit Mode 的 "Scale must be > 0" 透過 SetParent(HiddenBarParent) 從源頭避免
 
     local prevHandler = geterrorhandler()
     -- 已是我們的過濾器，跳過（避免自我鏈接）
@@ -194,7 +193,6 @@ local function InstallScaleErrorFilter()
         return
     end
     scaleErrorFilter = function(msg, ...)
-        -- 使用 tostring 確保非字串錯誤訊息也能過濾（如 error object / userdata）
         local msgStr = tostring(msg or "")
         if msgStr:find("Scale must be > 0") or msgStr:find("secret number value tainted") then
             return
@@ -277,9 +275,11 @@ local function HideMainActionBar()
 end
 
 -- 隱藏多重動作條、WoW 12.0 動作條、容器
--- MultiBar 框架不能設 SetAlpha(0)（Edit Mode secureexecuterange 計算 scale=0）
--- 也不能替換 SetScale（taint SecureUtil 運算）
--- 策略：只隱藏 MultiBar 的子框架（按鈕）和材質，frame 本身保持 alpha=1
+-- MultiBar 框架使用 SetParent(HiddenBarParent) 策略（同 ElvUI）：
+-- ❌ SetAlpha(0) — secureexecuterange 計算 scale=0（無法攔截）
+-- ❌ 替換 SetScale — taint SecureUtil "secret number" 運算
+-- ❌ hooksecurefunc("seterrorhandler") — WoW 禁止 hook 此函數
+-- ✓ SetParent(HiddenFrame) — 父框架 Hide() 使子框架 IsVisible()=false
 local function HideMultiActionBars()
     local barsToHide = {
         "MultiBarBottomLeft",
@@ -293,21 +293,9 @@ local function HideMultiActionBars()
     for _, barName in ipairs(barsToHide) do
         local bar = _G[barName]
         if bar then
-            -- 隱藏子框架（按鈕等），不觸碰 frame 本身的 alpha
-            local childCount = select("#", bar:GetChildren())
-            if childCount > 0 then
-                local children = { bar:GetChildren() }
-                for i = 1, childCount do
-                    if children[i] then
-                        HideFrameSafely(children[i])
-                    end
-                end
-            end
-            -- 隱藏 frame 的材質（背景等），frame alpha 不變
-            HideFrameRegions(bar)
+            -- 移到隱藏父框架：不觸碰 frame 自身屬性，由父框架 Hide() 使其不可見
             pcall(function()
-                bar:EnableMouse(false)
-                bar:EnableKeyboard(false)
+                bar:SetParent(HiddenBarParent)
             end)
         end
     end
@@ -484,10 +472,11 @@ end
 -- ❌ rawset hooks — 在安全框架上產生 taint
 -- ❌ hooksecurefunc(SetAlpha) — 持續重新 taint 安全框架狀態
 -- ❌ RegisterStateDriver("visibility", "hide") — 破壞 EditMode 佈局（負數 scale）
--- ❌ MultiBar SetAlpha(0) — Edit Mode secureexecuterange 計算 scale=0（無法攔截的錯誤）
+-- ❌ MultiBar SetAlpha(0) — Edit Mode secureexecuterange 計算 scale=0（無法攔截）
 -- ❌ MultiBar SetScale 替換/hook — taint SecureUtil 的 "secret number" 運算
+-- ❌ hooksecurefunc("seterrorhandler") — WoW 禁止 hook 此函數
 -- ✓ 一般框架：SetAlpha(0) + EnableMouse(false)
--- ✓ MultiBar 框架：只隱藏子框架（按鈕）+ 材質，frame 保持 alpha=1
+-- ✓ MultiBar 框架：SetParent(HiddenBarParent) — 父框架隱藏使其不可見
 
 -- 延遲隱藏以捕捉初始載入後建立的框架
 local function HideBlizzardBarsDelayed()
