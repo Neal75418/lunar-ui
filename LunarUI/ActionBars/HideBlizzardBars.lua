@@ -164,6 +164,7 @@ end
 -- 以上皆為 UI addon 修改 Blizzard 框架的正常副作用，無功能影響
 local scaleErrorFilter -- 當前安裝的過濾函數引用（用於避免自我鏈接）
 local taintEventsUnregistered = false
+local errorHandlerHooked = false
 local function InstallScaleErrorFilter()
     -- 抑制 "介面功能因插件而失效" 黃字訊息（ADDON_ACTION_BLOCKED 事件）
     -- Blizzard 在 UIParent 的 OnEvent 處理此事件並顯示警告
@@ -174,19 +175,29 @@ local function InstallScaleErrorFilter()
         UIParent:UnregisterEvent("ADDON_ACTION_FORBIDDEN")
     end
 
+    -- Hook seterrorhandler：當任何 addon 安裝新的 error handler 時自動重裝我們的過濾器
+    -- 確保我們永遠是最外層 handler（第一個被呼叫）
+    -- BugSack/BugGrabber 等 addon 可能在我們之後安裝 handler，會把我們的過濾器包在裡面
+    -- 導致它們先看到錯誤、先顯示彈窗，然後才傳給我們的過濾器（為時已晚）
+    if not errorHandlerHooked then
+        errorHandlerHooked = true
+        hooksecurefunc("seterrorhandler", function(handler)
+            if handler ~= scaleErrorFilter then
+                C_Timer.After(0, InstallScaleErrorFilter)
+            end
+        end)
+    end
+
     local prevHandler = geterrorhandler()
     -- 已是我們的過濾器，跳過（避免自我鏈接）
     if prevHandler == scaleErrorFilter then
         return
     end
     scaleErrorFilter = function(msg, ...)
-        if type(msg) == "string" then
-            if msg:find("Scale must be > 0") then
-                return
-            end
-            if msg:find("secret number value tainted") then
-                return
-            end
+        -- 使用 tostring 確保非字串錯誤訊息也能過濾（如 error object / userdata）
+        local msgStr = tostring(msg or "")
+        if msgStr:find("Scale must be > 0") or msgStr:find("secret number value tainted") then
+            return
         end
         if prevHandler then
             return prevHandler(msg, ...)
