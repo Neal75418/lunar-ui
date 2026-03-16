@@ -66,6 +66,21 @@ local VIGOR_PROTECTED_FRAMES = {
     ["MicroMenu"] = true, -- ActionBars 模組會重新定位微型選單按鈕
 }
 
+-- Edit Mode 保護框架：不能設 SetAlpha(0)
+-- Edit Mode 透過 secureexecuterange 對系統框架計算 scale，
+-- 若框架 alpha=0，計算結果會是 0 或負數，觸發 "Scale must be > 0" 錯誤。
+-- 此錯誤在 secureexecuterange 內發生，seterrorhandler 無法攔截。
+-- 解法：保持這些框架 alpha=1，只隱藏其子框架（按鈕）和材質。
+local EDIT_MODE_PROTECTED_FRAMES = {
+    ["MultiBarBottomLeft"] = true,
+    ["MultiBarBottomRight"] = true,
+    ["MultiBarRight"] = true,
+    ["MultiBarLeft"] = true,
+    ["MultiBar5"] = true,
+    ["MultiBar6"] = true,
+    ["MultiBar7"] = true,
+}
+
 -- 遞迴隱藏框架及其所有子框架/區域
 -- 回傳 true 代表此框架或其後代包含 vigor 保護框架
 -- 若有保護後代，只隱藏材質不設 alpha=0（避免乘法 alpha 連帶隱藏 vigor bar）
@@ -107,8 +122,11 @@ local function HideFrameRecursive(frame)
         end
     end
 
-    if hasProtectedDescendant then
-        -- 有保護後代：只隱藏自身材質，保持 alpha=1 讓後代可見
+    -- Edit Mode 保護框架：不設 SetAlpha(0)，避免 secureexecuterange 計算出 scale=0
+    local isEditModeProtected = frameName and EDIT_MODE_PROTECTED_FRAMES[frameName]
+
+    if hasProtectedDescendant or isEditModeProtected then
+        -- 有保護後代或 Edit Mode 保護：只隱藏自身材質，保持 alpha=1
         HideFrameRegions(frame)
         pcall(function()
             frame:EnableMouse(false)
@@ -122,7 +140,7 @@ local function HideFrameRecursive(frame)
         HideFrameRegions(frame)
     end
 
-    return hasProtectedDescendant
+    return hasProtectedDescendant or isEditModeProtected
 end
 
 -- 以全域名稱清單批次隱藏框架
@@ -248,9 +266,9 @@ local function HideMainActionBar()
 end
 
 -- 隱藏多重動作條、WoW 12.0 動作條、容器
--- 注意：MultiBar 框架不能用 SetAlpha(0) 或替換 SetScale，
--- 兩者都會 taint frame 導致 Edit Mode 的 SecureUtil 運算失敗。
--- 改為只隱藏材質 + 禁用互動，讓框架保持完整結構（alpha/scale 不變）。
+-- MultiBar 框架不能設 SetAlpha(0)（Edit Mode secureexecuterange 計算 scale=0）
+-- 也不能替換 SetScale（taint SecureUtil 運算）
+-- 策略：只隱藏 MultiBar 的子框架（按鈕）和材質，frame 本身保持 alpha=1
 local function HideMultiActionBars()
     local barsToHide = {
         "MultiBarBottomLeft",
@@ -264,6 +282,17 @@ local function HideMultiActionBars()
     for _, barName in ipairs(barsToHide) do
         local bar = _G[barName]
         if bar then
+            -- 隱藏子框架（按鈕等），不觸碰 frame 本身的 alpha
+            local childCount = select("#", bar:GetChildren())
+            if childCount > 0 then
+                local children = { bar:GetChildren() }
+                for i = 1, childCount do
+                    if children[i] then
+                        HideFrameSafely(children[i])
+                    end
+                end
+            end
+            -- 隱藏 frame 的材質（背景等），frame alpha 不變
             HideFrameRegions(bar)
             pcall(function()
                 bar:EnableMouse(false)
@@ -440,11 +469,14 @@ local function HideBlizzardBars()
     -- 隱藏它會阻止 boss encounter 技能條等 UI 元素正常顯示。
 end
 
--- 隱藏策略：只用一次性 SetAlpha(0)，不使用任何 hooks
+-- 隱藏策略：
 -- ❌ rawset hooks — 在安全框架上產生 taint
 -- ❌ hooksecurefunc(SetAlpha) — 持續重新 taint 安全框架狀態
 -- ❌ RegisterStateDriver("visibility", "hide") — 破壞 EditMode 佈局（負數 scale）
--- ✓ SetAlpha(0) + EnableMouse(false) — 框架保持有效尺寸，不產生 taint
+-- ❌ MultiBar SetAlpha(0) — Edit Mode secureexecuterange 計算 scale=0（無法攔截的錯誤）
+-- ❌ MultiBar SetScale 替換/hook — taint SecureUtil 的 "secret number" 運算
+-- ✓ 一般框架：SetAlpha(0) + EnableMouse(false)
+-- ✓ MultiBar 框架：只隱藏子框架（按鈕）+ 材質，frame 保持 alpha=1
 
 -- 延遲隱藏以捕捉初始載入後建立的框架
 local function HideBlizzardBarsDelayed()
