@@ -248,6 +248,9 @@ local function HideMainActionBar()
 end
 
 -- 隱藏多重動作條、WoW 12.0 動作條、容器
+-- 注意：MultiBar 框架不能用 SetAlpha(0) 或替換 SetScale，
+-- 兩者都會 taint frame 導致 Edit Mode 的 SecureUtil 運算失敗。
+-- 改為只隱藏材質 + 禁用互動，讓框架保持完整結構（alpha/scale 不變）。
 local function HideMultiActionBars()
     local barsToHide = {
         "MultiBarBottomLeft",
@@ -261,7 +264,11 @@ local function HideMultiActionBars()
     for _, barName in ipairs(barsToHide) do
         local bar = _G[barName]
         if bar then
-            HideFrameSafely(bar)
+            HideFrameRegions(bar)
+            pcall(function()
+                bar:EnableMouse(false)
+                bar:EnableKeyboard(false)
+            end)
         end
     end
 
