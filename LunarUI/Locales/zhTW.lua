@@ -386,3 +386,8 @@ L["TankLayout"] = "坦克佈局"
 L["TankLayoutDesc"] = "較寬的框架與較大的名牌，便於仇恨感知"
 L["HealerLayout"] = "治療佈局"
 L["HealerLayoutDesc"] = "置中的大型團隊框架，便於治療選取"
+
+-- 其他
+L["FeatureUnavailable"] = "此功能不可用"
+L["ImportTooLarge"] = "匯入字串過大"
+L["KeybindCombatLocked"] = "戰鬥中無法更改快捷鍵"

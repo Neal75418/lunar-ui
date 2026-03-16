@@ -385,6 +385,11 @@ L["TankLayoutDesc"] = "Wider frames with larger nameplates for threat awareness"
 L["HealerLayout"] = "Healer Layout"
 L["HealerLayoutDesc"] = "Large raid frames centered for heal targeting"
 
+-- Misc
+L["FeatureUnavailable"] = "This feature is not available"
+L["ImportTooLarge"] = "Import string is too large"
+L["KeybindCombatLocked"] = "Cannot change keybinds during combat"
+
 -- Export
 Engine.L = L
 if Engine.LunarUI then

@@ -108,8 +108,8 @@ local FONTS = {
     -- Header font
     header = "Fonts\\MORPHEUS.TTF",
 
-    -- Custom fonts (if installed)
-    lunar = FONT_PATH .. "LunarFont.ttf",
+    -- Custom fonts: placeholder for future custom font
+    -- lunar = FONT_PATH .. "LunarFont.ttf",
 }
 
 -- Font sizes based on context

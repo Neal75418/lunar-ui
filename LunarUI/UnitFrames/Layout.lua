@@ -154,6 +154,16 @@ local function CreateHealthBar(frame, unit)
             self:SetStatusBarColor(r, g, b)
             self.bg:SetVertexColor(r * BG_DARKEN, g * BG_DARKEN, b * BG_DARKEN, 0.8)
         end
+
+        -- 死亡狀態指示器（oUF 無內建 DeadIndicator element，需手動驅動）
+        local ownerFrame = self.__owner
+        if ownerFrame and ownerFrame.DeadIndicator then
+            local isDead = UnitIsDeadOrGhost(ownerUnit)
+            ownerFrame.DeadIndicator:SetShown(isDead)
+            if ownerFrame.DeadOverlay then
+                ownerFrame.DeadOverlay:SetShown(isDead)
+            end
+        end
     end
 
     frame.Health = health
@@ -243,16 +253,6 @@ local CHANNEL_TICKS = {
     -- 武僧
     [117952] = 4, -- 碎玉疾風
     [191837] = 3, -- 精華之泉
-}
-
--- Evoker 強化施法階段數（spellID → 最大階段數）
-local EMPOWERED_STAGES = {
-    [382266] = 4, -- Fire Breath
-    [357208] = 4, -- Fire Breath (另一個 rank)
-    [367226] = 3, -- Spiritbloom
-    [382614] = 3, -- Dream Breath
-    [395152] = 3, -- Ebon Might
-    [396286] = 3, -- Upheaval
 }
 
 local MAX_TICKS = 10
@@ -389,84 +389,83 @@ local function CreateCastbar(frame, unit)
         castbar._latency = latency
     end
 
-    -- WoW 12.0 將 notInterruptible 設為隱藏值
-    -- 暴雪故意限制插件存取此資訊
-    -- 使用統一的施法條顏色（無法判斷是否可打斷）
-    castbar.PostCastStart = function(self, _unit)
-        self:SetStatusBarColor(unpack(CASTBAR_COLOR))
-        HideAllTicks(self)
-
-        -- 玩家施法條：顯示延遲
-        if self._latency then
-            local _, _, _, latencyWorld = GetNetStats()
-            if latencyWorld and latencyWorld > 0 then
-                local castTime = self.max or 0
-                if castTime > 0 then
-                    local latencyPct = (latencyWorld / 1000) / castTime
-                    latencyPct = math.min(latencyPct, 0.5) -- 上限 50%
-                    self._latency:SetWidth(self:GetWidth() * latencyPct)
-                    self._latency:Show()
-                else
-                    self._latency:Hide()
+    -- 隱藏所有強化施法階段標記
+    local function HideAllStages(cb)
+        if cb._stages then
+            for i = 1, MAX_TICKS do
+                if cb._stages[i] then
+                    cb._stages[i]:Hide()
                 end
-            else
-                self._latency:Hide()
             end
         end
     end
 
     local showTicks = cbDB.showTicks ~= false
-    castbar.PostChannelStart = function(self, _unit, spellID)
-        self:SetStatusBarColor(unpack(CASTBAR_COLOR))
-
-        -- 引導法術 tick 標記
-        if showTicks then
-            local numTicks = spellID and CHANNEL_TICKS[spellID]
-            if numTicks then
-                ShowTickMarks(self, numTicks)
-            else
-                HideAllTicks(self)
-            end
-        end
-
-        -- 隱藏延遲（引導法術不顯示延遲）
-        if self._latency then
-            self._latency:Hide()
-        end
-    end
-
-    castbar.PostChannelStop = function(self)
-        HideAllTicks(self)
-    end
-
-    -- Evoker 強化施法支援
     local showEmpowered = cbDB.showEmpowered ~= false
-    if isPlayer and showEmpowered then
-        castbar.PostEmpowerStart = function(self, _unit, spellID, oufNumStages)
-            self:SetStatusBarColor(0.6, 0.4, 0.9, 1) -- 紫色標識強化施法
-            -- 優先使用 oUF 提供的 numStages，fallback 到查表
-            local numStages = oufNumStages or (spellID and EMPOWERED_STAGES[spellID])
-            if numStages and numStages > 1 then
-                ShowEmpoweredStages(self, numStages)
+
+    -- WoW 12.0 將 notInterruptible 設為隱藏值
+    -- 暴雪故意限制插件存取此資訊
+    -- 使用統一的施法條顏色（無法判斷是否可打斷）
+    --
+    -- oUF 對所有施法類型（普通/引導/強化）統一呼叫 PostCastStart，
+    -- 透過 self.channeling / self.empowering / self.spellID 判斷類型
+    castbar.PostCastStart = function(self, _unit)
+        HideAllTicks(self)
+        HideAllStages(self)
+
+        if self.channeling then
+            -- 引導法術：顯示 tick 標記、隱藏延遲
+            self:SetStatusBarColor(unpack(CASTBAR_COLOR))
+            if showTicks then
+                local numTicks = self.spellID and CHANNEL_TICKS[self.spellID]
+                if numTicks then
+                    ShowTickMarks(self, numTicks)
+                end
             end
             if self._latency then
                 self._latency:Hide()
             end
-        end
-
-        castbar.PostEmpowerStop = function(self)
-            if self._stages then
-                for i = 1, MAX_TICKS do
-                    if self._stages[i] then
-                        self._stages[i]:Hide()
+        elseif self.empowering then
+            -- Evoker 強化施法：紫色標識（階段標記由 UpdatePips 處理）
+            self:SetStatusBarColor(0.6, 0.4, 0.9, 1)
+            if self._latency then
+                self._latency:Hide()
+            end
+        else
+            -- 普通施法：顯示延遲
+            self:SetStatusBarColor(unpack(CASTBAR_COLOR))
+            if self._latency then
+                local _, _, _, latencyWorld = GetNetStats()
+                if latencyWorld and latencyWorld > 0 then
+                    local castTime = self.max or 0
+                    if castTime > 0 then
+                        local latencyPct = (latencyWorld / 1000) / castTime
+                        latencyPct = math.min(latencyPct, 0.5) -- 上限 50%
+                        self._latency:SetWidth(self:GetWidth() * latencyPct)
+                        self._latency:Show()
+                    else
+                        self._latency:Hide()
                     end
+                else
+                    self._latency:Hide()
                 end
             end
         end
     end
 
+    -- Evoker 強化施法階段標記（oUF 呼叫 UpdatePips 傳入各階段百分比）
+    if isPlayer and showEmpowered then
+        castbar.UpdatePips = function(self, stages)
+            if not stages or #stages == 0 then
+                return
+            end
+            ShowEmpoweredStages(self, #stages)
+        end
+    end
+
     castbar.PostCastStop = function(self)
         HideAllTicks(self)
+        HideAllStages(self)
         if self._latency then
             self._latency:Hide()
         end
@@ -1159,7 +1158,7 @@ local function CreateResurrectIndicator(frame)
 end
 
 -- 死亡指示器：純 UI 元素（骷髏圖示 + 灰色覆蓋）
--- 事件驅動的狀態更新因 taint 問題已移除，死亡狀態由 oUF 內建機制處理
+-- oUF 無內建 DeadIndicator element，由 Health.PostUpdate 驅動顯示/隱藏
 local function CreateDeathIndicator(frame, _unit)
     local dead = frame:CreateTexture(nil, "OVERLAY")
     dead:SetSize(20, 20)

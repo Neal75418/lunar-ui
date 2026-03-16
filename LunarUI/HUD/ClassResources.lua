@@ -399,6 +399,7 @@ local function SetupResourceDisplay()
             if not resourceIcons[i] then
                 resourceIcons[i] = CreateResourceIcon(resourceFrame)
             end
+            resourceIcons[i]:ClearAllPoints()
             resourceIcons[i]:SetPoint(
                 "CENTER",
                 resourceFrame,

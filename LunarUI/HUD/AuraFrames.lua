@@ -184,13 +184,10 @@ local function SetupAuraIconInteraction(icon)
         if self.auraData and self.auraData.auraInstanceID then
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             -- 使用 auraInstanceID 而非 index（WoW 12.0+ 支援）
-            pcall(
-                GameTooltip.SetUnitBuffByAuraInstanceID,
-                GameTooltip,
-                "player",
-                self.auraData.auraInstanceID,
-                self.auraData.filter
-            )
+            -- 根據 aura 類型使用對應的 Buff/Debuff tooltip method
+            local tooltipMethod = self.auraData.isHarmful and GameTooltip.SetUnitDebuffByAuraInstanceID
+                or GameTooltip.SetUnitBuffByAuraInstanceID
+            pcall(tooltipMethod, GameTooltip, "player", self.auraData.auraInstanceID, self.auraData.filter)
             GameTooltip:Show()
         end
     end)

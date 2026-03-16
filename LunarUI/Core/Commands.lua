@@ -174,7 +174,11 @@ function LunarUI:SlashCommand(input)
         HandleDebugVigor(self, args[2])
     elseif cmd == "testvigor" then
         C_AddOns.LoadAddOn("LunarUI_Debug")
-        self:ToggleTestVigor()
+        if self.ToggleTestVigor then
+            self:ToggleTestVigor()
+        else
+            self:Print("LunarUI_Debug failed to load — ToggleTestVigor unavailable")
+        end
     else
         self:Print(string.format(_L["UnknownCommand"] or "Unknown command: %s", cmd))
         self:PrintHelp()

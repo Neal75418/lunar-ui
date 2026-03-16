@@ -778,10 +778,8 @@ local function ApplyStackOffsets(count)
 end
 
 -- 主協調器：名牌堆疊偵測與調整
+-- 注意：只操作非 secure 的子框架（Health/Backdrop），不需要 InCombatLockdown 檢查
 local function UpdateNameplateStacking()
-    if InCombatLockdown() then
-        return
-    end
     local db = LunarUI.GetModuleDB("nameplates")
     if not db or not db.stackingDetection then
         return

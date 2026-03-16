@@ -2859,7 +2859,7 @@ local function StyleConfigFrame()
 
     -- 標題字體美化
     if aceFrame.titletext then
-        aceFrame.titletext:SetFont(STANDARD_TEXT_FONT, 15, "OUTLINE")
+        aceFrame.titletext:SetFont(LunarUI.GetSelectedFont(), 15, "OUTLINE")
         aceFrame.titletext:SetTextColor(0.53, 0.51, 1.0)
     end
 
@@ -2873,7 +2873,7 @@ local function StyleConfigFrame()
 
     -- 底部狀態文字
     if aceFrame.statustext then
-        aceFrame.statustext:SetFont(STANDARD_TEXT_FONT, 10, "")
+        aceFrame.statustext:SetFont(LunarUI.GetSelectedFont(), 10, "")
         aceFrame.statustext:SetTextColor(0.5, 0.5, 0.5)
     end
 

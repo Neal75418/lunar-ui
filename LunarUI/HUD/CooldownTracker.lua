@@ -449,11 +449,13 @@ local function UpdateCooldownIcons()
         end
     end
 
-    -- 隱藏多餘的圖示
+    -- 隱藏多餘的圖示（保留正在播放閃光動畫的圖示）
     for i = visibleIndex + 1, MAX_ICONS do
         if cooldownIcons[i] then
-            cooldownIcons[i]:Hide()
-            cooldownIcons[i].spellID = nil
+            if not cooldownIcons[i].flashAnim:IsPlaying() then
+                cooldownIcons[i]:Hide()
+                cooldownIcons[i].spellID = nil
+            end
         end
     end
 
