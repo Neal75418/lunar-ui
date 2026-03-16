@@ -338,17 +338,10 @@ local function StyleChatFrame(chatFrame)
         end
     end
 
-    -- 樣式化按鈕框架：隱藏捲動/最小化按鈕，但保留 resize 子元素
+    -- 隱藏預設按鈕框架（捲動/最小化按鈕）
     local buttonFrame = _G[name .. "ButtonFrame"]
     if buttonFrame then
-        LunarUI.StripTextures(buttonFrame)
-        for _, child in pairs({ buttonFrame:GetChildren() }) do
-            local childName = child:GetName() or ""
-            if not childName:lower():find("resize") then
-                child:SetAlpha(0)
-                child:EnableMouse(false)
-            end
-        end
+        buttonFrame:Hide()
     end
 
     -- 樣式化標籤
@@ -385,6 +378,46 @@ local function StyleChatFrame(chatFrame)
                 self:ScrollDown()
                 self:ScrollDown()
             end
+        end
+    end)
+
+    -- 移動支援：透過標籤拖曳移動聊天框架
+    chatFrame:SetMovable(true)
+    chatFrame:SetClampedToScreen(true)
+    local tab = _G[name .. "Tab"]
+    if tab then
+        tab:RegisterForDrag("LeftButton")
+        tab:HookScript("OnDragStart", function()
+            chatFrame:StartMoving()
+        end)
+        tab:HookScript("OnDragStop", function()
+            chatFrame:StopMovingOrSizing()
+            if _G.FCF_SavePositionAndDimensions then
+                _G.FCF_SavePositionAndDimensions(chatFrame)
+            end
+        end)
+    end
+
+    -- 調整大小支援：右下角拖曳手柄
+    if chatFrame.SetResizeBounds then
+        chatFrame:SetResizeBounds(200, 80, 800, 600)
+    elseif chatFrame.SetMinResize then
+        chatFrame:SetMinResize(200, 80)
+        chatFrame:SetMaxResize(800, 600)
+    end
+    local grip = CreateFrame("Button", nil, chatFrame)
+    grip:SetSize(16, 16)
+    grip:SetPoint("BOTTOMRIGHT", 0, 0)
+    grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    grip:SetScript("OnMouseDown", function()
+        chatFrame:StartSizing("BOTTOMRIGHT")
+    end)
+    grip:SetScript("OnMouseUp", function()
+        chatFrame:StopMovingOrSizing()
+        if _G.FCF_SavePositionAndDimensions then
+            _G.FCF_SavePositionAndDimensions(chatFrame)
         end
     end)
 
