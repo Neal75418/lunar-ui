@@ -185,7 +185,8 @@ local function InstallScaleErrorFilter()
 
     -- 注意：hooksecurefunc("seterrorhandler") 被 WoW 禁止，不能 hook error handler 的安裝
     -- secureexecuterange 內的錯誤也繞過 seterrorhandler，此過濾器只能攔截一般 Lua 錯誤
-    -- Edit Mode 的 "Scale must be > 0" 透過 SetParent(HiddenBarParent) 從源頭避免
+    -- Edit Mode 的 "Scale must be > 0" 透過覆蓋 OnEditModeEnter 為 no-op 從源頭避免
+    -- 此過濾器作為 fallback，攔截任何殘餘的 taint 警告
 
     local prevHandler = geterrorhandler()
     -- 已是我們的過濾器，跳過（避免自我鏈接）
@@ -275,11 +276,18 @@ local function HideMainActionBar()
 end
 
 -- 隱藏多重動作條、WoW 12.0 動作條、容器
--- MultiBar 框架使用 SetParent(HiddenBarParent) 策略（同 ElvUI）：
--- ❌ SetAlpha(0) — secureexecuterange 計算 scale=0（無法攔截）
+-- MultiBar 框架的 Edit Mode 問題核心：
+--   Edit Mode 透過 secureexecuterange(registeredSystemFrames, callOnEditModeEnter) 迭代所有已註冊的系統框架，
+--   呼叫每個框架的 OnEditModeEnter()。裡面的 UpdateRightActionBarPositions 計算：
+--     newScale = multiBarHeight > availableSpace and availableSpace / multiBarHeight or 1
+--   當 availableSpace=0 時，scale=0 → C++ 層拋出 "Scale must be > 0"（無法用 seterrorhandler 攔截）。
+-- 嘗試過的失敗策略：
+-- ❌ SetAlpha(0) — 框架仍在 registeredSystemFrames 中，OnEditModeEnter 仍被呼叫
 -- ❌ 替換 SetScale — taint SecureUtil "secret number" 運算
--- ❌ hooksecurefunc("seterrorhandler") — WoW 禁止 hook 此函數
--- ✓ SetParent(HiddenFrame) — 父框架 Hide() 使子框架 IsVisible()=false
+-- ❌ hooksecurefunc("seterrorhandler") — WoW 禁止 hook 此全域函數
+-- ❌ SetParent(HiddenFrame) — Edit Mode 用 registeredSystemFrames 列表找框架，不看 parent
+-- ✓ 覆蓋 OnEditModeEnter/OnEditModeExit 為 no-op — secureexecuterange 呼叫時什麼都不做，
+--   scale 計算永遠不會執行。沒有 UnregisterSystemFrame API，但直接覆蓋方法不需要修改列表。
 local function HideMultiActionBars()
     local barsToHide = {
         "MultiBarBottomLeft",
@@ -293,10 +301,17 @@ local function HideMultiActionBars()
     for _, barName in ipairs(barsToHide) do
         local bar = _G[barName]
         if bar then
-            -- 移到隱藏父框架：不觸碰 frame 自身屬性，由父框架 Hide() 使其不可見
+            -- 1. 移到隱藏父框架：視覺上隱藏（由父框架 Hide() 使其不可見）
             pcall(function()
                 bar:SetParent(HiddenBarParent)
             end)
+            -- 2. 中和 Edit Mode：覆蓋為 no-op，防止 scale 計算
+            --    secureexecuterange 呼叫 no-op 時：
+            --    (a) 順利執行（無返回值、無 taint 流動）→ 完美
+            --    (b) taint 檢查失敗 → secureexecuterange 捕獲錯誤、繼續迭代下一個框架
+            --    兩種情況都不會產生 "Scale must be > 0" C++ 錯誤
+            bar.OnEditModeEnter = function() end
+            bar.OnEditModeExit = function() end
         end
     end
 
@@ -475,8 +490,9 @@ end
 -- ❌ MultiBar SetAlpha(0) — Edit Mode secureexecuterange 計算 scale=0（無法攔截）
 -- ❌ MultiBar SetScale 替換/hook — taint SecureUtil 的 "secret number" 運算
 -- ❌ hooksecurefunc("seterrorhandler") — WoW 禁止 hook 此函數
+-- ❌ SetParent(HiddenFrame) 單獨使用 — Edit Mode 用 registeredSystemFrames 列表找框架
 -- ✓ 一般框架：SetAlpha(0) + EnableMouse(false)
--- ✓ MultiBar 框架：SetParent(HiddenBarParent) — 父框架隱藏使其不可見
+-- ✓ MultiBar 框架：SetParent(HiddenBarParent) + 覆蓋 OnEditModeEnter/Exit 為 no-op
 
 -- 延遲隱藏以捕捉初始載入後建立的框架
 local function HideBlizzardBarsDelayed()
