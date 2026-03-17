@@ -117,6 +117,11 @@ local L = {
     skinCalendar = "Calendar",
     skinWeeklyRewards = "Great Vault",
     skinAddonList = "Addon List",
+    skinHousing = "Housing",
+    skinProfessions = "Professions",
+    skinPVP = "PVP",
+    skinSettings = "Settings",
+    skinTrade = "Trade",
 
     -- Frame Mover
     FrameMover = "Frame Mover",
@@ -2366,6 +2371,61 @@ local options = {
                     end,
                     set = function(_, v)
                         GetDB().skins.blizzard.addonlist = v
+                    end,
+                },
+                housing = {
+                    order = 19,
+                    type = "toggle",
+                    name = L.skinHousing,
+                    get = function()
+                        return GetDB().skins.blizzard.housing
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.housing = v
+                    end,
+                },
+                professions = {
+                    order = 20,
+                    type = "toggle",
+                    name = L.skinProfessions,
+                    get = function()
+                        return GetDB().skins.blizzard.professions
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.professions = v
+                    end,
+                },
+                pvp = {
+                    order = 21,
+                    type = "toggle",
+                    name = L.skinPVP,
+                    get = function()
+                        return GetDB().skins.blizzard.pvp
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.pvp = v
+                    end,
+                },
+                settings = {
+                    order = 22,
+                    type = "toggle",
+                    name = L.skinSettings,
+                    get = function()
+                        return GetDB().skins.blizzard.settings
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.settings = v
+                    end,
+                },
+                trade = {
+                    order = 23,
+                    type = "toggle",
+                    name = L.skinTrade,
+                    get = function()
+                        return GetDB().skins.blizzard.trade
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.trade = v
                     end,
                 },
             },

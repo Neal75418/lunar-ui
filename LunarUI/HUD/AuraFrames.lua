@@ -399,6 +399,7 @@ local function UpdateAuraIcon(iconFrame, auraData, _index, filter, isDebuff)
     iconFrame.auraData.auraInstanceID = auraData.auraInstanceID
     iconFrame.auraData.spellName = name
     iconFrame.auraData.filter = filter
+    iconFrame.auraData.isHarmful = (filter == "HARMFUL")
 
     -- 淡入動畫
     if iconFrame.currentAuraName ~= name then
