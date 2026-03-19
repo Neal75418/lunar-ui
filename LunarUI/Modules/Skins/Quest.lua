@@ -7,53 +7,56 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
+-- QuestFrame（NPC 任務對話框）— 保留羊皮紙原始風格
+-- 在 PLAYER_ENTERING_WORLD 時已存在，獨立於 Blizzard_QuestLog
 local function SkinQuest()
-    local skinned = false
+    if not _G.QuestFrame then
+        return
+    end
+    LunarUI:SkinFrame(_G.QuestFrame, { noStrip = true, fixText = false })
+    return true
+end
 
-    -- QuestFrame（NPC 任務對話框）— 保留羊皮紙原始風格
-    -- 只隱藏 NineSlice 邊框並套用 LunarUI 外框，內容區域完全不動
-    -- 放在最前面，因為 QuestFrame 在 PLAYER_ENTERING_WORLD 時已存在
-    if _G.QuestFrame then
-        LunarUI:SkinFrame(_G.QuestFrame, { noStrip = true, fixText = false })
-        skinned = true
+-- QuestMapFrame（任務地圖/日誌）+ QuestLogFrame
+-- 透過 Blizzard_QuestLog LoD addon 載入，需獨立觸發以免被 quest skin 提早標記成功
+-- 跟隨 "quest" toggle：若使用者停用 quest skin，此 skin 也不套用
+local function SkinQuestMap()
+    local skinsDB = LunarUI.GetModuleDB("skins")
+    if skinsDB and skinsDB.blizzard and skinsDB.blizzard.quest == false then
+        return true -- 視為已處理（不重試），跟隨 quest toggle 的停用
+    end
+    local frame = _G.QuestMapFrame
+    if not frame then
+        return
     end
 
-    -- QuestMapFrame（任務地圖/日誌 — 嵌在世界地圖中，LoD 可能尚未載入）
-    local frame = _G.QuestMapFrame
-    if frame then
-        -- QuestMapFrame 本身是子框架，skin 其細節面板
-        if frame.DetailsFrame then
-            LunarUI.StripTextures(frame.DetailsFrame)
-            LunarUI:SkinFrameText(frame.DetailsFrame, 3)
+    if frame.DetailsFrame then
+        LunarUI.StripTextures(frame.DetailsFrame)
+        LunarUI:SkinFrameText(frame.DetailsFrame, 3)
 
-            -- 完成按鈕
-            if frame.DetailsFrame.CompleteQuestFrame then
-                local completeBtn = frame.DetailsFrame.CompleteQuestFrame.CompleteButton
-                if completeBtn then
-                    LunarUI.SkinButton(completeBtn)
-                end
-            end
-
-            -- 放棄/分享按鈕
-            if frame.DetailsFrame.AbandonButton then
-                LunarUI.SkinButton(frame.DetailsFrame.AbandonButton)
-            end
-            if frame.DetailsFrame.ShareButton then
-                LunarUI.SkinButton(frame.DetailsFrame.ShareButton)
-            end
-            if frame.DetailsFrame.TrackButton then
-                LunarUI.SkinButton(frame.DetailsFrame.TrackButton)
+        if frame.DetailsFrame.CompleteQuestFrame then
+            local completeBtn = frame.DetailsFrame.CompleteQuestFrame.CompleteButton
+            if completeBtn then
+                LunarUI.SkinButton(completeBtn)
             end
         end
 
-        -- QuestLogFrame（獨立任務日誌，若存在）
-        LunarUI:SkinStandardFrame("QuestLogFrame")
-        skinned = true
+        if frame.DetailsFrame.AbandonButton then
+            LunarUI.SkinButton(frame.DetailsFrame.AbandonButton)
+        end
+        if frame.DetailsFrame.ShareButton then
+            LunarUI.SkinButton(frame.DetailsFrame.ShareButton)
+        end
+        if frame.DetailsFrame.TrackButton then
+            LunarUI.SkinButton(frame.DetailsFrame.TrackButton)
+        end
     end
 
-    return skinned or nil
+    LunarUI:SkinStandardFrame("QuestLogFrame")
+    return true
 end
 
 -- QuestFrame 在 PLAYER_ENTERING_WORLD 時已存在
--- QuestMapFrame 透過 Blizzard_QuestLog 載入
 LunarUI.RegisterSkin("quest", "PLAYER_ENTERING_WORLD", SkinQuest)
+-- QuestMapFrame 透過 Blizzard_QuestLog 載入後觸發；跟隨 "quest" toggle 的啟用狀態
+LunarUI.RegisterSkin("questmap", "Blizzard_QuestLog", SkinQuestMap)

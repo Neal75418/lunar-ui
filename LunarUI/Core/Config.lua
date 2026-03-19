@@ -64,6 +64,11 @@ function LunarUI:OnProfileChanged()
     if self.ApplyHUDScale then
         self:ApplyHUDScale()
     end
+    -- 套用框架位置（FrameMover 在 RegisterModule delay=2.0 後才初始化，
+    -- 此時 movers 表已就緒，可以直接套用新 profile 的位置）
+    if self.ApplyAllSavedPositions then
+        self.ApplyAllSavedPositions()
+    end
 
     self:Print(L["ProfileChanged"] or "Profile changed, UI refreshed")
 end

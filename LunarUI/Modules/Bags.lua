@@ -1773,10 +1773,6 @@ local function CloseBags()
             searchTimer:Cancel()
             searchTimer = nil
         end
-        if bankSearchTimer then
-            bankSearchTimer:Cancel()
-            bankSearchTimer = nil
-        end
         -- 關閉時清除搜尋
         local db = GetBagDB()
         if db and db.clearSearchOnClose and searchBox then

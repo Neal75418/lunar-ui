@@ -611,14 +611,24 @@ local function SanitizeString(val)
 end
 
 local function GetAuraSortFunction()
-    local db = LunarUI.db.profile
+    -- 驗證當前 method 是否已知，未知時返回 nil（告知 oUF 不排序）
+    local db = LunarUI.db and LunarUI.db.profile
     local af = db and db.auraFilters or {}
     local method = af.sortMethod or "time"
-    local reverse = af.sortReverse or false
+    if method ~= "time" and method ~= "duration" and method ~= "name" and method ~= "player" then
+        return nil
+    end
 
-    if method == "time" then
-        -- 按剩餘時間排序（快到期的在前）
-        return function(a, b)
+    -- 返回一個每次比較都讀取最新 DB 的 comparator
+    -- 確保 Options 更改排序設定後立即生效，無需重建框架
+    return function(a, b)
+        local _db = LunarUI.db and LunarUI.db.profile
+        local _af = _db and _db.auraFilters or {}
+        local _method = _af.sortMethod or "time"
+        local reverse = _af.sortReverse or false
+
+        if _method == "time" then
+            -- 按剩餘時間排序（快到期的在前）
             local aTime = SanitizeNumber(a.expirationTime)
             local bTime = SanitizeNumber(b.expirationTime)
             if aTime == 0 then
@@ -631,30 +641,24 @@ local function GetAuraSortFunction()
                 return aTime > bTime
             end
             return aTime < bTime
-        end
-    elseif method == "duration" then
-        -- 按總持續時間排序
-        return function(a, b)
+        elseif _method == "duration" then
+            -- 按總持續時間排序
             local aDur = SanitizeNumber(a.duration)
             local bDur = SanitizeNumber(b.duration)
             if reverse then
                 return aDur > bDur
             end
             return aDur < bDur
-        end
-    elseif method == "name" then
-        -- 按名稱字母排序
-        return function(a, b)
+        elseif _method == "name" then
+            -- 按名稱字母排序
             local aName = SanitizeString(a.name)
             local bName = SanitizeString(b.name)
             if reverse then
                 return aName > bName
             end
             return aName < bName
-        end
-    elseif method == "player" then
-        -- 玩家施放的在前
-        return function(a, b)
+        elseif _method == "player" then
+            -- 玩家施放的在前；同類別按剩餘時間排序（reverse 同樣影響 tie-breaking）
             local aPlayer = (a.isPlayerAura == true) and 1 or 0
             local bPlayer = (b.isPlayerAura == true) and 1 or 0
             if aPlayer ~= bPlayer then
@@ -663,14 +667,14 @@ local function GetAuraSortFunction()
                 end
                 return aPlayer > bPlayer
             end
-            -- 同類別按剩餘時間排序
             local aTime = SanitizeNumber(a.expirationTime)
             local bTime = SanitizeNumber(b.expirationTime)
+            if reverse then
+                return aTime > bTime
+            end
             return aTime < bTime
         end
     end
-
-    return nil
 end
 
 -- 公開排序函數供 oUF 使用

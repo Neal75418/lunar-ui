@@ -218,27 +218,25 @@ end)
 --------------------------------------------------------------------------------
 
 describe("ResetPosition", function()
+    local resetCalled = false
+    local savedResetAllPositions
+
     before_each(function()
         wipe(printLog)
-        LunarUI.db.profile.unitframes = {
-            player = { x = 100, y = 200, point = "TOPLEFT" },
-        }
+        resetCalled = false
+        savedResetAllPositions = LunarUI.ResetAllPositions
+        LunarUI.ResetAllPositions = function()
+            resetCalled = true
+        end
     end)
 
-    it("resets positions to defaults", function()
+    after_each(function()
+        LunarUI.ResetAllPositions = savedResetAllPositions
+    end)
+
+    it("delegates to ResetAllPositions", function()
         LunarUI:ResetPosition()
-        assert.equals(0, LunarUI.db.profile.unitframes.player.x)
-        assert.equals(0, LunarUI.db.profile.unitframes.player.y)
-        assert.equals("CENTER", LunarUI.db.profile.unitframes.player.point)
-    end)
-
-    it("does nothing when defaults missing", function()
-        local saved = LunarUI.db.defaults
-        LunarUI.db.defaults = nil
-        assert.has_no_errors(function()
-            LunarUI:ResetPosition()
-        end)
-        LunarUI.db.defaults = saved
+        assert.is_true(resetCalled)
     end)
 end)
 

@@ -646,6 +646,23 @@ local function Nameplate_OnHide(frame)
     -- Fix #4: Remove frame reference when hidden
     nameplateFrames[frame] = nil
 
+    -- 清除堆疊偏移狀態，避免框架被回收再用時帶有舊 NPC 的偏移
+    if frame._lunarStackShift then
+        frame._lunarStackShift = nil
+        frame._lunarStackOffset = nil
+        if frame.Health then
+            frame.Health:ClearAllPoints()
+            frame.Health:SetAllPoints(frame)
+        end
+        if frame.Backdrop then
+            frame.Backdrop:ClearAllPoints()
+            frame.Backdrop:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
+            frame.Backdrop:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
+        end
+    else
+        frame._lunarStackOffset = nil
+    end
+
     -- Performance: 標記堆疊偵測需要重新計算
     MarkStackingDirty()
 end

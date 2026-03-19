@@ -247,6 +247,10 @@ function LunarUI:ToggleAddon(cmd)
     local L = Engine.L or {}
     if cmd == "on" then
         self.db.profile.enabled = true
+        -- 若模組尚未啟用（因 enabled==false 而跳過），立即啟動
+        if LunarUI.EnableModules then
+            LunarUI.EnableModules()
+        end
         self:Print(L["Enabled"] or "Enabled")
     elseif cmd == "off" then
         self.db.profile.enabled = false
@@ -315,20 +319,10 @@ end
     重置框架位置
 ]]
 function LunarUI:ResetPosition()
-    -- 重置單位框架位置為預設值
-    if not self.db or not self.db.defaults or not self.db.defaults.profile then
-        return
+    -- 委派給 FrameMover 的 ResetAllPositions（含 defaultPoints 還原與訊息輸出）
+    if LunarUI.ResetAllPositions then
+        LunarUI.ResetAllPositions()
     end
-    for unit, data in pairs(self.db.defaults.profile.unitframes) do
-        if self.db.profile.unitframes[unit] then
-            self.db.profile.unitframes[unit].x = data.x
-            self.db.profile.unitframes[unit].y = data.y
-            self.db.profile.unitframes[unit].point = data.point
-        end
-    end
-
-    local L = Engine.L or {}
-    self:Print(L["PositionReset"] or "Frame positions reset to defaults")
 end
 
 --------------------------------------------------------------------------------

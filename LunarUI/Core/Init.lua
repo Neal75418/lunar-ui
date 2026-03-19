@@ -118,6 +118,24 @@ function LunarUI:RegisterModule(name, callbacks)
     end
 end
 
+--[[
+    EnableModules - 啟用所有已註冊的模組並標記就緒
+    供 OnEnable 和 /lunar on（ToggleAddon）共用，確保模組只啟用一次
+]]
+function LunarUI.EnableModules()
+    if LunarUI._modulesEnabled then
+        return
+    end
+    LunarUI._modulesEnabled = true
+    for _, mod in ipairs(moduleRegistry) do
+        ExecuteModuleCallback(mod)
+    end
+    if pendingDelayedModules == 0 then
+        modulesReadyFired = true
+        LunarUI:SendMessage("LUNARUI_MODULES_READY")
+    end
+end
+
 --------------------------------------------------------------------------------
 -- Ace3 生命週期
 --------------------------------------------------------------------------------
@@ -162,16 +180,7 @@ function LunarUI:OnEnable()
     end
 
     -- 啟用所有已註冊的模組
-    self._modulesEnabled = true
-    for _, mod in ipairs(moduleRegistry) do
-        ExecuteModuleCallback(mod)
-    end
-
-    -- 若無延遲模組，立即標記就緒
-    if pendingDelayedModules == 0 then
-        modulesReadyFired = true
-        self:SendMessage("LUNARUI_MODULES_READY")
-    end
+    LunarUI.EnableModules()
 
     local L = Engine.L or {}
     local msg = L["AddonEnabled"] or "已啟用。輸入 |cff8882ff/lunar|r 查看命令"
@@ -183,6 +192,11 @@ end
     清理所有事件與計時器以防止記憶體洩漏
 ]]
 function LunarUI:OnDisable()
+    -- 重置模組就緒狀態，確保重新啟用時能正確送出 LUNARUI_MODULES_READY
+    modulesReadyFired = false
+    pendingDelayedModules = 0
+    self._modulesEnabled = nil
+
     -- 取消所有計時器
     self:CancelAllTimers()
 

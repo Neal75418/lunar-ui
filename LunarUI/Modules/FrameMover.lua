@@ -444,6 +444,9 @@ function LunarUI.CleanupFrameMover()
     wipe(movers)
 end
 
+-- 暴露給 Config.lua 的 OnProfileChanged，確保切換 profile 後立即套用框架位置
+LunarUI.ApplyAllSavedPositions = ApplyAllSavedPositions
+
 LunarUI:RegisterModule("FrameMover", {
     onEnable = ApplyAllSavedPositions,
     onDisable = LunarUI.CleanupFrameMover,
