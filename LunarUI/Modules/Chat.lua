@@ -164,6 +164,20 @@ local escapedKeywordCache = {} -- Fix 3b: 預快取 keyword escaped pattern
 local escapedKeywordCacheSize = 0
 local KEYWORD_CACHE_MAX = 100
 
+-- C1 效能修復：角色圖示 name→unit 快取，GROUP_ROSTER_UPDATE 時標記為 dirty 重建
+-- 避免每則訊息做 O(n) UnitName() 掃描（最多 40 次 API call）
+local roleIconNameCache = {}
+local roleIconCacheDirty = true
+
+-- H6 效能修復：時間戳記快取（同一分鐘內不重複呼叫 date()）
+local _cachedTimestamp = ""
+local _cachedTimestampMinute = -1
+
+-- M8 效能修復：關鍵字列表快取（模組層，避免每則訊息建立新 table）
+local keywordCheckList = {}
+-- C1: 用於監聽 GROUP_ROSTER_UPDATE 的事件框架
+local chatRoleIconEventFrame
+
 --------------------------------------------------------------------------------
 -- 輔助函數
 --------------------------------------------------------------------------------
@@ -734,8 +748,13 @@ local function SetupTimestamps()
             local currentAddMessage = frame.AddMessage
             frame.AddMessage = function(self, msg, ...)
                 if msg and type(msg) == "string" then
-                    local timestamp = date(fmt)
-                    msg = "|cffb3b3b3[" .. timestamp .. "]|r " .. msg
+                    -- H6 效能修復：同一分鐘內快取 date() 結果，避免每則訊息重複呼叫
+                    local minute = math.floor(GetTime() / 60)
+                    if minute ~= _cachedTimestampMinute then
+                        _cachedTimestamp = date(fmt)
+                        _cachedTimestampMinute = minute
+                    end
+                    msg = "|cffb3b3b3[" .. _cachedTimestamp .. "]|r " .. msg
                 end
                 return currentAddMessage(self, msg, ...)
             end
@@ -880,28 +899,32 @@ local function AddRoleIconToMessage(_self, _event, msg, author, ...)
     local role = nil
     local shortAuthor = Ambiguate(author, "short")
 
-    -- 搜尋隊伍/團隊成員
-    local numGroupMembers = GetNumGroupMembers()
-    if numGroupMembers > 0 then
-        local prefix = IsInRaid() and "raid" or "party"
-        local limit = IsInRaid() and numGroupMembers or (numGroupMembers - 1)
-
-        for i = 1, limit do
-            local unit = prefix .. i
-            local unitName = UnitName(unit)
-            if unitName and unitName == shortAuthor then
-                role = UnitGroupRolesAssigned(unit)
-                break
+    -- C1 效能修復：使用 name→unit 快取做 O(1) 查詢，避免每則訊息最多 40 次 UnitName() API call
+    -- 快取在 GROUP_ROSTER_UPDATE 時標記 dirty，於此處懶重建
+    if roleIconCacheDirty then
+        roleIconCacheDirty = false
+        wipe(roleIconNameCache)
+        local numGroupMembers = GetNumGroupMembers()
+        if numGroupMembers > 0 then
+            local prefix = IsInRaid() and "raid" or "party"
+            local limit = IsInRaid() and numGroupMembers or (numGroupMembers - 1)
+            for i = 1, limit do
+                local unit = prefix .. i
+                local name = UnitName(unit)
+                if name then
+                    roleIconNameCache[name] = unit
+                end
             end
-        end
-
-        -- 檢查玩家自己
-        if not role or role == "NONE" then
             local playerName = UnitName("player")
-            if playerName == shortAuthor then
-                role = UnitGroupRolesAssigned("player")
+            if playerName then
+                roleIconNameCache[playerName] = "player"
             end
         end
+    end
+
+    local unit = roleIconNameCache[shortAuthor]
+    if unit then
+        role = UnitGroupRolesAssigned(unit)
     end
 
     if role and role ~= "NONE" and ROLE_ICONS[role] then
@@ -938,17 +961,22 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
         end
     end
 
-    -- 預設關鍵字：玩家名稱
+    -- M8 效能修復：複用模組層 keywordCheckList，只在 keywords 數量改變時重建
+    -- 避免每則訊息都建立新 table 並逐一 table.insert
     local keywords = db.keywords or {}
-    local checkList = { playerName }
-    for _, kw in ipairs(keywords) do
-        table.insert(checkList, kw)
+    local expectedCount = #keywords + 1 -- +1 for playerName
+    if #keywordCheckList ~= expectedCount then
+        wipe(keywordCheckList)
+        table.insert(keywordCheckList, playerName)
+        for _, kw in ipairs(keywords) do
+            table.insert(keywordCheckList, kw)
+        end
     end
 
     local msgLower = msg:lower()
     local matched = false
 
-    for _, keyword in ipairs(checkList) do
+    for _, keyword in ipairs(keywordCheckList) do
         if keyword and keyword ~= "" and msgLower:find(keyword:lower(), 1, true) then
             matched = true
             break
@@ -981,7 +1009,7 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
 
             -- 在訊息中高亮關鍵字（加底色）
             -- Fix 3b: 使用預快取的 escaped pattern
-            for _, keyword in ipairs(checkList) do
+            for _, keyword in ipairs(keywordCheckList) do
                 if keyword and keyword ~= "" then
                     local escaped = escapedKeywordCache[keyword]
                     if not escaped then
@@ -1237,6 +1265,16 @@ local function InitializeChat()
     -- 連結懸停 Tooltip 預覽
     SetupLinkTooltipPreview()
 
+    -- C1: 監聽隊伍變動以清除 role icon 名稱快取
+    if not chatRoleIconEventFrame then
+        chatRoleIconEventFrame = CreateFrame("Frame")
+        chatRoleIconEventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+        chatRoleIconEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+        chatRoleIconEventFrame:SetScript("OnEvent", function()
+            roleIconCacheDirty = true
+        end)
+    end
+
     -- 隱藏聊天按鈕
     if ChatFrameMenuButton then
         ChatFrameMenuButton:Hide()
@@ -1279,6 +1317,11 @@ local function CleanupChat()
     -- 清理 keyword escaped pattern 快取
     wipe(escapedKeywordCache)
     escapedKeywordCacheSize = 0
+    -- 清理 role icon 和 keyword 快取
+    wipe(roleIconNameCache)
+    roleIconCacheDirty = true
+    wipe(keywordCheckList)
+    _cachedTimestampMinute = -1
 end
 
 -- 匯出

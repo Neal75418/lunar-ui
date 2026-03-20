@@ -107,14 +107,6 @@ local function GetUnitClassification(unit)
     return classification or "normal"
 end
 
-local function IsImportantTarget(unit)
-    local classification = GetUnitClassification(unit)
-    return classification == "worldboss"
-        or classification == "rareelite"
-        or classification == "elite"
-        or classification == "rare"
-end
-
 --------------------------------------------------------------------------------
 -- Nameplate Elements
 --------------------------------------------------------------------------------
@@ -157,8 +149,9 @@ local function CreateHealthBar(frame)
     if healthText or showNpcColors then
         health.PostUpdate = function(bar, unit, cur, max)
             -- NPC 角色分類上色（覆蓋 oUF 的 reaction 顏色）
+            -- H2 效能修復：使用 Nameplate_OnShow 預計算的快取，避免 frequentUpdates 下每幀呼叫 UnitClassification+UnitPowerType
             if showNpcColors and unit then
-                local npcColor = GetNPCRoleColor(unit, db)
+                local npcColor = frame._npcColorCache
                 if npcColor then
                     local reaction = UnitReaction(unit, "player")
                     if (not reaction or reaction <= 4) and not UnitIsTapDenied(unit) then
@@ -605,7 +598,13 @@ local function Nameplate_OnShow(frame)
     if frame.unit then
         local classification = GetUnitClassification(frame.unit)
         local db = LunarUI.GetModuleDB("nameplates")
-        local isImportant = IsImportantTarget(frame.unit)
+        -- M6 效能修復：直接用已讀取的 classification 判斷，避免 IsImportantTarget 內第二次呼叫 UnitClassification
+        local isImportant = classification == "worldboss"
+            or classification == "rareelite"
+            or classification == "elite"
+            or classification == "rare"
+        -- H2 效能修復：預計算 NPC 顏色並快取到 frame，PostUpdate 直接讀取快取
+        frame._npcColorCache = GetNPCRoleColor(frame.unit, db)
 
         if db and db.highlight then
             local color = CLASSIFICATION_COLORS[classification]
@@ -645,6 +644,9 @@ local function Nameplate_OnHide(frame)
     end
     -- Fix #4: Remove frame reference when hidden
     nameplateFrames[frame] = nil
+
+    -- 清除 NPC 顏色快取（H2），避免框架回收後帶有前一個 NPC 的顏色
+    frame._npcColorCache = nil
 
     -- 清除堆疊偏移狀態，避免框架被回收再用時帶有舊 NPC 的偏移
     if frame._lunarStackShift then

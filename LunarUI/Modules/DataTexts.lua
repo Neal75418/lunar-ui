@@ -304,9 +304,9 @@ RegisterProvider("guild", {
         if not IsInGuild() then
             return format("%s: |cff999999-|r", L["Guild"] or "Guild")
         end
-        if C_GuildInfo.GuildRoster then
-            C_GuildInfo.GuildRoster()
-        end
+        -- H1 效能修復：移除 GuildRoster() 網路請求，避免在 GUILD_ROSTER_UPDATE 事件中
+        -- 自觸發下一次 GUILD_ROSTER_UPDATE，形成事件風暴
+        -- 已快取的 GetNumGuildMembers() 資料已足夠顯示人數
         local _, numOnline = GetNumGuildMembers()
         return format("%s: |cff00ff00%d|r", L["Guild"] or "Guild", numOnline or 0)
     end,

@@ -307,41 +307,38 @@ local function UpdateReputation()
 
     bar:Show()
 
-    -- Store for tooltip
-    bar._repData = {
-        name = name,
-        standing = standing,
-        cur = cur,
-        max = max,
-        isFriendship = isFriendship,
-        friendName = friendName,
-        friendText = friendText,
-    }
+    -- M7 效能修復：改用 flat fields 取代每事件建立新 table，避免 UPDATE_FACTION 頻繁觸發時的 GC 壓力
+    bar._repName = name
+    bar._repStanding = standing
+    bar._repCur = cur
+    bar._repMax = max
+    bar._repIsFriendship = isFriendship
+    bar._repFriendName = friendName
+    bar._repFriendText = friendText
 end
 
 local function ReputationTooltip(bar)
-    local data = bar._repData
-    if not data then
+    if not bar._repName then
         return
     end
 
-    local pct = data.max > 0 and floor(data.cur / data.max * 100) or 0
-    local color = STANDING_COLORS[data.standing] or STANDING_COLORS[4]
+    local pct = bar._repMax > 0 and floor(bar._repCur / bar._repMax * 100) or 0
+    local color = STANDING_COLORS[bar._repStanding] or STANDING_COLORS[4]
 
     _G.GameTooltip:SetOwner(bar, "ANCHOR_TOP", 0, 4)
     _G.GameTooltip:ClearLines()
-    _G.GameTooltip:AddLine(data.name, color.r, color.g, color.b)
+    _G.GameTooltip:AddLine(bar._repName, color.r, color.g, color.b)
 
     local standingLabel
-    if data.isFriendship and data.friendName then
-        standingLabel = data.friendName
+    if bar._repIsFriendship and bar._repFriendName then
+        standingLabel = bar._repFriendName
     else
-        standingLabel = _G["FACTION_STANDING_LABEL" .. (data.standing or 4)] or ""
+        standingLabel = _G["FACTION_STANDING_LABEL" .. (bar._repStanding or 4)] or ""
     end
     _G.GameTooltip:AddDoubleLine(L["Standing"] or "Standing", standingLabel, 1, 1, 1, color.r, color.g, color.b)
     _G.GameTooltip:AddDoubleLine(
         L["Current"] or "Current",
-        format("%s / %s (%d%%)", FormatValue(data.cur), FormatValue(data.max), pct),
+        format("%s / %s (%d%%)", FormatValue(bar._repCur), FormatValue(bar._repMax), pct),
         1,
         1,
         1,
@@ -351,7 +348,7 @@ local function ReputationTooltip(bar)
     )
     _G.GameTooltip:AddDoubleLine(
         L["Remaining"] or "Remaining",
-        FormatValue(data.max - data.cur),
+        FormatValue(bar._repMax - bar._repCur),
         1,
         1,
         1,
@@ -409,24 +406,26 @@ local function UpdateHonor()
 
     bar:Show()
 
-    -- Store for tooltip
-    bar._honorData = { cur = cur, max = max, level = level }
+    -- Store for tooltip (flat fields, no per-event table allocation)
+    bar._honorCur = cur
+    bar._honorMax = max
+    bar._honorLevel = level
 end
 
 local function HonorTooltip(bar)
-    local data = bar._honorData
-    if not data then
+    if not bar._honorCur then
         return
     end
 
-    local pct = data.max > 0 and floor(data.cur / data.max * 100) or 0
+    local cur, max, level = bar._honorCur, bar._honorMax, bar._honorLevel
+    local pct = max > 0 and floor(cur / max * 100) or 0
 
     _G.GameTooltip:SetOwner(bar, "ANCHOR_TOP", 0, 4)
     _G.GameTooltip:ClearLines()
-    _G.GameTooltip:AddLine(format("%s %d", L["HonorLevel"] or "Honor Level", data.level), 1.0, 0.24, 0.0)
+    _G.GameTooltip:AddLine(format("%s %d", L["HonorLevel"] or "Honor Level", level), 1.0, 0.24, 0.0)
     _G.GameTooltip:AddDoubleLine(
         L["Current"] or "Current",
-        format("%s / %s (%d%%)", FormatValue(data.cur), FormatValue(data.max), pct),
+        format("%s / %s (%d%%)", FormatValue(cur), FormatValue(max), pct),
         1,
         1,
         1,
@@ -434,16 +433,7 @@ local function HonorTooltip(bar)
         1,
         1
     )
-    _G.GameTooltip:AddDoubleLine(
-        L["Remaining"] or "Remaining",
-        FormatValue(data.max - data.cur),
-        1,
-        1,
-        1,
-        0.7,
-        0.7,
-        0.7
-    )
+    _G.GameTooltip:AddDoubleLine(L["Remaining"] or "Remaining", FormatValue(max - cur), 1, 1, 1, 0.7, 0.7, 0.7)
     _G.GameTooltip:Show()
 end
 

@@ -425,10 +425,13 @@ local function UpdateCooldownIcons()
                             icon.text:SetTextColor(1, 1, 1) -- 白色：還久
                         end
 
-                        -- 位置
-                        local x = (visibleIndex - 1) * (ICON_SIZE + ICON_SPACING)
-                        icon:ClearAllPoints()
-                        icon:SetPoint("LEFT", cooldownFrame, "LEFT", x, 0)
+                        -- 位置（H10 效能修復：只在 index 改變時才重設 anchor，避免每 0.1s 無條件呼叫 ClearAllPoints+SetPoint）
+                        if icon._layoutIndex ~= visibleIndex then
+                            icon._layoutIndex = visibleIndex
+                            local x = (visibleIndex - 1) * (ICON_SIZE + ICON_SPACING)
+                            icon:ClearAllPoints()
+                            icon:SetPoint("LEFT", cooldownFrame, "LEFT", x, 0)
+                        end
                         icon:Show()
 
                         -- 儲存 spellID 用於閃光
@@ -455,6 +458,7 @@ local function UpdateCooldownIcons()
             if not cooldownIcons[i].flashAnim:IsPlaying() then
                 cooldownIcons[i]:Hide()
                 cooldownIcons[i].spellID = nil
+                cooldownIcons[i]._layoutIndex = nil -- 清除快取，下次顯示時重設 anchor
             end
         end
     end

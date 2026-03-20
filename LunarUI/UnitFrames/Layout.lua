@@ -619,15 +619,12 @@ local function GetAuraSortFunction()
         return nil
     end
 
-    -- 返回一個每次比較都讀取最新 DB 的 comparator
-    -- 確保 Options 更改排序設定後立即生效，無需重建框架
+    -- C3 效能修復：method/reverse 在 GetAuraSortFunction 呼叫時讀取一次並捕獲為 upvalue
+    -- 避免每次 comparator 呼叫（每次排序 ~30 次）都重複做 3 層 DB table lookup
+    -- 排序設定變更後需重新呼叫 GetAuraSortFunction() 更新 SortBuffs/SortDebuffs
+    local reverse = af.sortReverse or false
     return function(a, b)
-        local _db = LunarUI.db and LunarUI.db.profile
-        local _af = _db and _db.auraFilters or {}
-        local _method = _af.sortMethod or "time"
-        local reverse = _af.sortReverse or false
-
-        if _method == "time" then
+        if method == "time" then
             -- 按剩餘時間排序（快到期的在前）
             local aTime = SanitizeNumber(a.expirationTime)
             local bTime = SanitizeNumber(b.expirationTime)
@@ -641,7 +638,7 @@ local function GetAuraSortFunction()
                 return aTime > bTime
             end
             return aTime < bTime
-        elseif _method == "duration" then
+        elseif method == "duration" then
             -- 按總持續時間排序
             local aDur = SanitizeNumber(a.duration)
             local bDur = SanitizeNumber(b.duration)
@@ -649,7 +646,7 @@ local function GetAuraSortFunction()
                 return aDur > bDur
             end
             return aDur < bDur
-        elseif _method == "name" then
+        elseif method == "name" then
             -- 按名稱字母排序
             local aName = SanitizeString(a.name)
             local bName = SanitizeString(b.name)
@@ -657,7 +654,7 @@ local function GetAuraSortFunction()
                 return aName > bName
             end
             return aName < bName
-        elseif _method == "player" then
+        elseif method == "player" then
             -- 玩家施放的在前；同類別按剩餘時間排序（reverse 同樣影響 tie-breaking）
             local aPlayer = (a.isPlayerAura == true) and 1 or 0
             local bPlayer = (b.isPlayerAura == true) and 1 or 0

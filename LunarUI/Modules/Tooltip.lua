@@ -355,8 +355,9 @@ local function OnTooltipSetUnit(tooltip)
     if level and level > 0 then
         -- 尋找等級行並著色（優先使用 GetTooltipData 結構化 API）
         local tooltipData = tooltip.GetTooltipData and tooltip:GetTooltipData()
+        -- M1 效能修復：等級行幾乎總是在第 2-4 行，限制掃描範圍避免遍歷全部 tooltip 行
         if tooltipData and tooltipData.lines then
-            for i = 2, #tooltipData.lines do
+            for i = 2, math.min(4, #tooltipData.lines) do
                 local lineData = tooltipData.lines[i]
                 if
                     lineData
@@ -371,8 +372,8 @@ local function OnTooltipSetUnit(tooltip)
                 end
             end
         else
-            -- fallback: 舊版 _G 掃描
-            for i = 2, tooltip:NumLines() do
+            -- fallback: 舊版 _G 掃描（同樣限制在前 4 行）
+            for i = 2, math.min(4, tooltip:NumLines()) do
                 local line = _G[tooltip:GetName() .. "TextLeft" .. i]
                 if line then
                     local text = line:GetText()

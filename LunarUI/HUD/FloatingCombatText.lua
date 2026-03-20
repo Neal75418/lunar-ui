@@ -27,6 +27,27 @@ local pendingTexts = {} -- CLEU 事件佇列（避免在 tainted 環境中操作
 local POOL_SIZE = 20 -- 預建數量
 local isEnabled = false
 
+-- M4 效能修復：快取 HUD DB 設定值，避免 ShowText 每次呼叫（戰鬥 AoE 中高頻）都查 DB
+local fctFontSize = 24
+local fctCritScale = 1.5
+local fctDuration = 1.5
+local fctShowDmgOut = true
+local fctShowDmgIn = true
+local fctShowHeal = true
+
+local function RefreshFCTSettingsCache()
+    local db = LunarUI.GetModuleDB("hud")
+    if not db then
+        return
+    end
+    fctFontSize = db.fctFontSize or 24
+    fctCritScale = db.fctCritScale or 1.5
+    fctDuration = db.fctDuration or 1.5
+    fctShowDmgOut = db.fctDamageOut ~= false
+    fctShowDmgIn = db.fctDamageIn ~= false
+    fctShowHeal = db.fctHealing ~= false
+end
+
 --------------------------------------------------------------------------------
 -- 常數
 --------------------------------------------------------------------------------
@@ -130,10 +151,11 @@ local function RecycleText(fs)
     fs._animFrame:SetScript("OnUpdate", nil)
     fs._animFrame:Hide()
 
-    -- 從活動列表移除
+    -- M3 效能修復：O(1) swap-remove，避免 table.remove 在中間位置移動後續所有元素
     for i, active in ipairs(activeTexts) do
         if active == fs then
-            table.remove(activeTexts, i)
+            activeTexts[i] = activeTexts[#activeTexts]
+            activeTexts[#activeTexts] = nil
             break
         end
     end
@@ -180,16 +202,17 @@ local function ShowText(amount, isCrit, textType)
         return
     end
 
-    local _, fontSize, critScale, duration, showDmgOut, showDmgIn, showHeal = GetSettings()
+    -- M4 效能修復：使用快取的設定值，避免每次 ShowText 都查 DB
+    local fontSize, critScale, duration = fctFontSize, fctCritScale, fctDuration
 
     -- 類別過濾
-    if textType == "damage_out" and not showDmgOut then
+    if textType == "damage_out" and not fctShowDmgOut then
         return
     end
-    if textType == "damage_in" and not showDmgIn then
+    if textType == "damage_in" and not fctShowDmgIn then
         return
     end
-    if textType == "heal" and not showHeal then
+    if textType == "heal" and not fctShowHeal then
         return
     end
 
@@ -420,6 +443,7 @@ LunarUI.InitFCT = function()
     if not enabled then
         return
     end
+    RefreshFCTSettingsCache()
     fctFrame = CreateFCTFrame()
     fctFrame:Show()
     isEnabled = true
@@ -436,6 +460,7 @@ LunarUI:RegisterModule("FloatingCombatText", {
             return
         end
 
+        RefreshFCTSettingsCache()
         fctFrame = CreateFCTFrame()
         fctFrame:Show()
         isEnabled = true

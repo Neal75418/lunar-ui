@@ -132,7 +132,8 @@ Tags.Methods["lunar:health:current-max"] = SafeTag(function(unit)
     if status then
         return status
     end
-    return ShortValue(UnitHealth(unit) or 0) .. " / " .. ShortValue(UnitHealthMax(unit) or 0)
+    -- H7 效能修復：改用 format 一次性建立結果字串，避免兩個中間 string 物件
+    return format("%s / %s", ShortValue(UnitHealth(unit) or 0), ShortValue(UnitHealthMax(unit) or 0))
 end)
 Tags.Events["lunar:health:current-max"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
 

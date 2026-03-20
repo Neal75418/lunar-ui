@@ -418,14 +418,15 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
     local visibleIndex = 0
 
     for i = 1, 40 do
-        local auraOk, auraData = pcall(getDataFn, "player", i)
-        if not auraOk or not auraData then
+        -- H3 效能修復：taint 下 WoW API 回傳 nil 而非拋出例外，不需 pcall 包裹每個 index
+        -- tostring/tonumber 在下方已做 taint 斷鏈，直接呼叫更有效率
+        local auraData = getDataFn("player", i)
+        if not auraData then
             break
         end
 
         -- taint 安全：tostring/tonumber 會斷開 CLEU/Aura API 回傳值的 taint 鏈
         -- （與 FloatingCombatText.lua 的 Sanitize() 原理相同）
-        -- API 呼叫本身已被上方的 pcall 保護，此處只是純值轉換，不會拋出例外
         local name = tostring(auraData.name or "")
         local duration = tonumber(auraData.duration or 0) or 0
 
@@ -472,43 +473,43 @@ local function UpdateAuras()
 end
 
 -- 計時條即時更新（每幀更新計時條寬度和顏色）
-local function UpdateTimerBars()
-    local now = GetTime()
+-- C4 效能修復：UpdateIconTimers 提升為模組層 function，now 以參數傳入，避免每 0.1s 建立 closure
+local function UpdateIconTimers(icons, maxIcons, now)
+    for i = 1, maxIcons do
+        local iconFrame = icons[i]
+        if not iconFrame or not iconFrame:IsShown() then
+            break
+        end
+        if not iconFrame.auraData then
+            break
+        end
 
-    local function UpdateIconTimers(icons, maxIcons)
-        for i = 1, maxIcons do
-            local iconFrame = icons[i]
-            if not iconFrame or not iconFrame:IsShown() then
-                break
-            end
-            if not iconFrame.auraData then
-                break
-            end
-
-            -- 從冷卻框架反推持續時間
-            local start, dur = iconFrame.cooldown:GetCooldownTimes()
-            if start and dur and start > 0 and dur > 0 then
-                start = start / 1000 -- GetCooldownTimes 回傳毫秒
-                dur = dur / 1000
-                local remaining = (start + dur) - now
-                if remaining > 0 then
-                    local pct = remaining / dur
-                    local barWidth = (ICON_SIZE - 2) * pct
-                    if barWidth < 1 then
-                        barWidth = 1
-                    end
-                    iconFrame.bar:SetWidth(barWidth)
-                    local r, g, b = GetTimerBarColor(remaining, dur)
-                    iconFrame.bar:SetVertexColor(r, g, b)
-                else
-                    iconFrame.bar:Hide()
+        -- 從冷卻框架反推持續時間
+        local start, dur = iconFrame.cooldown:GetCooldownTimes()
+        if start and dur and start > 0 and dur > 0 then
+            start = start / 1000 -- GetCooldownTimes 回傳毫秒
+            dur = dur / 1000
+            local remaining = (start + dur) - now
+            if remaining > 0 then
+                local pct = remaining / dur
+                local barWidth = (ICON_SIZE - 2) * pct
+                if barWidth < 1 then
+                    barWidth = 1
                 end
+                iconFrame.bar:SetWidth(barWidth)
+                local r, g, b = GetTimerBarColor(remaining, dur)
+                iconFrame.bar:SetVertexColor(r, g, b)
+            else
+                iconFrame.bar:Hide()
             end
         end
     end
+end
 
-    UpdateIconTimers(buffIcons, MAX_BUFFS)
-    UpdateIconTimers(debuffIcons, MAX_DEBUFFS)
+local function UpdateTimerBars()
+    local now = GetTime()
+    UpdateIconTimers(buffIcons, MAX_BUFFS, now)
+    UpdateIconTimers(debuffIcons, MAX_DEBUFFS, now)
 end
 
 --------------------------------------------------------------------------------

@@ -97,6 +97,9 @@ local resourceType
 local maxResources = 0
 local isInitialized = false
 local useBar = false -- 是否使用進度條而非圖示
+-- M5 效能修復：快取資源顏色，避免 UpdateResources 每次 UNIT_POWER_UPDATE 都呼叫 GetClassResourceInfo
+-- 職業和顏色在戰鬥中不會改變，SetupResourceDisplay 初始化後一次性設定
+local cachedResourceColor = { 1, 1, 1 }
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -337,7 +340,7 @@ local function UpdateResources()
         return
     end
 
-    local color = select(4, GetClassResourceInfo()) or { 1, 1, 1 }
+    local color = cachedResourceColor -- M5: 使用 SetupResourceDisplay 快取的顏色，無需重複呼叫 GetClassResourceInfo
 
     if useBar then
         if resourceBar then
@@ -376,6 +379,8 @@ local function SetupResourceDisplay()
     resourceType = powerType
     maxResources = max
     useBar = usesBar
+    -- M5: 快取 color，UpdateResources 直接讀取，不重複呼叫 GetClassResourceInfo
+    cachedResourceColor = color
 
     if useBar then
         -- 使用進度條
