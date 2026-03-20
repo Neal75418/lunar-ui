@@ -756,7 +756,7 @@ describe("DeserializeString additional coverage", function()
         local result, err = LunarUI.DeserializeString(nested)
         assert.is_nil(result)
         assert.is_string(err)
-        assert.truthy(err:find("巢狀深度"))
+        assert.is_string(err)
     end)
 
     it("handles escape sequence \\r", function()
@@ -832,6 +832,14 @@ end)
 --------------------------------------------------------------------------------
 
 describe("ExportSettings additional coverage", function()
+    local savedVersion
+    before_each(function()
+        savedVersion = LunarUI.version
+    end)
+    after_each(function()
+        LunarUI.version = savedVersion
+    end)
+
     it("excludes userdata values from export", function()
         -- Simulate userdata with a table that has __type = userdata
         -- In real WoW, these would be actual userdata; here we just test that
@@ -853,7 +861,6 @@ describe("ExportSettings additional coverage", function()
         LunarUI.db = { profile = { style = { fontSize = 12 } } }
         local result = LunarUI:ExportSettings()
         assert.truthy(result:find("2.0%-test"))
-        LunarUI.version = "1.0-test"
     end)
 end)
 

@@ -430,6 +430,12 @@ end)
 -- CleanupUnitFrames
 --------------------------------------------------------------------------------
 
+-- NOTE: SpawnUnitFrames() is never called in this spec, so the `spawnedUnitFrames`
+-- accumulation issue is purely theoretical here. CleanupUnitFrames() only cleans up
+-- the PLAYER_ENTERING_WORLD event frame — it does NOT wipe the spawnedFrames upvalue.
+-- If SpawnUnitFrames() were added to a test, a before_each calling
+-- LunarUI.CleanupUnitFrames() would NOT reset accumulated frame entries.
+-- For now, no before_each is needed because SpawnUnitFrames is never invoked below.
 describe("CleanupUnitFrames", function()
     it("does not error when no frames spawned", function()
         assert.has_no_errors(function()

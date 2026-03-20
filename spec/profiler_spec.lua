@@ -43,6 +43,9 @@ loader.loadAddonFile("LunarUI/Core/Profiler.lua", LunarUI)
 describe("Profiler enable/disable", function()
     before_each(function()
         wipe(printLog)
+        pcall(function()
+            LunarUI:DisableProfiling()
+        end)
     end)
 
     it("starts disabled", function()
@@ -193,9 +196,7 @@ describe("Event profiling", function()
     before_each(function()
         wipe(printLog)
         if LunarUI.DisableEventProfiling then
-            pcall(function()
-                LunarUI:DisableEventProfiling()
-            end)
+            LunarUI:DisableEventProfiling()
         end
     end)
 

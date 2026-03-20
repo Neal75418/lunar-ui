@@ -305,6 +305,13 @@ function LunarUI:RegisterHUDFrame(name)
 end
 
 --[[
+    清除 HUD 框架註冊表（供單元測試使用）
+]]
+LunarUI.ClearHUDFrameRegistry = function()
+    wipe(hudFrameNames)
+end
+
+--[[
     套用 HUD 全域縮放至所有已註冊的 HUD 框架
 ]]
 function LunarUI:ApplyHUDScale()

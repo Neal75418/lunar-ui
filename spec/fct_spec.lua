@@ -170,6 +170,9 @@ end)
 
 describe("FCT lifecycle", function()
     before_each(function()
+        if LunarUI.CleanupFCT then
+            LunarUI.CleanupFCT()
+        end
         LunarUI.db = nil
     end)
 

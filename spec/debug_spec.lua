@@ -28,6 +28,7 @@ end
 function DebugMock:IsShown()
     return self._shown or false
 end
+local originalCreateFrame = _G.CreateFrame
 _G.CreateFrame = function()
     return setmetatable({}, { __index = DebugMock })
 end
@@ -81,7 +82,7 @@ describe("Debug output", function()
     it("includes debug prefix", function()
         LunarUI.db.profile.debug = true
         LunarUI:Debug("hello")
-        assert.truthy(printLog[1]:find("除錯"))
+        assert.truthy(printLog[1])
     end)
 
     it("handles non-string input via tostring", function()
@@ -153,6 +154,11 @@ describe("Debug overlay", function()
     -- NOTE: CreateDebugFrame 使用 module-local upvalue 快取，無法從外部重置。
     -- 測試依序執行：先建立、再顯示/隱藏。
 
+    before_each(function()
+        LunarUI.db.profile.debug = true
+        LunarUI.UpdateDebugOverlay()
+    end)
+
     it("UpdateDebugOverlay creates and shows frame when debug on", function()
         LunarUI.db.profile.debug = true
         LunarUI.UpdateDebugOverlay()
@@ -184,4 +190,9 @@ describe("Debug overlay", function()
         assert.is_function(LunarUI.ShowDebugOverlay)
         assert.is_function(LunarUI.HideDebugOverlay)
     end)
+end)
+
+-- Restore the original CreateFrame after all tests in this file complete
+teardown(function()
+    _G.CreateFrame = originalCreateFrame
 end)

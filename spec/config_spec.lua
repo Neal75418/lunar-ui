@@ -309,6 +309,10 @@ end)
 --------------------------------------------------------------------------------
 
 describe("RegisterHUDFrame", function()
+    after_each(function()
+        LunarUI.ClearHUDFrameRegistry()
+    end)
+
     it("registers frame name and applies scale", function()
         local mockFrame = {
             _scale = 1,
@@ -347,6 +351,10 @@ end)
 --------------------------------------------------------------------------------
 
 describe("ApplyHUDScale", function()
+    after_each(function()
+        LunarUI.ClearHUDFrameRegistry()
+    end)
+
     it("applies scale to registered HUD frames", function()
         local mockFrame = {
             _scale = 1,

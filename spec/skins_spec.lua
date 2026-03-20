@@ -142,6 +142,7 @@ local function MockFrame(opts)
     return frame
 end
 
+local originalCreateFrame = _G.CreateFrame
 _G.CreateFrame = function(_type, _name, _parent, _template)
     return MockFrame()
 end
@@ -375,7 +376,10 @@ end)
 --------------------------------------------------------------------------------
 
 describe("RegisterSkin", function()
-    it("registers a skin function", function()
+    -- NOTE: The `skins` table is module-local in Skins.lua and not exported.
+    -- We can only verify that registration does not raise an error.
+    -- Deeper verification would require exposing the skins table or a lookup API.
+    it("registers a skin function without error", function()
         assert.has_no_errors(function()
             LunarUI.RegisterSkin("TestSkin", "PLAYER_ENTERING_WORLD", function()
                 return true
@@ -745,4 +749,9 @@ describe("InitializeSkins", function()
         end)
         LunarUI.db = savedDB
     end)
+end)
+
+-- Restore the original CreateFrame after all tests in this file complete
+teardown(function()
+    _G.CreateFrame = originalCreateFrame
 end)

@@ -744,6 +744,9 @@ LunarUI.GetCachedInspectData = GetCachedInspectData
 LunarUI.CacheInspectData = CacheInspectData
 LunarUI.ClearInspectCache = ClearInspectCache
 LunarUI.RequestInspect = RequestInspect
+LunarUI.ResetInspectThrottle = function()
+    lastInspectTime = 0
+end
 
 LunarUI:RegisterModule("Tooltip", {
     onEnable = InitializeTooltip,

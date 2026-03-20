@@ -176,7 +176,7 @@ describe("Chat emoji replacement", function()
 
     it("replaces :) with food icon", function()
         if not emojiFilter then
-            pending("emoji filter not captured")
+            error("emoji filter not captured — filter discovery failed")
             return
         end
         local _, result = emojiFilter(nil, nil, "Hello :)")
@@ -185,7 +185,7 @@ describe("Chat emoji replacement", function()
 
     it("replaces :D with guidance icon", function()
         if not emojiFilter then
-            pending("emoji filter not captured")
+            error("emoji filter not captured — filter discovery failed")
             return
         end
         local _, result = emojiFilter(nil, nil, "LOL :D")
@@ -194,7 +194,7 @@ describe("Chat emoji replacement", function()
 
     it("replaces <3 with candy icon", function()
         if not emojiFilter then
-            pending("emoji filter not captured")
+            error("emoji filter not captured — filter discovery failed")
             return
         end
         local _, result = emojiFilter(nil, nil, "I love you <3")
@@ -203,7 +203,7 @@ describe("Chat emoji replacement", function()
 
     it("does not modify messages without emojis", function()
         if not emojiFilter then
-            pending("emoji filter not captured")
+            error("emoji filter not captured — filter discovery failed")
             return
         end
         local _, result = emojiFilter(nil, nil, "Hello world")
@@ -212,7 +212,7 @@ describe("Chat emoji replacement", function()
 
     it("handles nil message gracefully", function()
         if not emojiFilter then
-            pending("emoji filter not captured")
+            error("emoji filter not captured — filter discovery failed")
             return
         end
         local blocked, result = emojiFilter(nil, nil, nil)
@@ -222,7 +222,7 @@ describe("Chat emoji replacement", function()
 
     it("preserves unmatched 2-char sequences (M7 fix)", function()
         if not emojiFilter then
-            pending("emoji filter not captured")
+            error("emoji filter not captured — filter discovery failed")
             return
         end
         -- :X is not in EMOJI_MAP, should be preserved
@@ -248,7 +248,7 @@ describe("Chat spam filter", function()
 
     it("blocks messages with gold selling", function()
         if not spamFilter then
-            pending("spam filter not captured")
+            error("spam filter not captured — filter discovery failed")
             return
         end
         local blocked = spamFilter(nil, nil, "buy gold cheap only $5", "Spammer")
@@ -257,7 +257,7 @@ describe("Chat spam filter", function()
 
     it("blocks messages with www URLs", function()
         if not spamFilter then
-            pending("spam filter not captured")
+            error("spam filter not captured — filter discovery failed")
             return
         end
         local blocked = spamFilter(nil, nil, "visit www.gold-shop.com for deals", "Spammer")
@@ -266,7 +266,7 @@ describe("Chat spam filter", function()
 
     it("blocks power leveling ads", function()
         if not spamFilter then
-            pending("spam filter not captured")
+            error("spam filter not captured — filter discovery failed")
             return
         end
         local blocked = spamFilter(nil, nil, "power level your character fast!", "Spammer")
@@ -275,7 +275,7 @@ describe("Chat spam filter", function()
 
     it("does not block normal messages", function()
         if not spamFilter then
-            pending("spam filter not captured")
+            error("spam filter not captured — filter discovery failed")
             return
         end
         local blocked = spamFilter(nil, nil, "LF healer for mythic+", "Player")
@@ -284,7 +284,7 @@ describe("Chat spam filter", function()
 
     it("handles nil message", function()
         if not spamFilter then
-            pending("spam filter not captured")
+            error("spam filter not captured — filter discovery failed")
             return
         end
         local blocked, _msg = spamFilter(nil, nil, nil, "Player")

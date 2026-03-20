@@ -294,6 +294,7 @@ describe("Tag lunar:health:percent", function()
     it("returns percent for normal unit", function()
         _G._mockUnit.health = 75000
         _G._mockUnit.healthMax = 100000
+        _G._mockUnit.healthPercent = 75
         assert.equals("75%", tag("player"))
     end)
 
@@ -556,8 +557,10 @@ describe("Tag lunar:class:color", function()
     it("returns color code for valid class", function()
         local result = tag("player")
         assert.is_not_nil(result)
-        -- WARRIOR: r=200/255, g=155/255, b=110/255 → |cffc89b6e（由 wow_mock RAID_CLASS_COLORS 決定）
-        assert.equals("|cffc89b6e", result)
+        local c = _G.RAID_CLASS_COLORS.WARRIOR
+        local expected =
+            string.format("|cff%02x%02x%02x", math.floor(c.r * 255), math.floor(c.g * 255), math.floor(c.b * 255))
+        assert.equals(expected, result)
     end)
 
     it("returns empty for non-player", function()

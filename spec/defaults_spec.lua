@@ -370,6 +370,14 @@ describe("Defaults skins", function()
             assert.is_boolean(sk.blizzard[name], "Missing or non-boolean skin: " .. name)
         end)
     end
+
+    it("blizzard skin count matches expected", function()
+        local count = 0
+        for _ in pairs(sk.blizzard) do
+            count = count + 1
+        end
+        assert.equals(#skinNames, count)
+    end)
 end)
 
 --------------------------------------------------------------------------------

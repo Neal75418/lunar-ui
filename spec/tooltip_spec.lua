@@ -496,11 +496,10 @@ end)
 
 describe("RequestInspect", function()
     local notifyCalled
-    -- 使用遞增時間基準，避免跨測試 lastInspectTime 殘留導致節流
     local timeBase = 100000
 
     before_each(function()
-        timeBase = timeBase + 100
+        LunarUI.ResetInspectThrottle()
         LunarUI.ClearInspectCache()
         notifyCalled = false
         _G.CanInspect = function()
@@ -515,19 +514,9 @@ describe("RequestInspect", function()
         _G.NotifyInspect = function()
             notifyCalled = true
         end
-        -- 用遞增時間確保不被前次測試節流
         _G.GetTime = function()
             return timeBase
         end
-        -- 先發一次請求來重置 lastInspectTime
-        LunarUI.RequestInspect("target")
-        notifyCalled = false
-        -- 推進時間超過節流間隔
-        _G.GetTime = function()
-            return timeBase + 2
-        end
-        -- 清除快取
-        LunarUI.ClearInspectCache()
     end)
 
     it("calls NotifyInspect when all conditions pass", function()

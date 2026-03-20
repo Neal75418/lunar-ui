@@ -106,6 +106,8 @@ end
 
 function MockFrame:RegisterEvent() end
 function MockFrame:UnregisterAllEvents() end
+function MockFrame:SetAttribute() end
+function MockFrame:GetAttribute() end
 
 --------------------------------------------------------------------------------
 -- Appearance - Texture & Color

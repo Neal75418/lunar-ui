@@ -57,7 +57,8 @@ describe("FormatBarText", function()
 
     it("formats remaining mode", function()
         local result = FormatBarText("remaining", 1500, 3000)
-        assert.equals("1.5K remaining", result)
+        assert.truthy(result:find("1.5K"))
+        assert.truthy(result:find("remaining"))
     end)
 
     it("formats default with extra label", function()

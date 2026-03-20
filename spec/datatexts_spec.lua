@@ -207,11 +207,14 @@ describe("Built-in provider updates", function()
     -- The providers are internal locals, but we can test them indirectly
     -- by initializing and verifying no errors occur with mock APIs
 
+    after_each(function()
+        LunarUI.CleanupDataTexts()
+    end)
+
     it("initializes panel with fps/latency/clock slots", function()
         assert.has_no.errors(function()
             LunarUI.InitializeDataTexts()
         end)
-        LunarUI.CleanupDataTexts()
     end)
 
     it("handles missing map data for coords provider", function()
@@ -222,7 +225,6 @@ describe("Built-in provider updates", function()
         assert.has_no.errors(function()
             LunarUI.InitializeDataTexts()
         end)
-        LunarUI.CleanupDataTexts()
     end)
 
     it("handles not-in-guild for guild provider", function()
@@ -232,7 +234,6 @@ describe("Built-in provider updates", function()
         assert.has_no.errors(function()
             LunarUI.InitializeDataTexts()
         end)
-        LunarUI.CleanupDataTexts()
     end)
 
     it("handles no specialization for spec provider", function()
@@ -242,6 +243,5 @@ describe("Built-in provider updates", function()
         assert.has_no.errors(function()
             LunarUI.InitializeDataTexts()
         end)
-        LunarUI.CleanupDataTexts()
     end)
 end)

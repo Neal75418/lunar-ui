@@ -131,26 +131,31 @@ describe("ApplyRolePreset", function()
     it("applies DPS preset to raid frames", function()
         LunarUI:ApplyRolePreset("DAMAGER")
         local raid = LunarUI.db.profile.unitframes.raid
+        -- DPS raid frame dimensions from Defaults.lua "dps" layout preset
         assert.equals(72, raid.width)
         assert.equals(28, raid.height)
+        -- DPS raid spacing from Defaults.lua "dps" layout preset
         assert.equals(3, raid.spacing)
     end)
 
     it("applies DPS preset to party frames", function()
         LunarUI:ApplyRolePreset("DAMAGER")
         local party = LunarUI.db.profile.unitframes.party
+        -- DPS party frame dimensions from Defaults.lua "dps" layout preset
         assert.equals(140, party.width)
         assert.equals(32, party.height)
     end)
 
     it("applies Tank preset with nameplate override", function()
         LunarUI:ApplyRolePreset("TANK")
+        -- Tank nameplate height from Defaults.lua "tank" layout preset (taller for threat clarity)
         assert.equals(10, LunarUI.db.profile.nameplates.height)
     end)
 
     it("applies Tank preset to raid frames", function()
         LunarUI:ApplyRolePreset("TANK")
         local raid = LunarUI.db.profile.unitframes.raid
+        -- Tank raid frame dimensions from Defaults.lua "tank" layout preset (wider than DPS)
         assert.equals(85, raid.width)
         assert.equals(32, raid.height)
     end)
@@ -158,6 +163,8 @@ describe("ApplyRolePreset", function()
     it("applies Healer preset with larger party frames", function()
         LunarUI:ApplyRolePreset("HEALER")
         local party = LunarUI.db.profile.unitframes.party
+        -- Healer party frame dimensions from Defaults.lua "healer" layout preset
+        -- Healer party must be wider and taller than DPS party (165 > 140, 42 > 32)
         assert.equals(165, party.width)
         assert.equals(42, party.height)
     end)
@@ -201,7 +208,7 @@ describe("ApplyRolePreset", function()
             return "HEALER"
         end
         LunarUI:ApplyRolePreset()
-        -- Should apply healer preset
+        -- Should apply healer preset; 165 = healer party width from Defaults.lua "healer" layout preset
         assert.equals(165, LunarUI.db.profile.unitframes.party.width)
     end)
 end)

@@ -40,6 +40,8 @@ _G.GameTooltip = {
 _G.ATTACK_BUTTON_FLASH_TIME = 0.4
 _G.RANGE_INDICATOR = "•"
 _G.UIParent = nil
+_G.RegisterStateDriver = function() end
+_G.UnregisterStateDriver = function() end
 
 -- Mock LibStub：提供最小化的 LibActionButton
 _G.LibStub = function(name, _silent)
@@ -96,24 +98,32 @@ local LunarUI = {
             UnregisterAllEvents = function() end,
         }, {})
     end,
+    HideBlizzardBarsDelayed = function() end,
     Print = function() end,
     db = {
         profile = {
             actionbars = {
                 buttonSize = 36,
                 buttonSpacing = 4,
-                bar1 = { buttons = 12, x = 0, y = 0, orientation = "HORIZONTAL" },
-                bar2 = { buttons = 12, x = 0, y = 0, orientation = "HORIZONTAL" },
-                bar3 = { buttons = 12, x = 0, y = 0, orientation = "HORIZONTAL" },
-                bar4 = { buttons = 12, x = 0, y = 0, orientation = "VERTICAL" },
-                bar5 = { buttons = 12, x = 0, y = 0, orientation = "VERTICAL" },
-                bar6 = { buttons = 12, x = 0, y = 0, orientation = "HORIZONTAL" },
+                bar1 = { enabled = true, buttons = 12, x = 0, y = 0, orientation = "HORIZONTAL" },
+                bar2 = { enabled = true, buttons = 12, x = 0, y = 0, orientation = "HORIZONTAL" },
+                bar3 = { enabled = true, buttons = 12, x = 0, y = 0, orientation = "HORIZONTAL" },
+                bar4 = { enabled = true, buttons = 12, x = 0, y = 0, orientation = "VERTICAL" },
+                bar5 = { enabled = true, buttons = 12, x = 0, y = 0, orientation = "VERTICAL" },
+                bar6 = { enabled = true, buttons = 12, x = 0, y = 0, orientation = "HORIZONTAL" },
                 petbar = { x = 0, y = 0, orientation = "HORIZONTAL" },
                 stancebar = { x = 0, y = 0, orientation = "HORIZONTAL" },
             },
         },
     },
 }
+
+LunarUI.GetModuleDB = function(key)
+    if not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
+    return LunarUI.db.profile[key]
+end
 
 loader.loadAddonFile("LunarUI/ActionBars/ActionBars.lua", LunarUI)
 
@@ -182,5 +192,18 @@ describe("ActionBars lifecycle", function()
         assert.has_no_errors(function()
             LunarUI.ToggleKeybindMode()
         end)
+    end)
+
+    it("SpawnActionBars creates bar entries", function()
+        LunarUI.CleanupActionBars()
+        LunarUI.SpawnActionBars()
+        assert.is_table(LunarUI.actionBars)
+        -- verify at least one bar was created (bar1..bar6 are created by SpawnActionBars)
+        local count = 0
+        for _ in pairs(LunarUI.actionBars) do
+            count = count + 1
+        end
+        assert.is_true(count > 0)
+        LunarUI.CleanupActionBars()
     end)
 end)

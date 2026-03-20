@@ -30,7 +30,12 @@ _G.GameTooltip = {
     Hide = function() end,
 }
 
--- Mock CreateFrame with event tracking
+-- Mock CreateFrame with event tracking.
+-- NOTE: This mock is installed BEFORE loadAddonFile runs (below), so the module
+-- creates its loot frame via this mock. RegisterEvent writes to the spec-local
+-- `registeredEvents` table, which the tests then assert on.  This is intentional:
+-- the tests exercise the module's event registration through the mock, not by
+-- inspecting module-internal state directly.
 local mock_frame = require("spec.mock_frame")
 local registeredEvents = {}
 local LootMock = setmetatable({}, { __index = mock_frame.MockFrame })
