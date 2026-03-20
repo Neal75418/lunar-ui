@@ -966,16 +966,13 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
         end
     end
 
-    -- M8 效能修復：複用模組層 keywordCheckList，只在 keywords 數量改變時重建
-    -- 避免每則訊息都建立新 table 並逐一 table.insert
+    -- M8 效能修復：複用模組層 keywordCheckList，每次呼叫重建以確保內容最新
+    -- 使用 count 短路曾導致同數量但不同內容的 keyword 變更無法反映
     local keywords = db.keywords or {}
-    local expectedCount = #keywords + 1 -- +1 for playerName
-    if #keywordCheckList ~= expectedCount then
-        wipe(keywordCheckList)
-        table.insert(keywordCheckList, playerName)
-        for _, kw in ipairs(keywords) do
-            table.insert(keywordCheckList, kw)
-        end
+    wipe(keywordCheckList)
+    table.insert(keywordCheckList, playerName)
+    for _, kw in ipairs(keywords) do
+        table.insert(keywordCheckList, kw)
     end
 
     local msgLower = msg:lower()

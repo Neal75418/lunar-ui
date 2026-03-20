@@ -166,6 +166,10 @@ local EVENT_HANDLERS = {
 --------------------------------------------------------------------------------
 
 function LunarUI:InitAutomation()
+    -- self.db.profile.automation 與 GetModuleDB("automation") 回傳同一個 table：
+    -- GetModuleDB("automation") == LunarUI.db.profile["automation"]（見 Utils.lua:GetModuleDB）
+    -- 因此兩個路徑不會發散；此處直接存取 self.db.profile.automation 是有意為之，
+    -- 避免在初始化守衛中呼叫 GetModuleDB（其內部也會 nil-check self.db / self.db.profile）。
     if not self.db or not self.db.profile or not self.db.profile.automation then
         return
     end

@@ -278,3 +278,100 @@ describe("FCTGetSettings", function()
         LunarUI_FCT.db = origDb
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- InitAuraFrames / CleanupAuraFrames lifecycle (AuraFrames.lua)
+--------------------------------------------------------------------------------
+
+-- Set up globals required by Initialize / CleanupAuraFrames
+_G.InCombatLockdown = function()
+    return false
+end
+_G.C_Timer = { After = function() end }
+_G.GetTime = function()
+    return 1000
+end
+-- Blizzard buff frames (nil by default → HideBlizzardBuffFrames is a no-op)
+_G.BuffFrame = nil
+_G.DebuffFrame = nil
+
+describe("InitAuraFrames lifecycle", function()
+    before_each(function()
+        -- Reset initialized state between tests via CleanupAuraFrames
+        LunarUI_AF.CleanupAuraFrames()
+        -- Restore GetHUDSetting so auraFrames is enabled and numeric defaults are provided
+        LunarUI_AF.GetHUDSetting = function(_key, default)
+            if default == false then
+                return false
+            end
+            return default
+        end
+    end)
+
+    it("exports InitAuraFrames as a function", function()
+        assert.is_function(LunarUI_AF.InitAuraFrames)
+    end)
+
+    it("does not error on first call", function()
+        assert.has_no_errors(function()
+            LunarUI_AF.InitAuraFrames()
+        end)
+    end)
+
+    it("does nothing when auraFrames setting is false", function()
+        LunarUI_AF.GetHUDSetting = function(_key, _default)
+            return false
+        end
+        assert.has_no_errors(function()
+            LunarUI_AF.InitAuraFrames()
+        end)
+    end)
+
+    it("is idempotent (second call does not error)", function()
+        LunarUI_AF.InitAuraFrames()
+        assert.has_no_errors(function()
+            LunarUI_AF.InitAuraFrames()
+        end)
+    end)
+
+    it("can be re-initialized after cleanup", function()
+        LunarUI_AF.InitAuraFrames()
+        LunarUI_AF.CleanupAuraFrames()
+        assert.has_no_errors(function()
+            LunarUI_AF.InitAuraFrames()
+        end)
+    end)
+end)
+
+describe("CleanupAuraFrames lifecycle", function()
+    it("exports CleanupAuraFrames as a function", function()
+        assert.is_function(LunarUI_AF.CleanupAuraFrames)
+    end)
+
+    it("does not error when not initialized", function()
+        LunarUI_AF.CleanupAuraFrames()
+        assert.has_no_errors(function()
+            LunarUI_AF.CleanupAuraFrames()
+        end)
+    end)
+
+    it("does not error after InitAuraFrames", function()
+        LunarUI_AF.GetHUDSetting = function(_key, default)
+            if default == false then
+                return false
+            end
+            return default
+        end
+        LunarUI_AF.InitAuraFrames()
+        assert.has_no_errors(function()
+            LunarUI_AF.CleanupAuraFrames()
+        end)
+    end)
+
+    it("can be called multiple times in sequence", function()
+        assert.has_no_errors(function()
+            LunarUI_AF.CleanupAuraFrames()
+            LunarUI_AF.CleanupAuraFrames()
+        end)
+    end)
+end)

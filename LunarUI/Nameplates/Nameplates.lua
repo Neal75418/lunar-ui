@@ -296,11 +296,12 @@ local function CreateDebuffs(frame)
     -- Only show player's debuffs
     debuffs.onlyShowPlayer = true
 
-    -- Fix #53: WoW 12.0 makes isHarmful a secret value that cannot be tested
-    -- The Debuffs element already filters to harmful auras, so just check isPlayerAura
-    -- Use isHarmfulAura as fallback if available (non-secret in some cases)
+    -- Fix #53: WoW 12.0 makes isHarmful a secret value (taint-protected) that cannot be read
+    -- from addon Lua. Attempting to test data.isHarmful always yields nil/false from addon code.
+    -- The oUF Debuffs element itself already restricts the aura pool to harmful auras before
+    -- invoking FilterAura, so checking isPlayerAura alone is sufficient and correct here.
+    -- Do NOT add "and data.isHarmful == true" — it will never match and will hide all debuffs.
     debuffs.FilterAura = function(_element, _unit, data)
-        -- Just check if it's the player's aura - Debuffs element handles harmful filtering
         return data.isPlayerAura == true
     end
 

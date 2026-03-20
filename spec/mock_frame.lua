@@ -178,6 +178,7 @@ function MockFrame:SetStatusBarColor() end
 function MockFrame:SetCooldown() end
 function MockFrame:SetDrawEdge() end
 function MockFrame:SetSwipeColor() end
+function MockFrame:SetHideCountdownNumbers() end
 
 --------------------------------------------------------------------------------
 -- Animation
