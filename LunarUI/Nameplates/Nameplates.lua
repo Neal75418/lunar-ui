@@ -676,6 +676,9 @@ end
 local stackingFrame = nil
 local STACKING_INTERVAL = 0.1 -- 更新間隔（秒）
 local STACKING_OFFSET = 10 -- 每層偏移量（像素）
+-- B4 效能修復：快取 npHeight（db.height 為靜態設定值，不在戰鬥中改變）
+-- 避免 UpdateNameplateStacking（dirty 驅動）每次都呼叫 GetModuleDB + 讀取 db.height
+local cachedNpHeight = 12
 
 -- Fix 7: 重用平行陣列，避免每 0.1s 為每個名牌建新 table
 local stackFrames = {}
@@ -799,13 +802,8 @@ end
 -- 主協調器：名牌堆疊偵測與調整
 -- 注意：只操作非 secure 的子框架（Health/Backdrop），不需要 InCombatLockdown 檢查
 local function UpdateNameplateStacking()
-    local db = LunarUI.GetModuleDB("nameplates")
-    if not db or not db.stackingDetection then
-        return
-    end
-
-    -- 名牌高度作為重疊閾值
-    local npHeight = (db.height or 8) + 4
+    -- B4 效能修復：使用快取的 npHeight，由 StartStackingDetection 設定
+    local npHeight = cachedNpHeight
 
     -- 執行堆疊調整流程
     local count = CollectVisibleNameplates()
@@ -821,6 +819,8 @@ local function StartStackingDetection()
     if not db or not db.stackingDetection then
         return
     end
+    -- B4 效能修復：快取 npHeight，UpdateNameplateStacking 直接使用不再查 DB
+    cachedNpHeight = (db.height or 8) + 4
 
     if stackingFrame then
         return

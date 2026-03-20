@@ -177,6 +177,8 @@ local _cachedTimestampMinute = -1
 local keywordCheckList = {}
 -- C1: 用於監聽 GROUP_ROSTER_UPDATE 的事件框架
 local chatRoleIconEventFrame
+-- B7 效能修復：玩家名稱在 session 中不會改變，避免每則訊息呼叫 UnitName("player")
+local cachedPlayerName = nil
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -952,8 +954,11 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
         return false, msg, author, ...
     end
 
-    -- 不對自己的訊息觸發
-    local playerName = UnitName("player")
+    -- 不對自己的訊息觸發（B7: 使用快取的玩家名稱，避免每則訊息呼叫 UnitName）
+    if not cachedPlayerName then
+        cachedPlayerName = UnitName("player")
+    end
+    local playerName = cachedPlayerName
     if author then
         local shortAuthor = Ambiguate(author, "short")
         if shortAuthor == playerName then
@@ -1272,6 +1277,7 @@ local function InitializeChat()
         chatRoleIconEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
         chatRoleIconEventFrame:SetScript("OnEvent", function()
             roleIconCacheDirty = true
+            cachedPlayerName = UnitName("player") -- B7: refresh on world enter
         end)
     end
 

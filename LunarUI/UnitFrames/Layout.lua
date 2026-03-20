@@ -156,12 +156,16 @@ local function CreateHealthBar(frame, unit)
         end
 
         -- 死亡狀態指示器（oUF 無內建 DeadIndicator element，需手動驅動）
+        -- B3 效能修復：快取 isDead 狀態，只在狀態改變時才呼叫 SetShown（frequentUpdates=true 下每幀執行）
         local ownerFrame = self.__owner
         if ownerFrame and ownerFrame.DeadIndicator then
             local isDead = UnitIsDeadOrGhost(ownerUnit)
-            ownerFrame.DeadIndicator:SetShown(isDead)
-            if ownerFrame.DeadOverlay then
-                ownerFrame.DeadOverlay:SetShown(isDead)
+            if isDead ~= self._lastIsDead then
+                self._lastIsDead = isDead
+                ownerFrame.DeadIndicator:SetShown(isDead)
+                if ownerFrame.DeadOverlay then
+                    ownerFrame.DeadOverlay:SetShown(isDead)
+                end
             end
         end
     end
@@ -491,11 +495,14 @@ local auraBlacklistCache = {}
 --[[ AuraFilter DB 設定快取（避免高頻 DB 查詢）]]
 local auraFilterDBCache = {} -- [unitKey] = { onlyPlayerDebuffs = bool }
 local auraFilterGlobalCache = nil -- 全域過濾器設定快取
+-- A2 效能修復：快取 unit → unitKey 的 gsub 結果（AuraFilter 每次 aura 都呼叫，結果恆定）
+local unitKeyCache = {} -- [unit] = unitKey (e.g. "party1" → "party")
 
 local function RebuildAuraFilterCache()
     wipe(auraWhitelistCache)
     wipe(auraBlacklistCache)
     wipe(auraFilterDBCache) -- 清除 DB 設定快取，強制重新讀取
+    wipe(unitKeyCache) -- 清除 unit → unitKey 快取（設定變更時）
     auraFilterGlobalCache = nil
     local db = LunarUI.db.profile
     if not db then
@@ -535,7 +542,12 @@ end
 --[[ 光環過濾器：根據 DB 設定過濾 ]]
 local function AuraFilter(_element, unit, data)
     -- 標準化單位 key（boss1 → boss, party1 → party）
-    local unitKey = unit:gsub("%d+$", "")
+    -- A2 效能修復：結果恆定，memoize 避免每次 aura 都建立字串
+    local unitKey = unitKeyCache[unit]
+    if not unitKey then
+        unitKey = unit:gsub("%d+$", "")
+        unitKeyCache[unit] = unitKey
+    end
 
     -- 使用快取避免高頻 DB 查詢
     local cachedSettings = auraFilterDBCache[unitKey]

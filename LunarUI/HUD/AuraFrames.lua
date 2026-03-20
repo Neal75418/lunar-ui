@@ -98,9 +98,8 @@ local AURA_THROTTLE = 0.1
 
 local function ShouldShowBuff(name, _duration)
     -- WoW secret value 不能當 table index，用 pcall 保護
-    local ok, isFiltered = pcall(function()
-        return FILTERED_BUFF_NAMES[name]
-    end)
+    -- B1 效能修復：改用 pcall(rawget, t, k)，避免每次建立匿名 closure（每次 aura 更新執行 40 次）
+    local ok, isFiltered = pcall(rawget, FILTERED_BUFF_NAMES, name)
     if not ok or isFiltered then
         return false
     end
@@ -602,17 +601,19 @@ LunarUI.ShouldShowBuff = ShouldShowBuff
 
 -- 光環資料節流更新（用 C_Timer 取代 OnUpdate 輪詢）
 local auraUpdateScheduled = false
+-- B2 效能修復：提升為具名模組函數，避免 ScheduleAuraUpdate 每次觸發都建立新 closure
+local function OnAuraTimerFired()
+    auraUpdateScheduled = false
+    if isInitialized then
+        UpdateAuras()
+    end
+end
 local function ScheduleAuraUpdate()
     if auraUpdateScheduled then
         return
     end
     auraUpdateScheduled = true
-    C_Timer.After(AURA_THROTTLE, function()
-        auraUpdateScheduled = false
-        if isInitialized then
-            UpdateAuras()
-        end
-    end)
+    C_Timer.After(AURA_THROTTLE, OnAuraTimerFired)
 end
 
 eventFrame = LunarUI.CreateEventHandler(

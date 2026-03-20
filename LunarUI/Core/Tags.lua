@@ -32,10 +32,10 @@ local UnitName = UnitName
 local UnitClass = UnitClass
 local UnitEffectiveLevel = UnitEffectiveLevel
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned
-local UnitIsUnit = UnitIsUnit
 local IsInRaid = IsInRaid
 local GetNumGroupMembers = GetNumGroupMembers
 local GetRaidRosterInfo = GetRaidRosterInfo
+local UnitIsUnit = UnitIsUnit
 local GetMaxLevelForLatestExpansion = GetMaxLevelForLatestExpansion
 local RAID_CLASS_COLORS = RAID_CLASS_COLORS
 local strlenutf8 = strlenutf8
@@ -276,14 +276,35 @@ end)
 Tags.Events["lunar:role"] = "GROUP_ROSTER_UPDATE"
 
 -- [lunar:group] — 團隊組別編號
+-- B6 效能修復：快取 raidIndex → group 映射，避免 40 人 raid 中 O(N²) GetRaidRosterInfo 呼叫
+-- 保留 UnitIsUnit 掃描（跨 token 匹配必要），但 GetRaidRosterInfo 只在 dirty 時執行一次
+-- GROUP_ROSTER_UPDATE：第一個 tag 呼叫觸發重建（O(N)），後續 39 個 frame 掃描已快取的 index→group
+local raidIndexToGroup = {}
+local groupCacheDirty = true
+if CreateFrame then
+    local groupTagFrame = CreateFrame("Frame")
+    groupTagFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+    groupTagFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    groupTagFrame:SetScript("OnEvent", function()
+        groupCacheDirty = true
+    end)
+end
+
 Tags.Methods["lunar:group"] = SafeTag(function(unit)
     if not IsInRaid() then
         return ""
     end
+    if groupCacheDirty then
+        groupCacheDirty = false
+        wipe(raidIndexToGroup)
+        for i = 1, GetNumGroupMembers() do
+            local _, _, group = GetRaidRosterInfo(i)
+            raidIndexToGroup[i] = group
+        end
+    end
     for i = 1, GetNumGroupMembers() do
         if UnitIsUnit(unit, "raid" .. i) then
-            local _, _, group = GetRaidRosterInfo(i)
-            return tostring(group or "")
+            return tostring(raidIndexToGroup[i] or "")
         end
     end
     return ""

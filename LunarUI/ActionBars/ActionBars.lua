@@ -709,6 +709,19 @@ local fadeState = {} -- { [barKey] = { alpha, targetAlpha, hovered, timer } }
 local hoverCheckElapsed = 0
 local barHoverStates = {} -- { [barKey] = { wasHovering = bool } }
 
+-- A1/B5 效能修復：快取 fade 設定值，避免 UpdateFadeAndHover（每幀）和 IsBarFadeEnabled（每 bar）重複查 DB
+local cachedFadeEnabled = true
+local cachedFadeAlpha = 0.3
+local cachedFadeDelay = 2.0
+local cachedFadeDuration = 0.4
+local function RefreshFadeSettingsCache()
+    local db = LunarUI.db.profile.actionbars
+    cachedFadeEnabled = db.fadeEnabled ~= false
+    cachedFadeAlpha = db.fadeAlpha or 0.3
+    cachedFadeDelay = db.fadeDelay or 2.0
+    cachedFadeDuration = db.fadeDuration or 0.4
+end
+
 local function GetFadeSettings()
     local db = LunarUI.db.profile.actionbars
     return db.fadeEnabled ~= false, db.fadeAlpha or 0.3, db.fadeDelay or 2.0, db.fadeDuration or 0.4
@@ -718,8 +731,7 @@ local function IsBarFadeEnabled(barKey)
     if isBarsUnlocked then
         return false
     end
-    local globalEnabled = GetFadeSettings()
-    if not globalEnabled then
+    if not cachedFadeEnabled then -- A1/B5: use cached value, avoid per-bar GetFadeSettings() call
         return false
     end
 
@@ -745,7 +757,6 @@ end
 -- 平滑動畫框架
 local fadeAnimFrame = CreateFrame("Frame")
 local fadeAnimActive = false
-local cachedFadeDuration = 0.4 -- 由 StartFadeAnimation 快取，動畫期間設定不會變
 
 -- 前向宣告（UpdateFadeAndHover 需要這些函數）
 ---@type fun(barKey: string, targetAlpha: number)
@@ -858,8 +869,8 @@ end
 
 -- 合併的 OnUpdate 處理器（協調淡出動畫與懸停偵測）
 local function UpdateFadeAndHover(_self, elapsed)
-    -- 全域淡出設定檢查（只檢查一次）
-    local fadeEnabled, fadeAlpha, fadeDelay = GetFadeSettings()
+    -- A1/B5 效能修復：使用快取設定值，避免每幀查 DB
+    local fadeEnabled, fadeAlpha, fadeDelay = cachedFadeEnabled, cachedFadeAlpha, cachedFadeDelay
 
     -- 執行淡出動畫
     local anyAnimActive = UpdateFadeAnimation(fadeEnabled, elapsed)
@@ -886,21 +897,19 @@ function StartFadeAnimation()
         return
     end
     fadeAnimActive = true
-    local _, _, _, dur = GetFadeSettings()
-    cachedFadeDuration = dur or 0.4
+    RefreshFadeSettingsCache() -- A1/B5: 更新所有快取設定值（包含 duration）
     fadeAnimFrame:SetScript("OnUpdate", UpdateFadeAndHover)
 end
 
 local function FadeAllBarsOut()
-    local enabled, targetAlpha = GetFadeSettings()
-    if not enabled then
+    if not cachedFadeEnabled then -- A1/B5: use cached value
         return
     end
 
     for barKey in pairs(bars) do
         if IsBarFadeEnabled(barKey) then
             if not fadeState[barKey] or not fadeState[barKey].hovered then
-                FadeBarTo(barKey, targetAlpha)
+                FadeBarTo(barKey, cachedFadeAlpha)
             end
         end
     end
@@ -939,8 +948,8 @@ end
 local combatFrame = LunarUI.CreateEventHandler(
     { "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED" },
     function(_self, event)
-        local enabled = GetFadeSettings()
-        if not enabled then
+        RefreshFadeSettingsCache() -- A1/B5: 更新快取（戰鬥狀態切換時設定可能已變更）
+        if not cachedFadeEnabled then
             return
         end
 
@@ -951,8 +960,7 @@ local combatFrame = LunarUI.CreateEventHandler(
         elseif event == "PLAYER_REGEN_ENABLED" then
             -- 離開戰鬥：延遲淡出
             isInCombat = false
-            local _, _, fadeDelay = GetFadeSettings()
-            C_Timer.After(fadeDelay, function()
+            C_Timer.After(cachedFadeDelay, function()
                 if not fadeInitialized then
                     return
                 end

@@ -276,12 +276,19 @@ local function UpdateResourceIcons(current, max, color)
     for i = 1, max do
         local icon = resourceIcons[i]
         if icon then
-            if i <= current then
-                icon.fill:SetVertexColor(color[1], color[2], color[3])
+            local isActive = i <= current
+            -- B9 效能修復：只在狀態切換時呼叫 SetVertexColor（顏色為 cachedResourceColor，不會改變）
+            -- 避免 UNIT_POWER_UPDATE（高頻）每次對所有圖示無謂呼叫 C API
+            if isActive then
+                if not icon._isActive then
+                    icon._isActive = true
+                    icon.fill:SetVertexColor(color[1], color[2], color[3])
+                    icon.glow:SetVertexColor(color[1], color[2], color[3], 0.7)
+                end
                 icon.fill:Show()
-                icon.glow:SetVertexColor(color[1], color[2], color[3], 0.7)
                 icon.glow:Show()
             else
+                icon._isActive = false
                 icon.fill:Hide()
                 icon.glow:Hide()
             end
@@ -360,9 +367,10 @@ local function SetupResourceDisplay()
         resourceFrame = CreateResourceFrame()
     end
 
-    -- 清除現有元素
+    -- 清除現有元素（重置 _isActive 讓換職業/天賦後正確重新套色）
     for _, icon in ipairs(resourceIcons) do
         icon:Hide()
+        icon._isActive = nil
     end
     if resourceBar then
         resourceBar:Hide()
