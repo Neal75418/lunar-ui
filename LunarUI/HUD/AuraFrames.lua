@@ -39,6 +39,7 @@ local MAX_DEBUFFS = 8
 -- 倒數計時條
 local BAR_HEIGHT = 4
 local BAR_OFFSET = 1 -- 圖示與計時條間距
+local LABEL_HEIGHT = 16 -- 分類標籤（Buffs / Debuffs）高度
 
 local function LoadSettings()
     ICON_SIZE = LunarUI.GetHUDSetting("auraIconSize", 30)
@@ -257,7 +258,7 @@ local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY)
     local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
     frame:SetSize(
         ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-        totalIconHeight * 2 + ICON_SPACING + 16 -- 16 = 標籤高度
+        totalIconHeight * 2 + ICON_SPACING + LABEL_HEIGHT
     )
     -- 重用舊框架時保留其位置（/reload 時舊框架已在正確位置）
     if not isReused then

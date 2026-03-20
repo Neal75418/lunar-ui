@@ -68,12 +68,14 @@ local BINDING_FORMATS = {
 
 -- 從設定讀取按鈕大小
 local function GetButtonSize()
-    return LunarUI.db.profile.actionbars.buttonSize or DEFAULT_BUTTON_SIZE
+    local db = LunarUI.GetModuleDB("actionbars")
+    return db and db.buttonSize or DEFAULT_BUTTON_SIZE
 end
 
 -- 從設定讀取按鈕間距
 local function GetButtonSpacing()
-    return LunarUI.db.profile.actionbars.buttonSpacing or DEFAULT_BUTTON_SPACING
+    local db = LunarUI.GetModuleDB("actionbars")
+    return db and db.buttonSpacing or DEFAULT_BUTTON_SPACING
 end
 
 --------------------------------------------------------------------------------
@@ -164,7 +166,8 @@ local function CreateBarFrame(name, numButtons, parent, orientation)
     frame:SetFrameLevel(100)
 
     -- 設定透明度
-    local alpha = LunarUI.db.profile.actionbars.alpha or 1.0
+    local abDB = LunarUI.GetModuleDB("actionbars")
+    local alpha = abDB and abDB.alpha or 1.0
     frame:SetAlpha(alpha)
 
     -- 背景 / 解鎖 mover（掛在 UIParent 下，避免繼承 bar 的 alpha 和 secure 框架限制）
@@ -338,8 +341,9 @@ local function StyleButton(button)
     end
 
     -- 樣式化快捷鍵文字
+    local abStyleDB = LunarUI.GetModuleDB("actionbars")
     if hotkey then
-        local showHotkeys = LunarUI.db.profile.actionbars.showHotkeys
+        local showHotkeys = abStyleDB and abStyleDB.showHotkeys
         if showHotkeys == false then
             hotkey:Hide()
         else
@@ -353,7 +357,7 @@ local function StyleButton(button)
     -- 巨集名稱
     local macroName = button.Name or _G[name .. "Name"]
     if macroName then
-        local showMacroNames = LunarUI.db.profile.actionbars.showMacroNames
+        local showMacroNames = abStyleDB and abStyleDB.showMacroNames
         if showMacroNames then
             macroName:Show()
         else
@@ -424,30 +428,9 @@ end
 -- 動作條建立
 --------------------------------------------------------------------------------
 
-local function CreateActionBar(id, page)
-    local db = LunarUI.db.profile.actionbars["bar" .. id]
-    if not db or not db.enabled then
-        return
-    end
-
-    local numButtons = db.buttons or 12
-    local buttonSize = GetButtonSize()
-    local buttonSpacing = GetButtonSpacing()
-    local orientation = db.orientation or "horizontal"
-    local name = "LunarUI_ActionBar" .. id
-
-    -- 建立動作條框架
-    local bar = CreateBarFrame(name, numButtons, UIParent, orientation)
-    bar.id = id
-    bar.page = page
-    bar.dbKey = "bar" .. id
-
-    -- 位置（從設定讀取）
-    local x = db.x or 0
-    local y = db.y or (100 + (id - 1) * (buttonSize + 8))
-    bar:SetPoint("BOTTOM", UIParent, "BOTTOM", x, y)
-
-    -- 建立按鈕
+-- 建立並配置動作條的所有按鈕
+local function CreateActionBarButtons(bar, page, numButtons, buttonSize, buttonSpacing, orientation, name)
+    local rangeDb = LunarUI.GetModuleDB("actionbars")
     bar.buttons = {}
     for i = 1, numButtons do
         local buttonName = name .. "Button" .. i
@@ -487,7 +470,6 @@ local function CreateActionBar(id, page)
         end
 
         -- 技能距離著色（超出範圍時按鈕變紅）
-        local rangeDb = LunarUI.db.profile.actionbars
         if rangeDb and rangeDb.outOfRangeColoring ~= false and button.UpdateConfig then
             button.config = button.config or {}
             button.config.outOfRangeColoring = "button"
@@ -505,35 +487,68 @@ local function CreateActionBar(id, page)
         bar.buttons[i] = button
         buttons[buttonName] = button
     end
+end
+
+-- 設定主動作條（bar1）的頁面切換與覆蓋條隱藏狀態驅動
+local function SetupBar1StateDrivers(bar)
+    -- 頁面切換狀態驅動：bonusbar 用於德魯伊變形/龍騎術等
+    bar:SetAttribute(
+        "_onstate-page",
+        [[
+        self:SetAttribute("state", newstate)
+        control:ChildUpdate("state", newstate)
+    ]]
+    )
+
+    local pageCondition = table.concat({
+        "[bar:2] 2",
+        "[bar:3] 3",
+        "[bar:4] 4",
+        "[bar:5] 5",
+        "[bar:6] 6",
+        "[bonusbar:1] 7",
+        "[bonusbar:2] 8",
+        "[bonusbar:3] 9",
+        "[bonusbar:4] 10",
+        "[bonusbar:5] 11",
+        "1",
+    }, "; ")
+    RegisterStateDriver(bar, "page", pageCondition)
+
+    -- 覆蓋條/載具時隱藏（讓暴雪原生覆蓋條顯示飛龍騎術等技能）
+    RegisterStateDriver(bar, "visibility", "[overridebar] hide; [vehicleui] hide; [possessbar] hide; show")
+end
+
+local function CreateActionBar(id, page)
+    local abDB = LunarUI.GetModuleDB("actionbars")
+    local db = abDB and abDB["bar" .. id]
+    if not db or not db.enabled then
+        return
+    end
+
+    local numButtons = db.buttons or 12
+    local buttonSize = GetButtonSize()
+    local buttonSpacing = GetButtonSpacing()
+    local orientation = db.orientation or "horizontal"
+    local name = "LunarUI_ActionBar" .. id
+
+    -- 建立動作條框架
+    local bar = CreateBarFrame(name, numButtons, UIParent, orientation)
+    bar.id = id
+    bar.page = page
+    bar.dbKey = "bar" .. id
+
+    -- 位置（從設定讀取）
+    local x = db.x or 0
+    local y = db.y or (100 + (id - 1) * (buttonSize + 8))
+    bar:SetPoint("BOTTOM", UIParent, "BOTTOM", x, y)
+
+    -- 建立按鈕
+    CreateActionBarButtons(bar, page, numButtons, buttonSize, buttonSpacing, orientation, name)
 
     -- 主動作條（bar1）需要頁面切換 + 覆蓋條/載具隱藏
     if id == 1 then
-        -- 頁面切換狀態驅動：bonusbar 用於德魯伊變形/龍騎術等
-        bar:SetAttribute(
-            "_onstate-page",
-            [[
-            self:SetAttribute("state", newstate)
-            control:ChildUpdate("state", newstate)
-        ]]
-        )
-
-        local pageCondition = table.concat({
-            "[bar:2] 2",
-            "[bar:3] 3",
-            "[bar:4] 4",
-            "[bar:5] 5",
-            "[bar:6] 6",
-            "[bonusbar:1] 7",
-            "[bonusbar:2] 8",
-            "[bonusbar:3] 9",
-            "[bonusbar:4] 10",
-            "[bonusbar:5] 11",
-            "1",
-        }, "; ")
-        RegisterStateDriver(bar, "page", pageCondition)
-
-        -- 覆蓋條/載具時隱藏（讓暴雪原生覆蓋條顯示飛龍騎術等技能）
-        RegisterStateDriver(bar, "visibility", "[overridebar] hide; [vehicleui] hide; [possessbar] hide; show")
+        SetupBar1StateDrivers(bar)
     end
 
     bars["bar" .. id] = bar
@@ -575,7 +590,8 @@ local function UpdateStanceButton(button, index)
 end
 
 local function CreateStanceBar()
-    local db = LunarUI.db.profile.actionbars.stancebar
+    local abDB = LunarUI.GetModuleDB("actionbars")
+    local db = abDB and abDB.stancebar
     if not db or not db.enabled then
         return
     end
@@ -645,7 +661,8 @@ local function CreateStanceBar()
 end
 
 local function CreatePetBar()
-    local db = LunarUI.db.profile.actionbars.petbar
+    local abDB = LunarUI.GetModuleDB("actionbars")
+    local db = abDB and abDB.petbar
     if not db or not db.enabled then
         return
     end
@@ -716,7 +733,7 @@ local cachedFadeDelay = 2.0
 local cachedFadeDuration = 0.4
 local cachedBaseAlpha = 1.0 -- #3: 快取 bar 基礎透明度，避免 SetBarAlpha 每幀查 DB
 local function RefreshFadeSettingsCache()
-    local db = LunarUI.db.profile.actionbars
+    local db = LunarUI.GetModuleDB("actionbars") or {}
     cachedFadeEnabled = db.fadeEnabled ~= false
     cachedFadeAlpha = db.fadeAlpha or 0.3
     cachedFadeDelay = db.fadeDelay or 2.0
@@ -733,7 +750,7 @@ local function IsBarFadeEnabled(barKey)
     end
 
     -- 每條 bar 可獨立覆蓋
-    local db = LunarUI.db.profile.actionbars
+    local db = LunarUI.GetModuleDB("actionbars")
     if db and type(db[barKey]) == "table" and db[barKey].fadeEnabled ~= nil then
         return db[barKey].fadeEnabled
     end
@@ -1082,7 +1099,7 @@ local function StyleExtraActionButton()
     if InCombatLockdown() then
         return
     end -- 防禦性：避免戰鬥中操作 EditMode 管理的框架
-    local db = LunarUI.db.profile.actionbars
+    local db = LunarUI.GetModuleDB("actionbars")
     if db.extraActionButton == false then
         return
     end
@@ -1139,7 +1156,7 @@ local function StyleZoneAbilityButton()
     if InCombatLockdown() then
         return
     end -- 防禦性：避免戰鬥中操作 EditMode 管理的框架
-    local db = LunarUI.db.profile.actionbars
+    local db = LunarUI.GetModuleDB("actionbars")
     if db.extraActionButton == false then
         return
     end
@@ -1175,7 +1192,8 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateMicroBar()
-    local db = LunarUI.db.profile.actionbars.microBar
+    local abDB = LunarUI.GetModuleDB("actionbars")
+    local db = abDB and abDB.microBar
     if not db or not db.enabled then
         return
     end
@@ -1294,7 +1312,7 @@ end
 --------------------------------------------------------------------------------
 
 local function SpawnActionBars()
-    local db = LunarUI.db.profile.actionbars
+    local db = LunarUI.GetModuleDB("actionbars")
     if not db then
         return
     end

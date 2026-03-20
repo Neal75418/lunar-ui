@@ -70,15 +70,15 @@ local RESOURCE_COLORS = {
     essence = { 0.2, 0.6, 0.5 }, -- 青綠
 }
 
--- 框架大小（初始化時從 DB 讀取）
-local ICON_SIZE = 26
-local ICON_SPACING = 4
-local BAR_HEIGHT = 10
+-- 框架大小（初始化時從 DB 讀取，為可變設定值，非常數）
+local iconSize = 26
+local iconSpacing = 4
+local barHeight = 10
 
 local function LoadSettings()
-    ICON_SIZE = LunarUI.GetHUDSetting("crIconSize", 26)
-    ICON_SPACING = LunarUI.GetHUDSetting("crIconSpacing", 4)
-    BAR_HEIGHT = LunarUI.GetHUDSetting("crBarHeight", 10)
+    iconSize = LunarUI.GetHUDSetting("crIconSize", 26)
+    iconSpacing = LunarUI.GetHUDSetting("crIconSpacing", 4)
+    barHeight = LunarUI.GetHUDSetting("crBarHeight", 10)
 end
 
 --------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ end
 
 local function CreateResourceIcon(parent)
     local icon = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    icon:SetSize(ICON_SIZE, ICON_SIZE)
+    icon:SetSize(iconSize, iconSize)
 
     -- 背景（使用共用模板）
     LunarUI.ApplyBackdrop(icon, LunarUI.iconBackdropTemplate, C.bgIcon, C.borderIcon)
@@ -199,7 +199,7 @@ end
 ---@return Frame
 local function CreateResourceBar(parent)
     local bar = CreateFrame("StatusBar", nil, parent)
-    bar:SetSize(ICON_SIZE * 5 + ICON_SPACING * 4, BAR_HEIGHT)
+    bar:SetSize(iconSize * 5 + iconSpacing * 4, barHeight)
     bar:SetStatusBarTexture(LunarUI.GetSelectedStatusBarTexture())
     bar:SetMinMaxValues(0, 100)
     bar:SetValue(0)
@@ -247,7 +247,7 @@ local function CreateResourceFrame()
     end
     LunarUI:RegisterHUDFrame("LunarUI_ClassResources")
 
-    resourceFrame:SetSize(ICON_SIZE * 6 + ICON_SPACING * 5, ICON_SIZE + 10)
+    resourceFrame:SetSize(iconSize * 6 + iconSpacing * 5, iconSize + 10)
     resourceFrame:SetPoint("CENTER", UIParent, "CENTER", 0, -180)
     resourceFrame:SetFrameStrata("HIGH")
     resourceFrame:SetMovable(true)
@@ -405,21 +405,15 @@ local function SetupResourceDisplay()
         end
     else
         -- 使用圖示
-        local totalWidth = max * ICON_SIZE + (max - 1) * ICON_SPACING
-        local startX = -totalWidth / 2 + ICON_SIZE / 2
+        local totalWidth = max * iconSize + (max - 1) * iconSpacing
+        local startX = -totalWidth / 2 + iconSize / 2
 
         for i = 1, max do
             if not resourceIcons[i] then
                 resourceIcons[i] = CreateResourceIcon(resourceFrame)
             end
             resourceIcons[i]:ClearAllPoints()
-            resourceIcons[i]:SetPoint(
-                "CENTER",
-                resourceFrame,
-                "CENTER",
-                startX + (i - 1) * (ICON_SIZE + ICON_SPACING),
-                0
-            )
+            resourceIcons[i]:SetPoint("CENTER", resourceFrame, "CENTER", startX + (i - 1) * (iconSize + iconSpacing), 0)
             resourceIcons[i]:Show()
         end
 
