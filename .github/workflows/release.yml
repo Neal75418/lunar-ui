@@ -24,10 +24,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y luarocks
+      - name: Install LuaJIT + LuaRocks
+        uses: leafo/gh-actions-lua@v12
+        with:
+          luaVersion: "luajit-2.1.0-beta3"
 
       - name: Cache luarocks packages
         uses: actions/cache@v5
@@ -37,13 +37,13 @@ jobs:
             /usr/local/lib/luarocks
             /usr/local/share/lua
             /usr/local/lib/lua
-          key: luarocks-release-${{ runner.os }}-${{ hashFiles('.busted', '.luacheckrc') }}
-          restore-keys: luarocks-release-${{ runner.os }}-
+          key: luarocks-release-luajit-${{ runner.os }}-${{ hashFiles('.busted', '.luacheckrc') }}
+          restore-keys: luarocks-release-luajit-${{ runner.os }}-
 
       - name: Install luarocks packages
-        run: |
-          luarocks show luacheck > /dev/null 2>&1 || sudo luarocks install luacheck
-          luarocks show busted > /dev/null 2>&1 || sudo luarocks install busted
+        uses: leafo/gh-actions-luarocks@v6
+        with:
+          rocks: luacheck busted
 
       - name: Lint with luacheck
         run: luacheck .
