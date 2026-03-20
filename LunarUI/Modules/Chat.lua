@@ -1328,6 +1328,8 @@ local function CleanupChat()
     roleIconCacheDirty = true
     wipe(keywordCheckList)
     _cachedTimestampMinute = -1
+    -- 重置 filter 註冊旗標，確保重新啟用時能正確重新註冊所有 filters
+    chatFiltersRegistered = false
 end
 
 -- 匯出

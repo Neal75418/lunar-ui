@@ -1100,7 +1100,7 @@ local function StyleExtraActionButton()
         return
     end -- 防禦性：避免戰鬥中操作 EditMode 管理的框架
     local db = LunarUI.GetModuleDB("actionbars")
-    if db.extraActionButton == false then
+    if not db or db.extraActionButton == false then
         return
     end
 
@@ -1157,7 +1157,7 @@ local function StyleZoneAbilityButton()
         return
     end -- 防禦性：避免戰鬥中操作 EditMode 管理的框架
     local db = LunarUI.GetModuleDB("actionbars")
-    if db.extraActionButton == false then
+    if not db or db.extraActionButton == false then
         return
     end
 

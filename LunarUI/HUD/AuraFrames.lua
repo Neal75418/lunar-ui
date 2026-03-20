@@ -306,7 +306,7 @@ local function SetupFrames()
             buffFrame,
             "TOPRIGHT",
             -col * (ICON_SIZE + ICON_SPACING),
-            -(row * (totalIconHeight + ICON_SPACING)) - 16 -- 16 = 標籤下方偏移
+            -(row * (totalIconHeight + ICON_SPACING)) - LABEL_HEIGHT -- 16 = 標籤下方偏移
         )
     end
 
@@ -320,7 +320,7 @@ local function SetupFrames()
             debuffFrame,
             "TOPRIGHT",
             -col * (ICON_SIZE + ICON_SPACING),
-            -(row * (totalIconHeight + ICON_SPACING)) - 16
+            -(row * (totalIconHeight + ICON_SPACING)) - LABEL_HEIGHT
         )
     end
 end
@@ -694,7 +694,7 @@ local function RelayoutIcons(icons, parentFrame, maxCount)
                 parentFrame,
                 "TOPRIGHT",
                 -col * (ICON_SIZE + ICON_SPACING),
-                -(row * (totalIconHeight + ICON_SPACING)) - 16
+                -(row * (totalIconHeight + ICON_SPACING)) - LABEL_HEIGHT
             )
         end
     end
@@ -718,13 +718,13 @@ function LunarUI.RebuildAuraFrames()
     if buffFrame then
         buffFrame:SetSize(
             ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-            totalIconHeight * 2 + ICON_SPACING + 16
+            totalIconHeight * 2 + ICON_SPACING + LABEL_HEIGHT
         )
     end
     if debuffFrame then
         debuffFrame:SetSize(
             ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-            totalIconHeight * 2 + ICON_SPACING + 16
+            totalIconHeight * 2 + ICON_SPACING + LABEL_HEIGHT
         )
     end
 
