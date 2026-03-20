@@ -59,6 +59,7 @@ read_globals = {
     "strmatch",
     "strfind",
     "strlenutf8",
+    "utf8sub",
     "format",
     "date",
     "time",

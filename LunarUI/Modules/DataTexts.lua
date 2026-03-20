@@ -92,7 +92,7 @@ RegisterProvider("fps", {
     update = function()
         local fps = floor(GetFramerate())
         local r, g = StatusColor(fps, 60, 30, false)
-        return format("|cff%02x%02x00%d|r FPS", r * 255, g * 255, fps)
+        return format("|cff%02x%02x00%d|r FPS", math.floor(r * 255), math.floor(g * 255), fps)
     end,
     tooltip = function(slot)
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
@@ -113,7 +113,7 @@ RegisterProvider("latency", {
         local _, _, latencyHome, latencyWorld = GetNetStats()
         local ms = latencyWorld > 0 and latencyWorld or latencyHome
         local r, g = StatusColor(ms, 100, 200, true)
-        return format("|cff%02x%02x00%d|r ms", r * 255, g * 255, ms)
+        return format("|cff%02x%02x00%d|r ms", math.floor(r * 255), math.floor(g * 255), ms)
     end,
     tooltip = function(slot)
         local _, _, latencyHome, latencyWorld = GetNetStats()
@@ -176,7 +176,13 @@ RegisterProvider("durability", {
         else
             r, g = 0.3, 1
         end
-        return format("%s: |cff%02x%02x00%d%%|r", L["Durability"] or "Dur", r * 255, g * 255, lowestDur)
+        return format(
+            "%s: |cff%02x%02x00%d%%|r",
+            L["Durability"] or "Dur",
+            math.floor(r * 255),
+            math.floor(g * 255),
+            lowestDur
+        )
     end,
     tooltip = function(slot)
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
@@ -233,7 +239,14 @@ RegisterProvider("bagSlots", {
         else
             r, g = 0.3, 1
         end
-        return format("%s: |cff%02x%02x00%d/%d|r", L["BagSlots"] or "Bags", r * 255, g * 255, totalFree, totalSlots)
+        return format(
+            "%s: |cff%02x%02x00%d/%d|r",
+            L["BagSlots"] or "Bags",
+            math.floor(r * 255),
+            math.floor(g * 255),
+            totalFree,
+            totalSlots
+        )
     end,
     tooltip = function(slot)
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)

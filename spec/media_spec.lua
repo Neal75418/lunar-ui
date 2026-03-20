@@ -91,7 +91,9 @@ describe("QUALITY_COLORS", function()
 
     it("has Legendary quality as orange", function()
         local c = LunarUI.QUALITY_COLORS[5]
-        assert.is_true(c[1] > 0.9 and c[2] > 0.3 and c[3] < 0.2)
+        assert.equals(1.00, c[1])
+        assert.equals(0.50, c[2])
+        assert.equals(0.00, c[3])
     end)
 end)
 
@@ -191,6 +193,12 @@ end)
 --------------------------------------------------------------------------------
 
 describe("StyleAuraButton", function()
+    before_each(function()
+        lastBackdrop = nil
+        lastBGColor = nil
+        lastBorderColor = nil
+    end)
+
     it("applies backdrop to button with BackdropTemplateMixin", function()
         local button = setmetatable({}, { __index = MediaMock })
         LunarUI.StyleAuraButton(button)

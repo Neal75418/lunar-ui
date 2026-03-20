@@ -735,6 +735,7 @@ end
 
 -- 匯出
 LunarUI.InitializeTooltip = InitializeTooltip
+LunarUI.CleanupTooltip = CleanupTooltip
 LunarUI.GetLevelDifficultyColor = GetLevelDifficultyColor
 LunarUI.GetUnitColor = GetUnitColor
 LunarUI.GetInspectItemLevel = GetInspectItemLevel

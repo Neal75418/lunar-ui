@@ -298,6 +298,29 @@ describe("IsEquipment", function()
         end
         assert.is_false(LunarUI.IsEquipment("item:unknown"))
     end)
+
+    it("caches result and only calls API once per link", function()
+        local callCount = 0
+        _G.C_Item.GetItemInfo = function()
+            callCount = callCount + 1
+            return "Ring", nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, 4
+        end
+        LunarUI.IsEquipment("item:cache_ring")
+        LunarUI.IsEquipment("item:cache_ring")
+        assert.equals(1, callCount)
+    end)
+
+    it("does not cache when classID is nil (item not yet loaded)", function()
+        local callCount = 0
+        _G.C_Item.GetItemInfo = function()
+            callCount = callCount + 1
+            return nil
+        end
+        LunarUI.IsEquipment("item:not_loaded_yet")
+        LunarUI.IsEquipment("item:not_loaded_yet")
+        -- Should call API twice because nil result is not cached
+        assert.equals(2, callCount)
+    end)
 end)
 
 --------------------------------------------------------------------------------
@@ -367,6 +390,52 @@ describe("IsItemUpgrade", function()
         end
     end)
 
+    it("returns false when bag item ilvl equals equipped ilvl (not strictly greater)", function()
+        _G.C_Item.GetItemInfo = function()
+            return "Helm", nil, nil, nil, nil, nil, nil, nil, "INVTYPE_HEAD"
+        end
+        local link = "item:helm_equal_ilvl"
+        local equippedLink = "item:equipped_equal_helm"
+        _G.GetInventoryItemLink = function(_unit, slot)
+            if slot == 1 then
+                return equippedLink
+            end
+            return nil
+        end
+        _G.C_Item.GetDetailedItemLevelInfo = function(l)
+            if l == link then
+                return 400
+            elseif l == equippedLink then
+                return 400
+            end
+            return nil
+        end
+        assert.is_false(LunarUI.IsItemUpgrade(link))
+        _G.GetInventoryItemLink = function()
+            return nil
+        end
+    end)
+
+    it("returns false when bag item ilvl is <= 1", function()
+        _G.C_Item.GetItemInfo = function()
+            return "Helm", nil, nil, nil, nil, nil, nil, nil, "INVTYPE_HEAD"
+        end
+        _G.C_Item.GetDetailedItemLevelInfo = function()
+            return 1
+        end
+        assert.is_false(LunarUI.IsItemUpgrade("item:ilvl_1_helm"))
+    end)
+
+    it("returns false when equipLoc is not in EQUIP_LOC_TO_SLOT mapping", function()
+        _G.C_Item.GetItemInfo = function()
+            return "Special", nil, nil, nil, nil, nil, nil, nil, "INVTYPE_NON_EQUIP"
+        end
+        _G.C_Item.GetDetailedItemLevelInfo = function()
+            return 400
+        end
+        assert.is_false(LunarUI.IsItemUpgrade("item:non_equip"))
+    end)
+
     -- equippedIlvlDirty 是內部單次消耗狀態，首次 RefreshEquippedItemLevels 後
     -- 就不會再刷新。此測試放最後：觸發唯一的 dirty refresh，所有槽位為空→升級。
     it("returns true when slot is empty (first dirty refresh)", function()
@@ -421,6 +490,27 @@ describe("GetBagTypeColor", function()
         local color = LunarUI.GetBagTypeColor(101)
         assert.is_truthy(color)
         assert.are.same({ 0.55, 0.28, 0.55, 0.25 }, color)
+    end)
+
+    it("caches bag type color and returns same value on second call", function()
+        local callCount = 0
+        _G.C_Container.GetContainerNumFreeSlots = function()
+            callCount = callCount + 1
+            return 10, 0x0008
+        end
+        local first = LunarUI.GetBagTypeColor(200)
+        local second = LunarUI.GetBagTypeColor(200)
+        assert.equals(first, second)
+        -- Second call should use cache (callCount should be 1)
+        assert.equals(1, callCount)
+    end)
+
+    it("returns false for bag with unknown flag bits", function()
+        -- bagType > 0 but no matching flag in PROFESSION_BAG_COLORS
+        _G.C_Container.GetContainerNumFreeSlots = function()
+            return 10, 0x0001
+        end
+        assert.is_false(LunarUI.GetBagTypeColor(201))
     end)
 end)
 

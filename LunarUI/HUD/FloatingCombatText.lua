@@ -343,7 +343,7 @@ local function OnCombatLogEvent()
         end
     elseif HEAL_EVENTS[event] then
         local amount = Sanitize(a15)
-        local critical = Sanitize(a18)
+        local critical = Sanitize(a21)
 
         if type(amount) ~= "number" then
             return

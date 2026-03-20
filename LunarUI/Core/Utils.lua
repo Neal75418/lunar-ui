@@ -75,6 +75,15 @@ end
     @param invert boolean - If true, lower values are better
     @return number, number - Red and Green color components (Blue is always 0.3)
 
+    Threshold ordering convention:
+      Non-inverted (higher=better, e.g. FPS):
+        greenThreshold > yellowThreshold  (e.g. 60, 30)
+        value >= greenThreshold → green; value >= yellowThreshold → yellow; else → red
+      Inverted (lower=better, e.g. latency):
+        greenThreshold < yellowThreshold  (e.g. 100, 200)
+        value <= greenThreshold → green; value <= yellowThreshold → yellow; else → red
+    Passing thresholds in the wrong order causes yellow to be unreachable.
+
     Usage:
         local r, g = LunarUI.StatusColor(latency, 100, 200, true)  -- Low is good
         local r, g = LunarUI.StatusColor(fps, 60, 30, false)       -- High is good

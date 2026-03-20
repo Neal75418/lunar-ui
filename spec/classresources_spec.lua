@@ -277,4 +277,39 @@ describe("ClassResources class configs", function()
         end)
         lui.CleanupClassResources()
     end)
+
+    it("GetHUDSetting classResources=false skips initialization", function()
+        local lui = loadWithClass(4, 1)
+        -- Return false for classResources to exercise the early-exit path
+        lui.GetHUDSetting = function(key, default)
+            if key == "classResources" then
+                return false
+            end
+            return default
+        end
+        assert.has_no_errors(function()
+            lui.InitClassResources()
+        end)
+        -- Cleanup should also be safe without full init
+        lui.CleanupClassResources()
+    end)
+
+    it("GetHUDSetting crIconSize custom value affects LoadSettings path", function()
+        local capturedKey
+        local lui = loadWithClass(4, 1)
+        -- Return a non-default icon size to exercise the configured-value path
+        lui.GetHUDSetting = function(key, default)
+            capturedKey = key
+            if key == "crIconSize" then
+                return 32
+            end
+            return default
+        end
+        assert.has_no_errors(function()
+            lui.RebuildClassResources()
+        end)
+        -- Verify GetHUDSetting was actually called with a sizing key
+        assert.is_string(capturedKey)
+        lui.CleanupClassResources()
+    end)
 end)

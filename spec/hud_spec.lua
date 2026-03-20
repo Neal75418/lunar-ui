@@ -11,14 +11,28 @@ local loader = require("spec.loader")
 -- GetTimerBarColor (AuraFrames.lua)
 --------------------------------------------------------------------------------
 
+local mock_frame = require("spec.mock_frame")
+
 local LunarUI_AF = {}
-LunarUI_AF.Colors = { bgSolid = { 0, 0, 0, 0.8 }, border = { 0, 0, 0, 1 } }
-LunarUI_AF.DEBUFF_TYPE_COLORS = {}
+LunarUI_AF.Colors = {
+    bgSolid = { 0, 0, 0, 0.8 },
+    border = { 0, 0, 0, 1 },
+    bgIcon = { 0, 0, 0, 0.8 },
+}
+LunarUI_AF.DEBUFF_TYPE_COLORS = { [""] = { r = 0.8, g = 0, b = 0 } }
 LunarUI_AF.iconBackdropTemplate = {}
-LunarUI_AF.GetHUDSetting = function()
-    return true
+LunarUI_AF.ICON_TEXCOORD = { 0.08, 0.92, 0.08, 0.92 }
+LunarUI_AF.GetHUDSetting = function(_key, default)
+    -- Return the provided default (enables auraFrames = true, returns numeric defaults correctly)
+    if default == false then
+        return false
+    end
+    return default
 end
+LunarUI_AF.SetFont = function() end
 LunarUI_AF.RegisterModule = function() end
+LunarUI_AF.RegisterHUDFrame = function() end
+LunarUI_AF.RegisterMovableFrame = function() end
 LunarUI_AF.GetModuleDB = function(key)
     if not LunarUI_AF.db or not LunarUI_AF.db.profile then
         return nil
@@ -26,7 +40,7 @@ LunarUI_AF.GetModuleDB = function(key)
     return LunarUI_AF.db.profile[key]
 end
 LunarUI_AF.CreateEventHandler = function()
-    return nil
+    return mock_frame.newFrame()
 end
 
 loader.loadAddonFile("LunarUI/HUD/AuraFrames.lua", LunarUI_AF)

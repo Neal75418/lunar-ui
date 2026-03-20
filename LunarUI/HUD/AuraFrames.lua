@@ -477,10 +477,10 @@ local function UpdateIconTimers(icons, maxIcons, now)
     for i = 1, maxIcons do
         local iconFrame = icons[i]
         if not iconFrame or not iconFrame:IsShown() then
-            break
+            goto continue
         end
         if not iconFrame.auraData then
-            break
+            goto continue
         end
 
         -- 從冷卻框架反推持續時間
@@ -502,6 +502,7 @@ local function UpdateIconTimers(icons, maxIcons, now)
                 iconFrame.bar:Hide()
             end
         end
+        ::continue::
     end
 end
 

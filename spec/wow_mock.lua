@@ -85,5 +85,18 @@ _G.debugstack = function()
     return "(mock stack)"
 end
 
+-- C_UnitAuras: WoW 10.0+ unit aura API
+_G.C_UnitAuras = {
+    GetBuffDataByIndex = function(_unit, _index, _filter)
+        return nil
+    end,
+    GetDebuffDataByIndex = function(_unit, _index, _filter)
+        return nil
+    end,
+    CancelAuraByAuraInstanceID = function(_unit, _auraInstanceID)
+        return false
+    end,
+}
+
 -- print override to suppress output during tests (optional)
 -- _G.print = function() end

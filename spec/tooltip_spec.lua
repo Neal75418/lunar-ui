@@ -110,6 +110,12 @@ LunarUI.IsDebugMode = function()
     return false
 end
 LunarUI.db = { profile = { tooltip = { enabled = true } } }
+LunarUI.GetModuleDB = function(key)
+    if not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
+    return LunarUI.db.profile[key]
+end
 
 loader.loadAddonFile("LunarUI/Modules/Tooltip.lua", LunarUI)
 
@@ -574,5 +580,89 @@ describe("RequestInspect", function()
         end
         LunarUI.RequestInspect("target")
         assert.is_false(notifyCalled)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- InitializeTooltip lifecycle
+--------------------------------------------------------------------------------
+
+describe("InitializeTooltip lifecycle", function()
+    before_each(function()
+        LunarUI.db = { profile = { tooltip = { enabled = true } } }
+        LunarUI.ClearInspectCache()
+    end)
+
+    it("exports InitializeTooltip as a function", function()
+        assert.is_function(LunarUI.InitializeTooltip)
+    end)
+
+    it("does not error when called with enabled db", function()
+        assert.has_no_errors(function()
+            LunarUI.InitializeTooltip()
+        end)
+    end)
+
+    it("does nothing and does not error when db is nil", function()
+        LunarUI.db = nil
+        assert.has_no_errors(function()
+            LunarUI.InitializeTooltip()
+        end)
+    end)
+
+    it("does nothing and does not error when db.enabled is false", function()
+        LunarUI.db = { profile = { tooltip = { enabled = false } } }
+        assert.has_no_errors(function()
+            LunarUI.InitializeTooltip()
+        end)
+    end)
+
+    it("can be called multiple times without error (idempotent guard)", function()
+        assert.has_no_errors(function()
+            LunarUI.InitializeTooltip()
+            LunarUI.InitializeTooltip()
+        end)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- CleanupTooltip lifecycle
+--------------------------------------------------------------------------------
+
+describe("CleanupTooltip lifecycle", function()
+    before_each(function()
+        LunarUI.db = { profile = { tooltip = { enabled = true } } }
+        LunarUI.ClearInspectCache()
+    end)
+
+    it("exports CleanupTooltip as a function", function()
+        assert.is_function(LunarUI.CleanupTooltip)
+    end)
+
+    it("does not error when called without prior Init", function()
+        assert.has_no_errors(function()
+            LunarUI.CleanupTooltip()
+        end)
+    end)
+
+    it("does not error after InitializeTooltip", function()
+        LunarUI.InitializeTooltip()
+        assert.has_no_errors(function()
+            LunarUI.CleanupTooltip()
+        end)
+    end)
+
+    it("clears inspect cache on cleanup", function()
+        LunarUI.CacheInspectData("Player-CLEAN", 480, "Frost")
+        assert.is_truthy(LunarUI.GetCachedInspectData("Player-CLEAN"))
+        LunarUI.CleanupTooltip()
+        assert.is_nil(LunarUI.GetCachedInspectData("Player-CLEAN"))
+    end)
+
+    it("can be called repeatedly without error", function()
+        assert.has_no_errors(function()
+            LunarUI.CleanupTooltip()
+            LunarUI.CleanupTooltip()
+        end)
     end)
 end)

@@ -1099,9 +1099,13 @@ local function InitializeMinimap()
     isInitialized = true
 
     -- 首次啟用時安裝 flag-controlled wrapper，之後只切換 flag
+    -- luacheck: ignore 121 -- GetMinimapShape 必須直接覆寫：LibSharedMedia 和 Blizzard_MapMicro
+    -- 需要 call 此函數取得形狀回傳值，hooksecurefunc 只能加後置 hook 無法攔截回傳值。
+    -- BasicMinimap、Carbonite、SexyMap 等知名插件均採用相同模式。
+    -- 使用 flag + originalGetMinimapShape 保留 fallback，避免與其他插件衝突。
     if not originalGetMinimapShape then
         originalGetMinimapShape = GetMinimapShape
-        GetMinimapShape = function()
+        GetMinimapShape = function() -- luacheck: ignore 121
             if lunarMinimapIsSquare then
                 return "SQUARE"
             end

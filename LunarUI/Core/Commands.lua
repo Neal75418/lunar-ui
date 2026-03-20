@@ -215,6 +215,9 @@ end
     顯示目前狀態
 ]]
 function LunarUI:PrintStatus()
+    if not self.db or not self.db.profile then
+        return
+    end
     local L = Engine.L or {}
     self:Print(L["StatusTitle"] or "|cff8882ffLunarUI Status:|r")
     self:Print("  " .. string.format(L["StatusVersion"] or "Version: %s", self.version))

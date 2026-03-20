@@ -485,6 +485,13 @@ local function SetupTrackedSpells()
             table_insert(trackedSpells, spellID)
         end
     end
+
+    -- 重設所有圖示的 wasOnCooldown 旗標，避免 spec 切換後殘留狀態導致偽閃光
+    for i = 1, #cooldownIcons do
+        if cooldownIcons[i] then
+            cooldownIcons[i].wasOnCooldown = false
+        end
+    end
 end
 
 -- Forward declaration（實際定義在下方事件處理區段）

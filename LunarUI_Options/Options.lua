@@ -2960,3 +2960,15 @@ frame:SetScript("OnEvent", function(self, _event, addon)
         -- Frame can be garbage collected now
     end
 end)
+
+--------------------------------------------------------------------------------
+-- Test Exports (pure functions exposed for unit testing)
+--------------------------------------------------------------------------------
+
+LunarUI.Options_SafeGetField = SafeGetField
+LunarUI.Options_BuildSearchIndex = BuildSearchIndex
+LunarUI.Options_FilterSearchResults = FilterSearchResults
+--- Inject a custom search index for testing FilterSearchResults in isolation
+LunarUI.Options_SetSearchIndex = function(idx)
+    searchIndex = idx
+end
