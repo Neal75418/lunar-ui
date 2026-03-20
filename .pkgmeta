@@ -26,7 +26,7 @@ externals:
     tag: 0.57
   LunarUI/Libs/oUF:
     url: https://github.com/oUF-wow/oUF.git
-    tag: 13.1.1
+    tag: 13.3.1
 
 ignore:
   - README.md

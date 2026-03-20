@@ -888,16 +888,27 @@ local function SpawnNameplates()
         return
     end
 
+    -- WoW 12.0.0 移除了 C_NamePlate.SetNamePlateSize 和 C_NamePlateManager.SetNamePlateHitTestInsets
+    -- oUF issue #734 尚未修復（截至 13.3.1），在此提供 no-op stub 防止 Lua error
+    if not C_NamePlate.SetNamePlateSize then
+        C_NamePlate.SetNamePlateSize = function() end -- luacheck: ignore 122
+    end
+    if not C_NamePlateManager then -- luacheck: ignore 113
+        C_NamePlateManager = {} -- luacheck: ignore 111
+    end
+    if not C_NamePlateManager.SetNamePlateHitTestInsets then -- luacheck: ignore 113
+        C_NamePlateManager.SetNamePlateHitTestInsets = function() end -- luacheck: ignore 112
+    end
+
     oUF:SetActiveStyle("LunarUI_Nameplate")
 
-    -- Spawn nameplates with callbacks
-    oUF:SpawnNamePlates("LunarUI_Nameplate", function(frame, event, _unit)
-        -- Callback for nameplate events
-        if event == "NAME_PLATE_UNIT_ADDED" then
-            Nameplate_OnShow(frame)
-        elseif event == "NAME_PLATE_UNIT_REMOVED" then
-            Nameplate_OnHide(frame)
-        end
+    -- Spawn nameplates；oUF 新版 API 以 SetAddedCallback/SetRemovedCallback 取代第二個參數
+    local nameplateDriver = oUF:SpawnNamePlates("LunarUI_Nameplate")
+    nameplateDriver:SetAddedCallback(function(frame)
+        Nameplate_OnShow(frame)
+    end)
+    nameplateDriver:SetRemovedCallback(function(frame)
+        Nameplate_OnHide(frame)
     end)
 
     -- 堆疊偵測
