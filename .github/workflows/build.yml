@@ -55,10 +55,10 @@ jobs:
           done
           echo "All TOC files valid!"
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y luarocks
+      - name: Install LuaJIT + LuaRocks
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "luajit-2.1.0-beta3"
 
       - name: Cache luarocks packages
         uses: actions/cache@v5
@@ -68,11 +68,13 @@ jobs:
             /usr/local/lib/luarocks
             /usr/local/share/lua
             /usr/local/lib/lua
-          key: luarocks-lint-${{ runner.os }}-${{ hashFiles('.luacheckrc') }}
-          restore-keys: luarocks-lint-${{ runner.os }}-
+          key: luarocks-lint-luajit-${{ runner.os }}-${{ hashFiles('.luacheckrc') }}
+          restore-keys: luarocks-lint-luajit-${{ runner.os }}-
 
       - name: Install luacheck
-        run: luarocks show luacheck > /dev/null 2>&1 || sudo luarocks install luacheck
+        uses: leafo/gh-actions-luarocks@v4
+        with:
+          rocks: luacheck
 
       - name: Lint with luacheck
         run: luacheck .
@@ -103,10 +105,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y luarocks
+      - name: Install LuaJIT + LuaRocks
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "luajit-2.1.0-beta3"
 
       - name: Cache luarocks packages
         uses: actions/cache@v5
@@ -116,13 +118,13 @@ jobs:
             /usr/local/lib/luarocks
             /usr/local/share/lua
             /usr/local/lib/lua
-          key: luarocks-test-${{ runner.os }}-${{ hashFiles('.busted') }}
-          restore-keys: luarocks-test-${{ runner.os }}-
+          key: luarocks-test-luajit-${{ runner.os }}-${{ hashFiles('.busted') }}
+          restore-keys: luarocks-test-luajit-${{ runner.os }}-
 
       - name: Install test tools
-        run: |
-          luarocks show busted > /dev/null 2>&1 || sudo luarocks install busted
-          luarocks show luacov > /dev/null 2>&1 || sudo luarocks install luacov
+        uses: leafo/gh-actions-luarocks@v4
+        with:
+          rocks: busted luacov
 
       - name: Run unit tests with coverage
         run: |
