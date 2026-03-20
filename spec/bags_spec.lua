@@ -218,10 +218,11 @@ loader.loadAddonFile("LunarUI/Modules/Bags.lua", LunarUI)
 
 describe("BagsGetItemLevel", function()
     before_each(function()
-        -- Reset C_Item mock for each test
+        -- Reset C_Item mock and flush module-level cache for each test
         _G.C_Item.GetDetailedItemLevelInfo = function()
             return nil
         end
+        LunarUI.BagsClearItemLevelCache()
     end)
 
     it("returns nil for nil input", function()
@@ -337,6 +338,33 @@ describe("IsItemUpgrade", function()
             return "Potion", nil, nil, nil, nil, nil, nil, nil, ""
         end
         assert.is_false(LunarUI.IsItemUpgrade("item:potion"))
+    end)
+
+    it("returns false when bag item ilvl is lower than equipped", function()
+        _G.C_Item.GetItemInfo = function()
+            return "Helm", nil, nil, nil, nil, nil, nil, nil, "INVTYPE_HEAD"
+        end
+        local bagLink = "item:bag_helm_300"
+        local equippedLink = "item:equipped_helm_400"
+        _G.GetInventoryItemLink = function(_unit, slot)
+            if slot == 1 then -- INVTYPE_HEAD = slotID 1
+                return equippedLink
+            end
+            return nil
+        end
+        _G.C_Item.GetDetailedItemLevelInfo = function(link)
+            if link == bagLink then
+                return 300
+            elseif link == equippedLink then
+                return 400
+            end
+            return nil
+        end
+        assert.is_false(LunarUI.IsItemUpgrade(bagLink))
+        -- Reset
+        _G.GetInventoryItemLink = function()
+            return nil
+        end
     end)
 
     -- equippedIlvlDirty 是內部單次消耗狀態，首次 RefreshEquippedItemLevels 後

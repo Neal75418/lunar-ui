@@ -153,6 +153,11 @@ loader.loadAddonFile("LunarUI/Modules/Minimap.lua", LunarUI)
 --------------------------------------------------------------------------------
 
 describe("Minimap lifecycle", function()
+    -- 每個測試前先清理狀態，確保 isInitialized 重置
+    before_each(function()
+        LunarUI.CleanupMinimap()
+    end)
+
     it("exports InitializeMinimap function", function()
         assert.is_function(LunarUI.InitializeMinimap)
     end)
@@ -172,18 +177,21 @@ describe("Minimap lifecycle", function()
     end)
 
     it("CleanupMinimap does not error after Init", function()
+        LunarUI.InitializeMinimap()
         assert.has_no_errors(function()
             LunarUI.CleanupMinimap()
         end)
     end)
 
     it("CleanupMinimap does not error when not initialized", function()
+        -- before_each 已呼叫 CleanupMinimap，確保此時 isInitialized = false
         assert.has_no_errors(function()
             LunarUI.CleanupMinimap()
         end)
     end)
 
-    it("RefreshMinimap does nothing when frame not created", function()
+    it("RefreshMinimap skips gracefully when not initialized", function()
+        -- before_each 重置後未呼叫 Init，isInitialized = false
         assert.has_no_errors(function()
             LunarUI.RefreshMinimap()
         end)

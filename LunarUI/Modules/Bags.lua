@@ -2223,6 +2223,10 @@ LunarUI.BagsGetItemLevel = GetItemLevel
 LunarUI.BagsResetEquippedIlvlDirty = function()
     equippedIlvlDirty = true
 end
+LunarUI.BagsClearItemLevelCache = function()
+    wipe(itemLevelCache)
+    itemLevelCacheMeta.n = 0
+end
 LunarUI.IsEquipment = IsEquipment
 LunarUI.IsItemUpgrade = IsItemUpgrade
 LunarUI.GetBagTypeColor = GetBagTypeColor

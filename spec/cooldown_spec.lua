@@ -191,14 +191,23 @@ describe("CDGetSpellTexture", function()
     end)
 
     it("clears cache when max size exceeded", function()
-        -- Fill cache beyond limit (CACHE_MAX_SIZE = 2000)
+        -- Spell 100 → iconID 132337（from mock）；先填入 cache
+        LunarUI.CDGetSpellTexture(100)
+
+        -- 填滿超過 CACHE_MAX_SIZE = 2000 的項目，強制驅逐
         for i = 1, 2001 do
             LunarUI.CDGetSpellTexture(i)
         end
-        -- Cache should have been wiped and repopulated with last entry
-        -- Verify it still works
+
+        -- 驅逐後修改 API 回傳值，確認下次呼叫走 API 而非舊快取
+        local origFn = _G.C_Spell.GetSpellInfo
+        _G.C_Spell.GetSpellInfo = function()
+            return { iconID = 999 }
+        end
         local texture = LunarUI.CDGetSpellTexture(100)
-        assert.equals(132337, texture)
+        -- 若快取已被清除，會呼叫新 API 回傳 999；若快取未清除，仍回傳 132337
+        assert.equals(999, texture)
+        _G.C_Spell.GetSpellInfo = origFn
     end)
 end)
 

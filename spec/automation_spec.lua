@@ -73,8 +73,13 @@ end
 function AutoMock:GetRegisteredEvents()
     return self._events or {}
 end
+
+-- 追蹤所有 CreateFrame 呼叫，以便取得 automationFrame 參照
+local createdFrames = {}
 _G.CreateFrame = function()
-    return setmetatable({ _events = {} }, { __index = AutoMock })
+    local frame = setmetatable({ _events = {} }, { __index = AutoMock })
+    createdFrames[#createdFrames + 1] = frame
+    return frame
 end
 _G.UIParent = setmetatable({}, { __index = AutoMock })
 
@@ -96,6 +101,12 @@ local LunarUI = {
     Print = function() end,
     RegisterModule = function() end,
 }
+LunarUI.GetModuleDB = function(key)
+    if not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
+    return LunarUI.db.profile[key]
+end
 
 loader.loadAddonFile("LunarUI/Modules/Automation.lua", LunarUI)
 
@@ -175,29 +186,69 @@ end)
 --------------------------------------------------------------------------------
 
 describe("Automation auto repair", function()
-    it("repairs when merchant shows and can repair", function()
-        local _repaired = false
-        _G.GetRepairAllCost = function()
-            return 5000, true
-        end
-        _G.RepairAllItems = function()
-            _repaired = true
-        end
+    -- automationFrame 是 loadAddonFile 執行時建立的第一個框架
+    local automationFrame
 
-        -- Init and trigger MERCHANT_SHOW
-        LunarUI:InitAutomation()
-        -- The handler is set via SetScript, but our mock doesn't execute it
-        -- Test that init doesn't crash instead
-        assert.has_no_errors(function()
-            LunarUI:InitAutomation()
-        end)
+    before_each(function()
         LunarUI.CleanupAutomation()
+        automationFrame = createdFrames[1]
+        LunarUI:InitAutomation()
+    end)
 
-        -- Reset
+    after_each(function()
+        LunarUI.CleanupAutomation()
         _G.GetRepairAllCost = function()
             return 0, false
         end
         _G.RepairAllItems = function() end
+        _G.GetMoney = function()
+            return 1000000
+        end
+    end)
+
+    it("calls RepairAllItems when merchant shows and can repair", function()
+        local repaired = false
+        _G.GetRepairAllCost = function()
+            return 5000, true
+        end
+        _G.GetMoney = function()
+            return 100000
+        end
+        _G.RepairAllItems = function()
+            repaired = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "MERCHANT_SHOW")
+        assert.is_true(repaired)
+    end)
+
+    it("does not repair when canRepair is false", function()
+        local repaired = false
+        _G.GetRepairAllCost = function()
+            return 0, false
+        end
+        _G.RepairAllItems = function()
+            repaired = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "MERCHANT_SHOW")
+        assert.is_false(repaired)
+    end)
+
+    it("does not repair when not enough gold", function()
+        local repaired = false
+        _G.GetRepairAllCost = function()
+            return 5000, true
+        end
+        _G.GetMoney = function()
+            return 100
+        end -- not enough
+        _G.RepairAllItems = function()
+            repaired = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "MERCHANT_SHOW")
+        assert.is_false(repaired)
     end)
 end)
 
@@ -206,13 +257,56 @@ end)
 --------------------------------------------------------------------------------
 
 describe("Automation auto release", function()
-    it("only releases in PvP instances", function()
-        -- The auto release handler checks IsInInstance for "pvp" type
-        -- This is tested indirectly through the module loading
-        assert.has_no_errors(function()
-            LunarUI:InitAutomation()
-            LunarUI.CleanupAutomation()
-        end)
+    local automationFrame
+
+    before_each(function()
+        LunarUI.CleanupAutomation()
+        automationFrame = createdFrames[1]
+        LunarUI:InitAutomation()
+    end)
+
+    after_each(function()
+        LunarUI.CleanupAutomation()
+        _G.IsInInstance = function()
+            return false, "none"
+        end
+        _G.UnitIsDeadOrGhost = function()
+            return false
+        end
+        _G.RepopMe = function() end
+    end)
+
+    it("calls RepopMe in PvP instance on PLAYER_DEAD", function()
+        local released = false
+        _G.IsInInstance = function()
+            return true, "pvp"
+        end
+        _G.UnitIsDeadOrGhost = function()
+            return true
+        end
+        _G.UnitIsFeignDeath = function()
+            return false
+        end
+        _G.RepopMe = function()
+            released = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "PLAYER_DEAD")
+        -- C_Timer.After 在 mock 中立即執行
+        assert.is_true(released)
+    end)
+
+    it("does not release outside PvP instance", function()
+        local released = false
+        _G.IsInInstance = function()
+            return false, "none"
+        end
+        _G.RepopMe = function()
+            released = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "PLAYER_DEAD")
+        assert.is_false(released)
     end)
 end)
 
@@ -221,24 +315,98 @@ end)
 --------------------------------------------------------------------------------
 
 describe("Automation quest handling", function()
-    it("does not error on quest complete with no choices", function()
-        _G.GetNumQuestChoices = function()
-            return 0
-        end
-        local _rewarded = false
-        _G.GetQuestReward = function()
-            _rewarded = true
-        end
+    local automationFrame
 
-        -- Init doesn't crash
-        assert.has_no_errors(function()
-            LunarUI:InitAutomation()
-            LunarUI.CleanupAutomation()
-        end)
+    before_each(function()
+        LunarUI.CleanupAutomation()
+        automationFrame = createdFrames[1]
+        LunarUI:InitAutomation()
+    end)
 
+    after_each(function()
+        LunarUI.CleanupAutomation()
+        _G.AcceptQuest = function() end
         _G.GetNumQuestChoices = function()
             return 0
         end
         _G.GetQuestReward = function() end
+    end)
+
+    it("calls AcceptQuest when QUEST_DETAIL fires", function()
+        local accepted = false
+        _G.AcceptQuest = function()
+            accepted = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "QUEST_DETAIL")
+        assert.is_true(accepted)
+    end)
+
+    it("calls GetQuestReward on QUEST_COMPLETE with no choices", function()
+        local rewarded = false
+        _G.GetNumQuestChoices = function()
+            return 0
+        end
+        _G.GetQuestReward = function()
+            rewarded = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "QUEST_COMPLETE")
+        assert.is_true(rewarded)
+    end)
+
+    it("calls GetQuestReward(1) on QUEST_COMPLETE with exactly 1 choice", function()
+        local rewardedIndex = nil
+        _G.GetNumQuestChoices = function()
+            return 1
+        end
+        _G.GetQuestReward = function(idx)
+            rewardedIndex = idx
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "QUEST_COMPLETE")
+        assert.equals(1, rewardedIndex)
+    end)
+
+    it("does not call GetQuestReward on QUEST_COMPLETE with 2+ choices", function()
+        local rewarded = false
+        _G.GetNumQuestChoices = function()
+            return 2
+        end
+        _G.GetQuestReward = function()
+            rewarded = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "QUEST_COMPLETE")
+        assert.is_false(rewarded)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- LFG Auto Accept
+--------------------------------------------------------------------------------
+
+describe("Automation LFG queue", function()
+    local automationFrame
+
+    before_each(function()
+        LunarUI.CleanupAutomation()
+        automationFrame = createdFrames[1]
+        LunarUI:InitAutomation()
+    end)
+
+    after_each(function()
+        LunarUI.CleanupAutomation()
+        _G.AcceptProposal = function() end
+    end)
+
+    it("calls AcceptProposal on LFG_PROPOSAL_SHOW", function()
+        local accepted = false
+        _G.AcceptProposal = function()
+            accepted = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "LFG_PROPOSAL_SHOW")
+        assert.is_true(accepted)
     end)
 end)
