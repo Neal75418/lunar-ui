@@ -48,11 +48,17 @@ local moduleRegistry = {}
 ]]
 local pendingDelayedModules = 0
 local modulesReadyFired = false
+local enableGeneration = 0 -- 每次 OnDisable 遞增，使飛行中的 C_Timer.After callback 失效
 
 local function ExecuteModuleCallback(entry)
     if entry.delay > 0 then
+        local gen = enableGeneration -- 捕捉當前世代，callback 可藉此判斷是否已過期
         pendingDelayedModules = pendingDelayedModules + 1
         C_Timer.After(entry.delay, function()
+            -- 世代不符代表 OnDisable 已被呼叫，此 callback 已過期，直接忽略
+            if gen ~= enableGeneration then
+                return
+            end
             -- 延遲期間若插件已停用，跳過初始化但仍遞減計數器
             if not LunarUI:IsEnabled() then
                 pendingDelayedModules = pendingDelayedModules - 1
@@ -192,6 +198,8 @@ end
     清理所有事件與計時器以防止記憶體洩漏
 ]]
 function LunarUI:OnDisable()
+    -- 遞增世代，使所有飛行中的 C_Timer.After callback 失效
+    enableGeneration = enableGeneration + 1
     -- 重置模組就緒狀態，確保重新啟用時能正確送出 LUNARUI_MODULES_READY
     modulesReadyFired = false
     pendingDelayedModules = 0

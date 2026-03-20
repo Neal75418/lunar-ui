@@ -65,6 +65,7 @@ local defaults = {
         -- 一般設定
         enabled = true,
         debug = false,
+        uiScale = nil, -- 由安裝精靈設定；nil = 不覆寫系統縮放
 
         -- 單位框架設定
         unitframes = {

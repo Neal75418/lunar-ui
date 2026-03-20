@@ -60,6 +60,10 @@ end
 ]]
 function LunarUI:OnProfileChanged()
     local L = Engine.L or {}
+    -- 套用精靈設定的 UI 縮放（若有儲存）
+    if self.db and self.db.profile and self.db.profile.uiScale then
+        UIParent:SetScale(self.db.profile.uiScale)
+    end
     -- 先套用 HUD 縮放（避免框架顯示時短暫出現舊縮放值）
     if self.ApplyHUDScale then
         self:ApplyHUDScale()

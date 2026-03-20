@@ -125,6 +125,10 @@ describe("FrameMover exports", function()
         assert.is_function(LunarUI.CleanupFrameMover)
     end)
 
+    it("exports ApplyAllSavedPositions", function()
+        assert.is_function(LunarUI.ApplyAllSavedPositions)
+    end)
+
     it("registers FrameMover module", function()
         assert.truthy(registeredModules["FrameMover"])
         assert.equals(2.0, registeredModules["FrameMover"].delay)

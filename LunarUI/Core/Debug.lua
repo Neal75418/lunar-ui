@@ -168,11 +168,10 @@ end
 
 --[[
     隱藏除錯面板
-    清理 OnUpdate 腳本以節省資源
+    WoW 隱藏框架不會觸發 OnUpdate，無需清除腳本
 ]]
 function LunarUI.HideDebugOverlay()
     if debugFrame then
-        debugFrame:SetScript("OnUpdate", nil)
         debugFrame:Hide()
     end
 end

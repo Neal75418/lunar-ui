@@ -89,7 +89,7 @@ end
 -- 成就截圖
 --------------------------------------------------------------------------------
 
-local function OnAchievementEarned(_self, _event)
+local function OnAchievementEarned()
     local cfg = GetAutoConfig()
     if not cfg or not cfg.autoScreenshot then
         return

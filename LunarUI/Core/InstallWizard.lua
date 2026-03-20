@@ -361,7 +361,8 @@ local function ApplyWizardSettings()
         return
     end
 
-    -- 1. UI 縮放
+    -- 1. UI 縮放（持久化到 DB，確保重載後仍生效）
+    db.profile.uiScale = wizardChoices.uiScale
     UIParent:SetScale(wizardChoices.uiScale)
 
     -- 2. 佈局預設
@@ -621,6 +622,8 @@ end
     從 Init.lua 在首次安裝時呼叫
 ]]
 function LunarUI.ShowInstallWizard()
+    -- 每次重新開啟精靈時都重建框架，確保 uiScale 反映當前 UI 縮放
+    LunarUI.CleanupInstallWizard()
     currentStep = 1
     local f = CreateWizardFrame()
     f:Show()

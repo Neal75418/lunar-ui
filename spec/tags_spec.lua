@@ -292,7 +292,8 @@ describe("Tag lunar:health:percent", function()
     end)
 
     it("returns percent for normal unit", function()
-        _G._mockUnit.healthPercent = 75
+        _G._mockUnit.health = 75000
+        _G._mockUnit.healthMax = 100000
         assert.equals("75%", tag("player"))
     end)
 
@@ -301,11 +302,9 @@ describe("Tag lunar:health:percent", function()
         assert.equals("|cffcc3333Dead|r", tag("player"))
     end)
 
-    it("returns 0% when UnitHealthPercent returns nil", function()
-        _G._mockUnit.healthPercent = nil
-        _G.UnitHealthPercent = function()
-            return nil
-        end
+    it("returns 0% when UnitHealthMax is 0", function()
+        _G._mockUnit.health = 0
+        _G._mockUnit.healthMax = 0
         assert.equals("0%", tag("player"))
     end)
 end)

@@ -21,7 +21,6 @@ end
 
 local UnitHealth = UnitHealth
 local UnitHealthMax = UnitHealthMax
-local UnitHealthPercent = UnitHealthPercent
 local UnitPower = UnitPower
 local UnitPowerMax = UnitPowerMax
 local UnitIsDead = UnitIsDead
@@ -121,8 +120,9 @@ Tags.Methods["lunar:health:percent"] = SafeTag(function(unit)
     if status then
         return status
     end
-    local pct = UnitHealthPercent(unit, true, CurveConstants.ScaleTo100)
-    return format("%d%%", pct or 0)
+    local hp, maxHp = UnitHealth(unit), UnitHealthMax(unit)
+    local pct = maxHp > 0 and math.floor(hp / maxHp * 100 + 0.5) or 0
+    return format("%d%%", pct)
 end)
 Tags.Events["lunar:health:percent"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
 

@@ -317,7 +317,7 @@ function LunarUI:SkinStandardFrame(frameName, options)
     elseif options.tabProperty then
         local tabs = frame[options.tabProperty]
         if tabs then
-            for _, tab in pairs(tabs) do
+            for _, tab in ipairs(tabs) do
                 LunarUI.SkinTab(tab)
                 if tab.Text then
                     LunarUI.SetFontLight(tab.Text)

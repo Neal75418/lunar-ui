@@ -282,42 +282,48 @@ local function StyleChatFrame(chatFrame)
         chatFrame.LunarBackdrop = backdrop
     end
 
+    -- 淡入淡出動畫 handler（可被 OnEnter/OnLeave 共用）
+    local function startFadeAnimation(bd)
+        if bd._fadeUpdate then
+            return
+        end
+        bd._fadeUpdate = true
+        bd:SetScript("OnUpdate", function(self, dt)
+            local target = self._fadeTarget or 0
+            local current = self:GetAlpha()
+            local speed = 4 * dt -- ~0.25s fade
+            if current < target then
+                self:SetAlpha(math.min(current + speed, target))
+            elseif current > target then
+                self:SetAlpha(math.max(current - speed, target))
+                if self:GetAlpha() <= 0.01 then
+                    self:SetAlpha(0)
+                    self:Hide()
+                    self:SetScript("OnUpdate", nil)
+                    self._fadeUpdate = false
+                end
+            else
+                -- 已到達目標（淡入或淡出皆完成），卸載 OnUpdate
+                self:SetScript("OnUpdate", nil)
+                self._fadeUpdate = false
+            end
+        end)
+    end
+
     -- 滑鼠懸停時淡入/淡出背景
     chatFrame:HookScript("OnEnter", function(self)
         if self.LunarBackdrop then
             self.LunarBackdrop:Show()
             self.LunarBackdrop._fadeTarget = 1
-            if not self.LunarBackdrop._fadeUpdate then
-                self.LunarBackdrop._fadeUpdate = true
-                self.LunarBackdrop:SetScript("OnUpdate", function(bd, dt)
-                    local target = bd._fadeTarget or 0
-                    local current = bd:GetAlpha()
-                    local speed = 4 * dt -- ~0.25s fade
-                    if current < target then
-                        bd:SetAlpha(math.min(current + speed, target))
-                    elseif current > target then
-                        bd:SetAlpha(math.max(current - speed, target))
-                        if bd:GetAlpha() <= 0.01 then
-                            bd:SetAlpha(0)
-                            bd:Hide()
-                            -- Fix 11: 動畫完成後卸載 OnUpdate
-                            bd:SetScript("OnUpdate", nil)
-                            bd._fadeUpdate = false
-                        end
-                    else
-                        -- Fix 11: 已到達目標，不需繼續每幀執行
-                        bd:SetScript("OnUpdate", nil)
-                        bd._fadeUpdate = false
-                    end
-                end)
-            end
             self.LunarBackdrop:SetAlpha(self.LunarBackdrop:GetAlpha() or 0)
+            startFadeAnimation(self.LunarBackdrop)
         end
     end)
 
     chatFrame:HookScript("OnLeave", function(self)
         if self.LunarBackdrop and not MouseIsOver(self) then
             self.LunarBackdrop._fadeTarget = 0
+            startFadeAnimation(self.LunarBackdrop)
         end
     end)
 

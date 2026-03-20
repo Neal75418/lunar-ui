@@ -152,11 +152,13 @@ end
 local scannedButtonIDs = {}
 
 -- 掃描前清理過期的按鈕參照（原地壓縮，保留原始順序，避免每次建立新 table）
+-- 以框架有效性（GetObjectType 可呼叫）判斷，而非 IsShown()，
+-- 避免暫時隱藏的合法按鈕被誤刪
 local function ClearStaleButtonReferences()
     local writeIdx = 0
     for i = 1, #collectedButtons do
         local button = collectedButtons[i]
-        if button and button:IsShown() then
+        if button and button.GetObjectType then
             writeIdx = writeIdx + 1
             collectedButtons[writeIdx] = button
         end

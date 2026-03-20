@@ -65,6 +65,11 @@ local function SkinMerchant()
     if not merchantHookRegistered then
         merchantHookRegistered = true
         hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
+            -- hooksecurefunc 無法撤銷，停用時跳過以免修改未換膚的商人介面
+            local skinsDB = LunarUI.GetModuleDB("skins")
+            if not skinsDB or skinsDB.enabled == false then
+                return
+            end
             pcall(function()
                 for i = 1, _G.MERCHANT_ITEMS_PER_PAGE or 12 do
                     local btn = _G["MerchantItem" .. i]

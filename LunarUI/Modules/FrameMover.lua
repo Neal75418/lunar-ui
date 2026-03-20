@@ -427,11 +427,15 @@ function LunarUI.ResetAllPositions()
     end
     LunarUI.db.profile.framePositions = {}
 
-    -- 重設所有框架到預設位置
+    -- 重設所有框架到預設位置，並同步 mover 位置（若在移動模式中）
     for _, data in pairs(movers) do
         data.frame:ClearAllPoints()
         for _, pt in ipairs(data.defaultPoints) do
             data.frame:SetPoint(unpack(pt))
+        end
+        if isMoving and data.mover then
+            data.mover:ClearAllPoints()
+            data.mover:SetPoint("CENTER", data.frame, "CENTER", 0, 0)
         end
     end
 

@@ -939,29 +939,23 @@ local function CreateHealPrediction(frame, unit)
         return
     end
 
-    -- 自身治療預測
+    -- 自身治療預測（錨定在血條上而非框架，避免 portrait 偏移導致寬度溢出）
     local healingPlayer = CreateFrame("StatusBar", nil, hp)
     healingPlayer:SetStatusBarTexture(GetStatusBarTexture())
     healingPlayer:SetStatusBarColor(0.0, 0.8, 0.0, 0.4)
-    healingPlayer:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
-    healingPlayer:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
-    healingPlayer:SetWidth(frame:GetWidth())
+    healingPlayer:SetAllPoints(hp)
 
     -- 他人治療預測
     local healingOther = CreateFrame("StatusBar", nil, hp)
     healingOther:SetStatusBarTexture(GetStatusBarTexture())
     healingOther:SetStatusBarColor(0.0, 0.6, 0.0, 0.3)
-    healingOther:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
-    healingOther:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
-    healingOther:SetWidth(frame:GetWidth())
+    healingOther:SetAllPoints(hp)
 
     -- 吸收盾
     local damageAbsorb = CreateFrame("StatusBar", nil, hp)
     damageAbsorb:SetStatusBarTexture(GetStatusBarTexture())
     damageAbsorb:SetStatusBarColor(1.0, 1.0, 1.0, 0.3)
-    damageAbsorb:SetPoint("TOPLEFT", hp, "TOPLEFT", 0, 0)
-    damageAbsorb:SetPoint("BOTTOMLEFT", hp, "BOTTOMLEFT", 0, 0)
-    damageAbsorb:SetWidth(frame:GetWidth())
+    damageAbsorb:SetAllPoints(hp)
 
     frame.HealthPrediction = {
         healingPlayer = healingPlayer,
@@ -1111,7 +1105,8 @@ end
 local function CreateAssistantIndicator(frame)
     local assist = frame.Health:CreateTexture(nil, "OVERLAY")
     assist:SetSize(12, 12)
-    assist:SetPoint("TOPLEFT", frame, "TOPLEFT", -4, 4)
+    -- 往右偏移 16px 避免與 LeaderIndicator (-4, 4) 重疊
+    assist:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, 4)
     frame.AssistantIndicator = assist
     return assist
 end

@@ -72,6 +72,14 @@ _G.strsplit = function(delimiter, str)
     return unpack(result)
 end
 
+-- strtrim: WoW-specific whitespace trimming function
+_G.strtrim = function(s)
+    if type(s) ~= "string" then
+        return s
+    end
+    return s:match("^%s*(.-)%s*$")
+end
+
 -- debugstack: WoW debug function (stub)
 _G.debugstack = function()
     return "(mock stack)"

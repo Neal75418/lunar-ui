@@ -38,7 +38,7 @@ local function SkinGossip()
     if frame.GreetingPanel and frame.GreetingPanel.ScrollBox then
         -- 防止重複 hook
         if frame.GreetingPanel.ScrollBox._lunarHooked then
-            return
+            return true
         end
         frame.GreetingPanel.ScrollBox._lunarHooked = true
 

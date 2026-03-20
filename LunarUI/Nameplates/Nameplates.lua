@@ -571,7 +571,7 @@ end
 
 --[[ Update target indicator ]]
 local function UpdateTargetIndicator(frame)
-    if not frame or not frame.TargetIndicator then
+    if not frame or not frame.unit or not frame.TargetIndicator then
         return
     end
 
@@ -736,10 +736,10 @@ local function SortNameplatesByY(count)
 end
 
 -- 偵測重疊並計算偏移（使用固定閾值）
+-- 以未偏移的 Y 比較，避免偏移誤差累積導致不必要的堆疊
 local function DetectOverlaps(count, npHeight)
     for i = 2, count do
-        local effectivePrevY = stackYs[i - 1] + stackOffsets[i - 1]
-        local dy = stackYs[i] - effectivePrevY
+        local dy = stackYs[i] - stackYs[i - 1]
         if dy < npHeight then
             stackOffsets[i] = stackOffsets[i - 1] + STACKING_OFFSET
         end

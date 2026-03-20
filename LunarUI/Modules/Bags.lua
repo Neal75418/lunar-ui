@@ -1984,6 +1984,8 @@ local function OnBagEvent(_self, event, ...)
     end
 
     if event == "PLAYERBANKSLOTS_CHANGED" then
+        -- SortBankBags 觸發 PLAYERBANKSLOTS_CHANGED（不觸發 BAG_UPDATE_DELAYED），需在此重設旗標
+        isSorting = false
         if bankFrame and bankFrame:IsShown() then
             UpdateAllBankSlots()
         end
@@ -2218,6 +2220,9 @@ LunarUI.SellJunk = SellJunk
 LunarUI.OpenBank = OpenBank
 LunarUI.CloseBank = CloseBank
 LunarUI.BagsGetItemLevel = GetItemLevel
+LunarUI.BagsResetEquippedIlvlDirty = function()
+    equippedIlvlDirty = true
+end
 LunarUI.IsEquipment = IsEquipment
 LunarUI.IsItemUpgrade = IsItemUpgrade
 LunarUI.GetBagTypeColor = GetBagTypeColor

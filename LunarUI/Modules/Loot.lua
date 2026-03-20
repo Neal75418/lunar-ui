@@ -40,7 +40,6 @@ local backdropTemplate = LunarUI.backdropTemplate
 
 local lootFrame
 local lootSlots = {}
-local lootAllButton
 
 --------------------------------------------------------------------------------
 -- Slot Creation
@@ -201,8 +200,6 @@ local function CreateLootFrame()
             _G.LootSlot(i)
         end
     end)
-    lootAllButton = lootAllBtn
-
     return frame
 end
 
@@ -290,13 +287,6 @@ local function UpdateLootFrame()
     -- Resize frame
     local contentHeight = TITLE_HEIGHT + visibleCount * (SLOT_HEIGHT + SLOT_PADDING) + BUTTON_HEIGHT + FRAME_PADDING
     lootFrame:SetHeight(contentHeight + FRAME_PADDING * 2)
-
-    -- Reposition loot all button
-    if not lootAllButton then
-        return
-    end
-    lootAllButton:ClearAllPoints()
-    lootAllButton:SetPoint("BOTTOM", lootFrame, "BOTTOM", 0, FRAME_PADDING)
 
     lootFrame:Show()
 end

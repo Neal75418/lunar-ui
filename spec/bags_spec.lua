@@ -316,6 +316,8 @@ describe("IsItemUpgrade", function()
         end
         -- Ensure upgrade feature is enabled
         LunarUI.db.profile.bags.showUpgradeArrow = true
+        -- Reset internal dirty flag so each test gets a fresh equipped-levels cache
+        LunarUI.BagsResetEquippedIlvlDirty()
     end)
 
     it("returns false for nil input", function()
