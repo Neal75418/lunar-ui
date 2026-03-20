@@ -19,8 +19,8 @@ local function SkinWeeklyRewards()
     end
 
     -- 確認對話框
-    if _G.WeeklyRewardsFrame and _G.WeeklyRewardsFrame.ConcessionFrame then
-        local concession = _G.WeeklyRewardsFrame.ConcessionFrame
+    if frame.ConcessionFrame then
+        local concession = frame.ConcessionFrame
         if concession.AcceptButton then
             LunarUI.SkinButton(concession.AcceptButton)
         end

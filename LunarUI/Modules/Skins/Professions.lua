@@ -24,11 +24,9 @@ local function SkinProfessionsFrame()
         -- 配方列表
         if frame.CraftingPage.RecipeList then
             LunarUI.StripTextures(frame.CraftingPage.RecipeList)
-        end
-
-        -- 搜尋框
-        if frame.CraftingPage.RecipeList and frame.CraftingPage.RecipeList.SearchBox then
-            LunarUI.SkinEditBox(frame.CraftingPage.RecipeList.SearchBox)
+            if frame.CraftingPage.RecipeList.SearchBox then
+                LunarUI.SkinEditBox(frame.CraftingPage.RecipeList.SearchBox)
+            end
         end
 
         -- 製作詳情面板

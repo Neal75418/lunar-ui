@@ -142,6 +142,10 @@ if LunarUI.InitializeChat then
     LunarUI.InitializeChat()
 end
 
+-- 確認 filter 有成功註冊（若此 assert 失敗，代表 InitializeChat 本身有問題，
+-- 而非 filter 邏輯：後續 pending() 會 silent pass，這裡提前暴露根本原因）
+assert(#registeredFilters > 0, "Chat filters were not registered — InitializeChat may have failed")
+
 --------------------------------------------------------------------------------
 -- Emoji Replacement
 --------------------------------------------------------------------------------

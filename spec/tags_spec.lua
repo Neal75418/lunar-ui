@@ -556,7 +556,8 @@ describe("Tag lunar:class:color", function()
     it("returns color code for valid class", function()
         local result = tag("player")
         assert.is_not_nil(result)
-        assert.truthy(result:match("^|cff"))
+        -- WARRIOR: r=200/255, g=155/255, b=110/255 → |cffc89b6e（由 wow_mock RAID_CLASS_COLORS 決定）
+        assert.equals("|cffc89b6e", result)
     end)
 
     it("returns empty for non-player", function()
@@ -702,6 +703,43 @@ describe("Tag lunar:group", function()
         _G.IsInRaid = origIsInRaid
         _G.GetNumGroupMembers = origGetNum
         _G.UnitIsUnit = origUnitIsUnit
+    end)
+
+    it("O(1) raidTokenToGroup 直接查表（標準 raid token）", function()
+        -- 測試 raidTokenToGroup[unit] 的直接 O(1) 路徑（unit = "raid2"）
+        -- 與上方測試不同：不走 UnitIsUnit O(N) fallback
+        local origIsInRaid = _G.IsInRaid
+        local origGetNum = _G.GetNumGroupMembers
+        local origGetRaid = _G.GetRaidRosterInfo
+
+        _G.IsInRaid = function()
+            return true
+        end
+        _G.GetNumGroupMembers = function()
+            return 2
+        end
+        _G.GetRaidRosterInfo = function(i)
+            if i == 2 then
+                return "Arthas", nil, 3
+            end
+            return nil
+        end
+
+        local testLunarUI = {}
+        local testEngine = {
+            oUF = { Tags = { Methods = {}, Events = {}, SharedEvents = {} } },
+        }
+        loader.loadAddonFile("LunarUI/Core/Tags.lua", testLunarUI, testEngine)
+
+        local raidTag = testLunarUI.TagMethods["lunar:group"]
+        -- "raid2" 是標準 raid token，應走 O(1) raidTokenToGroup 路徑
+        assert.equals("3", raidTag("raid2"))
+        -- 第二次呼叫仍回傳相同值（cache hit，不再重建）
+        assert.equals("3", raidTag("raid2"))
+
+        _G.IsInRaid = origIsInRaid
+        _G.GetNumGroupMembers = origGetNum
+        _G.GetRaidRosterInfo = origGetRaid
     end)
 end)
 

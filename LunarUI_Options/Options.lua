@@ -161,14 +161,15 @@ setmetatable(L, {
 -- Fix #26: DB 未載入時回傳 nil（AceDB 保證 Options panel 開啟時 DB 一定存在）
 local getDBWarned = false
 local function GetDB()
-    if not LunarUI or not LunarUI.db or not LunarUI.db.profile then
+    local profile = LunarUI.GetProfileDB and LunarUI.GetProfileDB()
+    if not profile then
         if not getDBWarned then
             getDBWarned = true
             LunarUI:Print("|cffff0000[Options] DB not ready — settings may not save|r")
         end
         return nil
     end
-    return LunarUI.db.profile
+    return profile
 end
 
 local function RefreshUI()
@@ -2465,21 +2466,6 @@ for i = 1, 6 do
                 end,
                 set = function(_, v)
                     GetDB().actionbars["bar" .. i].buttons = v
-                    RefreshUI()
-                end,
-            },
-            buttonSize = {
-                order = 3,
-                type = "range",
-                name = L.buttonSize,
-                min = 24,
-                max = 48,
-                step = 1,
-                get = function()
-                    return GetDB().actionbars["bar" .. i].buttonSize
-                end,
-                set = function(_, v)
-                    GetDB().actionbars["bar" .. i].buttonSize = v
                     RefreshUI()
                 end,
             },

@@ -98,6 +98,17 @@ function LunarUI:GetModuleConfig(moduleName)
 end
 
 --[[
+    取得完整設定 profile（供 LunarUI_Options 等跨模組存取全域設定用）
+    @return table|nil - 完整 profile 表，若 DB 未就緒則返回 nil
+]]
+function LunarUI.GetProfileDB()
+    if not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
+    return LunarUI.db.profile
+end
+
+--[[
     取得嵌套設定路徑
     @param ... string - 路徑層級（如 "hud", "scale"）
     @return any - 設定值，若路徑不存在則返回 nil

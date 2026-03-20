@@ -25,19 +25,17 @@ local function SkinTradeFrame()
 
     -- 交易欄位（玩家方 + 對方各 7 欄）
     for i = 1, 7 do
-        pcall(function()
-            local playerSlot = _G["TradePlayerItem" .. i .. "ItemButton"]
-            if playerSlot then
-                LunarUI.StripTextures(playerSlot)
-                LunarUI.CreateIconBorder(playerSlot)
-            end
+        local playerSlot = _G["TradePlayerItem" .. i .. "ItemButton"]
+        if playerSlot then
+            LunarUI.StripTextures(playerSlot)
+            LunarUI.CreateIconBorder(playerSlot)
+        end
 
-            local recipientSlot = _G["TradeRecipientItem" .. i .. "ItemButton"]
-            if recipientSlot then
-                LunarUI.StripTextures(recipientSlot)
-                LunarUI.CreateIconBorder(recipientSlot)
-            end
-        end)
+        local recipientSlot = _G["TradeRecipientItem" .. i .. "ItemButton"]
+        if recipientSlot then
+            LunarUI.StripTextures(recipientSlot)
+            LunarUI.CreateIconBorder(recipientSlot)
+        end
     end
 
     -- 金幣輸入框

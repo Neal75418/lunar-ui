@@ -55,17 +55,18 @@ local function SkinLFG()
         LunarUI.StripTextures(_G.LFGListFrame)
 
         -- 搜尋面板
-        if _G.LFGListFrame.SearchPanel then
-            LunarUI.StripTextures(_G.LFGListFrame.SearchPanel)
+        local searchPanel = _G.LFGListFrame.SearchPanel
+        if searchPanel then
+            LunarUI.StripTextures(searchPanel)
 
-            if _G.LFGListFrame.SearchPanel.SearchBox then
-                LunarUI.StripTextures(_G.LFGListFrame.SearchPanel.SearchBox)
+            if searchPanel.SearchBox then
+                LunarUI.StripTextures(searchPanel.SearchBox)
             end
-            if _G.LFGListFrame.SearchPanel.SignUpButton then
-                LunarUI.SkinButton(_G.LFGListFrame.SearchPanel.SignUpButton)
+            if searchPanel.SignUpButton then
+                LunarUI.SkinButton(searchPanel.SignUpButton)
             end
-            if _G.LFGListFrame.SearchPanel.BackButton then
-                LunarUI.SkinButton(_G.LFGListFrame.SearchPanel.BackButton)
+            if searchPanel.BackButton then
+                LunarUI.SkinButton(searchPanel.BackButton)
             end
         end
 

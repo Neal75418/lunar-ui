@@ -530,10 +530,11 @@ function LunarUI:DebugVigorFrames()
     -- 10) LunarUI 狀態
     add("--- LunarUI State ---")
     pcall(function()
-        local db = LunarUI.db and LunarUI.db.profile
-        if db then
-            add("enabled=" .. tostring(db.enabled))
-            add("actionbars.enabled=" .. tostring(db.actionbars and db.actionbars.enabled))
+        local profile = LunarUI.GetProfileDB and LunarUI.GetProfileDB()
+        if profile then
+            add("enabled=" .. tostring(profile.enabled))
+            local actionbarsDB = LunarUI.GetModuleDB and LunarUI.GetModuleDB("actionbars")
+            add("actionbars.enabled=" .. tostring(actionbarsDB and actionbarsDB.enabled))
         else
             add("db.profile not available")
         end

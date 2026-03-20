@@ -167,6 +167,13 @@ describe("StatusColor", function()
         assert.equals(0.3, g)
     end)
 
+    it("returns yellow for mid-range latency (inverted)", function()
+        -- value > greenThreshold 但 <= yellowThreshold：warn band
+        local r, g = LunarUI.StatusColor(150, 100, 200, true)
+        assert.equals(1, r)
+        assert.equals(0.8, g)
+    end)
+
     it("returns red for nil value", function()
         local r, g = LunarUI.StatusColor(nil, 60, 30, false)
         assert.equals(1, r)
