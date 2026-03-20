@@ -369,18 +369,20 @@ local function ApplyWizardSettings()
     local presets = GetLayoutPresets()
     local preset = presets[wizardChoices.layout]
     if preset then
-        if preset.unitframes then
+        local ufDB = db.profile.unitframes
+        if preset.unitframes and type(ufDB) == "table" then
             for unit, values in pairs(preset.unitframes) do
-                if db.profile.unitframes[unit] then
+                if ufDB[unit] then
                     for k, v in pairs(values) do
-                        db.profile.unitframes[unit][k] = v
+                        ufDB[unit][k] = v
                     end
                 end
             end
         end
-        if preset.nameplates then
+        local npDB = db.profile.nameplates
+        if preset.nameplates and type(npDB) == "table" then
             for k, v in pairs(preset.nameplates) do
-                db.profile.nameplates[k] = v
+                npDB[k] = v
             end
         end
     end

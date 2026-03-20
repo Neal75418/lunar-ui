@@ -47,20 +47,22 @@ function LunarUI:ApplyRolePreset(role)
     end
 
     -- 套用 unitframes 預設
-    if preset.unitframes then
+    local ufDB = self.db.profile.unitframes
+    if preset.unitframes and type(ufDB) == "table" then
         for unit, values in pairs(preset.unitframes) do
-            if self.db.profile.unitframes[unit] then
+            if ufDB[unit] then
                 for k, v in pairs(values) do
-                    self.db.profile.unitframes[unit][k] = v
+                    ufDB[unit][k] = v
                 end
             end
         end
     end
 
     -- 套用 nameplates 預設
-    if preset.nameplates then
+    local npDB = self.db.profile.nameplates
+    if preset.nameplates and type(npDB) == "table" then
         for k, v in pairs(preset.nameplates) do
-            self.db.profile.nameplates[k] = v
+            npDB[k] = v
         end
     end
 end
