@@ -193,6 +193,9 @@ local VALIDATION_RULES = {
 
 -- 從 "." 分隔路徑取得設定表中的值及其父表（亦曝露供單元測試使用）
 local function resolveDBPath(db, path)
+    if not path or path == "" then
+        return nil, nil, nil
+    end
     local parts = { strsplit(".", path) }
     local parent = db
     for i = 1, #parts - 1 do

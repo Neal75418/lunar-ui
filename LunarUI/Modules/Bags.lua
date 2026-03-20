@@ -143,21 +143,21 @@ end
 -- 輔助函數
 --------------------------------------------------------------------------------
 
-local function GetTotalSlots()
+-- 背包 0-4 各欄位加總輔助，fn 為 C_Container 的槽位查詢函數
+local function SumBagSlots(fn)
     local total = 0
     for bag = 0, 4 do
-        total = total + C_Container.GetContainerNumSlots(bag)
+        total = total + fn(bag)
     end
     return total
 end
 
+local function GetTotalSlots()
+    return SumBagSlots(C_Container.GetContainerNumSlots)
+end
+
 local function GetTotalFreeSlots()
-    local free = 0
-    for bag = 0, 4 do
-        local freeSlots = C_Container.GetContainerNumFreeSlots(bag)
-        free = free + freeSlots
-    end
-    return free
+    return SumBagSlots(C_Container.GetContainerNumFreeSlots)
 end
 
 -- 快取機制：避免重複呼叫昂貴的物品資訊 API

@@ -134,7 +134,7 @@ local function UpdateExperience()
         return
     end
 
-    local db = LunarUI.db.profile.databars
+    local db = LunarUI.GetModuleDB("databars")
     if not db or not db.experience or not db.experience.enabled then
         bar:Hide()
         return
@@ -233,7 +233,7 @@ local function UpdateReputation()
         return
     end
 
-    local db = LunarUI.db.profile.databars
+    local db = LunarUI.GetModuleDB("databars")
     if not db or not db.reputation or not db.reputation.enabled then
         bar:Hide()
         return
@@ -369,7 +369,7 @@ local function UpdateHonor()
         return
     end
 
-    local db = LunarUI.db.profile.databars
+    local db = LunarUI.GetModuleDB("databars")
     if not db or not db.honor or not db.honor.enabled then
         bar:Hide()
         return
@@ -442,7 +442,7 @@ end
 --------------------------------------------------------------------------------
 
 local function InitializeDataBars()
-    local db = LunarUI.db.profile.databars
+    local db = LunarUI.GetModuleDB("databars")
     if not db or not db.enabled then
         return
     end
