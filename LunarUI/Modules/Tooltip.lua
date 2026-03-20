@@ -729,6 +729,7 @@ local function CleanupTooltip()
         inspectEventFrame:UnregisterAllEvents()
         inspectEventFrame:SetScript("OnEvent", nil)
     end
+    ClearInspectCache()
 end
 
 -- 匯出
