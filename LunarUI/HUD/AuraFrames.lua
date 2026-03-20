@@ -476,33 +476,27 @@ end
 local function UpdateIconTimers(icons, maxIcons, now)
     for i = 1, maxIcons do
         local iconFrame = icons[i]
-        if not iconFrame or not iconFrame:IsShown() then
-            goto continue
-        end
-        if not iconFrame.auraData then
-            goto continue
-        end
-
-        -- 從冷卻框架反推持續時間
-        local start, dur = iconFrame.cooldown:GetCooldownTimes()
-        if start and dur and start > 0 and dur > 0 then
-            start = start / 1000 -- GetCooldownTimes 回傳毫秒
-            dur = dur / 1000
-            local remaining = (start + dur) - now
-            if remaining > 0 then
-                local pct = remaining / dur
-                local barWidth = (ICON_SIZE - 2) * pct
-                if barWidth < 1 then
-                    barWidth = 1
+        if iconFrame and iconFrame:IsShown() and iconFrame.auraData then
+            -- 從冷卻框架反推持續時間
+            local start, dur = iconFrame.cooldown:GetCooldownTimes()
+            if start and dur and start > 0 and dur > 0 then
+                start = start / 1000 -- GetCooldownTimes 回傳毫秒
+                dur = dur / 1000
+                local remaining = (start + dur) - now
+                if remaining > 0 then
+                    local pct = remaining / dur
+                    local barWidth = (ICON_SIZE - 2) * pct
+                    if barWidth < 1 then
+                        barWidth = 1
+                    end
+                    iconFrame.bar:SetWidth(barWidth)
+                    local r, g, b = GetTimerBarColor(remaining, dur)
+                    iconFrame.bar:SetVertexColor(r, g, b)
+                else
+                    iconFrame.bar:Hide()
                 end
-                iconFrame.bar:SetWidth(barWidth)
-                local r, g, b = GetTimerBarColor(remaining, dur)
-                iconFrame.bar:SetVertexColor(r, g, b)
-            else
-                iconFrame.bar:Hide()
             end
         end
-        ::continue::
     end
 end
 
