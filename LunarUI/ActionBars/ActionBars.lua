@@ -714,17 +714,14 @@ local cachedFadeEnabled = true
 local cachedFadeAlpha = 0.3
 local cachedFadeDelay = 2.0
 local cachedFadeDuration = 0.4
+local cachedBaseAlpha = 1.0 -- #3: 快取 bar 基礎透明度，避免 SetBarAlpha 每幀查 DB
 local function RefreshFadeSettingsCache()
     local db = LunarUI.db.profile.actionbars
     cachedFadeEnabled = db.fadeEnabled ~= false
     cachedFadeAlpha = db.fadeAlpha or 0.3
     cachedFadeDelay = db.fadeDelay or 2.0
     cachedFadeDuration = db.fadeDuration or 0.4
-end
-
-local function GetFadeSettings()
-    local db = LunarUI.db.profile.actionbars
-    return db.fadeEnabled ~= false, db.fadeAlpha or 0.3, db.fadeDelay or 2.0, db.fadeDuration or 0.4
+    cachedBaseAlpha = db.alpha or 1.0 -- #3
 end
 
 local function IsBarFadeEnabled(barKey)
@@ -749,9 +746,7 @@ local function SetBarAlpha(bar, alpha)
     if not bar then
         return
     end
-    -- 不在戰鬥中才修改透明度（安全考量）
-    local baseAlpha = LunarUI.db.profile.actionbars.alpha or 1.0
-    bar:SetAlpha(alpha * baseAlpha)
+    bar:SetAlpha(alpha * cachedBaseAlpha) -- #3: 使用快取，避免動畫每幀查 DB
 end
 
 -- 平滑動畫框架
@@ -977,8 +972,8 @@ local function InitializeFade()
     if not combatFrame then
         return
     end -- 模組已 cleanup
-    local enabled = GetFadeSettings()
-    if not enabled then
+    RefreshFadeSettingsCache() -- #2: 確保快取最新，避免兩次 GetFadeSettings() 查 DB
+    if not cachedFadeEnabled then
         return
     end
     fadeInitialized = true
@@ -991,8 +986,7 @@ local function InitializeFade()
     -- 非戰鬥中立即啟動淡出
     if not InCombatLockdown() then
         isInCombat = false
-        local _, _, fadeDelay = GetFadeSettings()
-        C_Timer.After(fadeDelay, function()
+        C_Timer.After(cachedFadeDelay, function() -- #2: 使用快取值
             if not fadeInitialized then
                 return
             end

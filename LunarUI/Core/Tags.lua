@@ -279,7 +279,9 @@ Tags.Events["lunar:role"] = "GROUP_ROSTER_UPDATE"
 -- B6 效能修復：快取 raidIndex → group 映射，避免 40 人 raid 中 O(N²) GetRaidRosterInfo 呼叫
 -- 保留 UnitIsUnit 掃描（跨 token 匹配必要），但 GetRaidRosterInfo 只在 dirty 時執行一次
 -- GROUP_ROSTER_UPDATE：第一個 tag 呼叫觸發重建（O(N)），後續 39 個 frame 掃描已快取的 index→group
+-- #10: 同時建立 raidToken → group 映射，標準 "raid1"~"raid40" token 可直接 O(1) 查詢
 local raidIndexToGroup = {}
+local raidTokenToGroup = {} -- #10: "raid1"~"raid40" O(1) 快取
 local groupCacheDirty = true
 if CreateFrame then
     local groupTagFrame = CreateFrame("Frame")
@@ -297,11 +299,19 @@ Tags.Methods["lunar:group"] = SafeTag(function(unit)
     if groupCacheDirty then
         groupCacheDirty = false
         wipe(raidIndexToGroup)
+        wipe(raidTokenToGroup) -- #10
         for i = 1, GetNumGroupMembers() do
             local _, _, group = GetRaidRosterInfo(i)
             raidIndexToGroup[i] = group
+            raidTokenToGroup["raid" .. i] = group -- #10: O(1) 直接查詢
         end
     end
+    -- #10: 標準 raid token 直接查表（O(1)），避免 UnitIsUnit 掃描
+    local direct = raidTokenToGroup[unit]
+    if direct then
+        return tostring(direct)
+    end
+    -- fallback：非標準 token（如跨隊伍匹配）仍走 UnitIsUnit O(N) 掃描
     for i = 1, GetNumGroupMembers() do
         if UnitIsUnit(unit, "raid" .. i) then
             return tostring(raidIndexToGroup[i] or "")

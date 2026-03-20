@@ -327,11 +327,11 @@ local function UpdateResources()
 
     if resourceType == POWER_TYPE_RUNES then
         -- 符文需要特殊處理
-        -- WoW 12.0：GetRuneCooldown 可能返回密值，用 pcall 保護
+        -- #14: GetRuneCooldown 回傳正常數值，不需要 pcall 保護（已驗證 WoW 12.0）
         local ready = 0
         for i = 1, 6 do
-            local ok, _start, _duration, runeReady = pcall(GetRuneCooldown, i)
-            if ok and runeReady then
+            local _start, _duration, runeReady = GetRuneCooldown(i)
+            if runeReady then
                 ready = ready + 1
             end
         end

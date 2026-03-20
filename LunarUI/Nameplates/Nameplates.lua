@@ -949,19 +949,21 @@ local function SpawnNameplates()
         nameplateQuestFrame = CreateFrame("Frame")
         nameplateQuestFrame:RegisterEvent("QUEST_LOG_UPDATE")
         local questUpdatePending = false
+        -- #9: 具名函數，避免 QUEST_LOG_UPDATE 每次觸發時分配新 closure
+        local function OnQuestTimerFired()
+            questUpdatePending = false
+            for np in pairs(nameplateFrames) do
+                if np:IsShown() then
+                    UpdateQuestIndicator(np)
+                end
+            end
+        end
         nameplateQuestFrame:SetScript("OnEvent", function()
             if questUpdatePending then
                 return
             end
             questUpdatePending = true
-            C_Timer.After(0.5, function()
-                questUpdatePending = false
-                for np in pairs(nameplateFrames) do
-                    if np:IsShown() then
-                        UpdateQuestIndicator(np)
-                    end
-                end
-            end)
+            C_Timer.After(0.5, OnQuestTimerFired)
         end)
     end
 end

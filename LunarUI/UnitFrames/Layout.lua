@@ -331,6 +331,17 @@ local function ShowEmpoweredStages(castbar, numStages)
     end
 end
 
+-- #5: 提升至模組層級，避免 CreateCastbar 每次呼叫產生新 closure（~15 unit frames）
+local function HideAllStages(cb)
+    if cb._stages then
+        for i = 1, MAX_TICKS do
+            if cb._stages[i] then
+                cb._stages[i]:Hide()
+            end
+        end
+    end
+end
+
 local function CreateCastbar(frame, unit)
     local isPlayer = (unit == "player")
     local unitKey = unit and unit:gsub("%d+$", "") or "player"
@@ -391,17 +402,6 @@ local function CreateCastbar(frame, unit)
         latency:SetPoint("BOTTOMRIGHT", castbar:GetStatusBarTexture(), "BOTTOMRIGHT")
         latency:Hide()
         castbar._latency = latency
-    end
-
-    -- 隱藏所有強化施法階段標記
-    local function HideAllStages(cb)
-        if cb._stages then
-            for i = 1, MAX_TICKS do
-                if cb._stages[i] then
-                    cb._stages[i]:Hide()
-                end
-            end
-        end
     end
 
     local showTicks = cbDB.showTicks ~= false
@@ -866,6 +866,7 @@ local function CreateClassPower(frame)
     end
 
     -- 佈局更新：根據實際點數重排寬度和位置
+    -- #6: 快取 maxVisible/powerType，跳過無變化的 layout/color 操作（高頻：UNIT_POWER_FREQUENT）
     classPower.PostUpdate = function(element, _cur, _max, _hasMaxChanged, powerType)
         local maxVisible = 0
         for idx = 1, MAX_POINTS do
@@ -877,23 +878,32 @@ local function CreateClassPower(frame)
             return
         end
 
-        local singleWidth = (barWidth - (maxVisible - 1) * spacing) / maxVisible
-        for idx = 1, maxVisible do
-            element[idx]:ClearAllPoints()
-            element[idx]:SetSize(singleWidth, barHeight)
-            if idx == 1 then
-                element[idx]:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
-            else
-                element[idx]:SetPoint("LEFT", element[idx - 1], "RIGHT", spacing, 0)
+        -- 只在 maxVisible 改變時重算 layout（避免每幀 ClearAllPoints/SetPoint/SetSize）
+        local prevMaxVisible = element._lastMaxVisible or 0
+        if maxVisible ~= prevMaxVisible then
+            element._lastMaxVisible = maxVisible
+            local singleWidth = (barWidth - (maxVisible - 1) * spacing) / maxVisible
+            for idx = 1, maxVisible do
+                element[idx]:ClearAllPoints()
+                element[idx]:SetSize(singleWidth, barHeight)
+                if idx == 1 then
+                    element[idx]:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
+                else
+                    element[idx]:SetPoint("LEFT", element[idx - 1], "RIGHT", spacing, 0)
+                end
             end
         end
 
-        -- 根據職業著色
-        local colors = oUF and oUF.colors and oUF.colors.power
-        if colors and powerType and colors[powerType] then
-            local c = colors[powerType]
-            for idx = 1, maxVisible do
-                element[idx]:SetStatusBarColor(c[1] or c.r, c[2] or c.g, c[3] or c.b)
+        -- 只在 powerType 改變或 maxVisible 增加時重新著色
+        if powerType ~= element._lastPowerType or maxVisible > (element._lastColoredMax or 0) then
+            element._lastPowerType = powerType
+            element._lastColoredMax = maxVisible
+            local colors = oUF and oUF.colors and oUF.colors.power
+            if colors and powerType and colors[powerType] then
+                local c = colors[powerType]
+                for idx = 1, maxVisible do
+                    element[idx]:SetStatusBarColor(c[1] or c.r, c[2] or c.g, c[3] or c.b)
+                end
             end
         end
     end

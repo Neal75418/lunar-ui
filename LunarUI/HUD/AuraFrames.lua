@@ -328,13 +328,9 @@ end
 -- 更新函數
 --------------------------------------------------------------------------------
 
-local function UpdateAuraIcon(iconFrame, auraData, _index, filter, isDebuff)
-    -- tostring/tonumber 斷開 Aura API taint 鏈（呼叫者已 pcall 保護 API 呼叫本身）
-    local name = tostring(auraData.name or "")
+-- #8: 接受預先淨化的參數，避免與 UpdateAuraGroup 重複做 tostring/tonumber（每個 aura 多 4 次轉換）
+local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expirationTime, filter, isDebuff)
     local iconTexture = auraData.icon
-    local count = tonumber(tostring(auraData.applications or 0)) or 0
-    local duration = tonumber(tostring(auraData.duration or 0)) or 0
-    local expirationTime = tonumber(tostring(auraData.expirationTime or 0)) or 0
 
     -- 圖示紋理
     iconFrame.texture:SetTexture(iconTexture)
@@ -426,6 +422,7 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
 
         -- taint 安全：tostring/tonumber 會斷開 CLEU/Aura API 回傳值的 taint 鏈
         -- （與 FloatingCombatText.lua 的 Sanitize() 原理相同）
+        -- #8: 集中淨化所有欄位，UpdateAuraIcon 直接使用已淨化值
         local name = tostring(auraData.name or "")
         local duration = tonumber(auraData.duration or 0) or 0
 
@@ -439,7 +436,9 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
         if shouldShow then
             visibleIndex = visibleIndex + 1
             if visibleIndex <= maxIcons then
-                UpdateAuraIcon(icons[visibleIndex], auraData, i, filter, isDebuff)
+                local count = tonumber(tostring(auraData.applications or 0)) or 0
+                local expirationTime = tonumber(tostring(auraData.expirationTime or 0)) or 0
+                UpdateAuraIcon(icons[visibleIndex], auraData, name, count, duration, expirationTime, filter, isDebuff)
             end
         end
     end
