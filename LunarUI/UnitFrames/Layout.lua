@@ -948,7 +948,8 @@ end
 local function CreateHealPrediction(frame, unit)
     local unitKey = unit or "player"
     unitKey = unitKey:gsub("%d+$", "")
-    local ufDB = LunarUI.db.profile.unitframes[unitKey]
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local ufDB = ufAll and ufAll[unitKey]
     if ufDB and ufDB.showHealPrediction == false then
         return
     end
