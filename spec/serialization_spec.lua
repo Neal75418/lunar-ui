@@ -532,6 +532,9 @@ end)
 
 describe("ImportSettings", function()
     before_each(function()
+        _G.InCombatLockdown = function()
+            return false
+        end
         LunarUI.db = {
             profile = {
                 style = { fontSize = 12, theme = "lunar" },

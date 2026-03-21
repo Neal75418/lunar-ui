@@ -422,6 +422,10 @@ end
 function LunarUI:ImportSettings(importString)
     local L = Engine.L or {}
 
+    if InCombatLockdown() then
+        return false, L["CombatLockdown"] or "戰鬥中無法匯入設定"
+    end
+
     if not importString or importString == "" then
         return false, L["InvalidSettings"] or "未提供匯入字串"
     end

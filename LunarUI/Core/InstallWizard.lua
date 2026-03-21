@@ -37,6 +37,9 @@ local TOTAL_STEPS = 4
 
 -- 佈局預設值（從 Engine.GetLayoutPresets 取得共用資料，加上 label/desc）
 local function GetLayoutPresets()
+    if not Engine.GetLayoutPresets then
+        return {}
+    end
     local presets = Engine.GetLayoutPresets()
     presets.dps.label = L["InstallLayoutDPS"] or "DPS"
     presets.dps.desc = L["InstallLayoutDPSDesc"] or "Compact raid frames, large player/target, debuff-focused"
@@ -392,7 +395,9 @@ local function ApplyWizardSettings()
     end
 
     -- 3. 動作條淡出
-    db.profile.actionbars.fadeEnabled = wizardChoices.actionBarFade
+    if db.profile.actionbars then
+        db.profile.actionbars.fadeEnabled = wizardChoices.actionBarFade
+    end
 
     -- 4. 標記安裝完成
     db.global.installComplete = true
@@ -664,6 +669,9 @@ function LunarUI:CheckInstallWizard()
     if not self.db.global.installComplete then
         -- 延遲顯示，確保所有模組已載入
         C_Timer.After(1, function()
+            if not LunarUI:IsEnabled() then
+                return
+            end
             if self.db and self.db.global and not self.db.global.installComplete then
                 self:ShowInstallWizard()
             end
