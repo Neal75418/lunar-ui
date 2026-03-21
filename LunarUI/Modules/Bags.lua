@@ -369,23 +369,9 @@ local function HideSlotTooltip()
     GameTooltip:Hide()
 end
 
--- 物品格子點擊處理（template 預設 handler 依賴原生 ContainerFrame parent，無法在自訂框架下運作）
--- C_Container.UseContainerItem 不是 protected function，可從 OnClick handler 直接呼叫
--- （OnClick 具備 hardware event context）
-local function OnSlotClick(self, button)
-    local bag, slot = self.bag, self.slot
-    if button == "RightButton" then
-        C_Container.UseContainerItem(bag, slot)
-        return
-    end
-    if IsShiftKeyDown() then
-        local link = C_Container.GetContainerItemLink(bag, slot)
-        if link and ChatEdit_InsertLink and ChatEdit_InsertLink(link) then
-            return
-        end
-    end
-    C_Container.PickupContainerItem(bag, slot)
-end
+-- 不覆寫 OnClick：ContainerFrameItemButtonMixin:OnClick 在模板的安全執行環境中
+-- 處理右鍵 UseContainerItem 和左鍵 PickupContainerItem / HandleModifiedItemClick。
+-- 只需確保 GetBagID() 和 SetID() 正確，mixin 便能正常運作。
 
 -- 隱藏格子上的所有指示器（重構：避免重複代碼）
 local function HideAllSlotIndicators(button)
@@ -510,10 +496,12 @@ local function SetupSlotBase(button, bag, slot)
         return self.bag
     end
 
-    -- 覆寫 tooltip 與點擊
+    -- 設定 slot ID（mixin 的 OnClick 透過 self:GetID() 取得 slot）
+    button:SetID(slot)
+
+    -- 覆寫 tooltip（保留模板的 OnClick 讓 mixin 處理右鍵使用/左鍵拾取）
     button:SetScript("OnEnter", ShowSlotTooltip)
     button:SetScript("OnLeave", HideSlotTooltip)
-    button:SetScript("OnClick", OnSlotClick)
     button:RegisterForDrag("LeftButton")
     button:SetScript("OnDragStart", function(self)
         C_Container.PickupContainerItem(self.bag, self.slot)
@@ -1714,7 +1702,7 @@ local function RefreshBagLayout()
         end
         button.bag = slotInfo.bag
         button.slot = slotInfo.slot
-        -- OnSlotClick 直接讀取 self.bag/self.slot，不需要額外同步
+        button:SetID(slotInfo.slot)
 
         -- 分離背包視圖
         if db and db.splitBags and prevBag ~= nil and slotInfo.bag ~= prevBag then
