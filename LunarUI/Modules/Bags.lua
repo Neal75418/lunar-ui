@@ -1589,6 +1589,8 @@ local function CloseBank()
         -- 清除銀行批次更新佇列避免洩漏
         wipe(bankUpdateQueue)
         bankUpdateInProgress = false
+        -- 重設排序旗標：銀行關閉時排序事件可能不再到達，避免 isSorting 永遠為 true
+        isSorting = false
     end
 end
 
@@ -1906,10 +1908,8 @@ local function HookBagFunctions()
         CloseBags()
     end)
 
-    -- 掛鉤 ToggleAllBags：按 B 時切換我們的背包
-    hooksecurefunc("ToggleAllBags", function()
-        ToggleBags()
-    end)
+    -- 注意：不 hook ToggleAllBags，因為 ToggleAllBags 內部會呼叫 OpenAllBags/CloseAllBags，
+    -- 兩者已有 hook，若再 hook ToggleAllBags 會造成開包後立即關包的雙重觸發
 
     -- 徹底禁用暴雪背包框架（alpha 0 + 移到螢幕外 + 禁用滑鼠）
     -- 只設 alpha 0 不夠：框架仍接收滑鼠事件，會擋住我們的自訂背包

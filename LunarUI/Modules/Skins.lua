@@ -387,10 +387,10 @@ local function ApplySkin(name)
         if LunarUI.Debug then
             LunarUI:Debug("Skin error [" .. name .. "]: " .. tostring(result))
         end
-        skinned[name] = true -- 錯誤路徑也標記完成，避免重試反覆執行無效 skin
-    elseif result then
-        skinned[name] = true
     end
+    -- 成功或失敗都標記完成，避免每次 ADDON_LOADED 重複執行
+    -- （skin func 通常不回傳值，不應依賴回傳值判斷是否完成）
+    skinned[name] = true
 end
 
 --- 檢查指定 skin 是否啟用
@@ -446,14 +446,14 @@ local function InitializeSkins()
     -- 載入立即可用的 skins
     LoadAllSkins()
 
-    -- 監聽延遲載入的 addon
+    -- 監聽延遲載入的 addon（每次 enable 重新掛載，CleanupSkins 會 UnregisterAllEvents + nil OnEvent）
     if not skinsEventFrame then
         skinsEventFrame = CreateFrame("Frame")
-        skinsEventFrame:RegisterEvent("ADDON_LOADED")
-        skinsEventFrame:SetScript("OnEvent", function(_self, event, ...)
-            OnAddonLoaded(event, ...)
-        end)
     end
+    skinsEventFrame:RegisterEvent("ADDON_LOADED")
+    skinsEventFrame:SetScript("OnEvent", function(_self, event, ...)
+        OnAddonLoaded(event, ...)
+    end)
 end
 
 -- 匯出
@@ -475,6 +475,8 @@ function LunarUI.CleanupSkins()
         skinsEventFrame:UnregisterAllEvents()
         skinsEventFrame:SetScript("OnEvent", nil)
     end
+    -- 重設 skinned 表，讓 re-enable 時 ApplySkin 能重新執行（個別框架仍有 _lunarSkinned 防重複）
+    wipe(skinned)
 end
 
 LunarUI:RegisterModule("Skins", {
