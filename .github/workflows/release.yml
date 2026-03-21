@@ -29,26 +29,16 @@ jobs:
         with:
           luaVersion: "luajit-2.1.0-beta3"
 
-      - name: Cache luarocks packages
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.luarocks
-            /usr/local/lib/luarocks
-            /usr/local/share/lua
-            /usr/local/lib/lua
-          key: luarocks-release-luajit-${{ runner.os }}-${{ hashFiles('.busted', '.luacheckrc') }}
-          restore-keys: luarocks-release-luajit-${{ runner.os }}-
-
-      - name: Install luarocks packages
+      - name: Install LuaRocks binary
         uses: leafo/gh-actions-luarocks@v6
-        with:
-          rocks: luacheck busted
 
-      - name: Add luarocks bin to PATH
+      - name: Install luacheck + busted and configure PATH
+        # gh-actions-luarocks@v6 不再支援 rocks 參數，需手動呼叫 luarocks install
+        # .luarocks/bin/luarocks 由 gh-actions-luarocks 安裝，使用完整路徑避免 PATH 問題
         run: |
+          $GITHUB_WORKSPACE/.luarocks/bin/luarocks install luacheck
+          $GITHUB_WORKSPACE/.luarocks/bin/luarocks install busted
           echo "$GITHUB_WORKSPACE/.luarocks/bin" >> $GITHUB_PATH
-          echo "$HOME/.luarocks/bin" >> $GITHUB_PATH
 
       - name: Lint with luacheck
         run: luacheck .
