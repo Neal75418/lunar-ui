@@ -35,11 +35,23 @@ end
 --------------------------------------------------------------------------------
 
 local statusBarTexture -- lazy: resolved after DB is ready
+local npCombatWaitFrame -- 戰鬥等待框架（singleton，避免重複呼叫建立多個 frame）
 local function GetStatusBarTexture()
     if not statusBarTexture then
         statusBarTexture = LunarUI.GetSelectedStatusBarTexture()
     end
     return statusBarTexture
+end
+
+-- 串聯 Layout.lua 的 statusBarTexture 失效函數，確保 Options 更換材質時名牌也同步清除
+do
+    local _prev = LunarUI.InvalidateStatusBarTextureCache
+    LunarUI.InvalidateStatusBarTextureCache = function()
+        statusBarTexture = nil
+        if _prev then
+            _prev()
+        end
+    end
 end
 
 -- 共用顏色常數（與 UnitFrames/Layout.lua 一致）
@@ -883,11 +895,13 @@ local function SpawnNameplates()
         return
     end
 
-    -- Fix #39: Use event-driven retry for combat lockdown
+    -- Fix #39: Use event-driven retry for combat lockdown（singleton 避免重複呼叫建立多個 frame）
     if InCombatLockdown() then
-        local waitFrame = CreateFrame("Frame")
-        waitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-        waitFrame:SetScript("OnEvent", function(self)
+        if not npCombatWaitFrame then
+            npCombatWaitFrame = CreateFrame("Frame")
+        end
+        npCombatWaitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        npCombatWaitFrame:SetScript("OnEvent", function(self)
             self:UnregisterAllEvents()
             self:SetScript("OnEvent", nil)
             SpawnNameplates()
@@ -981,6 +995,11 @@ LunarUI.GetNPCRoleColor = GetNPCRoleColor
 
 -- Fix #35: Cleanup function to prevent memory leaks on disable/reload
 function LunarUI.CleanupNameplates()
+    -- 清理戰鬥等待框架
+    if npCombatWaitFrame then
+        npCombatWaitFrame:UnregisterAllEvents()
+        npCombatWaitFrame:SetScript("OnEvent", nil)
+    end
     -- Unregister target change event handler
     if nameplateTargetFrame then
         nameplateTargetFrame:UnregisterAllEvents()

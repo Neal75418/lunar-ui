@@ -1666,7 +1666,10 @@ local function SpawnUnitFrames()
         combatWaitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
         combatWaitFrame:SetScript("OnEvent", function(self)
             self:UnregisterAllEvents()
-            SpawnUnitFrames()
+            local ok, err = pcall(SpawnUnitFrames)
+            if not ok and LunarUI.Debug then
+                LunarUI:Debug("SpawnUnitFrames error: " .. tostring(err))
+            end
         end)
         return
     end
