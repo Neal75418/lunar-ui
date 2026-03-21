@@ -271,9 +271,22 @@ function LunarUI:ToggleAddon(cmd)
         self:Print(L["Enabled"] or "Enabled")
     elseif cmd == "off" then
         self.db.profile.enabled = false
+        -- 真的停用所有模組（呼叫 onDisable + 還原暴雪動作條）
+        if LunarUI.DisableModules then
+            LunarUI.DisableModules()
+        end
         self:Print(L["Disabled"] or "Disabled")
     else
         self.db.profile.enabled = not self.db.profile.enabled
+        if self.db.profile.enabled then
+            if LunarUI.EnableModules then
+                LunarUI.EnableModules()
+            end
+        else
+            if LunarUI.DisableModules then
+                LunarUI.DisableModules()
+            end
+        end
         self:Print(self.db.profile.enabled and (L["Enabled"] or "Enabled") or (L["Disabled"] or "Disabled"))
     end
 end
@@ -305,26 +318,16 @@ end
     開啟設定介面
 ]]
 function LunarUI:OpenOptions()
-    -- 嘗試使用 AceConfigDialog 開啟設定面板
-    local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
-    if AceConfigDialog then
-        AceConfigDialog:Open("LunarUI")
+    -- 統一走 LunarUI_Options 提供的 OpenConfig（含 LoadOnDemand + 搜尋 UI + 樣式化）
+    if LunarUI.OpenConfig then
+        LunarUI.OpenConfig()
         return
     end
 
-    -- 備用方案：使用暴雪 Settings API（WoW 10.0+）
-    if _G.Settings and _G.Settings.OpenToCategory then
-        local ok, _err = pcall(_G.Settings.OpenToCategory, "LunarUI")
-        if ok then
-            return
-        end
-        -- 如果失敗，嘗試舊版 API
-    end
-
-    -- 備用方案：舊版介面選項 API
-    if _G.InterfaceOptionsFrame_OpenToCategory then
-        _G.InterfaceOptionsFrame_OpenToCategory("LunarUI")
-        _G.InterfaceOptionsFrame_OpenToCategory("LunarUI") -- 呼叫兩次確保打開
+    -- Fallback：LunarUI_Options 尚未載入，嘗試直接開 AceConfigDialog
+    local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
+    if AceConfigDialog then
+        AceConfigDialog:Open("LunarUI")
         return
     end
 

@@ -11,6 +11,10 @@ local LunarUI = Engine.LunarUI
 -- 隱藏暴雪動作條
 --------------------------------------------------------------------------------
 
+-- 還原用：儲存被修改的框架原始狀態
+local savedBarStates = {} -- { [frame] = { parent, onEditModeEnter, onEditModeExit } }
+local hiddenFrames = {} -- { [frame] = true } 追蹤被 SetAlpha(0) 的框架
+
 -- 安全隱藏框架：設置透明度為 0 並禁用互動
 -- 不使用 RegisterStateDriver（會破壞 EditMode 佈局計算導致負數 scale）
 -- 不使用 hooksecurefunc 或 rawset（會在安全框架上產生 taint）
@@ -19,6 +23,7 @@ local function HideFrameSafely(frame)
     if not frame then
         return
     end
+    hiddenFrames[frame] = true
     pcall(function()
         frame:SetAlpha(0)
         frame:EnableMouse(false)
@@ -172,6 +177,7 @@ end
 -- 3. ADDON_ACTION_BLOCKED / ADDON_ACTION_FORBIDDEN（UIErrorsFrame 的 "介面功能因插件而失效" 訊息）
 -- 以上皆為 UI addon 修改 Blizzard 框架的正常副作用，無功能影響
 local scaleErrorFilter -- 當前安裝的過濾函數引用（用於避免自我鏈接）
+local savedErrorHandler -- 安裝前的原始 error handler（供還原）
 local taintEventsUnregistered = false
 local function InstallScaleErrorFilter()
     -- 抑制 "介面功能因插件而失效" 黃字訊息（ADDON_ACTION_BLOCKED 事件）
@@ -193,6 +199,7 @@ local function InstallScaleErrorFilter()
     if prevHandler == scaleErrorFilter then
         return
     end
+    savedErrorHandler = prevHandler
     scaleErrorFilter = function(msg, ...)
         local msgStr = tostring(msg or "")
         if msgStr:find("Scale must be > 0") or msgStr:find("secret number value tainted") then
@@ -203,6 +210,23 @@ local function InstallScaleErrorFilter()
         end
     end
     seterrorhandler(scaleErrorFilter)
+end
+
+-- 還原全域副作用：error handler + UIParent 事件
+local function UninstallScaleErrorFilter()
+    -- 還原 error handler（只在當前 handler 仍是我們的過濾器時才還原，避免斷鏈）
+    if scaleErrorFilter and geterrorhandler() == scaleErrorFilter and savedErrorHandler then
+        seterrorhandler(savedErrorHandler)
+    end
+    scaleErrorFilter = nil
+    savedErrorHandler = nil
+
+    -- 重新註冊 UIParent 事件
+    if taintEventsUnregistered then
+        taintEventsUnregistered = false
+        UIParent:RegisterEvent("ADDON_ACTION_BLOCKED")
+        UIParent:RegisterEvent("ADDON_ACTION_FORBIDDEN")
+    end
 end
 
 -- 隱藏主動作條及 ArtFrame 裝飾（獅鷲獸/背景/頁碼等）
@@ -301,15 +325,19 @@ local function HideMultiActionBars()
     for _, barName in ipairs(barsToHide) do
         local bar = _G[barName]
         if bar then
+            -- 儲存原始狀態（供還原）
+            if not savedBarStates[bar] then
+                savedBarStates[bar] = {
+                    parent = bar:GetParent(),
+                    onEditModeEnter = bar.OnEditModeEnter,
+                    onEditModeExit = bar.OnEditModeExit,
+                }
+            end
             -- 1. 移到隱藏父框架：視覺上隱藏（由父框架 Hide() 使其不可見）
             pcall(function()
                 bar:SetParent(HiddenBarParent)
             end)
             -- 2. 中和 Edit Mode：覆蓋為 no-op，防止 scale 計算
-            --    secureexecuterange 呼叫 no-op 時：
-            --    (a) 順利執行（無返回值、無 taint 流動）→ 完美
-            --    (b) taint 檢查失敗 → secureexecuterange 捕獲錯誤、繼續迭代下一個框架
-            --    兩種情況都不會產生 "Scale must be > 0" C++ 錯誤
             bar.OnEditModeEnter = function() end
             bar.OnEditModeExit = function() end
         end
@@ -522,3 +550,38 @@ local function HideBlizzardBarsDelayed()
 end
 
 LunarUI.HideBlizzardBarsDelayed = HideBlizzardBarsDelayed
+
+--------------------------------------------------------------------------------
+-- 還原暴雪動作條（/lunar off 時呼叫）
+--------------------------------------------------------------------------------
+
+local function RestoreBlizzardBars()
+    if InCombatLockdown() then
+        return
+    end
+
+    -- 1. 還原 MultiBar 框架：parent + OnEditModeEnter/Exit
+    for bar, state in pairs(savedBarStates) do
+        pcall(function()
+            bar:SetParent(state.parent)
+            bar:Show()
+        end)
+        bar.OnEditModeEnter = state.onEditModeEnter
+        bar.OnEditModeExit = state.onEditModeExit
+    end
+    wipe(savedBarStates)
+
+    -- 2. 還原被 SetAlpha(0) 的框架
+    for frame in pairs(hiddenFrames) do
+        pcall(function()
+            frame:SetAlpha(1)
+            frame:EnableMouse(true)
+        end)
+    end
+    wipe(hiddenFrames)
+
+    -- 3. 還原全域副作用（error handler + UIParent 事件）
+    UninstallScaleErrorFilter()
+end
+
+LunarUI.RestoreBlizzardBars = RestoreBlizzardBars

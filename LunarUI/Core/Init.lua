@@ -144,6 +144,36 @@ function LunarUI.EnableModules()
     end
 end
 
+--[[
+    DisableModules - 停用所有已註冊的模組（反向迭代）
+    供 /lunar off（ToggleAddon）呼叫，讓「停用」語義完整
+    包含 HideBlizzardBars 的還原
+]]
+function LunarUI.DisableModules()
+    if not LunarUI._modulesEnabled then
+        return
+    end
+    LunarUI._modulesEnabled = false
+    modulesReadyFired = false
+    pendingDelayedModules = 0
+
+    -- 反向停用所有模組
+    for i = #moduleRegistry, 1, -1 do
+        local mod = moduleRegistry[i]
+        if mod then
+            local ok, err = pcall(mod.onDisable)
+            if not ok then
+                LunarUI:Print("|cffff6666Module '" .. (mod.name or "?") .. "' cleanup failed:|r " .. tostring(err))
+            end
+        end
+    end
+
+    -- 還原暴雪動作條（HideBlizzardBars 的全域副作用）
+    if LunarUI.RestoreBlizzardBars then
+        LunarUI.RestoreBlizzardBars()
+    end
+end
+
 --------------------------------------------------------------------------------
 -- Ace3 生命週期
 --------------------------------------------------------------------------------

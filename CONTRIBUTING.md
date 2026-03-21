@@ -144,6 +144,25 @@ LunarUI.RegisterSkin("myframe", "PLAYER_ENTERING_WORLD", SkinMyFrame)
 | **命名衝突**    | 多模組有同名 local 函數時用前綴區分（如 `BagsGetItemLevel` vs `GetItemLevel`）                           |
 | **Mock 要點** | 模組層級有副作用時（`CreateFrame`、`RegisterModule`），需在 spec 內提供完整 stub                            |
 
+### 🎮 Integration 手測矩陣
+
+單元測試無法覆蓋 WoW 運行時行為。以下場景在修改核心系統後必須在遊戲內驗證：
+
+| # | 場景 | 驗證重點 |
+|:-:|:-----|:--------|
+| 1 | `/reload` | 所有模組正確重建，無 Lua 錯誤 |
+| 2 | `/lunar off` → `/lunar on` | 模組完整停止再啟動，Blizzard UI 正確還原/隱藏 |
+| 3 | 進出戰鬥 | `InCombatLockdown()` guard 正確攔截，戰後操作恢復 |
+| 4 | 進出 Edit Mode | 動作條 OnEditModeEnter monkey patch 不拋 "Scale must be > 0" |
+| 5 | 切換 Profile | `OnProfileChanged` 套用新位置，框架正確刷新 |
+| 6 | 切換專精 | ClassResources / CooldownTracker 正確重建 |
+| 7 | 開關自訂 ActionBars | HideBlizzardBars 正確隱藏/還原 |
+| 8 | 開啟背包 → 右鍵使用物品 | SecureActionButtonTemplate + item2 正確觸發 UseContainerItem |
+| 9 | 開啟商人 → 自動賣灰 | SellJunk generation counter 正確防止重疊 |
+| 10 | 開啟銀行 → 關閉重開 | Bank batch update generation counter 正確防止 stale callback |
+
+> 新增高風險 workaround 或修改 enable/disable 生命週期時，必須跑完此矩陣。
+
 ---
 
 ## 📝 Commit Convention
