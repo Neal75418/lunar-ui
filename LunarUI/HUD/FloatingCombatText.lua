@@ -23,7 +23,11 @@ local fctFrame = nil
 local queueFrame = nil -- 佇列處理框架（在乾淨的執行環境中消化 CLEU 事件）
 local textPool = {} -- 可用的 FontString 池
 local activeTexts = {} -- 目前顯示中的 FontString
-local pendingTexts = {} -- CLEU 事件佇列（避免在 tainted 環境中操作 UI）
+-- CLEU 事件佇列：平行陣列取代 table-of-tables，消除每事件 GC 壓力
+local pendingAmounts = {}
+local pendingCriticals = {}
+local pendingTypes = {}
+local pendingCount = 0
 local POOL_SIZE = 20 -- 預建數量
 local isEnabled = false
 
@@ -115,6 +119,7 @@ local function CreatePooledText(parent)
     local animFrame = CreateFrame("Frame", nil, parent)
     animFrame:Hide()
     fs._animFrame = animFrame
+    animFrame._fctOwner = fs -- 反向連結，供 FCTAnimOnUpdate 使用
     fs._elapsed = 0
     fs._duration = 1.5
     fs._startY = 0
@@ -167,30 +172,33 @@ end
 -- 動畫系統
 --------------------------------------------------------------------------------
 
+-- 模組層級 OnUpdate handler，透過 _fctOwner 取得 FontString，避免每次 AnimateText 建立閉包
+local function FCTAnimOnUpdate(self, dt)
+    local fs = self._fctOwner
+    fs._elapsed = fs._elapsed + dt
+    local pct = fs._elapsed / fs._duration
+
+    if pct >= 1 then
+        RecycleText(fs)
+        return
+    end
+
+    -- 向上飄動（OutQuad 先快後慢）
+    local y = fs._startY + OutQuad(pct, 0, FLOAT_DISTANCE, 1)
+    -- 淡出（InQuad 先慢後快）
+    local alpha = 1 - InQuad(pct, 0, 1, 1)
+
+    fs:SetPoint("CENTER", fctFrame, "CENTER", fs._offsetX or 0, y)
+    fs:SetAlpha(alpha)
+end
+
 local function AnimateText(fs, startY, duration)
     fs._elapsed = 0
     fs._duration = duration
     fs._startY = startY
     fs:Show()
     fs._animFrame:Show()
-
-    fs._animFrame:SetScript("OnUpdate", function(_self, dt)
-        fs._elapsed = fs._elapsed + dt
-        local pct = fs._elapsed / fs._duration
-
-        if pct >= 1 then
-            RecycleText(fs)
-            return
-        end
-
-        -- 向上飄動（OutQuad 先快後慢）
-        local y = fs._startY + OutQuad(pct, 0, FLOAT_DISTANCE, 1)
-        -- 淡出（InQuad 先慢後快）
-        local alpha = 1 - InQuad(pct, 0, 1, 1)
-
-        fs:SetPoint("CENTER", fctFrame, "CENTER", fs._offsetX or 0, y)
-        fs:SetAlpha(alpha)
-    end)
+    fs._animFrame:SetScript("OnUpdate", FCTAnimOnUpdate)
 end
 
 --------------------------------------------------------------------------------
@@ -337,9 +345,15 @@ local function OnCombatLogEvent()
         end
 
         if sourceGUID == playerGUID then
-            pendingTexts[#pendingTexts + 1] = { amount, critical, "damage_out" }
+            pendingCount = pendingCount + 1
+            pendingAmounts[pendingCount] = amount
+            pendingCriticals[pendingCount] = critical
+            pendingTypes[pendingCount] = "damage_out"
         elseif destGUID == playerGUID then
-            pendingTexts[#pendingTexts + 1] = { amount, critical, "damage_in" }
+            pendingCount = pendingCount + 1
+            pendingAmounts[pendingCount] = amount
+            pendingCriticals[pendingCount] = critical
+            pendingTypes[pendingCount] = "damage_in"
         end
     elseif HEAL_EVENTS[event] then
         local amount = Sanitize(a15)
@@ -350,12 +364,15 @@ local function OnCombatLogEvent()
         end
 
         if sourceGUID == playerGUID then
-            pendingTexts[#pendingTexts + 1] = { amount, critical, "heal" }
+            pendingCount = pendingCount + 1
+            pendingAmounts[pendingCount] = amount
+            pendingCriticals[pendingCount] = critical
+            pendingTypes[pendingCount] = "heal"
         end
     end
 
     -- 喚醒佇列處理框架（下一幀的 OnUpdate 將在乾淨環境中執行）
-    if #pendingTexts > 0 and queueFrame then
+    if pendingCount > 0 and queueFrame then
         queueFrame:Show()
     end
 end
@@ -384,11 +401,10 @@ local function CreateFCTFrame()
     queueFrame:Hide()
     queueFrame:SetScript("OnUpdate", function(self)
         self:Hide() -- 處理完立即停止，下次有事件時再 Show()
-        for i = 1, #pendingTexts do
-            local entry = pendingTexts[i]
-            ShowText(entry[1], entry[2], entry[3])
+        for i = 1, pendingCount do
+            ShowText(pendingAmounts[i], pendingCriticals[i], pendingTypes[i])
         end
-        wipe(pendingTexts)
+        pendingCount = 0
     end)
 
     -- 註冊戰鬥日誌事件
@@ -416,7 +432,7 @@ local function CleanupFCT()
             queueFrame:SetScript("OnUpdate", nil)
             queueFrame:Hide()
         end
-        wipe(pendingTexts)
+        pendingCount = 0
 
         -- 回收所有活動中的文字
         for i = #activeTexts, 1, -1 do

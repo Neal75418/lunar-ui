@@ -136,6 +136,9 @@ local CLASS_RESOURCE_CONFIG = {
         return nil, 0, false, nil
     end,
     [CLASS_DEMONHUNTER] = function(specID)
+        if not specID then
+            return nil, 0, false, nil
+        end
         if specID == 1 then -- 浩劫
             return POWER_TYPE_FURY, 100, true, RESOURCE_COLORS.fury
         else -- 乘禦

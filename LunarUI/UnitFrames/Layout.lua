@@ -292,8 +292,12 @@ local function ShowTickMarks(castbar, numTicks)
         end
         tick:SetHeight(castbar:GetHeight())
         local pct = i / numTicks
+        local cbWidth = castbar:GetWidth()
+        if cbWidth <= 0 then
+            return
+        end
         tick:ClearAllPoints()
-        tick:SetPoint("LEFT", castbar, "LEFT", castbar:GetWidth() * pct, 0)
+        tick:SetPoint("LEFT", castbar, "LEFT", cbWidth * pct, 0)
         tick:Show()
     end
 end
@@ -325,8 +329,12 @@ local function ShowEmpoweredStages(castbar, numStages)
         end
         stage:SetHeight(castbar:GetHeight())
         local pct = i / (numStages + 1)
+        local cbWidth = castbar:GetWidth()
+        if cbWidth <= 0 then
+            return
+        end
         stage:ClearAllPoints()
-        stage:SetPoint("LEFT", castbar, "LEFT", castbar:GetWidth() * pct, 0)
+        stage:SetPoint("LEFT", castbar, "LEFT", cbWidth * pct, 0)
         stage:Show()
     end
 end
@@ -882,6 +890,9 @@ local function CreateClassPower(frame)
         local prevMaxVisible = element._lastMaxVisible or 0
         if maxVisible ~= prevMaxVisible then
             element._lastMaxVisible = maxVisible
+            if barWidth <= 0 then
+                return
+            end
             local singleWidth = (barWidth - (maxVisible - 1) * spacing) / maxVisible
             for idx = 1, maxVisible do
                 element[idx]:ClearAllPoints()

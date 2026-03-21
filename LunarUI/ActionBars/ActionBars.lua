@@ -849,31 +849,24 @@ local function UpdateHoverDetection(fadeEnabled, fadeAlpha, fadeDelay, elapsed)
                 end
                 FadeBarTo(barKey, 1.0)
 
-            -- 滑鼠離開
+            -- 滑鼠離開（fadeState[barKey] 已在進入時初始化，此處必然存在）
             elseif not isHovering and hoverState.wasHovering then
                 hoverState.wasHovering = false
-                if fadeState[barKey] then
-                    fadeState[barKey].hovered = false
-                end
-                if fadeState[barKey] and fadeState[barKey].timer then
-                    fadeState[barKey].timer:Cancel()
-                end
-                if not fadeState[barKey] then
-                    fadeState[barKey] = {
-                        alpha = 1.0,
-                        targetAlpha = 1.0,
-                        hovered = false,
-                        timer = nil,
-                    }
-                end
-                fadeState[barKey].timer = C_Timer.NewTimer(fadeDelay, function()
-                    if not isInCombat and fadeState[barKey] and not fadeState[barKey].hovered then
-                        FadeBarTo(barKey, fadeAlpha)
+                local state = fadeState[barKey]
+                if state then
+                    state.hovered = false
+                    if state.timer then
+                        state.timer:Cancel()
                     end
-                    if fadeState[barKey] then
-                        fadeState[barKey].timer = nil
-                    end
-                end)
+                    state.timer = C_Timer.NewTimer(fadeDelay, function()
+                        if not isInCombat and fadeState[barKey] and not fadeState[barKey].hovered then
+                            FadeBarTo(barKey, fadeAlpha)
+                        end
+                        if fadeState[barKey] then
+                            fadeState[barKey].timer = nil
+                        end
+                    end)
+                end
             end
         end
     end
@@ -989,7 +982,10 @@ local combatFrame = LunarUI.CreateEventHandler(
 local function InitializeFade()
     if not combatFrame then
         return
-    end -- 模組已 cleanup
+    end
+    -- 重新註冊戰鬥事件（Cleanup 後重新啟用時需要）
+    combatFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    combatFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     RefreshFadeSettingsCache() -- #2: 確保快取最新，避免兩次 GetFadeSettings() 查 DB
     if not cachedFadeEnabled then
         return
@@ -1377,10 +1373,9 @@ local function CleanupActionBars()
     wipe(pendingNormalClear)
     wipe(pendingDesaturate)
 
-    -- 解除戰鬥事件監聽
+    -- 解除戰鬥事件監聽（保留 frame 參照，重新啟用時可重新註冊）
     if combatFrame then
         combatFrame:UnregisterAllEvents()
-        combatFrame = nil
     end
 
     -- 清理姿態條事件

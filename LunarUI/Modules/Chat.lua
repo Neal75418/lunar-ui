@@ -646,34 +646,7 @@ local function HandleURLClick(_self, link, _text, _button)
 
     local linkType, url = strsplit(":", link, 2)
     if linkType == "LunarURL" and url then
-        -- 使用本地化字串顯示網址複製彈窗
-        local popupText = L["PressToCopyURL"] or "Press Ctrl+C to copy URL:"
-        local closeText = CLOSE or "Close" -- 使用暴雪全域 CLOSE 字串
-
-        -- 建立彈窗以顯示並複製網址
-        StaticPopupDialogs["LUNARUI_URL_COPY"] = StaticPopupDialogs["LUNARUI_URL_COPY"]
-            or {
-                text = popupText,
-                button1 = closeText,
-                hasEditBox = true,
-                editBoxWidth = 280,
-                OnShow = function(popup, data)
-                    popup.editBox:SetText(data)
-                    popup.editBox:HighlightText()
-                    popup.editBox:SetFocus()
-                end,
-                EditBoxOnEnterPressed = function(editBox)
-                    editBox:GetParent():Hide()
-                end,
-                EditBoxOnEscapePressed = function(editBox)
-                    editBox:GetParent():Hide()
-                end,
-                timeout = 0,
-                whileDead = true,
-                hideOnEscape = true,
-                preferredIndex = 3,
-            }
-
+        -- 彈窗已在 InitializeChat 預先註冊，此處直接呼叫
         StaticPopup_Show("LUNARUI_URL_COPY", nil, nil, url)
         return true
     end
@@ -1221,6 +1194,31 @@ local function InitializeChat()
     if not db or not db.enabled then
         return
     end
+
+    -- 預先在 ADDON_LOADED 階段（而非 click handler）註冊彈窗，避免在 click 事件中寫入
+    -- StaticPopupDialogs 全域表（可能在 secure 執行路徑中觸發 taint）
+    StaticPopupDialogs["LUNARUI_URL_COPY"] = StaticPopupDialogs["LUNARUI_URL_COPY"]
+        or {
+            text = L["PressToCopyURL"] or "Press Ctrl+C to copy URL:",
+            button1 = CLOSE or "Close",
+            hasEditBox = true,
+            editBoxWidth = 280,
+            OnShow = function(popup, data)
+                popup.editBox:SetText(data)
+                popup.editBox:HighlightText()
+                popup.editBox:SetFocus()
+            end,
+            EditBoxOnEnterPressed = function(editBox)
+                editBox:GetParent():Hide()
+            end,
+            EditBoxOnEscapePressed = function(editBox)
+                editBox:GetParent():Hide()
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            preferredIndex = 3,
+        }
 
     -- 樣式化所有聊天框架
     for _, frameName in ipairs(CHAT_FRAMES) do

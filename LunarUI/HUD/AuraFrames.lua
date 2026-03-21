@@ -41,6 +41,9 @@ local BAR_HEIGHT = 4
 local BAR_OFFSET = 1 -- 圖示與計時條間距
 local LABEL_HEIGHT = 16 -- 分類標籤（Buffs / Debuffs）高度
 
+-- 暴雪 Buff/Debuff 框架清單（模組層級常數，避免 HideBlizzardBuffFrames / CleanupAuraFrames 每次呼叫都建立拋棄用 table）
+local BLIZZARD_BUFF_FRAMES = { _G.BuffFrame, _G.DebuffFrame }
+
 local function LoadSettings()
     ICON_SIZE = LunarUI.GetHUDSetting("auraIconSize", 30)
     ICON_SPACING = LunarUI.GetHUDSetting("auraIconSpacing", 4)
@@ -522,8 +525,7 @@ local function HideBlizzardBuffFrames()
     if InCombatLockdown() then
         return
     end
-    local frames = { _G.BuffFrame, _G.DebuffFrame }
-    for _, frame in ipairs(frames) do
+    for _, frame in ipairs(BLIZZARD_BUFF_FRAMES) do
         if frame then
             pcall(function()
                 frame:SetScale(0.001)
@@ -764,7 +766,7 @@ function LunarUI.CleanupAuraFrames()
 
     -- 還原暴雪框架（恢復 scale / alpha / 可見性）
     if not InCombatLockdown() then
-        for _, frame in ipairs({ _G.BuffFrame, _G.DebuffFrame }) do
+        for _, frame in ipairs(BLIZZARD_BUFF_FRAMES) do
             if frame then
                 pcall(function()
                     frame:SetScale(1)
