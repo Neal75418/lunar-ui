@@ -150,7 +150,7 @@ Tags.Methods["lunar:health:deficit"] = SafeTag(function(unit)
     end
     return "-" .. ShortValue(deficit)
 end)
-Tags.Events["lunar:health:deficit"] = "UNIT_HEALTH UNIT_MAXHEALTH"
+Tags.Events["lunar:health:deficit"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
 
 -- [lunar:power] — 格式化當前能量
 Tags.Methods["lunar:power"] = SafeTag(function(unit)
@@ -193,9 +193,9 @@ Tags.Methods["lunar:name:medium"] = SafeTag(function(unit, realUnit)
     local len = strlenutf8 and strlenutf8(name) or #name
     if len > 15 then
         if string_utf8sub then
-            return string_utf8sub(name, 1, 14) .. "..."
+            return string_utf8sub(name, 1, 12) .. "..."
         end
-        return name:sub(1, 14) .. "..."
+        return name:sub(1, 12) .. "..."
     end
     return name
 end)

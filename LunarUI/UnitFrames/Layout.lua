@@ -324,6 +324,7 @@ local function ShowEmpoweredStages(castbar, numStages)
         return
     end
 
+    numStages = math.min(numStages, MAX_TICKS) -- 防止超出 _stages 上限導致無法隱藏的洩漏
     for i = 1, numStages do
         local stage = castbar._stages[i]
         if not stage then
@@ -1236,7 +1237,7 @@ local function PlayerLayout(frame, unit)
 
     Shared(frame, unit)
     CreatePortrait(frame, unit)
-    CreatePowerBar(frame, unit)
+    CreatePowerBar(frame)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
     CreateBuffs(frame, unit)
@@ -1259,7 +1260,7 @@ local function TargetLayout(frame, unit)
 
     Shared(frame, unit)
     CreatePortrait(frame, unit)
-    CreatePowerBar(frame, unit)
+    CreatePowerBar(frame)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
 
@@ -1291,7 +1292,7 @@ local function FocusLayout(frame, unit)
 
     Shared(frame, unit)
     CreatePortrait(frame, unit)
-    CreatePowerBar(frame, unit)
+    CreatePowerBar(frame)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
     CreateDebuffs(frame, unit)
@@ -1306,7 +1307,7 @@ local function PetLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    CreatePowerBar(frame, unit)
+    CreatePowerBar(frame)
     CreateThreatIndicator(frame)
 
     return frame
@@ -1330,7 +1331,7 @@ local function BossLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    CreatePowerBar(frame, unit)
+    CreatePowerBar(frame)
     CreateHealthText(frame, unit)
     CreateCastbar(frame, unit)
     CreateDebuffs(frame, unit)
@@ -1345,7 +1346,7 @@ local function PartyLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    CreatePowerBar(frame, unit)
+    CreatePowerBar(frame)
     CreateHealthText(frame, unit)
     CreateDebuffs(frame, unit)
     CreateThreatIndicator(frame)
@@ -1706,6 +1707,11 @@ local function CleanupUnitFrames()
     if playerEnterWorldFrame then
         playerEnterWorldFrame:UnregisterAllEvents()
         playerEnterWorldFrame:SetScript("OnEvent", nil)
+    end
+    -- 清除戰鬥等待框架（防止 disable 後 PLAYER_REGEN_ENABLED 重新觸發 SpawnUnitFrames）
+    if combatWaitFrame then
+        combatWaitFrame:UnregisterAllEvents()
+        combatWaitFrame:SetScript("OnEvent", nil)
     end
     -- 重設重試計數器，讓下次 enable 從頭開始計算
     spawnRetries = 0

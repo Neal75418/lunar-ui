@@ -454,7 +454,7 @@ describe("Tag lunar:name:medium", function()
     it("truncates long name with ellipsis", function()
         _G._mockUnit.name = "VeryLongCharacterName"
         local result = tag("player")
-        assert.equals("VeryLongCharac...", result)
+        assert.equals("VeryLongChar...", result)
     end)
 
     it("truncates via sub fallback when utf8sub is nil", function()
@@ -479,7 +479,7 @@ describe("Tag lunar:name:medium", function()
         _G._mockUnit.name = "VeryLongCharacterName"
         local tag2 = testLunarUI.TagMethods["lunar:name:medium"]
         local result = tag2("player")
-        assert.equals("VeryLongCharac...", result)
+        assert.equals("VeryLongChar...", result)
 
         _G.string.utf8sub = orig_utf8sub
         _G.UnitName = origUnitName
