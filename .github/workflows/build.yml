@@ -76,6 +76,11 @@ jobs:
         with:
           rocks: luacheck
 
+      - name: Add luarocks bin to PATH
+        run: |
+          echo "$GITHUB_WORKSPACE/.luarocks/bin" >> $GITHUB_PATH
+          echo "$HOME/.luarocks/bin" >> $GITHUB_PATH
+
       - name: Lint with luacheck
         run: luacheck .
 
@@ -125,6 +130,11 @@ jobs:
         uses: leafo/gh-actions-luarocks@v6
         with:
           rocks: busted luacov
+
+      - name: Add luarocks bin to PATH
+        run: |
+          echo "$GITHUB_WORKSPACE/.luarocks/bin" >> $GITHUB_PATH
+          echo "$HOME/.luarocks/bin" >> $GITHUB_PATH
 
       - name: Run unit tests with coverage
         run: |

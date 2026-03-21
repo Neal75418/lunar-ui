@@ -45,6 +45,11 @@ jobs:
         with:
           rocks: luacheck busted
 
+      - name: Add luarocks bin to PATH
+        run: |
+          echo "$GITHUB_WORKSPACE/.luarocks/bin" >> $GITHUB_PATH
+          echo "$HOME/.luarocks/bin" >> $GITHUB_PATH
+
       - name: Lint with luacheck
         run: luacheck .
 
