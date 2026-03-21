@@ -40,10 +40,6 @@ local function GetMasqueGroup(barName)
     return masqueGroups[barName]
 end
 
--- 子模組匯入
-local StyleButton = LunarUI.ABStyleButton
-local PlayPressFlash = LunarUI.ABPlayPressFlash
-
 --------------------------------------------------------------------------------
 -- 常數與輔助函數
 --------------------------------------------------------------------------------
@@ -189,13 +185,13 @@ local function CreateActionBarButtons(bar, page, numButtons, buttonSize, buttonS
         end
 
         -- 樣式化
-        StyleButton(button)
+        LunarUI.ABStyleButton(button)
 
         -- 按下閃光回饋
         if not button._lunarHookedPress then
             button._lunarHookedPress = true
             button:HookScript("OnMouseDown", function(self)
-                PlayPressFlash(self)
+                LunarUI.ABPlayPressFlash(self)
             end)
         end
 
@@ -352,7 +348,7 @@ local function CreateStanceBar()
         -- 初始化圖標
         UpdateStanceButton(button, i)
 
-        StyleButton(button)
+        LunarUI.ABStyleButton(button)
 
         local masqueGroup = GetMasqueGroup("Stance Bar")
         if masqueGroup then
@@ -413,7 +409,7 @@ local function CreatePetBar()
         button:SetPoint("LEFT", bar, "LEFT", (i - 1) * 34, 0)
         button:SetID(i)
 
-        StyleButton(button)
+        LunarUI.ABStyleButton(button)
 
         local masqueGroup = GetMasqueGroup("Pet Bar")
         if masqueGroup then
