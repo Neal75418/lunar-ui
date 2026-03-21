@@ -40,42 +40,6 @@ local SIZES = {
 }
 
 --------------------------------------------------------------------------------
--- 子模組匯出的元素建構函數（由 Elements.lua / CastBar.lua / AuraSystem.lua / Indicators.lua 提供）
---------------------------------------------------------------------------------
-
-local CreateHealthBar = LunarUI.UFCreateHealthBar
-local CreatePowerBar = LunarUI.UFCreatePowerBar
-local CreateNameText = LunarUI.UFCreateNameText
-local CreateHealthText = LunarUI.UFCreateHealthText
-local CreateLevelText = LunarUI.UFCreateLevelText
-local CreateHealPrediction = LunarUI.UFCreateHealPrediction
-local CreatePortrait = LunarUI.UFCreatePortrait
-
-local CreateCastbar = LunarUI.UFCreateCastbar
-
-local CreateBuffs = LunarUI.UFCreateBuffs
-local CreateDebuffs = LunarUI.UFCreateDebuffs
-local CreateRaidDebuffs = LunarUI.UFCreateRaidDebuffs
-
-local CreateClassPower = LunarUI.UFCreateClassPower
-local CreateAlternativePower = LunarUI.UFCreateAlternativePower
-local CreateRestingIndicator = LunarUI.UFCreateRestingIndicator
-local CreateCombatIndicator = LunarUI.UFCreateCombatIndicator
-local CreateClassification = LunarUI.UFCreateClassification
-local CreateThreatIndicator = LunarUI.UFCreateThreatIndicator
-local CreateRangeIndicator = LunarUI.UFCreateRangeIndicator
-local CreateLeaderIndicator = LunarUI.UFCreateLeaderIndicator
-local CreateAssistantIndicator = LunarUI.UFCreateAssistantIndicator
-local CreateRaidRoleIndicator = LunarUI.UFCreateRaidRoleIndicator
-local CreateGroupRoleIndicator = LunarUI.UFCreateGroupRoleIndicator
-local CreateReadyCheckIndicator = LunarUI.UFCreateReadyCheckIndicator
-local CreateSummonIndicator = LunarUI.UFCreateSummonIndicator
-local CreateResurrectIndicator = LunarUI.UFCreateResurrectIndicator
-local CreateDeathIndicator = LunarUI.UFCreateDeathIndicator
-
-local RebuildAuraFilterCache = LunarUI.RebuildAuraFilterCache
-
---------------------------------------------------------------------------------
 -- 佈局函數
 --------------------------------------------------------------------------------
 
@@ -86,8 +50,8 @@ local function Shared(frame, unit)
     frame:SetScript("OnLeave", UnitFrame_OnLeave)
 
     CreateBackdrop(frame)
-    CreateHealthBar(frame, unit)
-    CreateNameText(frame, unit)
+    LunarUI.UFCreateHealthBar(frame, unit)
+    LunarUI.UFCreateNameText(frame, unit)
 
     return frame
 end
@@ -99,18 +63,18 @@ local function PlayerLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    CreatePortrait(frame, unit)
-    CreatePowerBar(frame)
-    CreateHealthText(frame, unit)
-    CreateCastbar(frame, unit)
-    CreateBuffs(frame, unit)
-    CreateLevelText(frame, unit)
-    CreateRestingIndicator(frame)
-    CreateCombatIndicator(frame)
-    CreateThreatIndicator(frame)
-    CreateClassPower(frame)
-    CreateAlternativePower(frame)
-    CreateHealPrediction(frame, unit)
+    LunarUI.UFCreatePortrait(frame, unit)
+    LunarUI.UFCreatePowerBar(frame)
+    LunarUI.UFCreateHealthText(frame, unit)
+    LunarUI.UFCreateCastbar(frame, unit)
+    LunarUI.UFCreateBuffs(frame, unit)
+    LunarUI.UFCreateLevelText(frame, unit)
+    LunarUI.UFCreateRestingIndicator(frame)
+    LunarUI.UFCreateCombatIndicator(frame)
+    LunarUI.UFCreateThreatIndicator(frame)
+    LunarUI.UFCreateClassPower(frame)
+    LunarUI.UFCreateAlternativePower(frame)
+    LunarUI.UFCreateHealPrediction(frame, unit)
 
     return frame
 end
@@ -122,13 +86,13 @@ local function TargetLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    CreatePortrait(frame, unit)
-    CreatePowerBar(frame)
-    CreateHealthText(frame, unit)
-    CreateCastbar(frame, unit)
+    LunarUI.UFCreatePortrait(frame, unit)
+    LunarUI.UFCreatePowerBar(frame)
+    LunarUI.UFCreateHealthText(frame, unit)
+    LunarUI.UFCreateCastbar(frame, unit)
 
     -- 減益：定位在框架上方（顯示所有人的 debuff）
-    CreateDebuffs(frame, unit)
+    LunarUI.UFCreateDebuffs(frame, unit)
     if frame.Debuffs then
         frame.Debuffs:ClearAllPoints()
         frame.Debuffs:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 4)
@@ -139,10 +103,10 @@ local function TargetLayout(frame, unit)
         frame.Debuffs["growth-y"] = "UP"
     end
 
-    CreateClassification(frame)
-    CreateLevelText(frame, unit)
-    CreateThreatIndicator(frame)
-    CreateDeathIndicator(frame, unit)
+    LunarUI.UFCreateClassification(frame)
+    LunarUI.UFCreateLevelText(frame, unit)
+    LunarUI.UFCreateThreatIndicator(frame)
+    LunarUI.UFCreateDeathIndicator(frame, unit)
 
     return frame
 end
@@ -154,11 +118,11 @@ local function FocusLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    CreatePortrait(frame, unit)
-    CreatePowerBar(frame)
-    CreateHealthText(frame, unit)
-    CreateCastbar(frame, unit)
-    CreateDebuffs(frame, unit)
+    LunarUI.UFCreatePortrait(frame, unit)
+    LunarUI.UFCreatePowerBar(frame)
+    LunarUI.UFCreateHealthText(frame, unit)
+    LunarUI.UFCreateCastbar(frame, unit)
+    LunarUI.UFCreateDebuffs(frame, unit)
 
     return frame
 end
@@ -170,8 +134,8 @@ local function PetLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    CreatePowerBar(frame)
-    CreateThreatIndicator(frame)
+    LunarUI.UFCreatePowerBar(frame)
+    LunarUI.UFCreateThreatIndicator(frame)
 
     return frame
 end
@@ -194,10 +158,10 @@ local function BossLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    CreatePowerBar(frame)
-    CreateHealthText(frame, unit)
-    CreateCastbar(frame, unit)
-    CreateDebuffs(frame, unit)
+    LunarUI.UFCreatePowerBar(frame)
+    LunarUI.UFCreateHealthText(frame, unit)
+    LunarUI.UFCreateCastbar(frame, unit)
+    LunarUI.UFCreateDebuffs(frame, unit)
 
     return frame
 end
@@ -209,18 +173,18 @@ local function PartyLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    CreatePowerBar(frame)
-    CreateHealthText(frame, unit)
-    CreateDebuffs(frame, unit)
-    CreateThreatIndicator(frame)
-    CreateRangeIndicator(frame)
-    CreateHealPrediction(frame, unit)
-    CreateLeaderIndicator(frame)
-    CreateGroupRoleIndicator(frame)
-    CreateReadyCheckIndicator(frame)
-    CreateSummonIndicator(frame)
-    CreateResurrectIndicator(frame)
-    CreateDeathIndicator(frame, unit)
+    LunarUI.UFCreatePowerBar(frame)
+    LunarUI.UFCreateHealthText(frame, unit)
+    LunarUI.UFCreateDebuffs(frame, unit)
+    LunarUI.UFCreateThreatIndicator(frame)
+    LunarUI.UFCreateRangeIndicator(frame)
+    LunarUI.UFCreateHealPrediction(frame, unit)
+    LunarUI.UFCreateLeaderIndicator(frame)
+    LunarUI.UFCreateGroupRoleIndicator(frame)
+    LunarUI.UFCreateReadyCheckIndicator(frame)
+    LunarUI.UFCreateSummonIndicator(frame)
+    LunarUI.UFCreateResurrectIndicator(frame)
+    LunarUI.UFCreateDeathIndicator(frame, unit)
 
     return frame
 end
@@ -233,18 +197,18 @@ local function CreateRaidLayout(dbKey)
         frame:SetSize(size.width, size.height)
 
         Shared(frame, unit)
-        CreateThreatIndicator(frame)
-        CreateRangeIndicator(frame)
-        CreateHealPrediction(frame, unit)
-        CreateLeaderIndicator(frame)
-        CreateAssistantIndicator(frame)
-        CreateRaidRoleIndicator(frame)
-        CreateGroupRoleIndicator(frame)
-        CreateReadyCheckIndicator(frame)
-        CreateSummonIndicator(frame)
-        CreateResurrectIndicator(frame)
-        CreateRaidDebuffs(frame)
-        CreateDeathIndicator(frame, unit)
+        LunarUI.UFCreateThreatIndicator(frame)
+        LunarUI.UFCreateRangeIndicator(frame)
+        LunarUI.UFCreateHealPrediction(frame, unit)
+        LunarUI.UFCreateLeaderIndicator(frame)
+        LunarUI.UFCreateAssistantIndicator(frame)
+        LunarUI.UFCreateRaidRoleIndicator(frame)
+        LunarUI.UFCreateGroupRoleIndicator(frame)
+        LunarUI.UFCreateReadyCheckIndicator(frame)
+        LunarUI.UFCreateSummonIndicator(frame)
+        LunarUI.UFCreateResurrectIndicator(frame)
+        LunarUI.UFCreateRaidDebuffs(frame)
+        LunarUI.UFCreateDeathIndicator(frame, unit)
 
         return frame
     end
@@ -554,7 +518,7 @@ local function SpawnUnitFrames()
     end
     local uf = LunarUI.db.profile.unitframes
 
-    RebuildAuraFilterCache()
+    LunarUI.RebuildAuraFilterCache()
     SpawnPlayerFrames(uf)
     SpawnBossFrames(uf)
     SpawnGroupFrames(uf)
