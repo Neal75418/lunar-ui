@@ -51,20 +51,20 @@ local function CreateLootSlot(parent, index)
     slot:EnableMouse(true)
     slot:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
-    -- Background highlight
+    -- 背景高亮
     local highlight = slot:CreateTexture(nil, "HIGHLIGHT")
     highlight:SetAllPoints()
     highlight:SetTexture("Interface\\Buttons\\WHITE8x8")
     highlight:SetVertexColor(1, 1, 1, 0.1)
 
-    -- Icon
+    -- 圖示
     local icon = slot:CreateTexture(nil, "ARTWORK")
     icon:SetSize(ICON_SIZE, ICON_SIZE)
     icon:SetPoint("LEFT", slot, "LEFT", 2, 0)
     icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     slot.icon = icon
 
-    -- Icon border (quality color)
+    -- 圖示邊框（品質顏色）
     local iconBorder = slot:CreateTexture(nil, "OVERLAY")
     iconBorder:SetPoint("TOPLEFT", icon, "TOPLEFT", -1, 1)
     iconBorder:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 1, -1)
@@ -72,14 +72,14 @@ local function CreateLootSlot(parent, index)
     iconBorder:SetVertexColor(0.3, 0.3, 0.3, 1)
     slot.iconBorder = iconBorder
 
-    -- Icon background (behind icon for border effect)
+    -- 圖示背景（邊框效果）
     local iconBg = slot:CreateTexture(nil, "BORDER")
     iconBg:SetAllPoints(iconBorder)
     iconBg:SetTexture("Interface\\Buttons\\WHITE8x8")
     iconBg:SetVertexColor(0, 0, 0, 1)
     slot.iconBg = iconBg
 
-    -- Item name
+    -- 物品名稱
     local name = slot:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(name, 11, "")
     name:SetPoint("LEFT", icon, "RIGHT", 6, 0)
@@ -88,21 +88,21 @@ local function CreateLootSlot(parent, index)
     name:SetWordWrap(false)
     slot.name = name
 
-    -- Quantity text (on the icon)
+    -- 數量文字（顯示在圖示上）
     local count = slot:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(count, 10, "OUTLINE")
     count:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", -1, 1)
     count:SetJustifyH("RIGHT")
     slot.count = count
 
-    -- Click handler
+    -- 點擊處理
     slot:SetScript("OnClick", function(self)
         if self.slotIndex then
             _G.LootSlot(self.slotIndex)
         end
     end)
 
-    -- Tooltip
+    -- 滑鼠提示
     slot:SetScript("OnEnter", function(self)
         if self.slotIndex then
             _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")

@@ -134,22 +134,22 @@ local function CreateHealthBar(frame)
     health:SetStatusBarTexture(GetStatusBarTexture())
     health:SetAllPoints()
 
-    -- Reaction colors (hostile/friendly)
+    -- 反應顏色（敵對/友善）
     health.colorReaction = true
     health.colorTapping = true
     health.colorDisconnected = true
 
-    -- Background
+    -- 背景
     health.bg = health:CreateTexture(nil, "BACKGROUND")
     health.bg:SetAllPoints()
     health.bg:SetTexture(GetStatusBarTexture())
     health.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     health.bg.multiplier = BG_DARKEN
 
-    -- Frequent updates
+    -- 高頻更新
     health.frequentUpdates = true
 
-    -- Health text overlay
+    -- 血量文字覆蓋
     local healthText
     if db and db.showHealthText then
         healthText = health:CreateFontString(nil, "OVERLAY")
@@ -240,7 +240,7 @@ local function CreateCastbar(frame)
     castbar:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, -3)
     castbar:SetHeight(6)
 
-    -- Background
+    -- 背景
     local bg = castbar:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
     bg:SetTexture(GetStatusBarTexture())
@@ -308,7 +308,7 @@ local function CreateDebuffs(frame)
     debuffs["growth-x"] = "RIGHT"
     debuffs["growth-y"] = "UP"
 
-    -- Only show player's debuffs
+    -- 只顯示玩家的減益
     debuffs.onlyShowPlayer = true
 
     -- WoW 12.0 將 isHarmful 設為 secret value（taint-protected），無法讀取。
@@ -341,7 +341,7 @@ local function CreateNameplateBuffs(frame)
     local maxBuffs = enemyDb and enemyDb.maxBuffs or 4
 
     local buffs = CreateFrame("Frame", nil, frame)
-    -- Position above debuffs if they exist, otherwise above health
+    -- 有減益時定位在減益上方，否則在血條上方
     if frame.Debuffs then
         buffs:SetPoint("BOTTOM", frame.Debuffs, "TOP", 0, 2)
     else
@@ -356,14 +356,14 @@ local function CreateNameplateBuffs(frame)
     buffs["growth-x"] = "RIGHT"
     buffs["growth-y"] = "UP"
 
-    -- Filter: only show stealable/purgeable buffs on enemies
+    -- 過濾：只顯示敵方可竊取/可驅散的增益
     buffs.FilterAura = function(_element, _unit, data)
         return data.isStealable == true
     end
 
     buffs.PostCreateButton = StyleNameplateAura
 
-    -- Stealable buffs get a bright border
+    -- 可竊取增益顯示亮邊框
     buffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
         if button.SetBackdropBorderColor then
             button:SetBackdropBorderColor(
@@ -545,11 +545,11 @@ end
 
 --[[ Shared Nameplate Layout (for callback) ]]
 local function NameplateLayout(frame, unit)
-    -- Determine if enemy or friendly
+    -- 判斷敵方或友方
     local reaction = UnitReaction(unit, "player")
 
     -- nil 或敵對（1-4）使用敵方佈局
-    -- Reaction: 1-3 = hostile, 4 = neutral, 5-8 = friendly
+    -- 反應值：1-3 = 敵對，4 = 中立，5-8 = 友善
     if not reaction or reaction <= 4 then
         return EnemyNameplateLayout(frame, unit)
     else
@@ -600,13 +600,13 @@ local function Nameplate_OnShow(frame)
     -- Performance: 標記堆疊偵測需要重新計算
     MarkStackingDirty()
 
-    -- Update target indicator
+    -- 更新目標指示器
     UpdateTargetIndicator(frame)
 
-    -- Update quest indicator
+    -- 更新任務指示器
     UpdateQuestIndicator(frame)
 
-    -- Update classification highlight + glow
+    -- 更新分類高亮 + 光暈
     if frame.unit then
         local classification = GetUnitClassification(frame.unit)
         local db = LunarUI.GetModuleDB("nameplates")
@@ -628,7 +628,7 @@ local function Nameplate_OnShow(frame)
             end
         end
 
-        -- Show classification glow for important targets
+        -- 重要目標顯示分類光暈
         if frame.ClassificationGlow then
             if isImportant then
                 local color = CLASSIFICATION_COLORS[classification]
@@ -1004,13 +1004,13 @@ function LunarUI.CleanupNameplates()
         npCombatWaitFrame:SetScript("OnEvent", nil)
         npCombatWaitFrame = nil
     end
-    -- Unregister target change event handler
+    -- 取消註冊目標切換事件處理器
     if nameplateTargetFrame then
         nameplateTargetFrame:UnregisterAllEvents()
         nameplateTargetFrame:SetScript("OnEvent", nil)
         nameplateTargetFrame = nil
     end
-    -- Unregister quest update event handler
+    -- 取消註冊任務更新事件處理器
     if nameplateQuestFrame then
         nameplateQuestFrame:UnregisterAllEvents()
         nameplateQuestFrame:SetScript("OnEvent", nil)
@@ -1018,9 +1018,9 @@ function LunarUI.CleanupNameplates()
     end
     -- 停止堆疊偵測
     StopStackingDetection()
-    -- Clear weak table references
+    -- 清除弱引用表引用
     wipe(nameplateFrames)
-    -- Reset stale upvalue to prevent highlight on wrong frame after re-enable
+    -- 重置過期 upvalue，防止 re-enable 後高亮錯誤框架
     lastTargetNameplate = nil
 end
 

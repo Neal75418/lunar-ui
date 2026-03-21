@@ -1436,7 +1436,7 @@ local function SpawnPlayerFrames(uf)
         local frame = SpawnAndAnchorFrame("player", "LunarUI_Player", function(f)
             f:SetPoint(uf.player.point, UIParent, "CENTER", uf.player.x, uf.player.y)
         end)
-        -- Special: Player frame needs delayed show + force update
+        -- 特殊處理：玩家框架需要延遲顯示 + 強制更新
         C_Timer.After(0.2, function()
             if frame then
                 frame:Show()
@@ -1461,7 +1461,7 @@ local function SpawnPlayerFrames(uf)
 
     if uf.pet and uf.pet.enabled then
         SpawnAndAnchorFrame("pet", "LunarUI_Pet", function(f)
-            -- Special: Anchor to player if available
+            -- 特殊處理：錨定到玩家框架（如可用）
             if spawnedFrames.player then
                 f:SetPoint("TOPLEFT", spawnedFrames.player, "BOTTOMLEFT", 0, -8)
             else
@@ -1472,7 +1472,7 @@ local function SpawnPlayerFrames(uf)
 
     if uf.targettarget and uf.targettarget.enabled then
         SpawnAndAnchorFrame("targettarget", "LunarUI_TargetTarget", function(f)
-            -- Special: Anchor to target if available
+            -- 特殊處理：錨定到目標框架（如可用）
             if spawnedFrames.target then
                 f:SetPoint("TOPRIGHT", spawnedFrames.target, "BOTTOMRIGHT", 0, -28)
             else
