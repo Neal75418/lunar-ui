@@ -563,6 +563,8 @@ local defaults = {
         version = nil,
         installComplete = false,
         installVersion = nil,
+        _debugVigor = false, -- LunarUI_Debug: 持續監控模式（/lunar debugvigor on/off）
+        _testVigorMode = false, -- LunarUI_Debug: 測試模式（/lunar testvigor）
     },
 
     char = {
