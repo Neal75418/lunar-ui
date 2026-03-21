@@ -418,10 +418,16 @@ end
 local function SetupSlotBase(button, bag, slot)
     button.bag = bag
     button.slot = slot
-    -- 設定 secure attribute 讓右鍵使用物品在安全執行環境中處理（C_Container.UseContainerItem 是 protected）
-    button:SetAttribute("type2", "item")
-    button:SetAttribute("bag", bag)
-    button:SetAttribute("slot", slot)
+    -- C_Container.UseContainerItem 是 protected function，無法從 addon OnClick 呼叫。
+    -- 使用 type2="macro" + PreClick 動態設置 macrotext2="/use B S"，
+    -- 讓右鍵在 secure macro 環境中執行 UseContainerItem。
+    -- （type2="item" + bag/slot 實際上呼叫的是 PickupContainerItem，不是 UseContainerItem）
+    button:SetAttribute("type2", "macro")
+    button:SetScript("PreClick", function(self, clickButton, _down)
+        if clickButton == "RightButton" and self.bag and self.slot then
+            self:SetAttribute("macrotext2", "/use " .. self.bag .. " " .. self.slot)
+        end
+    end)
     button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     -- 移除預設材質
@@ -1717,10 +1723,7 @@ local function RefreshBagLayout()
         end
         button.bag = slotInfo.bag
         button.slot = slotInfo.slot
-        if not InCombatLockdown() then
-            button:SetAttribute("bag", slotInfo.bag)
-            button:SetAttribute("slot", slotInfo.slot)
-        end
+        -- PreClick handler 在每次點擊前動態讀取 self.bag/self.slot，不需要 SetAttribute
 
         -- 分離背包視圖
         if db and db.splitBags and prevBag ~= nil and slotInfo.bag ~= prevBag then
