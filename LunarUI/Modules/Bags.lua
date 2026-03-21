@@ -370,13 +370,14 @@ local function HideSlotTooltip()
 end
 
 -- 物品格子點擊處理（template 預設 handler 依賴原生 ContainerFrame parent，無法在自訂框架下運作）
--- 注意：C_Container.UseContainerItem 是 protected function，不能從 addon OnClick 呼叫；
--- 右鍵使用由 SecureActionButtonTemplate 的 type2="item" 屬性在安全執行環境中處理。
+-- C_Container.UseContainerItem 不是 protected function，可從 OnClick handler 直接呼叫
+-- （OnClick 具備 hardware event context）
 local function OnSlotClick(self, button)
-    if button == "RightButton" then
-        return -- 由 type2="item" secure attribute 處理
-    end
     local bag, slot = self.bag, self.slot
+    if button == "RightButton" then
+        C_Container.UseContainerItem(bag, slot)
+        return
+    end
     if IsShiftKeyDown() then
         local link = C_Container.GetContainerItemLink(bag, slot)
         if link and ChatEdit_InsertLink and ChatEdit_InsertLink(link) then
@@ -418,16 +419,6 @@ end
 local function SetupSlotBase(button, bag, slot)
     button.bag = bag
     button.slot = slot
-    -- C_Container.UseContainerItem 是 protected function，無法從 addon OnClick 呼叫。
-    -- 使用 type2="macro" + PreClick 動態設置 macrotext2="/use B S"，
-    -- 讓右鍵在 secure macro 環境中執行 UseContainerItem。
-    -- （type2="item" + bag/slot 實際上呼叫的是 PickupContainerItem，不是 UseContainerItem）
-    button:SetAttribute("type2", "macro")
-    button:SetScript("PreClick", function(self, clickButton, _down)
-        if clickButton == "RightButton" and self.bag and self.slot then
-            self:SetAttribute("macrotext2", "/use " .. self.bag .. " " .. self.slot)
-        end
-    end)
     button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     -- 移除預設材質
@@ -1723,7 +1714,7 @@ local function RefreshBagLayout()
         end
         button.bag = slotInfo.bag
         button.slot = slotInfo.slot
-        -- PreClick handler 在每次點擊前動態讀取 self.bag/self.slot，不需要 SetAttribute
+        -- OnSlotClick 直接讀取 self.bag/self.slot，不需要額外同步
 
         -- 分離背包視圖
         if db and db.splitBags and prevBag ~= nil and slotInfo.bag ~= prevBag then
