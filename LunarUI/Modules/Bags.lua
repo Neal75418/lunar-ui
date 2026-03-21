@@ -318,17 +318,17 @@ end
 
 -- 銀行輔助函數
 local function GetTotalBankSlots()
-    local total = C_Container.GetContainerNumSlots(BANK_CONTAINER)
+    local total = (C_Container.GetContainerNumSlots(BANK_CONTAINER) or 0)
     for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
-        total = total + C_Container.GetContainerNumSlots(bag)
+        total = total + (C_Container.GetContainerNumSlots(bag) or 0)
     end
     return total
 end
 
 local function GetTotalBankFreeSlots()
-    local free = C_Container.GetContainerNumFreeSlots(BANK_CONTAINER)
+    local free = (C_Container.GetContainerNumFreeSlots(BANK_CONTAINER) or 0)
     for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
-        free = free + C_Container.GetContainerNumFreeSlots(bag)
+        free = free + (C_Container.GetContainerNumFreeSlots(bag) or 0)
     end
     return free
 end
