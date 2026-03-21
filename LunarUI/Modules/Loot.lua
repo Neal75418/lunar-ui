@@ -361,10 +361,16 @@ local function HookBlizzardLoot()
         hooksecurefunc(_G.LootFrame, "Show", function(self)
             local db = LunarUI.GetModuleDB("loot")
             if db and db.enabled then
+                -- 在 Show hook 內呼叫 Hide() 會 taint（在 protected 呼叫堆疊內）
+                -- 統一使用 SetAlpha(0) 隱藏，再於下一幀安全 Hide
+                self:SetAlpha(0)
                 if not InCombatLockdown() then
-                    self:Hide()
-                else
-                    self:SetAlpha(0)
+                    C_Timer.After(0, function()
+                        if not InCombatLockdown() and self:IsShown() then
+                            self:Hide()
+                            self:SetAlpha(1)
+                        end
+                    end)
                 end
             end
         end)

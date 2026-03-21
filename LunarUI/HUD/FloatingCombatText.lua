@@ -387,6 +387,16 @@ local function CreateFCTFrame()
         -- re-enable 時重新掛載事件（CleanupFCT 呼叫了 UnregisterAllEvents）
         fctFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         fctFrame:SetScript("OnEvent", OnCombatLogEvent)
+        -- 重新掛載 queueFrame OnUpdate（CleanupFCT 呼叫了 SetScript("OnUpdate", nil)）
+        if queueFrame then
+            queueFrame:SetScript("OnUpdate", function(self)
+                self:Hide()
+                for i = 1, pendingCount do
+                    ShowText(pendingAmounts[i], pendingCriticals[i], pendingTypes[i])
+                end
+                pendingCount = 0
+            end)
+        end
         return fctFrame
     end
 

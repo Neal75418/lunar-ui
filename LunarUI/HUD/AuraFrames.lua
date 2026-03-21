@@ -91,6 +91,7 @@ local debuffFrame = nil
 local buffIcons = {}
 local debuffIcons = {}
 local isInitialized = false
+local auraInitGeneration = 0
 
 -- /reload 時舊框架已在正確位置，不隱藏它（避免閃爍和位置跳動）
 
@@ -292,9 +293,11 @@ local function SetupFrames()
 
     local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
 
-    -- 建立 Buff 圖示（從右到左排列）
+    -- 建立 Buff 圖示（從右到左排列，重用已存在的框架）
     for i = 1, MAX_BUFFS do
-        buffIcons[i] = CreateAuraIcon(buffFrame, i)
+        if not buffIcons[i] then
+            buffIcons[i] = CreateAuraIcon(buffFrame, i)
+        end
         local row = math_floor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
         buffIcons[i]:SetPoint(
@@ -306,9 +309,11 @@ local function SetupFrames()
         )
     end
 
-    -- 建立 Debuff 圖示
+    -- 建立 Debuff 圖示（重用已存在的框架）
     for i = 1, MAX_DEBUFFS do
-        debuffIcons[i] = CreateAuraIcon(debuffFrame, i)
+        if not debuffIcons[i] then
+            debuffIcons[i] = CreateAuraIcon(debuffFrame, i)
+        end
         local row = math_floor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
         debuffIcons[i]:SetPoint(
@@ -622,9 +627,12 @@ eventFrame = LunarUI.CreateEventHandler(
             -- C-2: 防止與 RegisterModule delay 競爭，只在尚未排程時才安排
             if not isInitialized and not initScheduled then
                 initScheduled = true
+                local gen = auraInitGeneration
                 C_Timer.After(1.0, function()
                     initScheduled = false
-                    Initialize()
+                    if gen == auraInitGeneration then
+                        Initialize()
+                    end
                 end)
             end
         elseif event == "UNIT_AURA" then
@@ -783,8 +791,8 @@ function LunarUI.CleanupAuraFrames()
             debuffIcons[i]:Hide()
         end
     end
-    buffIcons = {}
-    debuffIcons = {}
+    wipe(buffIcons)
+    wipe(debuffIcons)
 
     -- 還原暴雪框架（恢復 scale / alpha / 可見性）
     if not InCombatLockdown() then
@@ -809,6 +817,7 @@ function LunarUI.CleanupAuraFrames()
     -- H-1: 重置排程旗標，避免 re-enable 後首次 UNIT_AURA 靜默失敗
     auraUpdateScheduled = false
     initScheduled = false
+    auraInitGeneration = auraInitGeneration + 1
 
     isInitialized = false
     -- 不取消事件註冊：OnEvent 已有 isInitialized guard，

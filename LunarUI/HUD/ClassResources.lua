@@ -96,6 +96,7 @@ local _playerClass
 local resourceType
 local maxResources = 0
 local isInitialized = false
+local setupScheduled = false
 local useBar = false -- 是否使用進度條而非圖示
 -- M5 效能修復：快取資源顏色，避免 UpdateResources 每次 UNIT_POWER_UPDATE 都呼叫 GetClassResourceInfo
 -- 職業和顏色在戰鬥中不會改變，SetupResourceDisplay 初始化後一次性設定
@@ -287,13 +288,15 @@ local function UpdateResourceIcons(current, max, color)
                     icon._isActive = true
                     icon.fill:SetVertexColor(color[1], color[2], color[3])
                     icon.glow:SetVertexColor(color[1], color[2], color[3], 0.7)
+                    icon.fill:Show()
+                    icon.glow:Show()
                 end
-                icon.fill:Show()
-                icon.glow:Show()
             else
-                icon._isActive = false
-                icon.fill:Hide()
-                icon.glow:Hide()
+                if icon._isActive ~= false then
+                    icon._isActive = false
+                    icon.fill:Hide()
+                    icon.glow:Hide()
+                end
             end
             icon:Show()
         end
@@ -460,7 +463,13 @@ local _eventFrame = LunarUI.CreateEventHandler({
         if resourceBar then
             resourceBar:Hide()
         end
-        C_Timer.After(0.5, SetupResourceDisplay)
+        if not setupScheduled then
+            setupScheduled = true
+            C_Timer.After(0.5, function()
+                setupScheduled = false
+                SetupResourceDisplay()
+            end)
+        end
     elseif event == "UNIT_POWER_UPDATE" or event == "UNIT_MAXPOWER" then
         if arg1 == "player" and isInitialized then
             UpdateResources()

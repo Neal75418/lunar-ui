@@ -22,6 +22,7 @@ local C = LunarUI.Colors
 local skins = {} -- 已註冊的 skin 函數 { name = { event, func } }
 local skinned = {} -- 已套用的框架名稱（避免重複）
 local skinsEventFrame -- 私有事件框架（不暴露到 LunarUI 物件）
+local skinsRetryTimer -- 延遲重試 timer handle（供 CleanupSkins 取消）
 
 --------------------------------------------------------------------------------
 -- Strip Textures Helper
@@ -412,7 +413,11 @@ local function LoadAllSkins()
     end
     -- 延遲重試失敗的 skins（等待 frame 建立完成）
     if #retryList > 0 then
-        C_Timer.After(3.0, function()
+        if skinsRetryTimer then
+            skinsRetryTimer:Cancel()
+        end
+        skinsRetryTimer = C_Timer.NewTimer(3.0, function()
+            skinsRetryTimer = nil
             local retryDb = LunarUI.GetModuleDB("skins")
             for _, name in ipairs(retryList) do
                 if not skinned[name] and IsSkinEnabled(retryDb, name) then
@@ -471,6 +476,10 @@ end
 
 -- 清理
 function LunarUI.CleanupSkins()
+    if skinsRetryTimer then
+        skinsRetryTimer:Cancel()
+        skinsRetryTimer = nil
+    end
     if skinsEventFrame then
         skinsEventFrame:UnregisterAllEvents()
         skinsEventFrame:SetScript("OnEvent", nil)

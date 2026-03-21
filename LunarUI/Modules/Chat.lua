@@ -1329,6 +1329,7 @@ local function CleanupChat()
     if chatRoleIconEventFrame then
         chatRoleIconEventFrame:UnregisterAllEvents()
         chatRoleIconEventFrame:SetScript("OnEvent", nil)
+        chatRoleIconEventFrame = nil
     end
 end
 

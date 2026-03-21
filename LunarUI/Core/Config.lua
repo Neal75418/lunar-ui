@@ -74,7 +74,7 @@ function LunarUI:OnProfileChanged()
     -- 套用框架位置（FrameMover 在 RegisterModule delay=2.0 後才初始化，
     -- 此時 movers 表已就緒，可以直接套用新 profile 的位置）
     if self.ApplyAllSavedPositions then
-        local ok, err = pcall(self.ApplyAllSavedPositions)
+        local ok, err = pcall(self.ApplyAllSavedPositions, self)
         if not ok and LunarUI.Debug then
             LunarUI:Debug("ApplyAllSavedPositions error: " .. tostring(err))
         end

@@ -126,6 +126,7 @@ local LAST_BANK_BAG = 11
 
 -- 前向宣告（函數定義在下方）
 local SellJunk
+local sellJunkGeneration = 0
 
 -- 從 DB 載入背包設定（覆寫模組常數）
 local function LoadBagSettings()
@@ -504,41 +505,46 @@ local function SetupSlotBase(button, bag, slot)
         button.newGlowAnim = ag
     end
 
-    -- 修正模板的 GetBagID（預設從 parent chain 查找 ContainerFrame，但我們的 parent 不是）
-    function button:GetBagID()
-        return self.bag
-    end
-
     -- 設定 slot ID（mixin 的 OnClick 透過 self:GetID() 取得 slot）
     button:SetID(slot)
 
-    -- 覆寫 tooltip
-    button:SetScript("OnEnter", ShowSlotTooltip)
-    button:SetScript("OnLeave", HideSlotTooltip)
-    button:RegisterForDrag("LeftButton")
-    button:SetScript("OnDragStart", function(self)
-        C_Container.PickupContainerItem(self.bag, self.slot)
-    end)
-    button.OnEnter = ShowSlotTooltip
-    button.OnLeave = HideSlotTooltip
-    button.UpdateTooltip = ShowSlotTooltip
+    -- 只在首次建立時設定 handler 和 mixin 方法（避免 re-layout 時重建 closure）
+    if not button._lunarSetup then
+        button._lunarSetup = true
 
-    -- 覆寫 mixin 的 OnClick 方法（不用 SetScript 以免干擾 intrinsic handler）
-    -- XML 的 <OnClick method="OnClick"/> 會呼叫 self:OnClick(btn)，
-    -- 在 SecureActionButton_OnClick（intrinsic）之後執行。
-    -- 右鍵已由 intrinsic 透過 type2="item" 安全處理，此處只處理左鍵。
-    function button:OnClick(btn)
-        if btn == "RightButton" then
-            return
+        -- 修正模板的 GetBagID（預設從 parent chain 查找 ContainerFrame，但我們的 parent 不是）
+        function button:GetBagID()
+            return self.bag
         end
-        if IsShiftKeyDown() then
-            local link = C_Container.GetContainerItemLink(self.bag, self.slot)
-            if link and ChatEdit_InsertLink then
-                ChatEdit_InsertLink(link)
+
+        -- 覆寫 tooltip
+        button:SetScript("OnEnter", ShowSlotTooltip)
+        button:SetScript("OnLeave", HideSlotTooltip)
+        button:RegisterForDrag("LeftButton")
+        button:SetScript("OnDragStart", function(self)
+            C_Container.PickupContainerItem(self.bag, self.slot)
+        end)
+        button.OnEnter = ShowSlotTooltip
+        button.OnLeave = HideSlotTooltip
+        button.UpdateTooltip = ShowSlotTooltip
+
+        -- 覆寫 mixin 的 OnClick 方法（不用 SetScript 以免干擾 intrinsic handler）
+        -- XML 的 <OnClick method="OnClick"/> 會呼叫 self:OnClick(btn)，
+        -- 在 SecureActionButton_OnClick（intrinsic）之後執行。
+        -- 右鍵已由 intrinsic 透過 type2="item" 安全處理，此處只處理左鍵。
+        function button:OnClick(btn)
+            if btn == "RightButton" then
+                return
             end
-            return
+            if IsShiftKeyDown() then
+                local link = C_Container.GetContainerItemLink(self.bag, self.slot)
+                if link and ChatEdit_InsertLink then
+                    ChatEdit_InsertLink(link)
+                end
+                return
+            end
+            C_Container.PickupContainerItem(self.bag, self.slot)
         end
-        C_Container.PickupContainerItem(self.bag, self.slot)
     end
 end
 
@@ -2141,6 +2147,8 @@ end
     增強型自動販賣：包含安全檢查與統計資訊
 ]]
 SellJunk = function()
+    sellJunkGeneration = sellJunkGeneration + 1
+    local myGen = sellJunkGeneration
     local db = GetBagDB()
     if not db or not db.autoSellJunk then
         return
@@ -2176,6 +2184,10 @@ SellJunk = function()
     local itemCount = #junkItems
     local index = 0
     local function SellNext()
+        -- generation counter：防止多個 SellJunk 呼叫產生重疊的販賣鏈
+        if myGen ~= sellJunkGeneration then
+            return
+        end
         -- 確保商人視窗仍然開啟，玩家可能在販賣過程中關閉商人
         if not MerchantFrame or not MerchantFrame:IsShown() then
             return

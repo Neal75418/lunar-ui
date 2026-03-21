@@ -912,28 +912,27 @@ local function ApplyIconSettings()
 
     local map = GetIconFrameMap()
     for key, iconDB in pairs(db.icons) do
-        if type(iconDB) ~= "table" then
-            break
-        end
-        local frame = map[key]
-        if frame then
-            if iconDB.hide then
-                frame:Hide()
-                frame:SetAlpha(0)
-            else
-                frame:SetAlpha(1)
-                frame:ClearAllPoints()
-                frame:SetPoint(
-                    iconDB.position or "CENTER",
-                    Minimap,
-                    iconDB.position or "CENTER",
-                    iconDB.xOffset or 0,
-                    iconDB.yOffset or 0
-                )
-                frame:SetScale(iconDB.scale or 1.0)
-                -- mail/difficulty 由自身事件決定顯示，其餘圖示直接 Show
-                if not SELF_MANAGED_ICONS[key] then
-                    frame:Show()
+        if type(iconDB) == "table" then
+            local frame = map[key]
+            if frame then
+                if iconDB.hide then
+                    frame:Hide()
+                    frame:SetAlpha(0)
+                else
+                    frame:SetAlpha(1)
+                    frame:ClearAllPoints()
+                    frame:SetPoint(
+                        iconDB.position or "CENTER",
+                        Minimap,
+                        iconDB.position or "CENTER",
+                        iconDB.xOffset or 0,
+                        iconDB.yOffset or 0
+                    )
+                    frame:SetScale(iconDB.scale or 1.0)
+                    -- mail/difficulty 由自身事件決定顯示，其餘圖示直接 Show
+                    if not SELF_MANAGED_ICONS[key] then
+                        frame:Show()
+                    end
                 end
             end
         end
@@ -1234,6 +1233,12 @@ function LunarUI.CleanupMinimap()
     end
     -- 停用方形小地圖（wrapper 仍在，但 flag 為 false 時直接透傳原始函數）
     lunarMinimapIsSquare = false
+    -- 清除框架 upvalue 引用（WoW 框架不可銷毀但 upvalue 必須重置，避免 re-enable 指向 orphaned 物件）
+    minimapFrame = nil
+    zoneText = nil
+    coordText = nil
+    clockText = nil
+    buttonFrame = nil
     isInitialized = false
 end
 

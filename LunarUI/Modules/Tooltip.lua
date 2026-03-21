@@ -113,9 +113,10 @@ local function CacheInspectData(guid, ilvl, spec)
     local count = 0
     local now = GetTime()
     local oldestKey, oldestTime = nil, now
+    local toEvict = {}
     for k, v in pairs(inspectCache) do
         if (now - v.time) >= INSPECT_CACHE_TTL then
-            inspectCache[k] = nil
+            toEvict[#toEvict + 1] = k
         else
             count = count + 1
             if v.time < oldestTime then
@@ -123,6 +124,9 @@ local function CacheInspectData(guid, ilvl, spec)
                 oldestTime = v.time
             end
         end
+    end
+    for i = 1, #toEvict do
+        inspectCache[toEvict[i]] = nil
     end
     -- 超過上限時移除最舊的條目
     if count > INSPECT_CACHE_MAX and oldestKey then
@@ -568,7 +572,7 @@ local function OnTooltipSetItem(tooltip)
         end
     end
 
-    if not InCombatLockdown() then
+    if not InCombatLockdown() and tooltip == GameTooltip then
         tooltip:Show()
     end
 end
@@ -592,7 +596,7 @@ local function OnTooltipSetSpell(tooltip)
     local spellID = select(2, tooltip:GetSpell())
     if spellID then
         tooltip:AddLine("|cff888888法術 ID: " .. spellID .. "|r")
-        if not InCombatLockdown() then
+        if not InCombatLockdown() and tooltip == GameTooltip then
             tooltip:Show()
         end
     end

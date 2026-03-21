@@ -306,6 +306,9 @@ local function ApplySavedPosition(name)
 end
 
 local function ApplyAllSavedPositions()
+    if InCombatLockdown() then
+        return
+    end
     for name in pairs(movers) do
         ApplySavedPosition(name)
     end
@@ -479,7 +482,17 @@ end
 -- 清理函數
 function LunarUI.CleanupFrameMover()
     ExitMoveMode()
-    wipe(movers)
+    -- 不 wipe(movers)：WoW 框架不可銷毀，wipe 會遺棄永久框架並導致 re-enable 時 stale closures
+    for _, data in pairs(movers) do
+        if data.mover then
+            data.mover:Hide()
+            data.mover:SetScript("OnDragStart", nil)
+            data.mover:SetScript("OnDragStop", nil)
+            data.mover:SetScript("OnMouseUp", nil)
+            data.mover:SetScript("OnEnter", nil)
+            data.mover:SetScript("OnLeave", nil)
+        end
+    end
 end
 
 -- 暴露給 Config.lua 的 OnProfileChanged，確保切換 profile 後立即套用框架位置

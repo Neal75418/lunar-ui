@@ -693,7 +693,7 @@ function LunarUI.CleanupDataTexts()
     end
 
     -- Hide and clean panels
-    for name, panel in pairs(panels) do
+    for _, panel in pairs(panels) do
         if panel then
             if panel.slots then
                 for _, slot in ipairs(panel.slots) do
@@ -704,8 +704,8 @@ function LunarUI.CleanupDataTexts()
             end
             panel:Hide()
         end
-        panels[name] = nil
     end
+    wipe(panels)
 
     wipe(onUpdateElapsed)
     wipe(slotsByProvider)

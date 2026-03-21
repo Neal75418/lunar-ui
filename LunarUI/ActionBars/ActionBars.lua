@@ -97,6 +97,7 @@ local BLIZZARD_BAR_KEYS = { extraActionButton = true, zoneAbilityButton = true }
 local fadeInitTimer = nil
 local savedExtraActionPos = nil
 local savedZoneAbilityPos = nil
+local actionBarsCombatWaitFrame = nil
 
 -- 清除按鈕 NormalTexture（提升到模組級供 hook 共用）
 local function ClearNormalTexture(self)
@@ -113,11 +114,12 @@ local normalClearScheduled = false
 
 local function ProcessPendingNormalClears()
     normalClearScheduled = false
-    for btn in pairs(pendingNormalClear) do
+    local snapshot = pendingNormalClear
+    pendingNormalClear = {}
+    for btn in pairs(snapshot) do
         if btn:GetNormalTexture() then
             ClearNormalTexture(btn)
         end
-        pendingNormalClear[btn] = nil
     end
 end
 
@@ -130,8 +132,9 @@ local desaturateScheduled = false
 
 local function ProcessPendingDesaturate()
     desaturateScheduled = false
-    for btn in pairs(pendingDesaturate) do
-        pendingDesaturate[btn] = nil
+    local snapshot = pendingDesaturate
+    pendingDesaturate = {}
+    for btn in pairs(snapshot) do
         local cd = btn.cooldown
         local btnIcon = btn.icon or (btn:GetName() and _G[btn:GetName() .. "Icon"])
         if btnIcon and cd then
@@ -1311,10 +1314,15 @@ local function CreateMicroBar()
             microMenuLayoutHooked = true
             hooksecurefunc(_G.MicroMenu, "Layout", function()
                 if bars.microBar and bars.microBar._buttons and not InCombatLockdown() then
+                    -- 從 DB 動態讀取（避免捕獲 stale upvalue）
+                    local microDB = LunarUI.GetModuleDB("actionbars")
+                    local mbDB = microDB and microDB.microBar
+                    local curBtnWidth = (mbDB and mbDB.buttonWidth) or 28
+                    local curSpacing = 1
                     for idx, mbtn in ipairs(bars.microBar._buttons) do
                         mbtn:SetParent(bars.microBar)
                         mbtn:ClearAllPoints()
-                        mbtn:SetPoint("LEFT", bars.microBar, "LEFT", (idx - 1) * (btnWidth + spacing), 0)
+                        mbtn:SetPoint("LEFT", bars.microBar, "LEFT", (idx - 1) * (curBtnWidth + curSpacing), 0)
                     end
                 end
             end)
@@ -1355,11 +1363,13 @@ local function SpawnActionBars()
         return -- 使用暴雪預設動作條
     end
 
-    -- 使用事件驅動重試而非固定計時器處理戰鬥鎖定
+    -- 使用事件驅動重試而非固定計時器處理戰鬥鎖定（singleton 防止框架洩漏）
     if InCombatLockdown() then
-        local waitFrame = CreateFrame("Frame")
-        waitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-        waitFrame:SetScript("OnEvent", function(self)
+        if not actionBarsCombatWaitFrame then
+            actionBarsCombatWaitFrame = CreateFrame("Frame")
+        end
+        actionBarsCombatWaitFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        actionBarsCombatWaitFrame:SetScript("OnEvent", function(self)
             self:UnregisterAllEvents()
             self:SetScript("OnEvent", nil)
             SpawnActionBars()
