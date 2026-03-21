@@ -86,7 +86,7 @@ jobs:
             unzip -q stylua.zip
             chmod +x stylua
           fi
-          ./stylua --check --glob '**/*.lua' --glob '!LunarUI/Libs/**' .
+          ./stylua --check --glob '**/*.lua' --glob '!LunarUI/Libs/**' --glob '!.lua/**' --glob '!.luarocks/**' .
 
       - name: Lint locale key parity
         run: ./scripts/check-locale-keys.sh
