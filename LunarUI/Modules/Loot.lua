@@ -347,6 +347,7 @@ eventFrame:SetScript("OnEvent", OnEvent)
 --------------------------------------------------------------------------------
 
 local blizzardLootHooked = false
+local lootCombatRestoreFrame = nil
 
 local function HookBlizzardLoot()
     if blizzardLootHooked then
@@ -370,6 +371,19 @@ local function HookBlizzardLoot()
                             self:Hide()
                             self:SetAlpha(1)
                         end
+                    end)
+                else
+                    -- 戰鬥中無法 Hide，等戰鬥結束後還原 alpha 並隱藏
+                    if not lootCombatRestoreFrame then
+                        lootCombatRestoreFrame = CreateFrame("Frame")
+                    end
+                    lootCombatRestoreFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+                    lootCombatRestoreFrame:SetScript("OnEvent", function(f)
+                        f:UnregisterAllEvents()
+                        if self:IsShown() and not InCombatLockdown() then
+                            self:Hide()
+                        end
+                        self:SetAlpha(1)
                     end)
                 end
             end

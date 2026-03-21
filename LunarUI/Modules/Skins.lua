@@ -386,8 +386,9 @@ local function ApplySkin(name)
     local ok, result = pcall(skin.func)
     if ok then
         skinned[name] = true
-    elseif LunarUI.Debug then
-        LunarUI:Debug("Skin error [" .. name .. "]: " .. tostring(result))
+    else
+        -- 生產環境也輸出錯誤，避免 Skin 失敗靜默無感
+        LunarUI:Print("|cffff6666[Skin]|r " .. name .. ": " .. tostring(result))
     end
 end
 

@@ -594,6 +594,9 @@ function LunarUI.RebuildCooldownTracker()
     -- 隱藏超出新上限的圖示
     for i = MAX_ICONS + 1, oldMaxIcons do
         if cooldownIcons[i] then
+            if cooldownIcons[i].flashAnim then
+                cooldownIcons[i].flashAnim:Stop()
+            end
             cooldownIcons[i]:Hide()
             cooldownIcons[i].spellID = nil
         end
