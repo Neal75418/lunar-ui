@@ -427,7 +427,13 @@ end
 ]]
 function LunarUI.UnregisterMovableFrame(name)
     if movers[name] then
-        movers[name].mover:Hide()
+        local mover = movers[name].mover
+        mover:Hide()
+        mover:SetScript("OnDragStart", nil)
+        mover:SetScript("OnDragStop", nil)
+        mover:SetScript("OnMouseUp", nil)
+        mover:SetScript("OnEnter", nil)
+        mover:SetScript("OnLeave", nil)
         movers[name] = nil
     end
 end

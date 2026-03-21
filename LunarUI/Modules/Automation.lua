@@ -140,7 +140,7 @@ local function OnQuestComplete()
     -- 只有無獎勵選擇或僅一個獎勵時才自動繳交（避免選錯獎勵）
     local numChoices = GetNumQuestChoices()
     if numChoices <= 1 then
-        GetQuestReward(numChoices > 0 and 1 or 0)
+        GetQuestReward(1)
     end
 end
 

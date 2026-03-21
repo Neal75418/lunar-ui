@@ -238,6 +238,9 @@ local function Initialize()
     end
     local isNew = not perfFrame
     CreatePerfFrame()
+    if perfFrame then
+        perfFrame:Show()
+    end
 
     -- 只在首次建立時向移動器登錄（避免 disable/enable 週期重複登錄）
     if isNew and perfFrame then

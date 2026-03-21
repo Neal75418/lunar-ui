@@ -793,6 +793,9 @@ function LunarUI.CleanupAuraFrames()
     end
     wipe(buffIcons)
     wipe(debuffIcons)
+    -- 清除框架 upvalue（WoW 框架不可銷毀，但 upvalue 必須重置讓 SetupFrames 能重新發現全域框架）
+    buffFrame = nil
+    debuffFrame = nil
 
     -- 還原暴雪框架（恢復 scale / alpha / 可見性）
     if not InCombatLockdown() then

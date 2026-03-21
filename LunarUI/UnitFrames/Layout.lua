@@ -518,7 +518,7 @@ local function RebuildAuraFilterCache()
     wipe(auraFilterDBCache) -- 清除 DB 設定快取，強制重新讀取
     wipe(unitKeyCache) -- 清除 unit → unitKey 快取（設定變更時）
     auraFilterGlobalCache = nil
-    local db = LunarUI.db.profile
+    local db = LunarUI.db and LunarUI.db.profile
     if not db then
         return
     end
@@ -542,7 +542,7 @@ LunarUI.RebuildAuraFilterCache = RebuildAuraFilterCache
 -- 取得全域過濾器設定（快取）
 local function GetAuraFilterSettings()
     if not auraFilterGlobalCache then
-        local db = LunarUI.db.profile
+        local db = LunarUI.db and LunarUI.db.profile
         local af = db and db.auraFilters or {}
         auraFilterGlobalCache = {
             hidePassive = af.hidePassive ~= false,
@@ -566,7 +566,10 @@ local function AuraFilter(_element, unit, data)
     -- 使用快取避免高頻 DB 查詢
     local cachedSettings = auraFilterDBCache[unitKey]
     if not cachedSettings then
-        local ufDB = LunarUI.db.profile.unitframes[unitKey]
+        local ufDB = LunarUI.db
+            and LunarUI.db.profile
+            and LunarUI.db.profile.unitframes
+            and LunarUI.db.profile.unitframes[unitKey]
         if not ufDB then
             return true
         end

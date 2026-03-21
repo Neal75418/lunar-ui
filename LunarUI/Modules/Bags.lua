@@ -1451,6 +1451,7 @@ end
 -- 批次更新銀行格子避免 FPS 下降
 local bankUpdateQueue = {}
 local bankUpdateInProgress = false
+local bankUpdateGeneration = 0
 local BANK_BATCH_SIZE = 10
 
 local function ProcessBankUpdateBatch()
@@ -1483,12 +1484,18 @@ local function ProcessBankUpdateBatch()
         end
     end
 
-    -- 排程下一批次
-    C_Timer.After(0, ProcessBankUpdateBatch)
+    -- 排程下一批次（使用 generation counter 防止 stale callback）
+    local gen = bankUpdateGeneration
+    C_Timer.After(0, function()
+        if gen == bankUpdateGeneration then
+            ProcessBankUpdateBatch()
+        end
+    end)
 end
 
 local function UpdateAllBankSlots()
-    -- 使用批次更新處理大型銀行
+    -- 使用批次更新處理大型銀行（遞增 generation 使 stale callback 失效）
+    bankUpdateGeneration = bankUpdateGeneration + 1
     wipe(bankUpdateQueue)
     for _, button in pairs(bankSlots) do
         if button then

@@ -167,7 +167,14 @@ local function ClearStaleButtonReferences()
     for i = writeIdx + 1, #collectedButtons do
         collectedButtons[i] = nil
     end
+    -- 從存活的按鈕重建 scannedButtonIDs（避免下次掃描重複加入）
     wipe(scannedButtonIDs)
+    for i = 1, writeIdx do
+        local name = collectedButtons[i] and collectedButtons[i]:GetName()
+        if name then
+            scannedButtonIDs[name] = true
+        end
+    end
 end
 
 -- 跳過系統按鈕和由 LunarUI 管理的按鈕（提升為常數避免每次呼叫重建 table）

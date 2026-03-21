@@ -384,14 +384,11 @@ local function ApplySkin(name)
     end
 
     local ok, result = pcall(skin.func)
-    if not ok then
-        if LunarUI.Debug then
-            LunarUI:Debug("Skin error [" .. name .. "]: " .. tostring(result))
-        end
+    if ok then
+        skinned[name] = true
+    elseif LunarUI.Debug then
+        LunarUI:Debug("Skin error [" .. name .. "]: " .. tostring(result))
     end
-    -- 成功或失敗都標記完成，避免每次 ADDON_LOADED 重複執行
-    -- （skin func 通常不回傳值，不應依賴回傳值判斷是否完成）
-    skinned[name] = true
 end
 
 --- 檢查指定 skin 是否啟用

@@ -550,11 +550,15 @@ end
 
 ---@return Frame
 local function CreateWizardFrame()
+    -- 優先重用已存在的 WoW 框架（WoW 框架不可銷毀，避免每次開啟洩漏新框架）
+    if not wizardFrame then
+        wizardFrame = _G["LunarUI_InstallWizard"]
+    end
     if wizardFrame then
         return wizardFrame
     end
 
-    local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    local f = CreateFrame("Frame", "LunarUI_InstallWizard", UIParent, "BackdropTemplate")
     f:SetSize(WIZARD_WIDTH, WIZARD_HEIGHT)
     f:SetPoint("CENTER")
     f:SetFrameStrata("DIALOG")
