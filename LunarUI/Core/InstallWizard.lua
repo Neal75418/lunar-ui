@@ -653,18 +653,16 @@ end
     在 OnEnable 時呼叫
 ]]
 function LunarUI.CleanupInstallWizard()
-    -- 清理步驟框架
+    -- 隱藏步驟框架（不 wipe：WoW 框架不可銷毀，保留引用讓重用時步驟內容仍可顯示）
     for _, frame in pairs(stepFrames) do
         if frame and frame.Hide then
             frame:Hide()
         end
     end
-    wipe(stepFrames)
 
-    -- 清理主框架
+    -- 隱藏主框架（不 nil：避免 CreateWizardFrame 重用全域框架但跳過 BuildStep 的回歸）
     if wizardFrame then
         wizardFrame:Hide()
-        wizardFrame = nil
     end
 end
 

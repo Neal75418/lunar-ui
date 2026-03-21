@@ -401,10 +401,14 @@ local function LoadAllSkins()
     local db = LunarUI.GetModuleDB("skins")
     local retryList = {}
     for name, skin in pairs(skins) do
-        if IsSkinEnabled(db, name) and skin.event == "PLAYER_ENTERING_WORLD" then
-            ApplySkin(name)
-            if not skinned[name] then
-                retryList[#retryList + 1] = name
+        if IsSkinEnabled(db, name) then
+            -- PLAYER_ENTERING_WORLD skins 直接載入
+            -- 其他 skins（addon-name event）在 /reload 後 addon 可能已載入，ADDON_LOADED 不會再觸發
+            if skin.event == "PLAYER_ENTERING_WORLD" or C_AddOns.IsAddOnLoaded(skin.event) then
+                ApplySkin(name)
+                if not skinned[name] then
+                    retryList[#retryList + 1] = name
+                end
             end
         end
     end
