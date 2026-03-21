@@ -1052,7 +1052,7 @@ local function EnterKeybindMode()
             button:EnableKeyboard(true)
             button:SetScript("OnKeyDown", function(self, key)
                 if key == "ESCAPE" then
-                    LunarUI:ExitKeybindMode()
+                    LunarUI.ExitKeybindMode() -- dot 語法：ExitKeybindMode 是 plain function，非 method
                     return
                 end
 
@@ -1403,6 +1403,7 @@ local function CleanupActionBars()
 
     -- 停止淡出動畫
     fadeInitialized = false
+    isInCombat = false -- 重設戰鬥狀態，避免 re-enable 後 hover 偵測誤判為戰鬥中
     fadeAnimFrame:SetScript("OnUpdate", nil)
     fadeAnimActive = false
     -- 重置批次處理旗標（避免下次 enable 後第一批 StyleButton 呼叫不觸發計時器）
@@ -1444,8 +1445,9 @@ local function CleanupActionBars()
 
     -- 還原 ExtraActionBarFrame
     if _G.ExtraActionBarFrame and bars.extraActionButton then
-        if _G.ExtraActionBarFrame.intro then
-            _G.ExtraActionBarFrame.intro:SetAlpha(1)
+        -- intro 是 AnimationGroup，無 SetAlpha；Play() 重新觸發暴雪進場動畫
+        if _G.ExtraActionBarFrame.intro and _G.ExtraActionBarFrame.intro.Play then
+            _G.ExtraActionBarFrame.intro:Play()
         end
         -- M4: 還原原始位置
         if savedExtraActionPos and not InCombatLockdown() then
