@@ -134,14 +134,14 @@ local function CreateLootFrame()
     frame:EnableMouse(true)
     frame:Hide()
 
-    -- Backdrop
+    -- 背景框
     if backdropTemplate then
         frame:SetBackdrop(backdropTemplate)
         frame:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], 0.92)
         frame:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
     end
 
-    -- Title bar (drag handle)
+    -- 標題列（拖曳把手）
     local titleBar = CreateFrame("Frame", nil, frame)
     titleBar:SetHeight(TITLE_HEIGHT)
     titleBar:SetPoint("TOPLEFT", frame, "TOPLEFT", FRAME_PADDING, -FRAME_PADDING)
@@ -155,7 +155,7 @@ local function CreateLootFrame()
         frame:StopMovingOrSizing()
     end)
 
-    -- Title text
+    -- 標題文字
     local title = titleBar:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(title, 12, "OUTLINE")
     title:SetPoint("LEFT", titleBar, "LEFT", 0, 0)
@@ -163,7 +163,7 @@ local function CreateLootFrame()
     title:SetTextColor(0.9, 0.85, 0.7, 1)
     frame.title = title
 
-    -- Close button
+    -- 關閉按鈕
     local closeBtn = CreateFrame("Button", nil, frame)
     closeBtn:SetSize(16, 16)
     closeBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -FRAME_PADDING, -FRAME_PADDING)
@@ -174,7 +174,7 @@ local function CreateLootFrame()
         _G.CloseLoot()
     end)
 
-    -- Loot All button
+    -- 全部拾取按鈕
     local lootAllBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
     lootAllBtn:SetSize(FRAME_WIDTH - FRAME_PADDING * 2, BUTTON_HEIGHT)
     lootAllBtn:SetPoint("BOTTOM", frame, "BOTTOM", 0, FRAME_PADDING)
@@ -218,12 +218,12 @@ local function UpdateLootFrame()
         return
     end
 
-    -- Ensure enough slots
+    -- 確保欄位數量足夠
     for i = #lootSlots + 1, numItems do
         lootSlots[i] = CreateLootSlot(lootFrame, i)
     end
 
-    -- Position and fill slots
+    -- 定位並填充欄位
     local visibleCount = 0
     for i = 1, numItems do
         local slot = lootSlots[i]
@@ -236,18 +236,18 @@ local function UpdateLootFrame()
             visibleCount = visibleCount + 1
             slot.slotIndex = i
 
-            -- Icon
+            -- 圖示
             slot.icon:SetTexture(lootIcon)
 
-            -- Quality border color
+            -- 品質邊框顏色
             local qc = QUALITY_COLORS[lootQuality] or QUALITY_COLORS[1]
             slot.iconBorder:SetVertexColor(qc[1], qc[2], qc[3], 1)
 
-            -- Name with quality color
+            -- 帶品質顏色的名稱
             slot.name:SetText(lootName)
             slot.name:SetTextColor(qc[1], qc[2], qc[3], 1)
 
-            -- Quantity
+            -- 數量
             if lootQuantity and lootQuantity > 1 then
                 slot.count:SetText(lootQuantity)
                 slot.count:Show()
@@ -256,7 +256,7 @@ local function UpdateLootFrame()
                 slot.count:Hide()
             end
 
-            -- Position
+            -- 定位
             slot:ClearAllPoints()
             slot:SetPoint(
                 "TOPLEFT",
@@ -272,19 +272,19 @@ local function UpdateLootFrame()
         end
     end
 
-    -- Hide extra slots
+    -- 隱藏多餘欄位
     for i = numItems + 1, #lootSlots do
         lootSlots[i]:Hide()
         lootSlots[i].slotIndex = nil
     end
 
-    -- Nothing visible (all slots cleared but LOOT_CLOSED not yet fired)
+    -- 無可見內容（所有欄位已清除但 LOOT_CLOSED 尚未觸發）
     if visibleCount == 0 then
         lootFrame:Hide()
         return
     end
 
-    -- Resize frame
+    -- 調整框架大小
     local contentHeight = TITLE_HEIGHT + visibleCount * (SLOT_HEIGHT + SLOT_PADDING) + BUTTON_HEIGHT + FRAME_PADDING
     lootFrame:SetHeight(contentHeight + FRAME_PADDING * 2)
 
@@ -299,13 +299,13 @@ local eventFrame = CreateFrame("Frame")
 
 local function OnEvent(_self, event)
     if event == "LOOT_OPENED" then
-        -- Check if module is enabled
+        -- 檢查模組是否啟用
         local db = LunarUI.GetModuleDB("loot")
         if not db or not db.enabled then
             return
         end
 
-        -- Hide Blizzard loot frame（LootFrame 是 protected frame，戰鬥中不可 Hide）
+        -- 隱藏暴雪拾取框架（LootFrame 是 protected frame，戰鬥中不可 Hide）
         if _G.LootFrame then
             if not InCombatLockdown() then
                 _G.LootFrame:Hide()
@@ -314,12 +314,12 @@ local function OnEvent(_self, event)
             end
         end
 
-        -- Create our frame on first use
+        -- 首次使用時建立框架
         if not lootFrame then
             lootFrame = CreateLootFrame()
         end
 
-        -- Position near cursor
+        -- 定位在游標附近
         lootFrame:ClearAllPoints()
         local x, y = _G.GetCursorPosition()
         local scale = UIParent:GetEffectiveScale()
@@ -354,7 +354,7 @@ local function HookBlizzardLoot()
     end
     blizzardLootHooked = true
 
-    -- Prevent Blizzard LootFrame from showing when our module is active
+    -- 防止暴雪 LootFrame 在模組啟用時顯示
     -- 戰鬥中不呼叫 Hide()（LootFrame 是保護框架，會造成 taint）
     -- 改用 SetAlpha(0) 讓框架不可見
     if _G.LootFrame and _G.LootFrame.Show then

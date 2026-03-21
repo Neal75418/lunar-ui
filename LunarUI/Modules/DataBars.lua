@@ -21,7 +21,7 @@ local L = Engine.L or {}
 -- 常數
 --------------------------------------------------------------------------------
 
-local statusBarTexture -- lazy: resolved after DB is ready
+local statusBarTexture -- 延遲載入：DB 就緒後解析
 local function GetStatusBarTexture()
     if not statusBarTexture then
         statusBarTexture = LunarUI.GetSelectedStatusBarTexture()
@@ -33,22 +33,22 @@ local floor = math.floor
 
 -- 陣營聲望顏色（對應暴雪 FACTION_BAR_COLORS）
 local STANDING_COLORS = {
-    [1] = { r = 0.80, g = 0.13, b = 0.13 }, -- Hated
-    [2] = { r = 0.80, g = 0.25, b = 0.00 }, -- Hostile
-    [3] = { r = 0.75, g = 0.27, b = 0.00 }, -- Unfriendly
-    [4] = { r = 0.85, g = 0.77, b = 0.36 }, -- Neutral
-    [5] = { r = 0.00, g = 0.67, b = 0.00 }, -- Friendly
-    [6] = { r = 0.00, g = 0.39, b = 0.88 }, -- Honored
-    [7] = { r = 0.64, g = 0.21, b = 0.93 }, -- Revered
-    [8] = { r = 1.00, g = 0.67, b = 0.00 }, -- Exalted
+    [1] = { r = 0.80, g = 0.13, b = 0.13 }, -- 仇恨
+    [2] = { r = 0.80, g = 0.25, b = 0.00 }, -- 敵對
+    [3] = { r = 0.75, g = 0.27, b = 0.00 }, -- 不友好
+    [4] = { r = 0.85, g = 0.77, b = 0.36 }, -- 中立
+    [5] = { r = 0.00, g = 0.67, b = 0.00 }, -- 友善
+    [6] = { r = 0.00, g = 0.39, b = 0.88 }, -- 尊敬
+    [7] = { r = 0.64, g = 0.21, b = 0.93 }, -- 崇敬
+    [8] = { r = 1.00, g = 0.67, b = 0.00 }, -- 崇拜
 }
 
 --------------------------------------------------------------------------------
 -- 模組狀態
 --------------------------------------------------------------------------------
 
-local bars = {} -- All created DataBar frames
-local eventFrame -- Shared event handler frame
+local bars = {} -- 所有已建立的資料條框架
+local eventFrame -- 共用事件處理框架
 
 --------------------------------------------------------------------------------
 -- 輔助：建立單一資料條
@@ -66,22 +66,22 @@ local function CreateDataBar(name, db)
     bar:SetFrameStrata("LOW")
     bar:SetFrameLevel(2)
 
-    -- Backdrop
+    -- 背景框
     LunarUI.ApplyBackdrop(bar)
 
     -- 子元件只在首次建立時建立（WoW CreateTexture/CreateFontString 不可刪除，重用 frame 時不重建）
     if not existingBar then
-        -- Background
+        -- 背景
         bar.bg = bar:CreateTexture(nil, "BACKGROUND")
         bar.bg:SetAllPoints()
         bar.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
 
-        -- Text overlay
+        -- 文字覆蓋
         bar.text = bar:CreateFontString(nil, "OVERLAY")
         LunarUI.SetFont(bar.text, 10, "OUTLINE")
         bar.text:SetPoint("CENTER")
 
-        -- Rested XP overlay (experience bar only)
+        -- 休息經驗覆蓋（僅限經驗條）
         bar.rested = bar:CreateTexture(nil, "ARTWORK", nil, 1)
         bar.rested:SetVertexColor(0.0, 0.4, 0.8, 0.4)
         bar.rested:Hide()
@@ -98,7 +98,7 @@ local function CreateDataBar(name, db)
         bar.text:Hide()
     end
 
-    -- Enable mouse for tooltip
+    -- 啟用滑鼠以支援 tooltip
     bar:EnableMouse(true)
 
     return bar
@@ -126,7 +126,7 @@ local function FormatBarText(textFormat, cur, max, extra)
         return FormatValue(max - cur) .. " " .. (L["Remaining"] or "remaining")
     end
 
-    -- Default: percent with extra label
+    -- 預設：百分比加額外標籤
     if extra then
         return format("%s %d%%", extra, pct)
     end
@@ -149,7 +149,7 @@ local function UpdateExperience()
         return
     end
 
-    -- Hide at max level
+    -- 滿級時隱藏
     if UnitLevel("player") >= (_G.GetMaxPlayerLevel and _G.GetMaxPlayerLevel() or 70) then
         bar:Hide()
         return
@@ -164,9 +164,9 @@ local function UpdateExperience()
 
     bar:SetMinMaxValues(0, max)
     bar:SetValue(cur)
-    bar:SetStatusBarColor(0.58, 0.0, 0.55) -- Purple
+    bar:SetStatusBarColor(0.58, 0.0, 0.55) -- 紫色
 
-    -- Rested XP
+    -- 休息經驗
     local rested = _G.GetXPExhaustion() or 0
     if rested > 0 then
         -- H-6: math.max(0, ...) 防止 cur > max 時 (max - cur) 為負數導致 SetWidth 報錯
@@ -183,7 +183,7 @@ local function UpdateExperience()
         bar.rested:Hide()
     end
 
-    -- Text
+    -- 文字
     if db.experience.showText then
         bar.text:SetText(FormatBarText(db.experience.textFormat, cur, max, "XP"))
         bar.text:Show()
@@ -249,10 +249,10 @@ local function UpdateReputation()
         return
     end
 
-    -- GetWatchedFactionInfo is available in all WoW versions
+    -- GetWatchedFactionInfo 在所有 WoW 版本均可用
     local name, standing, barMin, barMax, barValue, factionID
     if _G.C_Reputation and _G.C_Reputation.GetWatchedFactionData then
-        -- pcall protection: WoW 12.0 may protect some reputation fields as secret values
+        -- pcall 保護：WoW 12.0 可能將部分聲望欄位標記為 secret values
         local ok, data = pcall(_G.C_Reputation.GetWatchedFactionData)
         if ok and data then
             name = data.name
@@ -275,7 +275,7 @@ local function UpdateReputation()
         return
     end
 
-    -- Friendship / Renown check (WoW 12.0)
+    -- 友誼 / 名望檢查（WoW 12.0）
     local isFriendship = false
     local friendName, friendText
     if factionID and _G.C_GossipInfo and _G.C_GossipInfo.GetFriendshipReputation then
@@ -301,12 +301,12 @@ local function UpdateReputation()
     bar:SetMinMaxValues(0, max)
     bar:SetValue(cur)
 
-    -- Color by standing
+    -- 依聲望等級著色
     local color = STANDING_COLORS[standing] or STANDING_COLORS[4]
     bar:SetStatusBarColor(color.r, color.g, color.b)
     bar.rested:Hide()
 
-    -- Text
+    -- 文字
     if db.reputation.showText then
         local displayName = isFriendship and friendName or name
         bar.text:SetText(FormatBarText(db.reputation.textFormat, cur, max, displayName))
@@ -385,7 +385,7 @@ local function UpdateHonor()
         return
     end
 
-    -- Check if honor is relevant
+    -- 檢查榮譽是否相關
     if not _G.UnitHonor or not _G.UnitHonorMax then
         bar:Hide()
         return
@@ -402,10 +402,10 @@ local function UpdateHonor()
 
     bar:SetMinMaxValues(0, max)
     bar:SetValue(cur)
-    bar:SetStatusBarColor(1.0, 0.24, 0.0) -- Orange-red
+    bar:SetStatusBarColor(1.0, 0.24, 0.0) -- 橙紅色
     bar.rested:Hide()
 
-    -- Text
+    -- 文字
     if db.honor.showText then
         local label = format("%s %d", L["Honor"] or "Honor", level)
         bar.text:SetText(FormatBarText(db.honor.textFormat, cur, max, label))
@@ -416,7 +416,7 @@ local function UpdateHonor()
 
     bar:Show()
 
-    -- Store for tooltip (flat fields, no per-event table allocation)
+    -- 儲存 tooltip 資料（flat fields，避免每事件建立新 table）
     bar._honorCur = cur
     bar._honorMax = max
     bar._honorLevel = level
@@ -460,7 +460,7 @@ local function InitializeDataBars()
         return
     end
 
-    -- Experience bar
+    -- 經驗條
     if db.experience and db.experience.enabled then
         bars.experience = CreateDataBar("Experience", db.experience)
         bars.experience:SetScript("OnEnter", function(self)
@@ -471,7 +471,7 @@ local function InitializeDataBars()
         end)
     end
 
-    -- Reputation bar
+    -- 聲望條
     if db.reputation and db.reputation.enabled then
         bars.reputation = CreateDataBar("Reputation", db.reputation)
         bars.reputation:SetScript("OnEnter", function(self)
@@ -482,7 +482,7 @@ local function InitializeDataBars()
         end)
     end
 
-    -- Honor bar
+    -- 榮譽條
     if db.honor and db.honor.enabled then
         bars.honor = CreateDataBar("Honor", db.honor)
         bars.honor:SetScript("OnEnter", function(self)
@@ -493,7 +493,7 @@ local function InitializeDataBars()
         end)
     end
 
-    -- Event frame for updates
+    -- 事件框架，用於更新
     eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_XP_UPDATE")
     eventFrame:RegisterEvent("PLAYER_LEVEL_UP")
@@ -517,7 +517,7 @@ local function InitializeDataBars()
         end
     end)
 
-    -- Initial update
+    -- 初始更新
     UpdateExperience()
     UpdateReputation()
     UpdateHonor()

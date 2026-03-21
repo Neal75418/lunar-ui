@@ -158,7 +158,7 @@ local chatTempWindowHooked = false -- 私有狀態（不暴露到 LunarUI 物件
 local savedChannelFormats = {} -- 用於 Cleanup 還原 CHAT_*_GET 格式字串
 local savedAddMessageFuncs = {} -- 用於 Cleanup 還原 AddMessage 覆寫
 local chatFiltersRegistered = false -- 防止 ChatFrame_AddMessageEventFilter 重複註冊
--- Emoji 觸發字元 character class（匹配所有可能的 2-char emoji 序列）
+-- Emoji 觸發字元字元類別（匹配所有可能的 2-char emoji 序列）
 local EMOJI_PATTERN = "[%:%;<B][%)%(DPO3]"
 local escapedKeywordCache = {} -- Fix 3b: 預快取 keyword escaped pattern
 local escapedKeywordCacheSize = 0
@@ -1272,7 +1272,7 @@ local function InitializeChat()
         chatRoleIconEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
         chatRoleIconEventFrame:SetScript("OnEvent", function()
             roleIconCacheDirty = true
-            cachedPlayerName = UnitName("player") -- B7: refresh on world enter
+            cachedPlayerName = UnitName("player") -- B7: 進入世界時重新取得
         end)
     end
 
@@ -1289,7 +1289,7 @@ local function InitializeChat()
 end
 
 --------------------------------------------------------------------------------
--- Cleanup（還原全域函數，避免模組停用後汙染）
+-- 清理（還原全域函數，避免模組停用後汙染）
 --------------------------------------------------------------------------------
 
 local function CleanupChat()

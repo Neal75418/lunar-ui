@@ -491,7 +491,7 @@ local function CreateActionBarButtons(bar, page, numButtons, buttonSize, buttonS
             button:UpdateConfig()
         end
 
-        -- Masque skinning (if available)
+        -- Masque 換膚（如果可用）
         local masqueGroup = GetMasqueGroup(name)
         if masqueGroup then
             masqueGroup:AddButton(button)
@@ -758,7 +758,7 @@ local function IsBarFadeEnabled(barKey)
     if isBarsUnlocked then
         return false
     end
-    if not cachedFadeEnabled then -- A1/B5: use cached value, avoid per-bar GetFadeSettings() call
+    if not cachedFadeEnabled then -- A1/B5: 使用快取值，避免每條動作列呼叫 GetFadeSettings()
         return false
     end
 
@@ -921,12 +921,12 @@ function StartFadeAnimation()
 end
 
 local function FadeAllBarsOut()
-    if not cachedFadeEnabled then -- A1/B5: use cached value
+    if not cachedFadeEnabled then -- A1/B5: 使用快取值
         return
     end
 
     for barKey in pairs(bars) do
-        if not BLIZZARD_BAR_KEYS[barKey] and IsBarFadeEnabled(barKey) then -- M6: skip Blizzard secure frames
+        if not BLIZZARD_BAR_KEYS[barKey] and IsBarFadeEnabled(barKey) then -- M6: 跳過 Blizzard 安全框架
             if not fadeState[barKey] or not fadeState[barKey].hovered then
                 FadeBarTo(barKey, cachedFadeAlpha)
             end
@@ -936,7 +936,7 @@ end
 
 local function FadeAllBarsIn()
     for barKey in pairs(bars) do
-        if not BLIZZARD_BAR_KEYS[barKey] then -- M6: skip Blizzard secure frames
+        if not BLIZZARD_BAR_KEYS[barKey] then -- M6: 跳過 Blizzard 安全框架
             FadeBarTo(barKey, 1.0)
         end
     end

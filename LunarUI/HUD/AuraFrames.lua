@@ -541,7 +541,7 @@ end
 -- 初始化
 --------------------------------------------------------------------------------
 
--- Forward declarations（實際定義在下方事件處理區段）
+-- 前向宣告（實際定義在下方事件處理區段）
 local eventFrame
 local timerElapsed = 0
 local TIMER_UPDATE_INTERVAL = 0.1 -- 計時條 10 FPS（視覺無差異，減少 50% CPU）

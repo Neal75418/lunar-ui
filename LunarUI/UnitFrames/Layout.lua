@@ -33,7 +33,7 @@ local string_format = string.format
 local spawnedFrames = {}
 local combatWaitFrame -- 戰鬥等待框架（重用避免洩漏）
 
-local statusBarTexture -- lazy: resolved after DB is ready
+local statusBarTexture -- 延遲載入：等 DB 就緒後再解析
 local function GetStatusBarTexture()
     if not statusBarTexture then
         statusBarTexture = LunarUI.GetSelectedStatusBarTexture()
@@ -1702,7 +1702,7 @@ if _G.EditModeManagerFrame and _G.EditModeManagerFrame.ExitEditMode then
     end)
 end
 
-local playerEnterWorldFrame -- forward declaration
+local playerEnterWorldFrame -- 前向宣告
 
 -- 清理函數
 local function CleanupUnitFrames()

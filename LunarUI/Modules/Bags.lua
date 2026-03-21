@@ -57,7 +57,7 @@ local ITEM_QUALITY_COLORS = LunarUI.QUALITY_COLORS
 -- 透過 C_Container.GetContainerNumFreeSlots 的第二個返回值 bagType 判斷
 -- bagType 是位元遮罩（flag），對應 Enum.BagFamily
 local PROFESSION_BAG_COLORS = {
-    -- bagType flag → { r, g, b, a }
+    -- bagType 旗標 → { r, g, b, a }
     [0x0008] = { 0.18, 0.55, 0.18, 0.25 }, -- 草藥（Herbs）綠色
     [0x0010] = { 0.55, 0.28, 0.55, 0.25 }, -- 附魔（Enchanting）紫色
     [0x0020] = { 0.45, 0.45, 0.55, 0.25 }, -- 工程（Engineering）灰藍
@@ -613,7 +613,7 @@ local function CreateItemSlot(parent, slotID, bag, slot)
         button.profBg = profBg
     end
 
-    -- Hover 高亮
+    -- 懸停高亮
     if not button.hoverHighlight then
         local highlight = button:CreateTexture(nil, "HIGHLIGHT")
         highlight:SetTexture("Interface\\Buttons\\WHITE8x8")

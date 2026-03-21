@@ -29,12 +29,12 @@ local floor = math.floor
 -- 模組狀態
 --------------------------------------------------------------------------------
 
-local providers = {} -- Registered data text providers
-local onUpdateProviders = {} -- Only providers with onUpdate=true (Fix 1)
-local panels = {} -- Created panel frames
-local slotsByProvider = {} -- Reverse lookup: providerName → { slot1, slot2, ... } (Fix 5)
-local eventFrame -- Shared event handler frame
-local eventToProviders = {} -- event → { providerName1, providerName2, ... } (Fix 2)
+local providers = {} -- 已註冊的資料文字 provider
+local onUpdateProviders = {} -- 僅包含 onUpdate=true 的 provider（Fix 1）
+local panels = {} -- 已建立的面板框架
+local slotsByProvider = {} -- 反向查找：providerName → { slot1, slot2, ... }（Fix 5）
+local eventFrame -- 共用事件處理框架
+local eventToProviders = {} -- event → { providerName1, providerName2, ... }（Fix 2）
 
 --------------------------------------------------------------------------------
 -- Provider 註冊
@@ -453,17 +453,17 @@ local function CreateDataPanel(name, db)
     panel:SetFrameStrata("LOW")
     panel:SetFrameLevel(1)
 
-    -- Backdrop
+    -- 背景框
     if backdropTemplate then
         LunarUI.ApplyBackdrop(panel, nil, C.bgLight)
     else
-        -- Fallback: simple background
+        -- 備用：簡單背景
         panel.bg = panel:CreateTexture(nil, "BACKGROUND")
         panel.bg:SetAllPoints()
         panel.bg:SetColorTexture(C.bgLight[1], C.bgLight[2], C.bgLight[3], C.bgLight[4])
     end
 
-    -- Create slots
+    -- 建立欄位
     panel.slots = {}
     local numSlots = db.numSlots or 3
     local slotWidth = (db.width or 400) / numSlots
@@ -473,18 +473,18 @@ local function CreateDataPanel(name, db)
         slot:SetSize(slotWidth, db.height or 22)
         slot:SetPoint("LEFT", panel, "LEFT", (i - 1) * slotWidth, 0)
 
-        -- Text
+        -- 文字
         slot.text = slot:CreateFontString(nil, "OVERLAY")
         LunarUI.SetFont(slot.text, 11, "OUTLINE")
         slot.text:SetPoint("CENTER")
         slot.text:SetTextColor(0.9, 0.9, 0.9)
 
-        -- Hover highlight
+        -- 滑鼠懸停高亮
         slot.highlight = slot:CreateTexture(nil, "HIGHLIGHT")
         slot.highlight:SetAllPoints()
         slot.highlight:SetColorTexture(1, 1, 1, 0.05)
 
-        -- Separator (except first slot)
+        -- 分隔線（第一欄除外）
         if i > 1 then
             local sep = panel:CreateTexture(nil, "ARTWORK")
             sep:SetSize(1, (db.height or 22) - 6)
@@ -492,7 +492,7 @@ local function CreateDataPanel(name, db)
             sep:SetColorTexture(0.3, 0.3, 0.3, 0.5)
         end
 
-        -- Store slot index
+        -- 儲存欄位索引
         slot.slotIndex = i
         slot.panelName = name
 
@@ -524,7 +524,7 @@ local function BindSlotToProvider(slot, providerName)
     end
     slotsByProvider[providerName][#slotsByProvider[providerName] + 1] = slot
 
-    -- Click handler
+    -- 點擊處理
     slot:SetScript("OnClick", function(_self, button)
         if provider.click then
             provider.click(button)
@@ -532,7 +532,7 @@ local function BindSlotToProvider(slot, providerName)
     end)
     slot:RegisterForClicks("AnyUp")
 
-    -- Tooltip
+    -- 滑鼠提示
     slot:SetScript("OnEnter", function(btn)
         if provider.tooltip then
             provider.tooltip(btn)
@@ -542,7 +542,7 @@ local function BindSlotToProvider(slot, providerName)
         GameTooltip:Hide()
     end)
 
-    -- Initial update
+    -- 初始更新
     if provider.update then
         local text = provider.update()
         if text then
@@ -638,7 +638,7 @@ end
 --------------------------------------------------------------------------------
 
 local function InitializeDataTexts()
-    -- Clean up existing panels first (prevents duplicates on profile change)
+    -- 先清理現有面板（防止切換設定檔時產生重複）
     if next(panels) then
         LunarUI.CleanupDataTexts()
     end
@@ -648,14 +648,14 @@ local function InitializeDataTexts()
         return
     end
 
-    -- Create panels from config
+    -- 從設定建立面板
     if db.panels then
         for panelName, panelDB in pairs(db.panels) do
             if panelDB.enabled then
                 local panel = CreateDataPanel(panelName, panelDB)
                 panels[panelName] = panel
 
-                -- Bind slots to providers
+                -- 將欄位繫結到 provider
                 local slotAssignments = panelDB.slots or {}
                 for i, providerName in ipairs(slotAssignments) do
                     if panel.slots[i] then
@@ -666,13 +666,13 @@ local function InitializeDataTexts()
         end
     end
 
-    -- Setup event-driven updates
+    -- 設定事件驅動更新
     SetupEvents()
 
-    -- Setup OnUpdate for timed providers
+    -- 設定定時 provider 的 OnUpdate
     SetupOnUpdate()
 
-    -- Initial full update
+    -- 初始完整更新
     UpdateAllProviders()
 end
 
@@ -681,18 +681,18 @@ end
 --------------------------------------------------------------------------------
 
 function LunarUI.CleanupDataTexts()
-    -- Stop OnUpdate
+    -- 停止 OnUpdate
     if onUpdateFrame then
         onUpdateFrame:SetScript("OnUpdate", nil)
     end
 
-    -- Unregister events
+    -- 取消註冊事件
     if eventFrame then
         eventFrame:UnregisterAllEvents()
         eventFrame:SetScript("OnEvent", nil)
     end
 
-    -- Hide and clean panels
+    -- 隱藏並清理面板
     for _, panel in pairs(panels) do
         if panel then
             if panel.slots then

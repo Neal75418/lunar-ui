@@ -1218,7 +1218,7 @@ function LunarUI.CleanupMinimap()
     end
     -- 清理 minimap 框架事件
     if minimapFrame then
-        minimapFrame:Hide() -- Low: disable 後應隱藏框架，避免功能失效但框架仍可見
+        minimapFrame:Hide() -- 低優先：disable 後應隱藏框架，避免功能失效但框架仍可見
         minimapFrame:UnregisterAllEvents()
         minimapFrame:SetScript("OnUpdate", nil)
         minimapFrame:SetScript("OnEvent", nil)
