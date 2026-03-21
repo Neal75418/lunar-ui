@@ -369,22 +369,9 @@ local function HideSlotTooltip()
     GameTooltip:Hide()
 end
 
--- 左鍵點擊處理（右鍵由 SecureActionButtonTemplate 的 type2="item" 安全處理）
--- SecureActionButton_OnClick（intrinsic）先於此 handler 觸發，
--- 右鍵已在安全環境呼叫 UseContainerItem，此處直接 return。
-local function OnSlotClick(self, button)
-    if button == "RightButton" then
-        return -- 已由 SecureActionButtonTemplate intrinsic handler 處理
-    end
-    local bag, slot = self.bag, self.slot
-    if IsShiftKeyDown() then
-        local link = C_Container.GetContainerItemLink(bag, slot)
-        if link and ChatEdit_InsertLink and ChatEdit_InsertLink(link) then
-            return
-        end
-    end
-    C_Container.PickupContainerItem(bag, slot)
-end
+-- 不使用 SetScript("OnClick")：會干擾 SecureActionButtonTemplate 的 intrinsic handler。
+-- 改為覆寫 mixin 方法 button.OnClick，由 XML 的 <OnClick method="OnClick"/> 呼叫，
+-- 在 intrinsic SecureActionButton_OnClick 之後執行。
 
 -- 隱藏格子上的所有指示器（重構：避免重複代碼）
 local function HideAllSlotIndicators(button)
@@ -422,15 +409,14 @@ local function SetupSlotBase(button, bag, slot)
 
     -- SecureActionButtonTemplate: 右鍵使用物品（UseContainerItem）
     -- intrinsic handler SecureActionButton_OnClick 在安全環境中處理
+    -- 使用 item2 屬性（"bag slot" 格式），bag/slot 屬性在 12.x 已 deprecated
     button:SetAttribute("type2", "item")
-    button:SetAttribute("bag", bag)
-    button:SetAttribute("slot", slot)
+    button:SetAttribute("item2", bag .. " " .. slot)
 
-    -- PreClick 在每次右鍵前同步 bag/slot 屬性（按鈕重用時值可能變更）
+    -- PreClick 在每次右鍵前同步 item2 屬性（按鈕重用時 bag/slot 可能變更）
     button:SetScript("PreClick", function(self, clickButton)
         if clickButton == "RightButton" then
-            self:SetAttribute("bag", self.bag)
-            self:SetAttribute("slot", self.slot)
+            self:SetAttribute("item2", self.bag .. " " .. self.slot)
         end
     end)
 
@@ -526,10 +512,9 @@ local function SetupSlotBase(button, bag, slot)
     -- 設定 slot ID（mixin 的 OnClick 透過 self:GetID() 取得 slot）
     button:SetID(slot)
 
-    -- 覆寫 tooltip 與左鍵點擊（右鍵由 SecureActionButtonTemplate intrinsic 處理）
+    -- 覆寫 tooltip
     button:SetScript("OnEnter", ShowSlotTooltip)
     button:SetScript("OnLeave", HideSlotTooltip)
-    button:SetScript("OnClick", OnSlotClick)
     button:RegisterForDrag("LeftButton")
     button:SetScript("OnDragStart", function(self)
         C_Container.PickupContainerItem(self.bag, self.slot)
@@ -537,6 +522,24 @@ local function SetupSlotBase(button, bag, slot)
     button.OnEnter = ShowSlotTooltip
     button.OnLeave = HideSlotTooltip
     button.UpdateTooltip = ShowSlotTooltip
+
+    -- 覆寫 mixin 的 OnClick 方法（不用 SetScript 以免干擾 intrinsic handler）
+    -- XML 的 <OnClick method="OnClick"/> 會呼叫 self:OnClick(btn)，
+    -- 在 SecureActionButton_OnClick（intrinsic）之後執行。
+    -- 右鍵已由 intrinsic 透過 type2="item" 安全處理，此處只處理左鍵。
+    function button:OnClick(btn)
+        if btn == "RightButton" then
+            return
+        end
+        if IsShiftKeyDown() then
+            local link = C_Container.GetContainerItemLink(self.bag, self.slot)
+            if link and ChatEdit_InsertLink then
+                ChatEdit_InsertLink(link)
+            end
+            return
+        end
+        C_Container.PickupContainerItem(self.bag, self.slot)
+    end
 end
 
 local function CreateItemSlot(parent, slotID, bag, slot)
