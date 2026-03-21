@@ -1484,8 +1484,8 @@ local function SpawnBossFrames(uf)
         return
     end
 
-    oUF:SetActiveStyle("LunarUI_Boss")
     for i = 1, 8 do
+        oUF:SetActiveStyle("LunarUI_Boss") -- 每次 Spawn 前設定，防止其他程式碼插入時的 active style 競態
         local boss = oUF:Spawn("boss" .. i, "LunarUI_Boss" .. i)
         boss:SetPoint("RIGHT", UIParent, "RIGHT", uf.boss.x or -50, uf.boss.y or (200 - (i - 1) * 55))
         spawnedFrames["boss" .. i] = boss
@@ -1707,6 +1707,8 @@ local function CleanupUnitFrames()
         playerEnterWorldFrame:UnregisterAllEvents()
         playerEnterWorldFrame:SetScript("OnEvent", nil)
     end
+    -- 重設重試計數器，讓下次 enable 從頭開始計算
+    spawnRetries = 0
 end
 
 -- 匯出
