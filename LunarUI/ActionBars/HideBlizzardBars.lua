@@ -274,6 +274,7 @@ local function HideMainActionBar()
     -- 遍歷所有 Lua 屬性，隱藏所有可能的子框架/材質
     for _, value in pairs(MainMenuBarArtFrame) do
         if type(value) == "table" and value.SetAlpha then
+            hiddenRegions[value] = true
             pcall(function()
                 value:SetAlpha(0)
             end)
@@ -285,6 +286,7 @@ local function HideMainActionBar()
     for _, region in ipairs(regions) do
         if region then
             if region.SetAlpha then
+                hiddenRegions[region] = true
                 pcall(function()
                     region:SetAlpha(0)
                 end)
