@@ -18,7 +18,7 @@ local C = LunarUI.Colors
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
--- Constants
+-- 常數
 --------------------------------------------------------------------------------
 
 local statusBarTexture -- lazy: resolved after DB is ready
@@ -31,7 +31,7 @@ end
 local format = string.format
 local floor = math.floor
 
--- Faction standing colors (matches Blizzard FACTION_BAR_COLORS)
+-- 陣營聲望顏色（對應暴雪 FACTION_BAR_COLORS）
 local STANDING_COLORS = {
     [1] = { r = 0.80, g = 0.13, b = 0.13 }, -- Hated
     [2] = { r = 0.80, g = 0.25, b = 0.00 }, -- Hostile
@@ -44,14 +44,14 @@ local STANDING_COLORS = {
 }
 
 --------------------------------------------------------------------------------
--- Module State
+-- 模組狀態
 --------------------------------------------------------------------------------
 
 local bars = {} -- All created DataBar frames
 local eventFrame -- Shared event handler frame
 
 --------------------------------------------------------------------------------
--- Helper: Create a single DataBar
+-- 輔助：建立單一資料條
 --------------------------------------------------------------------------------
 
 local function CreateDataBar(name, db)
@@ -105,7 +105,7 @@ local function CreateDataBar(name, db)
 end
 
 --------------------------------------------------------------------------------
--- Format helpers
+-- 格式化輔助
 --------------------------------------------------------------------------------
 
 local FormatValue = LunarUI.FormatValue
@@ -134,7 +134,7 @@ local function FormatBarText(textFormat, cur, max, extra)
 end
 
 --------------------------------------------------------------------------------
--- Experience Bar
+-- 經驗條
 --------------------------------------------------------------------------------
 
 local function UpdateExperience()
@@ -234,7 +234,7 @@ local function ExperienceTooltip(bar)
 end
 
 --------------------------------------------------------------------------------
--- Reputation Bar
+-- 聲望條
 --------------------------------------------------------------------------------
 
 local function UpdateReputation()
@@ -370,7 +370,7 @@ local function ReputationTooltip(bar)
 end
 
 --------------------------------------------------------------------------------
--- Honor Bar
+-- 榮譽條
 --------------------------------------------------------------------------------
 
 local function UpdateHonor()
@@ -448,7 +448,7 @@ local function HonorTooltip(bar)
 end
 
 --------------------------------------------------------------------------------
--- Initialize
+-- 初始化
 --------------------------------------------------------------------------------
 
 local function InitializeDataBars()
@@ -523,7 +523,7 @@ local function InitializeDataBars()
     UpdateHonor()
 end
 
--- Cleanup
+-- 清理
 function LunarUI.CleanupDataBars()
     -- 清除材質快取（使用者切換材質後重新初始化時會重新取得）
     statusBarTexture = nil
@@ -543,7 +543,7 @@ function LunarUI.CleanupDataBars()
     wipe(bars)
 end
 
--- Export
+-- 匯出
 LunarUI.InitializeDataBars = InitializeDataBars
 LunarUI.FormatBarText = FormatBarText
 LunarUI.GetStatusBarTexture = GetStatusBarTexture

@@ -18,7 +18,7 @@ local C = LunarUI.Colors
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
--- Constants
+-- 常數
 --------------------------------------------------------------------------------
 
 local SLOT_HEIGHT = 32
@@ -35,14 +35,14 @@ local QUALITY_COLORS = LunarUI.QUALITY_COLORS
 local backdropTemplate = LunarUI.backdropTemplate
 
 --------------------------------------------------------------------------------
--- State
+-- 模組狀態
 --------------------------------------------------------------------------------
 
 local lootFrame
 local lootSlots = {}
 
 --------------------------------------------------------------------------------
--- Slot Creation
+-- 格子建立
 --------------------------------------------------------------------------------
 
 local function CreateLootSlot(parent, index)
@@ -120,7 +120,7 @@ local function CreateLootSlot(parent, index)
 end
 
 --------------------------------------------------------------------------------
--- Frame Creation
+-- 框架建立
 --------------------------------------------------------------------------------
 
 local function CreateLootFrame()
@@ -204,7 +204,7 @@ local function CreateLootFrame()
 end
 
 --------------------------------------------------------------------------------
--- Update Logic
+-- 更新邏輯
 --------------------------------------------------------------------------------
 
 local function UpdateLootFrame()
@@ -292,7 +292,7 @@ local function UpdateLootFrame()
 end
 
 --------------------------------------------------------------------------------
--- Event Handling
+-- 事件處理
 --------------------------------------------------------------------------------
 
 local eventFrame = CreateFrame("Frame")
@@ -343,7 +343,7 @@ end
 eventFrame:SetScript("OnEvent", OnEvent)
 
 --------------------------------------------------------------------------------
--- Hook Blizzard Loot Frame
+-- 掛鉤暴雪拾取框架
 --------------------------------------------------------------------------------
 
 local blizzardLootHooked = false
@@ -378,7 +378,7 @@ local function HookBlizzardLoot()
 end
 
 --------------------------------------------------------------------------------
--- Initialization & Cleanup
+-- 初始化與清理
 --------------------------------------------------------------------------------
 
 local function InitializeLoot()
@@ -401,7 +401,7 @@ local function CleanupLoot()
     end
 end
 
--- Export
+-- 匯出
 LunarUI.InitializeLoot = InitializeLoot
 LunarUI.CleanupLoot = CleanupLoot
 

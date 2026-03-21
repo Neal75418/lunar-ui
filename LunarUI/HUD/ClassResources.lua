@@ -252,20 +252,7 @@ local function CreateResourceFrame()
     resourceFrame:SetSize(iconSize * 6 + iconSpacing * 5, iconSize + 10)
     resourceFrame:SetPoint("CENTER", UIParent, "CENTER", 0, -180)
     resourceFrame:SetFrameStrata("HIGH")
-    resourceFrame:SetMovable(true)
-    resourceFrame:EnableMouse(true)
-    resourceFrame:RegisterForDrag("LeftButton")
     resourceFrame:SetClampedToScreen(true)
-
-    -- 拖曳支援
-    resourceFrame:SetScript("OnDragStart", function(self)
-        if IsShiftKeyDown() then
-            self:StartMoving()
-        end
-    end)
-    resourceFrame:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-    end)
 
     return resourceFrame
 end

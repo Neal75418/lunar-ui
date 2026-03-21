@@ -1,13 +1,13 @@
 ---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
-    LunarUI - Skins Engine
-    Unified Blizzard UI frame restyling system
+    LunarUI - Skin 引擎
+    統一的暴雪 UI 框架換膚系統
 
-    Features:
-    - Core skin utilities (SkinFrame, SkinButton, SkinCloseButton, SkinTab)
-    - Registry for per-frame skins with lazy loading
-    - StripTextures helper to remove default decorations
-    - Integrates with LunarUI backdropTemplate + colors
+    功能：
+    - 核心 Skin 工具（SkinFrame、SkinButton、SkinCloseButton、SkinTab）
+    - 延遲載入的 Skin 註冊機制
+    - StripTextures 輔助函數移除預設裝飾
+    - 整合 LunarUI backdropTemplate 與配色
 ]]
 
 local _ADDON_NAME, Engine = ...

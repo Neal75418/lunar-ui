@@ -17,7 +17,7 @@ local C = LunarUI.Colors
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
--- Constants
+-- 常數
 --------------------------------------------------------------------------------
 
 local backdropTemplate = LunarUI.backdropTemplate
@@ -26,7 +26,7 @@ local format = string.format
 local floor = math.floor
 
 --------------------------------------------------------------------------------
--- Module State
+-- 模組狀態
 --------------------------------------------------------------------------------
 
 local providers = {} -- Registered data text providers
@@ -37,7 +37,7 @@ local eventFrame -- Shared event handler frame
 local eventToProviders = {} -- event → { providerName1, providerName2, ... } (Fix 2)
 
 --------------------------------------------------------------------------------
--- Provider Registration
+-- Provider 註冊
 --------------------------------------------------------------------------------
 
 local function RegisterProvider(name, config)
@@ -59,7 +59,7 @@ local function RegisterProvider(name, config)
 end
 
 --------------------------------------------------------------------------------
--- Built-in Providers
+-- 內建 Provider
 --------------------------------------------------------------------------------
 
 -- 門檻色彩：值越好越綠，越差越紅
@@ -103,7 +103,7 @@ RegisterProvider("fps", {
     end,
 })
 
--- Latency
+-- 延遲
 RegisterProvider("latency", {
     label = L["Latency"] or "Latency",
     events = {},
@@ -126,7 +126,7 @@ RegisterProvider("latency", {
     end,
 })
 
--- Gold
+-- 金幣
 RegisterProvider("gold", {
     label = L["Gold"] or "Gold",
     events = { "PLAYER_MONEY", "PLAYER_ENTERING_WORLD" },
@@ -153,7 +153,7 @@ RegisterProvider("gold", {
     end,
 })
 
--- Durability
+-- 耐久度
 RegisterProvider("durability", {
     label = L["Durability"] or "Durability",
     events = { "UPDATE_INVENTORY_DURABILITY", "PLAYER_ENTERING_WORLD" },
@@ -219,7 +219,7 @@ RegisterProvider("durability", {
     end,
 })
 
--- Bag Slots
+-- 背包空位
 RegisterProvider("bagSlots", {
     label = L["BagSlots"] or "Bag Slots",
     events = { "BAG_UPDATE", "PLAYER_ENTERING_WORLD" },
@@ -264,7 +264,7 @@ RegisterProvider("bagSlots", {
     end,
 })
 
--- Friends Online
+-- 好友上線
 RegisterProvider("friends", {
     label = L["Friends"] or "Friends",
     events = {
@@ -309,7 +309,7 @@ RegisterProvider("friends", {
     end,
 })
 
--- Guild
+-- 公會
 RegisterProvider("guild", {
     label = L["Guild"] or "Guild",
     events = { "GUILD_ROSTER_UPDATE", "PLAYER_ENTERING_WORLD" },
@@ -342,7 +342,7 @@ RegisterProvider("guild", {
     end,
 })
 
--- Specialization
+-- 專精
 RegisterProvider("spec", {
     label = L["Spec"] or "Spec",
     events = { "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_TALENT_UPDATE", "PLAYER_ENTERING_WORLD" },
@@ -378,7 +378,7 @@ RegisterProvider("spec", {
     end,
 })
 
--- Clock
+-- 時鐘
 RegisterProvider("clock", {
     label = L["Clock"] or "Clock",
     events = {},
@@ -409,7 +409,7 @@ RegisterProvider("clock", {
     end,
 })
 
--- Coordinates
+-- 座標
 RegisterProvider("coords", {
     label = L["Coords"] or "Coords",
     events = {},
@@ -443,7 +443,7 @@ RegisterProvider("coords", {
 })
 
 --------------------------------------------------------------------------------
--- Panel Creation
+-- 面板建立
 --------------------------------------------------------------------------------
 
 local function CreateDataPanel(name, db)
@@ -504,7 +504,7 @@ local function CreateDataPanel(name, db)
 end
 
 --------------------------------------------------------------------------------
--- Slot Binding (connect slots to providers)
+-- Slot 繫結（將欄位連接到 provider）
 --------------------------------------------------------------------------------
 
 local function BindSlotToProvider(slot, providerName)
@@ -552,7 +552,7 @@ local function BindSlotToProvider(slot, providerName)
 end
 
 --------------------------------------------------------------------------------
--- Update System
+-- 更新系統
 --------------------------------------------------------------------------------
 
 local function UpdateProvider(providerName)
@@ -582,7 +582,7 @@ local function UpdateAllProviders()
 end
 
 --------------------------------------------------------------------------------
--- OnUpdate Throttle (for FPS, latency, clock, coords)
+-- OnUpdate 節流（FPS、延遲、時鐘、座標）
 --------------------------------------------------------------------------------
 
 local onUpdateFrame
@@ -607,7 +607,7 @@ local function SetupOnUpdate()
 end
 
 --------------------------------------------------------------------------------
--- Event System
+-- 事件系統
 --------------------------------------------------------------------------------
 
 local function SetupEvents()
@@ -634,7 +634,7 @@ local function SetupEvents()
 end
 
 --------------------------------------------------------------------------------
--- Initialize
+-- 初始化
 --------------------------------------------------------------------------------
 
 local function InitializeDataTexts()
@@ -677,7 +677,7 @@ local function InitializeDataTexts()
 end
 
 --------------------------------------------------------------------------------
--- Cleanup
+-- 清理
 --------------------------------------------------------------------------------
 
 function LunarUI.CleanupDataTexts()
@@ -715,7 +715,7 @@ function LunarUI.CleanupDataTexts()
     onUpdateFrame = nil
 end
 
--- Export
+-- 匯出
 LunarUI.InitializeDataTexts = InitializeDataTexts
 
 LunarUI:RegisterModule("DataTexts", {

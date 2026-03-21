@@ -1,14 +1,14 @@
 ---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
-    LunarUI - Nameplates
-    oUF-based nameplate system with Phase awareness
+    LunarUI - 名牌系統
+    基於 oUF 的名牌系統，支援月相感知
 
-    Features:
-    - Enemy nameplates with health, castbar, debuffs
-    - Friendly nameplates (simplified)
-    - Phase-aware alpha (faded in NEW phase)
-    - Important target highlighting (rare, elite, boss)
-    - Performance optimized for large pulls
+    功能：
+    - 敵方名牌：血量、施法條、減益效果
+    - 友方名牌（簡化版）
+    - 月相感知透明度（新月相時淡出）
+    - 重要目標高亮（稀有、精英、Boss）
+    - 大量拉怪效能最佳化
 ]]
 
 local _ADDON_NAME, Engine = ...
@@ -23,7 +23,7 @@ local UnitPowerType = UnitPowerType
 local math_floor = math.floor
 local string_format = string.format
 
--- Wait for oUF
+-- 等待 oUF
 -- oUF is exposed as LunarUF via X-oUF TOC header
 local oUF = Engine.oUF or _G.LunarUF or _G.oUF
 if not oUF then
@@ -31,7 +31,7 @@ if not oUF then
 end
 
 --------------------------------------------------------------------------------
--- Constants
+-- 常數
 --------------------------------------------------------------------------------
 
 local statusBarTexture -- lazy: resolved after DB is ready
@@ -58,7 +58,7 @@ end
 local CASTBAR_COLOR = LunarUI.CASTBAR_COLOR
 local BG_DARKEN = LunarUI.BG_DARKEN
 
--- Classification colors
+-- 分類顏色
 local CLASSIFICATION_COLORS = {
     worldboss = { r = 1.0, g = 0.2, b = 0.2 },
     rareelite = { r = 1.0, g = 0.5, b = 0.0 },
@@ -110,7 +110,7 @@ local nameplateQuestFrame
 local MarkStackingDirty
 
 --------------------------------------------------------------------------------
--- Helper Functions
+-- 輔助函數
 --------------------------------------------------------------------------------
 
 local function CreateBackdrop(frame)
@@ -123,7 +123,7 @@ local function GetUnitClassification(unit)
 end
 
 --------------------------------------------------------------------------------
--- Nameplate Elements
+-- 名牌元素
 --------------------------------------------------------------------------------
 
 --[[ Health Bar ]]
@@ -213,7 +213,7 @@ local function CreateNameText(frame)
     name:SetJustifyH("CENTER")
     name:SetWidth(frame:GetWidth() * 1.5)
 
-    -- Fix #47: Use standard oUF tag instead of undefined [name:abbrev]
+    -- [name:abbrev] 不是標準 oUF tag，改用 [name]
     frame:Tag(name, "[name]")
     frame.Name = name
     return name
@@ -311,20 +311,17 @@ local function CreateDebuffs(frame)
     -- Only show player's debuffs
     debuffs.onlyShowPlayer = true
 
-    -- Fix #53: WoW 12.0 makes isHarmful a secret value (taint-protected) that cannot be read
-    -- from addon Lua. Attempting to test data.isHarmful always yields nil/false from addon code.
-    -- The oUF Debuffs element itself already restricts the aura pool to harmful auras before
-    -- invoking FilterAura, so checking isPlayerAura alone is sufficient and correct here.
-    -- Do NOT add "and data.isHarmful == true" — it will never match and will hide all debuffs.
+    -- WoW 12.0 將 isHarmful 設為 secret value（taint-protected），無法讀取。
+    -- oUF Debuffs element 已限制 aura pool 為 harmful，FilterAura 只需檢查 isPlayerAura。
+    -- 不要加 "and data.isHarmful == true"——永遠不會匹配，會隱藏所有 debuffs。
     debuffs.FilterAura = function(_element, _unit, data)
         return data.isPlayerAura == true
     end
 
     debuffs.PostCreateButton = StyleNameplateAura
 
-    -- Post-update for debuff type colors
-    -- Fix #50 + Fix #57: WoW 12.0 makes dispelName a secret value
-    -- Use generic debuff color since we can't access dispel type
+    -- WoW 12.0 將 dispelName 設為 secret value，無法存取驅散類型
+    -- 統一使用通用 debuff 顏色
     debuffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
         if button.SetBackdropBorderColor then
             local color = DEBUFF_TYPE_COLORS["none"]
@@ -468,12 +465,12 @@ local function CreateTargetIndicator(frame)
     return highlight
 end
 
--- Weak table for nameplate frame tracking (stacking detection, etc.)
+-- 弱引用表：名牌框架追蹤（疊加偵測等）
 -- Weak table: key 為弱引用，當 nameplate frame 被 GC 時自動清理
 local nameplateFrames = setmetatable({}, { __mode = "k" })
 
 --------------------------------------------------------------------------------
--- Layout Functions
+-- 佈局函數
 --------------------------------------------------------------------------------
 
 --[[ Enemy Nameplate Layout ]]
@@ -551,9 +548,8 @@ local function NameplateLayout(frame, unit)
     -- Determine if enemy or friendly
     local reaction = UnitReaction(unit, "player")
 
-    -- Fix #22: nil or hostile (1-4) uses enemy layout
+    -- nil 或敵對（1-4）使用敵方佈局
     -- Reaction: 1-3 = hostile, 4 = neutral, 5-8 = friendly
-    -- Default to enemy if reaction is nil (safer assumption)
     if not reaction or reaction <= 4 then
         return EnemyNameplateLayout(frame, unit)
     else
@@ -562,7 +558,7 @@ local function NameplateLayout(frame, unit)
 end
 
 --------------------------------------------------------------------------------
--- Nameplate Callbacks
+-- 名牌回呼
 --------------------------------------------------------------------------------
 
 --[[ Update quest indicator ]]
@@ -659,7 +655,7 @@ local function Nameplate_OnHide(frame)
     if frame.QuestIndicator then
         frame.QuestIndicator:Hide()
     end
-    -- Fix #4: Remove frame reference when hidden
+    -- 隱藏時移除框架引用
     nameplateFrames[frame] = nil
 
     -- 清除 NPC 顏色快取（H2），避免框架回收後帶有前一個 NPC 的顏色
@@ -687,7 +683,7 @@ local function Nameplate_OnHide(frame)
 end
 
 --------------------------------------------------------------------------------
--- Stacking Detection (offset overlapping nameplates)
+-- 疊加偵測（偏移重疊名牌）
 --------------------------------------------------------------------------------
 
 local stackingFrame = nil
@@ -697,7 +693,7 @@ local STACKING_OFFSET = 10 -- 每層偏移量（像素）
 -- 避免 UpdateNameplateStacking（dirty 驅動）每次都呼叫 GetModuleDB + 讀取 db.height
 local cachedNpHeight = 12
 
--- Fix 7: 重用平行陣列，避免每 0.1s 為每個名牌建新 table
+-- 重用平行陣列，避免每 0.1s 為每個名牌建新 table
 local stackFrames = {}
 local stackYs = {}
 local stackOffsets = {}
@@ -709,7 +705,7 @@ MarkStackingDirty = function()
     stackingDirty = true
 end
 
--- Fix 8: 記錄上一個目標名牌，切換時只更新前/後兩個
+-- 記錄上一個目標名牌，切換時只更新前/後兩個
 local lastTargetNameplate = nil
 
 -- 收集可見名牌到重用陣列
@@ -886,7 +882,7 @@ local function StopStackingDetection()
 end
 
 --------------------------------------------------------------------------------
--- Register Style & Spawn
+-- 註冊樣式與生成
 --------------------------------------------------------------------------------
 
 oUF:RegisterStyle("LunarUI_Nameplate", NameplateLayout)
@@ -897,7 +893,7 @@ local function SpawnNameplates()
         return
     end
 
-    -- Fix #39: Use event-driven retry for combat lockdown（singleton 避免重複呼叫建立多個 frame）
+    -- 使用事件驅動重試處理戰鬥鎖定（singleton 避免重複呼叫建立多個 frame）
     if InCombatLockdown() then
         if not npCombatWaitFrame then
             npCombatWaitFrame = CreateFrame("Frame")
@@ -942,12 +938,12 @@ local function SpawnNameplates()
     -- 堆疊偵測
     StartStackingDetection()
 
-    -- Fix #5: Use singleton pattern to prevent duplicate event handlers
+    -- 使用 singleton 避免重複事件處理器
     if not nameplateTargetFrame then
         nameplateTargetFrame = CreateFrame("Frame")
         nameplateTargetFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
         nameplateTargetFrame:SetScript("OnEvent", function()
-            -- Fix 8: 只更新前一個和當前目標名牌，而非遍歷全部
+            -- 只更新前一個和當前目標名牌，而非遍歷全部
             -- 清除舊目標
             if lastTargetNameplate and lastTargetNameplate:IsShown() then
                 UpdateTargetIndicator(lastTargetNameplate)
@@ -994,13 +990,13 @@ local function SpawnNameplates()
     end
 end
 
--- Export
+-- 匯出
 LunarUI.SpawnNameplates = SpawnNameplates
 LunarUI.CLASSIFICATION_COLORS = CLASSIFICATION_COLORS
 LunarUI.NPC_ROLE_COLORS = NPC_ROLE_COLORS
 LunarUI.GetNPCRoleColor = GetNPCRoleColor
 
--- Fix #35: Cleanup function to prevent memory leaks on disable/reload
+-- 清理函數：防止 disable/reload 時記憶體洩漏
 function LunarUI.CleanupNameplates()
     -- 清理戰鬥等待框架
     if npCombatWaitFrame then

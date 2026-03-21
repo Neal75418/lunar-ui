@@ -357,20 +357,7 @@ local function CreateCooldownFrame()
     cooldownFrame:SetSize(MAX_ICONS * (ICON_SIZE + ICON_SPACING) - ICON_SPACING, ICON_SIZE + 10)
     cooldownFrame:SetPoint("CENTER", UIParent, "CENTER", 0, -250)
     cooldownFrame:SetFrameStrata("HIGH")
-    cooldownFrame:SetMovable(true)
-    cooldownFrame:EnableMouse(true)
-    cooldownFrame:RegisterForDrag("LeftButton")
     cooldownFrame:SetClampedToScreen(true)
-
-    -- 拖曳支援
-    cooldownFrame:SetScript("OnDragStart", function(self)
-        if IsShiftKeyDown() then
-            self:StartMoving()
-        end
-    end)
-    cooldownFrame:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-    end)
 
     -- 建立圖示
     for i = 1, MAX_ICONS do

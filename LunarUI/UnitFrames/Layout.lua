@@ -1422,7 +1422,7 @@ local spawnRetries = 0
 local MAX_SPAWN_RETRIES = 15 -- 最多重試 15 次（3 秒）
 
 -- 生成個人單位框架：player, target, focus, pet, targettarget
--- Helper function to spawn and anchor a frame (reduces duplication)
+-- 輔助函數：生成並錨定框架（減少重複）
 local function SpawnAndAnchorFrame(unit, style, anchorFunc)
     oUF:SetActiveStyle(style)
     local frame = oUF:Spawn(unit, style)
