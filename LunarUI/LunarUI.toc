@@ -55,6 +55,9 @@ Nameplates\Nameplates.lua
 
 # ActionBars
 ActionBars\HideBlizzardBars.lua
+ActionBars\ButtonStyling.lua
+ActionBars\FadeAndHover.lua
+ActionBars\SpecialButtons.lua
 ActionBars\ActionBars.lua
 
 # HUD

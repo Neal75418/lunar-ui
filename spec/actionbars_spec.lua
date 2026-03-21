@@ -130,6 +130,9 @@ LunarUI.GetModuleDB = function(key)
     return LunarUI.db.profile[key]
 end
 
+loader.loadAddonFile("LunarUI/ActionBars/ButtonStyling.lua", LunarUI)
+loader.loadAddonFile("LunarUI/ActionBars/FadeAndHover.lua", LunarUI)
+loader.loadAddonFile("LunarUI/ActionBars/SpecialButtons.lua", LunarUI)
 loader.loadAddonFile("LunarUI/ActionBars/ActionBars.lua", LunarUI)
 
 --------------------------------------------------------------------------------
