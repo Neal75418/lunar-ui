@@ -15,7 +15,12 @@ _G.IsShiftKeyDown = function()
     return false
 end
 _G.hooksecurefunc = function() end
-_G.C_Timer = { After = function() end }
+_G.C_Timer = {
+    After = function() end,
+    NewTimer = function()
+        return { Cancel = function() end }
+    end,
+}
 _G.GetTime = function()
     return 1000
 end

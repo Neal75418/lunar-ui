@@ -1231,6 +1231,10 @@ end
 function RegisterStateDriver(frame, attribute, values)
     return _rv
 end
+
+---@param frame table
+---@param attribute string
+function UnregisterStateDriver(frame, attribute) end
 function ClearFocus()
     return _rv
 end

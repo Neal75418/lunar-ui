@@ -92,6 +92,9 @@ local microMenuLayoutHooked = false
 local BLIZZARD_BAR_KEYS = { extraActionButton = true, zoneAbilityButton = true }
 
 -- M4: 儲存 Blizzard 框架的原始位置，清理時還原
+
+-- SpawnActionBars 延遲初始化 fade 的 timer handle（供 CleanupActionBars 取消）
+local fadeInitTimer = nil
 local savedExtraActionPos = nil
 local savedZoneAbilityPos = nil
 
@@ -1384,15 +1387,27 @@ local function SpawnActionBars()
     CreateMicroBar()
 
     -- 初始化淡入淡出系統
-    C_Timer.After(1.0, InitializeFade)
+    fadeInitTimer = C_Timer.NewTimer(1.0, function()
+        fadeInitTimer = nil
+        InitializeFade()
+    end)
 end
 
 -- 清理函數
 local function CleanupActionBars()
+    -- 取消尚未執行的 InitializeFade 計時器（防止 cleanup 後 fadeInitialized 被重設為 true）
+    if fadeInitTimer then
+        fadeInitTimer:Cancel()
+        fadeInitTimer = nil
+    end
+
     -- 停止淡出動畫
     fadeInitialized = false
     fadeAnimFrame:SetScript("OnUpdate", nil)
     fadeAnimActive = false
+    -- 重置批次處理旗標（避免下次 enable 後第一批 StyleButton 呼叫不觸發計時器）
+    normalClearScheduled = false
+    desaturateScheduled = false
 
     -- 清理淡出計時器
     for _, state in pairs(fadeState) do
@@ -1415,6 +1430,7 @@ local function CleanupActionBars()
     if bars.stancebar then
         bars.stancebar:UnregisterAllEvents()
         bars.stancebar:SetScript("OnEvent", nil)
+        bars.stancebar:Hide()
         bars.stancebar = nil
     end
 
@@ -1422,6 +1438,7 @@ local function CleanupActionBars()
     if bars.petbar then
         bars.petbar:UnregisterAllEvents()
         bars.petbar:SetScript("OnEvent", nil)
+        bars.petbar:Hide()
         bars.petbar = nil
     end
 
@@ -1454,9 +1471,20 @@ local function CleanupActionBars()
     -- 清理微型按鈕列
     CleanupMicroBar()
 
-    -- 若 keybind 模式仍啟動，先正常退出（ExitKeybindMode 需遍歷 buttons，必須在 wipe 前執行）
+    -- 若 keybind 模式仍啟動，先退出（ExitKeybindMode 需遍歷 buttons，必須在 wipe 前執行）
+    -- 戰鬥中無法 SetScript，改為直接重置旗標
     if keybindMode then
-        ExitKeybindMode()
+        if not InCombatLockdown() then
+            ExitKeybindMode()
+        else
+            keybindMode = false -- 戰鬥中只重置旗標，略過 SetScript 操作
+        end
+    end
+
+    -- 取消 bar1 的 StateDriver（避免 disable 後繼續觸發、且下次 enable 重複累積）
+    if bars["bar1"] then
+        UnregisterStateDriver(bars["bar1"], "page")
+        UnregisterStateDriver(bars["bar1"], "visibility")
     end
 
     -- 清理主動作條（bar1-6）的懸停框架旗標並重置 bars 表
@@ -1467,6 +1495,7 @@ local function CleanupActionBars()
         end
         if type(bar) == "table" then
             bar._lunarFadeHooked = nil
+            bar:Hide() -- Disable 後隱藏動作條（WoW frame 不可 destroy）
         end
         bars[barKey] = nil
     end
