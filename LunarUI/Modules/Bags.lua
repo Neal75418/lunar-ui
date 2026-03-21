@@ -1898,7 +1898,14 @@ local function HookBagFunctions()
 
     hooksRegistered = true
 
-    -- 掛鉤 OpenAllBags
+    -- 掛鉤 ToggleAllBags（B 鍵入口）
+    -- WoW 12.0.1 的 ToggleAllBags 直接操作 ContainerFrameCombinedBags，
+    -- 不再內部呼叫 OpenAllBags/CloseAllBags，因此必須獨立掛鉤
+    hooksecurefunc("ToggleAllBags", function()
+        ToggleBags()
+    end)
+
+    -- 掛鉤 OpenAllBags / CloseAllBags（其他插件或遊戲系統直接呼叫的路徑）
     hooksecurefunc("OpenAllBags", function()
         OpenBags()
     end)
@@ -1907,9 +1914,6 @@ local function HookBagFunctions()
     hooksecurefunc("CloseAllBags", function()
         CloseBags()
     end)
-
-    -- 注意：不 hook ToggleAllBags，因為 ToggleAllBags 內部會呼叫 OpenAllBags/CloseAllBags，
-    -- 兩者已有 hook，若再 hook ToggleAllBags 會造成開包後立即關包的雙重觸發
 
     -- 徹底禁用暴雪背包框架（alpha 0 + 移到螢幕外 + 禁用滑鼠）
     -- 只設 alpha 0 不夠：框架仍接收滑鼠事件，會擋住我們的自訂背包
