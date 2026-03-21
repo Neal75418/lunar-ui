@@ -67,7 +67,7 @@ local function SkinMerchant()
         hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
             -- hooksecurefunc 無法撤銷，停用時跳過以免修改未換膚的商人介面
             local skinsDB = LunarUI.GetModuleDB("skins")
-            if not skinsDB or skinsDB.enabled == false then
+            if not skinsDB or not skinsDB.enabled then -- 與 IsSkinEnabled 邏輯對齊
                 return
             end
             pcall(function()

@@ -76,6 +76,10 @@ function LunarUI.CreateIconBorder(parent, options)
     local inset = options.inset or 1
     local color = options.color or C.border
 
+    if not LunarUI.iconBackdropTemplate then
+        return nil
+    end
+
     local border = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     border:SetPoint("TOPLEFT", -inset, inset)
     border:SetPoint("BOTTOMRIGHT", inset, -inset)
@@ -144,7 +148,7 @@ function LunarUI:SkinFrameText(frame, depth, currentDepth)
             if region and region.IsObjectType and region:IsObjectType("FontString") then
                 -- 只修復近黑色文字（閾值 0.3），避免誤改暴雪故意使用的中灰色/陰影文字
                 local r, g, b = region:GetTextColor()
-                if r and r < 0.3 and g < 0.3 and b < 0.3 then
+                if r and r < 0.15 and g < 0.15 and b < 0.15 then -- 0.15 避免誤改暗金色文字（0.24, 0.20, 0.0）
                     region:SetTextColor(1, 1, 1, 1)
                 end
             end
@@ -383,6 +387,7 @@ local function ApplySkin(name)
         if LunarUI.Debug then
             LunarUI:Debug("Skin error [" .. name .. "]: " .. tostring(result))
         end
+        skinned[name] = true -- 錯誤路徑也標記完成，避免重試反覆執行無效 skin
     elseif result then
         skinned[name] = true
     end

@@ -8,6 +8,9 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local function SkinWorldMap()
+    if InCombatLockdown() then
+        return
+    end
     local frame = LunarUI:SkinStandardFrame("WorldMapFrame")
     if not frame then
         return
