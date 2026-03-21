@@ -144,10 +144,11 @@ end
 --------------------------------------------------------------------------------
 
 -- 背包 0-4 各欄位加總輔助，fn 為 C_Container 的槽位查詢函數
+-- 使用 (fn(bag)) 限制取第一個回傳值，避免 GetContainerNumFreeSlots 回傳兩個值時的意外累加
 local function SumBagSlots(fn)
     local total = 0
     for bag = 0, 4 do
-        total = total + fn(bag)
+        total = total + ((fn(bag)) or 0)
     end
     return total
 end
@@ -713,7 +714,9 @@ local function UpdateSlotEffects(button, db, bag, slot, containerInfo, itemLink,
     if button.questIcon then
         if db and db.showQuestItems ~= false and containerInfo.isQuestItem then
             button.questIcon:Show()
-            button.junkIcon:Hide()
+            if button.junkIcon then
+                button.junkIcon:Hide()
+            end
         else
             button.questIcon:Hide()
         end
@@ -976,6 +979,9 @@ local function CreateBagFrame()
     sortText:SetTextColor(0.8, 0.8, 0.8)
 
     sortButton:SetScript("OnClick", function()
+        if InCombatLockdown() then
+            return
+        end
         isSorting = true
         C_Container.SortBags()
     end)
@@ -1214,6 +1220,9 @@ local function CreateBankFrame()
     sortText:SetTextColor(0.8, 0.8, 0.8)
 
     bankSortButton:SetScript("OnClick", function()
+        if InCombatLockdown() then
+            return
+        end
         isSorting = true
         C_Container.SortBankBags()
     end)
@@ -2209,6 +2218,8 @@ function LunarUI.CleanupBags()
     wipe(equipmentTypeCache)
     itemLevelCacheMeta.n = 0
     equipmentTypeCacheMeta.n = 0
+    -- 注意：hooksRegistered 不重設，因為 hooksecurefunc hook 無法取消，
+    -- re-enable 時重新呼叫 HookBagFunctions() 會因 hooksRegistered=true 跳過（正確行為）
 end
 
 -- 匯出
