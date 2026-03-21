@@ -125,6 +125,10 @@ end
 ]]
 function LunarUI:SlashCommand(input)
     local _L = Engine.L or {}
+    -- 防止超長輸入造成不必要的解析開銷（WoW slash command 上限通常遠低於此值）
+    if #input > 256 then
+        return
+    end
     local args = {}
     for word in input:gmatch("%S+") do
         table.insert(args, word:lower())
@@ -154,8 +158,16 @@ function LunarUI:SlashCommand(input)
 
     -- 需要子命令的命令
     if cmd == "toggle" or cmd == "on" or cmd == "off" then
+        if InCombatLockdown() then
+            self:Print(_L["CombatLocked"] or "Cannot change addon state during combat")
+            return
+        end
         self:ToggleAddon(cmd)
     elseif cmd == "reset" then
+        if InCombatLockdown() then
+            self:Print(_L["CombatLocked"] or "Cannot reset positions during combat")
+            return
+        end
         if args[2] == "all" then
             LunarUI.ResetAllPositions()
         else

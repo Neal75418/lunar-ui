@@ -1325,6 +1325,11 @@ local function CleanupChat()
     _cachedTimestampMinute = -1
     -- 重置 filter 註冊旗標，確保重新啟用時能正確重新註冊所有 filters
     chatFiltersRegistered = false
+    -- 清理角色圖示事件框架（避免 disable 後仍持續回應事件）
+    if chatRoleIconEventFrame then
+        chatRoleIconEventFrame:UnregisterAllEvents()
+        chatRoleIconEventFrame:SetScript("OnEvent", nil)
+    end
 end
 
 -- 匯出

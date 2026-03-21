@@ -113,8 +113,14 @@ local function CreateHealthBar(frame, unit)
 
     -- 更新後鉤子：確保職業顏色正確套用（含 color cache 避免每幀重設）
     health.PostUpdate = function(self, _unit, _cur, _max)
-        local ownerUnit = self.__owner and self.__owner.unit
+        -- M11：快取 __owner 避免後段二次存取時 owner 已失效
+        local ownerFrame = self.__owner
+        local ownerUnit = ownerFrame and ownerFrame.unit
         if not ownerUnit then
+            return
+        end
+        -- H2：frequentUpdates=true 下 unit 可能暫時無效，提早退出避免 API 傳入 nil
+        if not UnitExists(ownerUnit) then
             return
         end
 
@@ -157,7 +163,6 @@ local function CreateHealthBar(frame, unit)
 
         -- 死亡狀態指示器（oUF 無內建 DeadIndicator element，需手動驅動）
         -- B3 效能修復：快取 isDead 狀態，只在狀態改變時才呼叫 SetShown（frequentUpdates=true 下每幀執行）
-        local ownerFrame = self.__owner
         if ownerFrame and ownerFrame.DeadIndicator then
             local isDead = UnitIsDeadOrGhost(ownerUnit)
             if isDead ~= self._lastIsDead then

@@ -152,7 +152,8 @@ end
 function LunarUI.UpdateDebugOverlay()
     local frame = CreateDebugFrame()
 
-    if LunarUI.GetModuleDB("debug") then
+    -- debug 是 profile root key（非 sub-table），需直接存取 db.profile.debug
+    if LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
         frame:Show()
     else
         frame:Hide()

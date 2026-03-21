@@ -27,6 +27,9 @@ function MockFrame:SetPoint() end
 function MockFrame:ClearAllPoints() end
 function MockFrame:SetAllPoints() end
 function MockFrame:SetScale() end
+function MockFrame:GetScale()
+    return 1.0
+end
 
 function MockFrame:GetWidth()
     return 200

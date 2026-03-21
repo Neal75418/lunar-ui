@@ -27,11 +27,13 @@ local function SkinCharacterFrame()
     end
 
     -- CharacterModelScene 背景（角色模型區域）
-    if _G.CharacterModelScene then
+    -- 使用 _lunarModelBg flag 防止重入時重複建立 texture
+    if _G.CharacterModelScene and not _G.CharacterModelScene._lunarModelBg then
         local bg = _G.CharacterModelScene:CreateTexture(nil, "BACKGROUND", nil, -8)
         if bg then
             bg:SetAllPoints()
             bg:SetColorTexture(0.03, 0.03, 0.03, 0.9)
+            _G.CharacterModelScene._lunarModelBg = bg
         end
     end
 

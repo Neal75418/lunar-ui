@@ -61,11 +61,13 @@ end
 
 local function SavePosition(name, point, relativePoint, x, y)
     local positions = GetSavedPositions()
+    -- 儲存座標時一併記錄 UIParent scale，以便 scale 變更後等比例換算
     positions[name] = {
         point = point,
         relativePoint = relativePoint,
         x = x,
         y = y,
+        scale = UIParent:GetScale() or 1.0,
     }
 end
 
@@ -275,10 +277,25 @@ local function ApplySavedPosition(name)
 
     local saved = LoadPosition(name)
     if saved then
-        -- 限制座標在螢幕範圍內（處理解析度變更後舊資料超出邊界的情況）
+        -- saved.point 型別驗證（防止手動編輯 SavedVariables 導致 SetPoint 傳入 nil）
+        if type(saved.point) ~= "string" or type(saved.relativePoint) ~= "string" then
+            return
+        end
+        local x = type(saved.x) == "number" and saved.x or 0
+        local y = type(saved.y) == "number" and saved.y or 0
+
+        -- Scale 換算：若儲存時的 scale 與當前不同，等比例縮放座標以維持螢幕位置不變
+        local savedScale = type(saved.scale) == "number" and saved.scale or 1.0
+        local currentScale = UIParent:GetScale() or 1.0
+        if savedScale ~= currentScale and currentScale > 0 then
+            x = x * savedScale / currentScale
+            y = y * savedScale / currentScale
+        end
+
+        -- 限制座標在螢幕範圍內（0 到螢幕尺寸，處理解析度變更後舊資料超出邊界的情況）
         local screenW, screenH = UIParent:GetWidth(), UIParent:GetHeight()
-        local x = math.max(-screenW, math.min(screenW, saved.x))
-        local y = math.max(-screenH, math.min(screenH, saved.y))
+        x = math.max(-screenW, math.min(screenW, x))
+        y = math.max(-screenH, math.min(screenH, y))
 
         data.frame:ClearAllPoints()
         data.frame:SetPoint(saved.point, UIParent, saved.relativePoint, x, y)
