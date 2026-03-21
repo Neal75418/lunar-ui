@@ -14,9 +14,11 @@ std = "lua51+wow"
 -- Ignore unused/unaccessed variables/args prefixed with _, and unused self in : method syntax
 ignore = { "21/_.+", "23/_.+", "212/self" }
 
--- Exclude third-party libraries
+-- Exclude third-party libraries and CI-installed toolchain directories
 exclude_files = {
     "LunarUI/Libs/**",
+    ".lua/**",      -- LuaJIT installation directory (gh-actions-lua, CI only)
+    ".luarocks/**", -- LuaRocks installation directory (gh-actions-luarocks, CI only)
 }
 
 -- wow_api.def.lua is a stub file for IDE autocomplete — suppress all warnings
