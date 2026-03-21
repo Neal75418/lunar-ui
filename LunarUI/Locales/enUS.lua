@@ -105,8 +105,14 @@ L["SpamFiltered"] = "Spam message filtered"
 
 -- Config
 L["SettingsImported"] = "Settings imported successfully"
+L["SettingsImportedVersion"] = "Settings imported successfully (version: %s)"
 L["SettingsExported"] = "Settings exported to clipboard"
 L["InvalidSettings"] = "Invalid settings format"
+L["ExportTitle"] = "Export Settings"
+L["ExportFailed"] = "Export failed: "
+L["ExportInstructions"] = "Ctrl+A to select all, Ctrl+C to copy"
+L["VersionUnknown"] = "unknown"
+L["DebugTitle"] = "Debug"
 
 -- Auras
 L["Auras"] = "Auras"

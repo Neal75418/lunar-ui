@@ -62,7 +62,8 @@ local NPC_ROLE_COLORS = {
     miniboss = { r = 0.8, g = 0.6, b = 0.2 }, -- 金色（精英/小Boss）
 }
 
-local function GetNPCRoleColor(unit, db)
+-- classification 為可選參數，由呼叫端傳入已計算的值以避免重複呼叫 UnitClassification
+local function GetNPCRoleColor(unit, db, classification)
     if not unit or UnitIsPlayer(unit) then
         return nil
     end
@@ -71,7 +72,9 @@ local function GetNPCRoleColor(unit, db)
         return nil
     end
 
-    local classification = UnitClassification(unit)
+    if not classification then
+        classification = UnitClassification(unit)
+    end
     if classification == "worldboss" or classification == "elite" or classification == "rareelite" then
         return npcDb.miniboss or NPC_ROLE_COLORS.miniboss
     end
@@ -605,7 +608,8 @@ local function Nameplate_OnShow(frame)
             or classification == "elite"
             or classification == "rare"
         -- H2 效能修復：預計算 NPC 顏色並快取到 frame，PostUpdate 直接讀取快取
-        frame._npcColorCache = GetNPCRoleColor(frame.unit, db)
+        -- M6 效能修復：傳入已計算的 classification，避免 GetNPCRoleColor 內第二次呼叫 UnitClassification
+        frame._npcColorCache = GetNPCRoleColor(frame.unit, db, classification)
 
         if db and db.highlight then
             local color = CLASSIFICATION_COLORS[classification]

@@ -1915,13 +1915,18 @@ local options = {
                     max = 40,
                     step = 1,
                     get = function()
-                        return GetDB().frameMover and GetDB().frameMover.gridSize or 10
+                        local db = GetDB()
+                        return db and db.frameMover and db.frameMover.gridSize or 10
                     end,
                     set = function(_, v)
-                        if not GetDB().frameMover then
-                            GetDB().frameMover = {}
+                        local db = GetDB()
+                        if not db then
+                            return
                         end
-                        GetDB().frameMover.gridSize = v
+                        if not db.frameMover then
+                            db.frameMover = {}
+                        end
+                        db.frameMover.gridSize = v
                         if LunarUI.LoadFrameMoverSettings then
                             LunarUI.LoadFrameMoverSettings()
                         end
@@ -1937,13 +1942,18 @@ local options = {
                     max = 1.0,
                     step = 0.05,
                     get = function()
-                        return GetDB().frameMover and GetDB().frameMover.moverAlpha or 0.6
+                        local db = GetDB()
+                        return db and db.frameMover and db.frameMover.moverAlpha or 0.6
                     end,
                     set = function(_, v)
-                        if not GetDB().frameMover then
-                            GetDB().frameMover = {}
+                        local db = GetDB()
+                        if not db then
+                            return
                         end
-                        GetDB().frameMover.moverAlpha = v
+                        if not db.frameMover then
+                            db.frameMover = {}
+                        end
+                        db.frameMover.moverAlpha = v
                         if LunarUI.LoadFrameMoverSettings then
                             LunarUI.LoadFrameMoverSettings()
                         end
@@ -2852,9 +2862,15 @@ local function RegisterOptions()
                     return t
                 end,
                 get = function()
+                    if not LunarUI.db or not LunarUI.db.char then
+                        return ""
+                    end
                     return LunarUI.db.char.specProfiles and LunarUI.db.char.specProfiles[i] or ""
                 end,
                 set = function(_, v)
+                    if not LunarUI.db or not LunarUI.db.char then
+                        return
+                    end
                     if not LunarUI.db.char.specProfiles then
                         LunarUI.db.char.specProfiles = {}
                     end

@@ -110,8 +110,14 @@ L["SpamFiltered"] = "垃圾訊息已過濾"
 
 -- 設定
 L["SettingsImported"] = "設定匯入成功"
+L["SettingsImportedVersion"] = "設定匯入成功（版本：%s）"
 L["SettingsExported"] = "設定已匯出至剪貼簿"
 L["InvalidSettings"] = "無效的設定格式"
+L["ExportTitle"] = "匯出設定"
+L["ExportFailed"] = "匯出失敗："
+L["ExportInstructions"] = "Ctrl+A 全選，Ctrl+C 複製"
+L["VersionUnknown"] = "未知"
+L["DebugTitle"] = "除錯"
 
 -- 光環
 L["Auras"] = "光環"

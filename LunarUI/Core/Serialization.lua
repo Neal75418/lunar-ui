@@ -143,6 +143,10 @@ local function DeserializeStringInner(str)
         local numStr = str:sub(startPos, pos - 1)
         local num = tonumber(numStr)
         if num then
+            -- 拒絕 NaN 與 Infinity（如 1e400 被 tonumber 解析為 Infinity）
+            if num ~= num or math.abs(num) == math.huge then
+                return nil, "無效數字：" .. numStr
+            end
             return num
         end
         return nil, "無效數字：" .. numStr
@@ -465,7 +469,10 @@ function LunarUI:ImportSettings(importString)
     self:OnProfileChanged()
 
     return true,
-        (L["SettingsImported"] or "設定匯入成功") .. "（版本：" .. (data.version or "未知") .. "）"
+        string.format(
+            L["SettingsImportedVersion"] or "設定匯入成功（版本：%s）",
+            data.version or (L["VersionUnknown"] or "未知")
+        )
 end
 
 --------------------------------------------------------------------------------
@@ -479,7 +486,7 @@ function LunarUI:ShowExportFrame()
     local L = Engine.L or {}
     local exportString, err = self:ExportSettings()
     if not exportString then
-        self:Print("匯出失敗：" .. (err or "未知"))
+        self:Print((L["ExportFailed"] or "匯出失敗：") .. (err or (L["VersionUnknown"] or "未知")))
         return
     end
 
@@ -500,7 +507,7 @@ function LunarUI:ShowExportFrame()
         local title = frame:CreateFontString(nil, "OVERLAY")
         LunarUI.SetFont(title, 14, "OUTLINE")
         title:SetPoint("TOP", 0, -10)
-        title:SetText("|cff8882ffLunarUI|r " .. (L["SettingsExported"] and "匯出設定" or "匯出設定"))
+        title:SetText("|cff8882ffLunarUI|r " .. (L["ExportTitle"] or "匯出設定"))
 
         -- 關閉按鈕
         local closeBtn = CreateFrame("Button", nil, frame)
@@ -531,7 +538,7 @@ function LunarUI:ShowExportFrame()
         local instructions = frame:CreateFontString(nil, "OVERLAY")
         LunarUI.SetFont(instructions, 10, "")
         instructions:SetPoint("BOTTOM", 0, 10)
-        instructions:SetText("Ctrl+A 全選，Ctrl+C 複製")
+        instructions:SetText(L["ExportInstructions"] or "Ctrl+A 全選，Ctrl+C 複製")
         instructions:SetTextColor(C.textDim[1], C.textDim[2], C.textDim[3])
 
         self.exportFrame = frame

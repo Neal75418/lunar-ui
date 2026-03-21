@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
 -- 除錯輔助函數
@@ -97,7 +98,7 @@ local function CreateDebugFrame()
     -- 標題
     local title = debugFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOP", 0, -5)
-    title:SetText("|cff8882ffLunarUI 除錯|r")
+    title:SetText("|cff8882ffLunarUI " .. (L["DebugTitle"] or "除錯") .. "|r")
     debugFrame.title = title
 
     -- FPS/記憶體顯示
