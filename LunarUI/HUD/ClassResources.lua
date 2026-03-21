@@ -489,14 +489,15 @@ local function Initialize()
     local _, _, classID = UnitClass("player")
     _playerClass = classID
 
+    -- isInitialized 必須在 SetupResourceDisplay() 之前設為 true，
+    -- 否則其內部的 "if not isInitialized then return end" guard 會使首次初始化提前返回
+    isInitialized = true
     SetupResourceDisplay()
 
     -- 註冊至框架移動器
     if resourceFrame then
         LunarUI.RegisterMovableFrame("ClassResources", resourceFrame, "職業資源")
     end
-
-    isInitialized = true
 end
 
 -- 暴露 Initialize 供 Options toggle 即時切換

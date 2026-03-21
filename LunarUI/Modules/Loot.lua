@@ -230,7 +230,7 @@ local function UpdateLootFrame()
         if not slot then
             break
         end
-        local lootIcon, lootName, lootQuantity, _, lootQuality, _, _, _, _ = _G.GetLootSlotInfo(i)
+        local lootIcon, lootName, lootQuantity, lootQuality, _, _, _, _ = _G.GetLootSlotInfo(i)
 
         if lootName then
             visibleCount = visibleCount + 1
@@ -305,9 +305,13 @@ local function OnEvent(_self, event)
             return
         end
 
-        -- Hide Blizzard loot frame
+        -- Hide Blizzard loot frame（LootFrame 是 protected frame，戰鬥中不可 Hide）
         if _G.LootFrame then
-            _G.LootFrame:Hide()
+            if not InCombatLockdown() then
+                _G.LootFrame:Hide()
+            else
+                _G.LootFrame:SetAlpha(0)
+            end
         end
 
         -- Create our frame on first use
