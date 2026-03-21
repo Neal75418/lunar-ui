@@ -286,13 +286,15 @@ local function OrganizeMinimapButtons()
     local buttonSize = 24
     local spacing = 2
 
-    for i, button in ipairs(collectedButtons) do
+    local visibleIdx = 0
+    for _, button in ipairs(collectedButtons) do
         if button and button:IsShown() then
+            visibleIdx = visibleIdx + 1
             button:SetParent(buttonFrame)
             button:ClearAllPoints()
 
-            local row = math.floor((i - 1) / buttonsPerRow)
-            local col = (i - 1) % buttonsPerRow
+            local row = math.floor((visibleIdx - 1) / buttonsPerRow)
+            local col = (visibleIdx - 1) % buttonsPerRow
 
             button:SetPoint(
                 "TOPLEFT",
@@ -329,8 +331,8 @@ local function OrganizeMinimapButtons()
         end
     end
 
-    -- 調整按鈕框架大小
-    local numButtons = #collectedButtons
+    -- 調整按鈕框架大小（只計算可見按鈕）
+    local numButtons = visibleIdx
     local numRows = math.ceil(numButtons / buttonsPerRow)
     local width = math.min(numButtons, buttonsPerRow) * (buttonSize + spacing) - spacing
     local height = numRows * (buttonSize + spacing) - spacing
