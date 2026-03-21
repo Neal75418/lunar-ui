@@ -24,7 +24,7 @@ local math_floor = math.floor
 local string_format = string.format
 
 -- 等待 oUF
--- oUF is exposed as LunarUF via X-oUF TOC header
+-- oUF 透過 TOC 的 X-oUF 標頭以 LunarUF 命名空間暴露
 local oUF = Engine.oUF or _G.LunarUF or _G.oUF
 if not oUF then
     return

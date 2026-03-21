@@ -23,7 +23,7 @@ if not LAB then
     return
 end
 
--- Masque support (optional)
+-- Masque 支援（可選）
 local Masque = LibStub("Masque", true)
 local masqueGroups = {}
 

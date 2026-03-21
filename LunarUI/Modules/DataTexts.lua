@@ -120,8 +120,8 @@ RegisterProvider("latency", {
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
         GameTooltip:AddLine(L["Latency"] or "Latency", 1, 1, 1)
-        GameTooltip:AddDoubleLine("Home", latencyHome .. " ms", 1, 1, 1, 0.3, 1, 0.3)
-        GameTooltip:AddDoubleLine("World", latencyWorld .. " ms", 1, 1, 1, 0.3, 1, 0.3)
+        GameTooltip:AddDoubleLine(L["LatencyHome"] or "Home", latencyHome .. " ms", 1, 1, 1, 0.3, 1, 0.3)
+        GameTooltip:AddDoubleLine(L["LatencyWorld"] or "World", latencyWorld .. " ms", 1, 1, 1, 0.3, 1, 0.3)
         GameTooltip:Show()
     end,
 })

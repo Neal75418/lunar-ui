@@ -200,7 +200,7 @@ end
 
 LunarUI:RegisterModule("Automation", {
     onEnable = function()
-        LunarUI:InitAutomation()
+        LunarUI.InitAutomation()
     end,
     onDisable = function()
         LunarUI.CleanupAutomation()

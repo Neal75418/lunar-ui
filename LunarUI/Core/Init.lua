@@ -75,8 +75,7 @@ local function ExecuteModuleCallback(entry)
                 ok, err = pcall(entry.onEnable)
             end
             if not ok then
-                print("|cffff6666[LunarUI]|r Module '" .. (entry.name or "?") .. "' failed: " .. tostring(err))
-                print("|cffff6666[LunarUI]|r Stack trace:")
+                LunarUI:Print("|cffff6666Module '" .. (entry.name or "?") .. "' failed:|r " .. tostring(err))
                 print(debugstack(2))
             end
             pendingDelayedModules = pendingDelayedModules - 1
@@ -93,8 +92,7 @@ local function ExecuteModuleCallback(entry)
             ok, err = pcall(entry.onEnable)
         end
         if not ok then
-            print("|cffff6666[LunarUI]|r Module '" .. (entry.name or "?") .. "' failed: " .. tostring(err))
-            print("|cffff6666[LunarUI]|r Stack trace:")
+            LunarUI:Print("|cffff6666Module '" .. (entry.name or "?") .. "' failed:|r " .. tostring(err))
             print(debugstack(2))
         end
     end
@@ -234,7 +232,7 @@ function LunarUI:OnDisable()
         if mod then
             local ok, err = pcall(mod.onDisable)
             if not ok then
-                print("|cffff6666[LunarUI]|r Module '" .. (mod.name or "?") .. "' cleanup failed: " .. tostring(err))
+                LunarUI:Print("|cffff6666Module '" .. (mod.name or "?") .. "' cleanup failed:|r " .. tostring(err))
             end
         end
     end
