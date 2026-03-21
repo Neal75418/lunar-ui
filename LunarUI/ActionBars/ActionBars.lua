@@ -88,6 +88,13 @@ local buttons = {}
 local keybindMode = false
 local microMenuLayoutHooked = false
 
+-- M6: Blizzard-managed bars 不可由 LunarUI 淡出控制（會造成 secure frame taint）
+local BLIZZARD_BAR_KEYS = { extraActionButton = true, zoneAbilityButton = true }
+
+-- M4: 儲存 Blizzard 框架的原始位置，清理時還原
+local savedExtraActionPos = nil
+local savedZoneAbilityPos = nil
+
 -- 清除按鈕 NormalTexture（提升到模組級供 hook 共用）
 local function ClearNormalTexture(self)
     local nt = self:GetNormalTexture()
@@ -913,7 +920,7 @@ local function FadeAllBarsOut()
     end
 
     for barKey in pairs(bars) do
-        if IsBarFadeEnabled(barKey) then
+        if not BLIZZARD_BAR_KEYS[barKey] and IsBarFadeEnabled(barKey) then -- M6: skip Blizzard secure frames
             if not fadeState[barKey] or not fadeState[barKey].hovered then
                 FadeBarTo(barKey, cachedFadeAlpha)
             end
@@ -923,7 +930,9 @@ end
 
 local function FadeAllBarsIn()
     for barKey in pairs(bars) do
-        FadeBarTo(barKey, 1.0)
+        if not BLIZZARD_BAR_KEYS[barKey] then -- M6: skip Blizzard secure frames
+            FadeBarTo(barKey, 1.0)
+        end
     end
 end
 
@@ -1092,6 +1101,24 @@ end
 -- ExtraActionButton 樣式化（世界任務/場景等特殊按鈕）
 --------------------------------------------------------------------------------
 
+-- M4 helper: 儲存框架所有 anchor 點（清理時還原）
+local function SaveFramePoints(frame)
+    local points = {}
+    for i = 1, frame:GetNumPoints() do
+        local point, relativeTo, relativePoint, x, y = frame:GetPoint(i)
+        points[i] = { point, relativeTo, relativePoint, x, y }
+    end
+    return points
+end
+
+-- M4 helper: 還原已儲存的 anchor 點
+local function RestoreFramePoints(frame, points)
+    frame:ClearAllPoints()
+    for _, p in ipairs(points) do
+        frame:SetPoint(p[1], p[2], p[3], p[4], p[5])
+    end
+end
+
 local function StyleExtraActionButton()
     if InCombatLockdown() then
         return
@@ -1108,6 +1135,9 @@ local function StyleExtraActionButton()
 
     -- 重新定位至畫面中下方
     -- 不使用 SetParent（會造成 taint），僅重新定位
+    if not savedExtraActionPos then
+        savedExtraActionPos = SaveFramePoints(extra) -- M4: 儲存原始位置供清理還原
+    end
     extra:ClearAllPoints()
     extra:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 300)
 
@@ -1165,6 +1195,9 @@ local function StyleZoneAbilityButton()
 
     -- 重新定位
     -- 不使用 SetParent（會造成 taint），僅重新定位
+    if not savedZoneAbilityPos then
+        savedZoneAbilityPos = SaveFramePoints(zone) -- M4: 儲存原始位置供清理還原
+    end
     zone:ClearAllPoints()
     zone:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 350)
 
@@ -1397,6 +1430,11 @@ local function CleanupActionBars()
         if _G.ExtraActionBarFrame.intro then
             _G.ExtraActionBarFrame.intro:SetAlpha(1)
         end
+        -- M4: 還原原始位置
+        if savedExtraActionPos and not InCombatLockdown() then
+            RestoreFramePoints(_G.ExtraActionBarFrame, savedExtraActionPos)
+            savedExtraActionPos = nil
+        end
         bars.extraActionButton = nil
     end
 
@@ -1404,6 +1442,11 @@ local function CleanupActionBars()
     if _G.ZoneAbilityFrame and bars.zoneAbilityButton then
         if _G.ZoneAbilityFrame.Style then
             _G.ZoneAbilityFrame.Style:SetAlpha(1)
+        end
+        -- M4: 還原原始位置
+        if savedZoneAbilityPos and not InCombatLockdown() then
+            RestoreFramePoints(_G.ZoneAbilityFrame, savedZoneAbilityPos)
+            savedZoneAbilityPos = nil
         end
         bars.zoneAbilityButton = nil
     end
