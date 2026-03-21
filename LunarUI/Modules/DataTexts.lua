@@ -709,9 +709,8 @@ function LunarUI.CleanupDataTexts()
 
     wipe(onUpdateElapsed)
     wipe(slotsByProvider)
-    -- M-7: 清除 provider 路由表，避免 profile 切換後殘留舊條目造成幽靈更新
-    wipe(eventToProviders)
-    wipe(onUpdateProviders)
+    -- eventToProviders / onUpdateProviders 由模組載入時的 RegisterProvider 靜態建立，
+    -- 不隨 profile 改變，不可 wipe（wipe 後重新 enable 時無法重建，providers 停止更新）
     eventFrame = nil
     onUpdateFrame = nil
 end

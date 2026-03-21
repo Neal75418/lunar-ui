@@ -1323,8 +1323,8 @@ local function CleanupChat()
     roleIconCacheDirty = true
     wipe(keywordCheckList)
     _cachedTimestampMinute = -1
-    -- 重置 filter 註冊旗標，確保重新啟用時能正確重新註冊所有 filters
-    chatFiltersRegistered = false
+    -- chatFiltersRegistered 不重置：ChatFrame_AddMessageEventFilter 無法移除，
+    -- 保留旗標可防止 disable+enable 循環時重複累積相同 filter
     -- 清理角色圖示事件框架（避免 disable 後仍持續回應事件）
     if chatRoleIconEventFrame then
         chatRoleIconEventFrame:UnregisterAllEvents()

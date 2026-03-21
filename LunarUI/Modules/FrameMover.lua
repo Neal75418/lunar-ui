@@ -197,6 +197,9 @@ local function CreateMover(name, targetFrame, label)
 
     -- 拖曳
     mover:SetScript("OnDragStart", function(self)
+        if InCombatLockdown() then
+            return
+        end
         self:StartMoving()
     end)
 
@@ -433,6 +436,16 @@ end
 LunarUI.ToggleMoveMode = ToggleMoveMode
 LunarUI.EnterMoveMode = EnterMoveMode
 LunarUI.ExitMoveMode = ExitMoveMode
+
+-- 進入戰鬥時自動退出移動模式（防止在戰鬥中拖拽安全框架觸發 lockdown 錯誤）
+local combatExitFrame = CreateFrame("Frame")
+combatExitFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+combatExitFrame:SetScript("OnEvent", function()
+    if isMoving then
+        ExitMoveMode()
+        LunarUI:Print(L["MoverCombatLocked"] or "Cannot enter move mode during combat")
+    end
+end)
 
 function LunarUI.LoadFrameMoverSettings()
     LoadFrameMoverSettings()

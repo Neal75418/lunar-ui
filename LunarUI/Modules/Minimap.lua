@@ -369,6 +369,8 @@ end
 -- 小地圖樣式化
 --------------------------------------------------------------------------------
 
+local minimapHooksInstalled = false -- hooksecurefunc 無法撤銷，需防止 enable/disable 循環堆疊
+
 local function HideBlizzardMinimapElements()
     -- 1. 把有用的 MinimapCluster 子元素 reparent 到 Minimap 並重設位置
     -- 原始錨點可能指向 MinimapCluster（即將移走），必須重設
@@ -444,19 +446,22 @@ local function HideBlizzardMinimapElements()
                 end, "ExpansionButton child")
             end
 
-            -- 防止暴雪把大小改回去
-            local settingSize = false
-            hooksecurefunc(btn, "SetSize", function(self, w, h)
-                if settingSize then
-                    return
-                end
-                if w ~= TARGET_SIZE or h ~= TARGET_SIZE then
-                    settingSize = true
-                    -- M-10: pcall 保護，確保錯誤時旗標能正確復原
-                    pcall(self.SetSize, self, TARGET_SIZE, TARGET_SIZE)
-                    settingSize = false
-                end
-            end)
+            -- 防止暴雪把大小改回去（只安裝一次，hooksecurefunc 無法撤銷）
+            if not minimapHooksInstalled then
+                local settingSize = false
+                hooksecurefunc(btn, "SetSize", function(self, w, h)
+                    if settingSize then
+                        return
+                    end
+                    if w ~= TARGET_SIZE or h ~= TARGET_SIZE then
+                        settingSize = true
+                        -- M-10: pcall 保護，確保錯誤時旗標能正確復原
+                        pcall(self.SetSize, self, TARGET_SIZE, TARGET_SIZE)
+                        settingSize = false
+                    end
+                end)
+                minimapHooksInstalled = true
+            end
         end
     end, "MinimapCluster reparent")
 
