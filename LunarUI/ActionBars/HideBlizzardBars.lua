@@ -31,7 +31,8 @@ local function HideFrameSafely(frame)
     end)
 end
 
--- 隱藏框架的所有區域（材質）- 只設置透明度
+-- 隱藏框架的所有區域（材質）- 只設置透明度，並追蹤以供還原
+local hiddenRegions = {} -- { [region] = true }
 local function HideFrameRegions(frame)
     if not frame then
         return
@@ -39,6 +40,7 @@ local function HideFrameRegions(frame)
     local regions = { frame:GetRegions() }
     for _, region in ipairs(regions) do
         if region and region.SetAlpha then
+            hiddenRegions[region] = true
             pcall(function()
                 region:SetAlpha(0)
             end)
@@ -50,10 +52,14 @@ end
 -- 精簡為 3 種有效方法：透明 + 隱藏 + 清除材質
 -- 原先 9 種方法（SetTexCoord/SetVertexColor/SetSize/ClearAllPoints/SetAtlas）為過度防禦，
 -- 每個 pcall 都有開銷，且此函數在 HideBlizzardBars() 的延遲重試中會執行 3 次。
+-- 注意：SetTexture(nil) 不可逆（無法還原原始材質路徑）
+-- 還原時只能 SetAlpha(1) + Show()，材質本身需要 WoW 重繪（/reload）
+local hiddenTextures = {} -- { [texture] = true }
 local function HideTextureForcefully(texture)
     if not texture then
         return
     end
+    hiddenTextures[texture] = true
     pcall(function()
         texture:SetAlpha(0)
         texture:Hide()
@@ -580,7 +586,24 @@ local function RestoreBlizzardBars()
     end
     wipe(hiddenFrames)
 
-    -- 3. 還原全域副作用（error handler + UIParent 事件）
+    -- 3. 還原被 HideFrameRegions 設為 alpha=0 的 regions
+    for region in pairs(hiddenRegions) do
+        pcall(function()
+            region:SetAlpha(1)
+        end)
+    end
+    wipe(hiddenRegions)
+
+    -- 4. 還原被 HideTextureForcefully 隱藏的材質（alpha + Show，SetTexture(nil) 不可逆）
+    for texture in pairs(hiddenTextures) do
+        pcall(function()
+            texture:SetAlpha(1)
+            texture:Show()
+        end)
+    end
+    wipe(hiddenTextures)
+
+    -- 5. 還原全域副作用（error handler + UIParent 事件）
     UninstallScaleErrorFilter()
 end
 

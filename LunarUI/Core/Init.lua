@@ -154,6 +154,8 @@ function LunarUI.DisableModules()
         return
     end
     LunarUI._modulesEnabled = false
+    -- 遞增世代，使飛行中的 C_Timer.After 延遲模組 callback 失效
+    enableGeneration = enableGeneration + 1
     modulesReadyFired = false
     pendingDelayedModules = 0
 
