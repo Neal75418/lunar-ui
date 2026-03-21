@@ -13,6 +13,9 @@ local LunarUI = Engine.LunarUI
 
 -- 角色佈局預設值（從 Engine.GetLayoutPresets 取得共用資料，映射至 WoW API 角色名稱）
 local function BuildRolePresets()
+    if not Engine.GetLayoutPresets then
+        return {} -- Defaults.lua 未載入時的防禦性回傳（TOC 順序正確時不應發生）
+    end
     local presets = Engine.GetLayoutPresets()
     return {
         DAMAGER = presets.dps,
