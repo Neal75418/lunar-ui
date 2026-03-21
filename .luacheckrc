@@ -107,6 +107,7 @@ read_globals = {
     "C_AddOns",
     "C_BattleNet",
     "C_Calendar",
+    "C_ClassTalents",
     "C_Container",
     "C_CVar",
     "C_DateAndTime",

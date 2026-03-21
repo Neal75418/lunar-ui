@@ -452,7 +452,8 @@ local function HideBlizzardMinimapElements()
                 end
                 if w ~= TARGET_SIZE or h ~= TARGET_SIZE then
                     settingSize = true
-                    self:SetSize(TARGET_SIZE, TARGET_SIZE)
+                    -- M-10: pcall 保護，確保錯誤時旗標能正確復原
+                    pcall(self.SetSize, self, TARGET_SIZE, TARGET_SIZE)
                     settingSize = false
                 end
             end)
@@ -710,10 +711,12 @@ local function CreateMinimapFrame()
                 elseif btn.ToggleMenu then
                     btn:ToggleMenu()
                 else
-                    -- 最後手段：包在 SafeCall 中避免戰鬥中報錯
-                    LunarUI.SafeCall(function()
-                        btn:Click()
-                    end, "TrackingButton Click")
+                    -- 最後手段：M-11: 加 InCombatLockdown 防護，避免 btn:Click() 在戰鬥中觸發 taint
+                    if not InCombatLockdown() then
+                        LunarUI.SafeCall(function()
+                            btn:Click()
+                        end, "TrackingButton Click")
+                    end
                 end
             elseif MiniMapTracking then
                 ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, "cursor")
@@ -1191,6 +1194,7 @@ function LunarUI.CleanupMinimap()
     end
     -- 清理 minimap 框架事件
     if minimapFrame then
+        minimapFrame:Hide() -- Low: disable 後應隱藏框架，避免功能失效但框架仍可見
         minimapFrame:UnregisterAllEvents()
         minimapFrame:SetScript("OnUpdate", nil)
         minimapFrame:SetScript("OnEvent", nil)

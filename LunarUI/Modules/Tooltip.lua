@@ -48,6 +48,8 @@ end
 --------------------------------------------------------------------------------
 
 local tooltipStyled = false
+local tooltipPositionHooked = false -- H-5: 防止 anchorCursor 動態切換時重複安裝定位 hook
+local _EMPTY = {} -- L-2: 避免 Engine.L or _EMPTY 在熱路徑上每次建立新 table
 
 -- Inspect 快取（避免重複請求）
 local inspectCache = {} -- { [guid] = { ilvl, spec, time } }
@@ -201,6 +203,13 @@ local function RequestInspect(unit)
     lastInspectTime = GetTime()
     pendingInspect = guid
     NotifyInspect(unit)
+    -- M-5: timeout 防護，避免伺服器無回應時 pendingInspect 永久 stale
+    local timeoutGuid = guid
+    C_Timer.After(5, function()
+        if pendingInspect == timeoutGuid then
+            pendingInspect = nil
+        end
+    end)
 end
 
 -- Inspect 回應事件（保留引用以便 Cleanup 解除註冊）
@@ -222,7 +231,7 @@ local inspectEventFrame = LunarUI.CreateEventHandler({ "INSPECT_READY" }, functi
             if GameTooltip:IsShown() and GameTooltip.GetUnit then
                 local _, tooltipUnit = GameTooltip:GetUnit()
                 if tooltipUnit and UnitGUID(tooltipUnit) == inspectGUID then
-                    local L = Engine.L or {}
+                    local L = Engine.L or _EMPTY
                     -- 新增 inspect 資訊行
                     if spec then
                         GameTooltip:AddLine("|cff888888" .. (L["TooltipSpec"] or "Spec:") .. "|r " .. spec, 1, 1, 1)
@@ -387,7 +396,7 @@ local function OnTooltipSetUnit(tooltip)
     end
 
     -- === 新增：裝等 + 專精（玩家） ===
-    local L = Engine.L or {}
+    local L = Engine.L or _EMPTY
     if UnitIsPlayer(unit) then
         local guid = UnitGUID(unit)
         if guid then
@@ -436,7 +445,9 @@ local function OnTooltipSetUnit(tooltip)
     if not UnitIsPlayer(unit) then
         local guid = UnitGUID(unit)
         if guid then
-            local unitType, _, _, _, _, npcID = strsplit("-", guid)
+            -- M-6: GUID 格式 Creature-0-RealmID-MapID-InstanceID-SpawnUID-NpcID（7 段）
+            -- 第 6 段為 SpawnUID，第 7 段才是 NPC ID
+            local unitType, _, _, _, _, _, npcID = strsplit("-", guid)
             if unitType == "Creature" or unitType == "Vehicle" then
                 if npcID then
                     tooltip:AddLine("|cff888888NPC ID: " .. npcID .. "|r")
@@ -504,7 +515,7 @@ local function OnTooltipSetItem(tooltip)
             end
 
             if not found then
-                local L = Engine.L or {}
+                local L = Engine.L or _EMPTY
                 tooltip:AddLine(" ")
                 tooltip:AddLine("|cff00ff00" .. (L["TooltipItemLevel"] or "Item Level:") .. " " .. itemLevel .. "|r")
             end
@@ -517,11 +528,11 @@ local function OnTooltipSetItem(tooltip)
         if itemID then
             local numID = tonumber(itemID)
             if numID then
-                local bagCount = C_Item.GetItemCount(numID, false)
+                local bagCount = C_Item.GetItemCount(numID, false) or 0 -- M-4: nil guard
                 local totalCount = C_Item.GetItemCount(numID, true) -- 含銀行
                 if totalCount and totalCount > 0 then
                     local bankCount = totalCount - bagCount
-                    local L = Engine.L or {}
+                    local L = Engine.L or _EMPTY
                     local countText = string.format("%s: %d", L["ItemCount"] or "Count", bagCount)
                     if bankCount > 0 then
                         countText = countText .. string.format("  (%s: %d)", L["BankTitle"] or "Bank", bankCount)
@@ -638,9 +649,12 @@ local function SetTooltipPosition()
     if not db or not db.enabled then
         return
     end
-    if not db.anchorCursor then
+    -- H-5: 無條件安裝 hook（之前以 anchorCursor 為安裝條件，導致動態切換後 hook 永不安裝）
+    -- callback 內部以 db.anchorCursor 決定行為，與此處安裝時機解耦
+    if tooltipPositionHooked then
         return
     end
+    tooltipPositionHooked = true
 
     hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
         if db.anchorCursor then
@@ -728,8 +742,10 @@ end
 local function CleanupTooltip()
     if inspectEventFrame then
         inspectEventFrame:UnregisterAllEvents()
-        inspectEventFrame:SetScript("OnEvent", nil)
+        -- H-4: 不清除 OnEvent script — re-enable 時只需 RegisterEvent 即可恢復功能
+        -- 清除 OnEvent 會導致 re-enable 後 INSPECT_READY 靜默無效
     end
+    pendingInspect = nil -- H-4: 清除飛行中的 inspect，避免舊 GUID 洩漏到下次啟用週期
     ClearInspectCache()
 end
 

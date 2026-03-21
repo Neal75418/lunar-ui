@@ -41,8 +41,8 @@ local BAR_HEIGHT = 4
 local BAR_OFFSET = 1 -- 圖示與計時條間距
 local LABEL_HEIGHT = 16 -- 分類標籤（Buffs / Debuffs）高度
 
--- 暴雪 Buff/Debuff 框架清單（模組層級常數，避免 HideBlizzardBuffFrames / CleanupAuraFrames 每次呼叫都建立拋棄用 table）
-local BLIZZARD_BUFF_FRAMES = { _G.BuffFrame, _G.DebuffFrame }
+-- 暴雪 Buff/Debuff 框架名稱（延遲查詢，避免 WoW 12.0 EditMode 延遲建立時固化 nil 參照）
+local BLIZZARD_BUFF_FRAME_NAMES = { "BuffFrame", "DebuffFrame" }
 
 local function LoadSettings()
     ICON_SIZE = LunarUI.GetHUDSetting("auraIconSize", 30)
@@ -101,10 +101,8 @@ local AURA_THROTTLE = 0.1
 --------------------------------------------------------------------------------
 
 local function ShouldShowBuff(name, _duration)
-    -- WoW secret value 不能當 table index，用 pcall 保護
-    -- B1 效能修復：改用 pcall(rawget, t, k)，避免每次建立匿名 closure（每次 aura 更新執行 40 次）
-    local ok, isFiltered = pcall(rawget, FILTERED_BUFF_NAMES, name)
-    if not ok or isFiltered then
+    -- name 已經過 tostring() 淨化，可直接作為 table index（rawget 不觸發 __index，不需要 pcall）
+    if FILTERED_BUFF_NAMES[name] then
         return false
     end
     return true
@@ -240,28 +238,23 @@ end
 -- 框架建立
 --------------------------------------------------------------------------------
 
-local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY)
+local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY, maxIcons)
     local existingFrame = _G[name]
     local frame
     local isReused = false
     if existingFrame then
         frame = existingFrame
         isReused = true
-        -- 清除舊的子物件（避免重載時重複）
-        for _, child in ipairs({ frame:GetRegions() }) do
-            if child.lunarLabel then
-                child:Show()
-            end
-        end
     else
         frame = CreateFrame("Frame", name, UIParent)
     end
     LunarUI:RegisterHUDFrame(name)
 
     local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
+    local rows = math.ceil((maxIcons or MAX_BUFFS) / ICONS_PER_ROW)
     frame:SetSize(
         ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-        totalIconHeight * 2 + ICON_SPACING + LABEL_HEIGHT
+        totalIconHeight * rows + math.max(0, rows - 1) * ICON_SPACING + LABEL_HEIGHT
     )
     -- 重用舊框架時保留其位置（/reload 時舊框架已在正確位置）
     if not isReused then
@@ -291,11 +284,11 @@ end
 
 local function SetupFrames()
     -- 增益框架 - 螢幕右上
-    buffFrame = CreateAuraFrame("LunarUI_BuffFrame", "增益", "TOPRIGHT", -215, -10)
+    buffFrame = CreateAuraFrame("LunarUI_BuffFrame", "增益", "TOPRIGHT", -215, -10, MAX_BUFFS)
 
     -- 減益框架 - 增益下方
     local buffHeight = buffFrame:GetHeight()
-    debuffFrame = CreateAuraFrame("LunarUI_DebuffFrame", "減益", "TOPRIGHT", -215, -10 - buffHeight - 6)
+    debuffFrame = CreateAuraFrame("LunarUI_DebuffFrame", "減益", "TOPRIGHT", -215, -10 - buffHeight - 6, MAX_DEBUFFS)
 
     local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
 
@@ -334,7 +327,8 @@ end
 
 -- #8: 接受預先淨化的參數，避免與 UpdateAuraGroup 重複做 tostring/tonumber（每個 aura 多 4 次轉換）
 local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expirationTime, filter, isDebuff)
-    local iconTexture = auraData.icon
+    -- H-3: 斷開 taint 鏈（aura API 回傳的 icon fileID 可能攜帶 taint）
+    local iconTexture = tonumber(auraData.icon) or tostring(auraData.icon or "")
 
     -- 圖示紋理
     iconFrame.texture:SetTexture(iconTexture)
@@ -497,6 +491,7 @@ local function UpdateIconTimers(icons, maxIcons, now)
                     iconFrame.bar:SetVertexColor(r, g, b)
                 else
                     iconFrame.bar:Hide()
+                    iconFrame.barBg:Hide()
                 end
             end
         end
@@ -525,7 +520,8 @@ local function HideBlizzardBuffFrames()
     if InCombatLockdown() then
         return
     end
-    for _, frame in ipairs(BLIZZARD_BUFF_FRAMES) do
+    for _, frameName in ipairs(BLIZZARD_BUFF_FRAME_NAMES) do
+        local frame = _G[frameName]
         if frame then
             pcall(function()
                 frame:SetScale(0.001)
@@ -598,6 +594,8 @@ LunarUI.ShouldShowBuff = ShouldShowBuff
 
 -- 光環資料節流更新（用 C_Timer 取代 OnUpdate 輪詢）
 local auraUpdateScheduled = false
+-- C-2: 防止 PLAYER_ENTERING_WORLD 與 RegisterModule delay 雙重觸發 Initialize
+local initScheduled = false
 -- B2 效能修復：提升為具名模組函數，避免 ScheduleAuraUpdate 每次觸發都建立新 closure
 local function OnAuraTimerFired()
     auraUpdateScheduled = false
@@ -620,7 +618,14 @@ eventFrame = LunarUI.CreateEventHandler(
             if LunarUI.GetHUDSetting("auraFrames", true) == false then
                 return
             end
-            C_Timer.After(1.0, Initialize)
+            -- C-2: 防止與 RegisterModule delay 競爭，只在尚未排程時才安排
+            if not isInitialized and not initScheduled then
+                initScheduled = true
+                C_Timer.After(1.0, function()
+                    initScheduled = false
+                    Initialize()
+                end)
+            end
         elseif event == "UNIT_AURA" then
             if arg1 == "player" and isInitialized then
                 ScheduleAuraUpdate()
@@ -711,17 +716,19 @@ function LunarUI.RebuildAuraFrames()
 
     local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
 
-    -- 重設框架大小
+    -- 重設框架大小（依實際列數計算，避免 ICONS_PER_ROW 調小時圖示超出框架邊界）
     if buffFrame then
+        local buffRows = math.ceil(MAX_BUFFS / ICONS_PER_ROW)
         buffFrame:SetSize(
             ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-            totalIconHeight * 2 + ICON_SPACING + LABEL_HEIGHT
+            totalIconHeight * buffRows + math.max(0, buffRows - 1) * ICON_SPACING + LABEL_HEIGHT
         )
     end
     if debuffFrame then
+        local debuffRows = math.ceil(MAX_DEBUFFS / ICONS_PER_ROW)
         debuffFrame:SetSize(
             ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-            totalIconHeight * 2 + ICON_SPACING + LABEL_HEIGHT
+            totalIconHeight * debuffRows + math.max(0, debuffRows - 1) * ICON_SPACING + LABEL_HEIGHT
         )
     end
 
@@ -764,9 +771,24 @@ function LunarUI.CleanupAuraFrames()
         debuffFrame:Hide()
     end
 
+    -- C-1: 清空圖示陣列（避免重新初始化時覆蓋參照但孤兒 Frame 仍掛在 parent）
+    for i = 1, #buffIcons do
+        if buffIcons[i] then
+            buffIcons[i]:Hide()
+        end
+    end
+    for i = 1, #debuffIcons do
+        if debuffIcons[i] then
+            debuffIcons[i]:Hide()
+        end
+    end
+    buffIcons = {}
+    debuffIcons = {}
+
     -- 還原暴雪框架（恢復 scale / alpha / 可見性）
     if not InCombatLockdown() then
-        for _, frame in ipairs(BLIZZARD_BUFF_FRAMES) do
+        for _, frameName in ipairs(BLIZZARD_BUFF_FRAME_NAMES) do
+            local frame = _G[frameName]
             if frame then
                 pcall(function()
                     frame:SetScale(1)
@@ -782,6 +804,10 @@ function LunarUI.CleanupAuraFrames()
         eventFrame:SetScript("OnUpdate", nil)
     end
     timerElapsed = 0
+
+    -- H-1: 重置排程旗標，避免 re-enable 後首次 UNIT_AURA 靜默失敗
+    auraUpdateScheduled = false
+    initScheduled = false
 
     isInitialized = false
     -- 不取消事件註冊：OnEvent 已有 isInitialized guard，

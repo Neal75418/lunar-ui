@@ -523,6 +523,7 @@ describe("RequestInspect", function()
         _G.GetTime = function()
             return timeBase
         end
+        _G.C_Timer = _G.C_Timer or { After = function() end }
     end)
 
     it("calls NotifyInspect when all conditions pass", function()

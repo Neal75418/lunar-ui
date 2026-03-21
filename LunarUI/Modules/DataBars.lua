@@ -160,7 +160,8 @@ local function UpdateExperience()
     -- Rested XP
     local rested = _G.GetXPExhaustion() or 0
     if rested > 0 then
-        local restedWidth = bar:GetWidth() * (math.min(rested, max - cur) / max)
+        -- H-6: math.max(0, ...) 防止 cur > max 時 (max - cur) 為負數導致 SetWidth 報錯
+        local restedWidth = bar:GetWidth() * (math.max(0, math.min(rested, max - cur)) / max)
         if restedWidth < 2 then
             bar.rested:Hide()
         else
@@ -519,6 +520,7 @@ function LunarUI.CleanupDataBars()
         eventFrame:UnregisterAllEvents()
         eventFrame:SetScript("OnEvent", nil)
     end
+    eventFrame = nil -- M-9: 清除參照，防止重複初始化防護邏輯失效
     for name, bar in pairs(bars) do
         if bar then
             bar:Hide()

@@ -355,7 +355,12 @@ RegisterProvider("spec", {
         return specName or (L["Spec"] or "Spec")
     end,
     click = function()
-        ToggleTalentFrame()
+        -- M-8: ToggleTalentFrame 在 WoW 12.0 已改為 C_ClassTalents API
+        if _G.ToggleTalentFrame then
+            ToggleTalentFrame()
+        elseif C_ClassTalents and C_ClassTalents.OpenTalentUI then
+            C_ClassTalents.OpenTalentUI()
+        end
     end,
     tooltip = function(slot)
         local specIndex = GetSpecialization()
@@ -704,6 +709,9 @@ function LunarUI.CleanupDataTexts()
 
     wipe(onUpdateElapsed)
     wipe(slotsByProvider)
+    -- M-7: 清除 provider 路由表，避免 profile 切換後殘留舊條目造成幽靈更新
+    wipe(eventToProviders)
+    wipe(onUpdateProviders)
     eventFrame = nil
     onUpdateFrame = nil
 end

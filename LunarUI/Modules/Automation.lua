@@ -110,12 +110,18 @@ local function OnQuestDetail()
     if not cfg or not cfg.autoAcceptQuest then
         return
     end
+    if InCombatLockdown() then
+        return
+    end -- Low: AcceptQuest 是保護函數，戰鬥中呼叫有 taint 風險
     AcceptQuest()
 end
 
 local function OnQuestProgress()
     local cfg = GetAutoConfig()
     if not cfg or not cfg.autoAcceptQuest then
+        return
+    end
+    if InCombatLockdown() then
         return
     end
     if IsQuestCompletable() then
@@ -126,6 +132,9 @@ end
 local function OnQuestComplete()
     local cfg = GetAutoConfig()
     if not cfg or not cfg.autoAcceptQuest then
+        return
+    end
+    if InCombatLockdown() then
         return
     end
     -- 只有無獎勵選擇或僅一個獎勵時才自動繳交（避免選錯獎勵）
@@ -144,6 +153,9 @@ local function OnLFGProposalShow()
     if not cfg or not cfg.autoAcceptQueue then
         return
     end
+    if InCombatLockdown() then
+        return
+    end -- Low: AcceptProposal 是保護函數，LFG_PROPOSAL_SHOW 可在戰鬥中觸發
     AcceptProposal()
 end
 

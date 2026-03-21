@@ -445,8 +445,8 @@ local _eventFrame = LunarUI.CreateEventHandler({
         if LunarUI.GetHUDSetting("classResources", true) == false then
             return
         end
-        -- 僅在已初始化時處理（避免 disable 狀態下觸發）
-        if not isInitialized and event == "PLAYER_SPECIALIZATION_CHANGED" then
+        -- Low: 確保 disable 後 PLAYER_ENTERING_WORLD 不會繞過 isInitialized 重啟模組
+        if not isInitialized then
             return
         end
         -- 立即隱藏舊資源，避免專精切換時短暫顯示過期資訊
