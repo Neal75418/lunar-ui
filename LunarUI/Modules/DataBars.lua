@@ -55,7 +55,9 @@ local eventFrame -- Shared event handler frame
 --------------------------------------------------------------------------------
 
 local function CreateDataBar(name, db)
-    local bar = CreateFrame("StatusBar", "LunarUI_DataBar_" .. name, UIParent, "BackdropTemplate")
+    -- 重用已存在的具名 frame（re-enable 場景），避免 duplicate frame 錯誤
+    local bar = _G["LunarUI_DataBar_" .. name]
+        or CreateFrame("StatusBar", "LunarUI_DataBar_" .. name, UIParent, "BackdropTemplate")
     bar:SetStatusBarTexture(GetStatusBarTexture())
     bar:SetSize(db.width or 400, db.height or 8)
     bar:SetPoint(db.point or "BOTTOM", UIParent, db.point or "BOTTOM", db.x or 0, db.y or 2)
@@ -443,6 +445,9 @@ end
 --------------------------------------------------------------------------------
 
 local function InitializeDataBars()
+    if eventFrame then
+        return -- 已初始化，防止重複呼叫導致事件 frame 洩漏
+    end
     local db = LunarUI.GetModuleDB("databars")
     if not db or not db.enabled then
         return

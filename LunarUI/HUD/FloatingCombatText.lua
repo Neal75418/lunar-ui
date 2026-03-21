@@ -357,7 +357,7 @@ local function OnCombatLogEvent()
         end
     elseif HEAL_EVENTS[event] then
         local amount = Sanitize(a15)
-        local critical = Sanitize(a21)
+        local critical = Sanitize(a18) -- SPELL_HEAL: critical 在位置 18（SPELL_DAMAGE 的 critical 才在 21）
 
         if type(amount) ~= "number" then
             return
@@ -384,6 +384,9 @@ end
 ---@return Frame
 local function CreateFCTFrame()
     if fctFrame then
+        -- re-enable 時重新掛載事件（CleanupFCT 呼叫了 UnregisterAllEvents）
+        fctFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+        fctFrame:SetScript("OnEvent", OnCombatLogEvent)
         return fctFrame
     end
 
