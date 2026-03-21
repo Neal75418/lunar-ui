@@ -31,8 +31,9 @@ local function HideFrameSafely(frame)
     end)
 end
 
--- 隱藏框架的所有區域（材質）- 只設置透明度，並追蹤以供還原
-local hiddenRegions = {} -- { [region] = true }
+-- 隱藏框架的所有區域（材質）- 追蹤 alpha 和 visibility 以供對稱還原
+local hiddenRegions = {} -- { [region] = true } 被 SetAlpha(0) 的 regions
+local explicitlyHidden = {} -- { [obj] = true } 被 Hide() 的 regions/子物件
 local function HideFrameRegions(frame)
     if not frame then
         return
@@ -52,14 +53,17 @@ end
 -- 精簡為 3 種有效方法：透明 + 隱藏 + 清除材質
 -- 原先 9 種方法（SetTexCoord/SetVertexColor/SetSize/ClearAllPoints/SetAtlas）為過度防禦，
 -- 每個 pcall 都有開銷，且此函數在 HideBlizzardBars() 的延遲重試中會執行 3 次。
--- 注意：SetTexture(nil) 不可逆（無法還原原始材質路徑）
--- 還原時只能 SetAlpha(1) + Show()，材質本身需要 WoW 重繪（/reload）
-local hiddenTextures = {} -- { [texture] = true }
+-- 儲存原始材質路徑/atlas，還原時用 SetTexture(path) 精確恢復
+local hiddenTextures = {} -- { [texture] = originalTexturePath }
 local function HideTextureForcefully(texture)
     if not texture then
         return
     end
-    hiddenTextures[texture] = true
+    -- 只在首次隱藏時儲存原始狀態（延遲重試會多次呼叫）
+    if hiddenTextures[texture] == nil then
+        local path = texture:GetTexture()
+        hiddenTextures[texture] = path or false -- false 代表原本就沒有材質
+    end
     pcall(function()
         texture:SetAlpha(0)
         texture:Hide()
@@ -286,6 +290,7 @@ local function HideMainActionBar()
                 end)
             end
             if region.Hide then
+                explicitlyHidden[region] = true
                 pcall(function()
                     region:Hide()
                 end)
@@ -445,11 +450,13 @@ local function HideBarDecorations()
             then
                 if type(value) == "table" then
                     if value.SetAlpha then
+                        hiddenRegions[value] = true
                         pcall(function()
                             value:SetAlpha(0)
                         end)
                     end
                     if value.Hide then
+                        explicitlyHidden[value] = true
                         pcall(function()
                             value:Hide()
                         end)
@@ -594,9 +601,20 @@ local function RestoreBlizzardBars()
     end
     wipe(hiddenRegions)
 
-    -- 4. 還原被 HideTextureForcefully 隱藏的材質（alpha + Show，SetTexture(nil) 不可逆）
-    for texture in pairs(hiddenTextures) do
+    -- 4. 還原被 Hide() 呼叫的 regions 和子物件
+    for obj in pairs(explicitlyHidden) do
         pcall(function()
+            obj:Show()
+        end)
+    end
+    wipe(explicitlyHidden)
+
+    -- 5. 還原被 HideTextureForcefully 處理的材質（精確恢復原始材質路徑）
+    for texture, originalPath in pairs(hiddenTextures) do
+        pcall(function()
+            if originalPath and originalPath ~= false then
+                texture:SetTexture(originalPath)
+            end
             texture:SetAlpha(1)
             texture:Show()
         end)
