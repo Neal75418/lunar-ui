@@ -791,10 +791,20 @@ local function CreateMailIndicator()
         mail:Hide()
     end
 
-    -- 隱藏預設郵件框架
+    -- 隱藏預設郵件框架（需避免戰鬥鎖定）
     if MiniMapMailFrame then
-        MiniMapMailFrame:Hide()
-        MiniMapMailFrame:UnregisterAllEvents()
+        if not InCombatLockdown() then
+            MiniMapMailFrame:Hide()
+            MiniMapMailFrame:UnregisterAllEvents()
+        else
+            local deferFrame = CreateFrame("Frame")
+            deferFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+            deferFrame:SetScript("OnEvent", function(self)
+                self:UnregisterAllEvents()
+                MiniMapMailFrame:Hide()
+                MiniMapMailFrame:UnregisterAllEvents()
+            end)
+        end
     end
 end
 

@@ -224,9 +224,9 @@ local function StyleChatTab(chatFrame)
         end
     end
 
-    -- 樣式化光暈
+    -- 樣式化光暈：隱藏但保留材質，UIFrameFlash 可在關鍵字警報時讓其閃爍
     if tab.glow then
-        tab.glow:SetTexture(nil)
+        tab.glow:SetAlpha(0)
     end
 end
 
