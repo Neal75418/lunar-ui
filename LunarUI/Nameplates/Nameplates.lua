@@ -36,6 +36,7 @@ end
 
 local statusBarTexture -- lazy: resolved after DB is ready
 local npCombatWaitFrame -- 戰鬥等待框架（singleton，避免重複呼叫建立多個 frame）
+local nameplatDriverSpawned = false -- oUF:SpawnNamePlates 是 singleton，只能呼叫一次
 local function GetStatusBarTexture()
     if not statusBarTexture then
         statusBarTexture = LunarUI.GetSelectedStatusBarTexture()
@@ -921,19 +922,22 @@ local function SpawnNameplates()
 
     oUF:SetActiveStyle("LunarUI_Nameplate")
 
-    -- Spawn nameplates；oUF 新版 API 以 SetAddedCallback/SetRemovedCallback 取代第二個參數
-    local nameplateDriver = oUF:SpawnNamePlates("LunarUI_Nameplate")
-    nameplateDriver:SetAddedCallback(function(frame)
-        -- SetAddedCallback 只在框架首次建立時觸發，非每次 OnShow。
-        -- Hook OnShow/OnHide 使每次框架被回收給不同 NPC 時都能正確刷新狀態。
-        frame:HookScript("OnShow", Nameplate_OnShow)
-        frame:HookScript("OnHide", Nameplate_OnHide)
-        -- 框架剛建立時可能已可見，執行首次初始化
-        Nameplate_OnShow(frame)
-    end)
-    nameplateDriver:SetRemovedCallback(function(frame)
-        Nameplate_OnHide(frame)
-    end)
+    -- oUF:SpawnNamePlates 是 singleton，只能呼叫一次（re-enable 時跳過）
+    if not nameplatDriverSpawned then
+        nameplatDriverSpawned = true
+        local nameplateDriver = oUF:SpawnNamePlates("LunarUI_Nameplate")
+        nameplateDriver:SetAddedCallback(function(frame)
+            -- SetAddedCallback 只在框架首次建立時觸發，非每次 OnShow。
+            -- Hook OnShow/OnHide 使每次框架被回收給不同 NPC 時都能正確刷新狀態。
+            frame:HookScript("OnShow", Nameplate_OnShow)
+            frame:HookScript("OnHide", Nameplate_OnHide)
+            -- 框架剛建立時可能已可見，執行首次初始化
+            Nameplate_OnShow(frame)
+        end)
+        nameplateDriver:SetRemovedCallback(function(frame)
+            Nameplate_OnHide(frame)
+        end)
+    end
 
     -- 堆疊偵測
     StartStackingDetection()

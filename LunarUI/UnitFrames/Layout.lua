@@ -1661,7 +1661,14 @@ local function SpawnGroupFrames(uf)
     end
 end
 
+local unitFramesSpawned = false -- oUF:Spawn 是 singleton，同一個 unit 不能 spawn 兩次
+
 local function SpawnUnitFrames()
+    -- oUF:Spawn 的 unit frame 不能重複建立（re-enable 時跳過）
+    if unitFramesSpawned then
+        return
+    end
+
     -- 戰鬥中不能創建框架，等待脫離戰鬥（使用單一框架避免洩漏）
     if _G.InCombatLockdown() then
         if not combatWaitFrame then
@@ -1718,6 +1725,7 @@ local function CleanupUnitFrames()
     end
     -- 重設重試計數器，讓下次 enable 從頭開始計算
     spawnRetries = 0
+    unitFramesSpawned = true
 end
 
 -- 匯出
