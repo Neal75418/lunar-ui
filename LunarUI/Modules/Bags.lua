@@ -369,9 +369,22 @@ local function HideSlotTooltip()
     GameTooltip:Hide()
 end
 
--- 不覆寫 OnClick：ContainerFrameItemButtonMixin:OnClick 在模板的安全執行環境中
--- 處理右鍵 UseContainerItem 和左鍵 PickupContainerItem / HandleModifiedItemClick。
--- 只需確保 GetBagID() 和 SetID() 正確，mixin 便能正常運作。
+-- 左鍵點擊處理（右鍵由 SecureActionButtonTemplate 的 type2="item" 安全處理）
+-- SecureActionButton_OnClick（intrinsic）先於此 handler 觸發，
+-- 右鍵已在安全環境呼叫 UseContainerItem，此處直接 return。
+local function OnSlotClick(self, button)
+    if button == "RightButton" then
+        return -- 已由 SecureActionButtonTemplate intrinsic handler 處理
+    end
+    local bag, slot = self.bag, self.slot
+    if IsShiftKeyDown() then
+        local link = C_Container.GetContainerItemLink(bag, slot)
+        if link and ChatEdit_InsertLink and ChatEdit_InsertLink(link) then
+            return
+        end
+    end
+    C_Container.PickupContainerItem(bag, slot)
+end
 
 -- 隱藏格子上的所有指示器（重構：避免重複代碼）
 local function HideAllSlotIndicators(button)
@@ -406,6 +419,20 @@ local function SetupSlotBase(button, bag, slot)
     button.bag = bag
     button.slot = slot
     button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+    -- SecureActionButtonTemplate: 右鍵使用物品（UseContainerItem）
+    -- intrinsic handler SecureActionButton_OnClick 在安全環境中處理
+    button:SetAttribute("type2", "item")
+    button:SetAttribute("bag", bag)
+    button:SetAttribute("slot", slot)
+
+    -- PreClick 在每次右鍵前同步 bag/slot 屬性（按鈕重用時值可能變更）
+    button:SetScript("PreClick", function(self, clickButton)
+        if clickButton == "RightButton" then
+            self:SetAttribute("bag", self.bag)
+            self:SetAttribute("slot", self.slot)
+        end
+    end)
 
     -- 移除預設材質
     local normalTexture = button:GetNormalTexture()
@@ -499,9 +526,10 @@ local function SetupSlotBase(button, bag, slot)
     -- 設定 slot ID（mixin 的 OnClick 透過 self:GetID() 取得 slot）
     button:SetID(slot)
 
-    -- 覆寫 tooltip（保留模板的 OnClick 讓 mixin 處理右鍵使用/左鍵拾取）
+    -- 覆寫 tooltip 與左鍵點擊（右鍵由 SecureActionButtonTemplate intrinsic 處理）
     button:SetScript("OnEnter", ShowSlotTooltip)
     button:SetScript("OnLeave", HideSlotTooltip)
+    button:SetScript("OnClick", OnSlotClick)
     button:RegisterForDrag("LeftButton")
     button:SetScript("OnDragStart", function(self)
         C_Container.PickupContainerItem(self.bag, self.slot)
@@ -512,7 +540,12 @@ local function SetupSlotBase(button, bag, slot)
 end
 
 local function CreateItemSlot(parent, slotID, bag, slot)
-    local button = CreateFrame("ItemButton", "LunarUI_BagSlot" .. slotID, parent, "ContainerFrameItemButtonTemplate")
+    local button = CreateFrame(
+        "ItemButton",
+        "LunarUI_BagSlot" .. slotID,
+        parent,
+        "ContainerFrameItemButtonTemplate,SecureActionButtonTemplate"
+    )
     button:SetSize(SLOT_SIZE, SLOT_SIZE)
 
     -- 設定共用基礎（圖示、邊框、物品等級、tooltip）
@@ -1065,7 +1098,12 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateBankSlot(parent, slotID, bag, slot)
-    local button = CreateFrame("ItemButton", "LunarUI_BankSlot" .. slotID, parent, "ContainerFrameItemButtonTemplate")
+    local button = CreateFrame(
+        "ItemButton",
+        "LunarUI_BankSlot" .. slotID,
+        parent,
+        "ContainerFrameItemButtonTemplate,SecureActionButtonTemplate"
+    )
     button:SetSize(SLOT_SIZE, SLOT_SIZE)
 
     -- 設定共用基礎（圖示、邊框、物品等級、tooltip）
