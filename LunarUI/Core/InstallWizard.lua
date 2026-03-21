@@ -636,6 +636,9 @@ function LunarUI.ShowInstallWizard()
     -- 每次重新開啟精靈時都重建框架，確保 uiScale 反映當前 UI 縮放
     LunarUI.CleanupInstallWizard()
     currentStep = 1
+    wizardChoices.uiScale = 0.75
+    wizardChoices.layout = "dps"
+    wizardChoices.actionBarFade = true
     local f = CreateWizardFrame()
     f:Show()
     UpdateStepDisplay()

@@ -452,6 +452,10 @@ function LunarUI.LoadFrameMoverSettings()
 end
 
 function LunarUI.ResetAllPositions()
+    if InCombatLockdown() then
+        LunarUI:Print(L["MoverCombatLocked"] or "Cannot enter move mode during combat")
+        return
+    end
     if not LunarUI.db or not LunarUI.db.profile then
         return
     end
