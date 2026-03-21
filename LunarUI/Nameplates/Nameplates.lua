@@ -824,9 +824,11 @@ local function UpdateNameplateStacking()
 
     -- 執行堆疊調整流程
     local count = CollectVisibleNameplates()
-    if count > 1 then
-        SortNameplatesByY(count)
-        DetectOverlaps(count, npHeight)
+    if count > 0 then
+        if count > 1 then
+            SortNameplatesByY(count)
+            DetectOverlaps(count, npHeight)
+        end
         ApplyStackOffsets(count)
     end
 end
@@ -926,6 +928,11 @@ local function SpawnNameplates()
     -- Spawn nameplates；oUF 新版 API 以 SetAddedCallback/SetRemovedCallback 取代第二個參數
     local nameplateDriver = oUF:SpawnNamePlates("LunarUI_Nameplate")
     nameplateDriver:SetAddedCallback(function(frame)
+        -- SetAddedCallback 只在框架首次建立時觸發，非每次 OnShow。
+        -- Hook OnShow/OnHide 使每次框架被回收給不同 NPC 時都能正確刷新狀態。
+        frame:HookScript("OnShow", Nameplate_OnShow)
+        frame:HookScript("OnHide", Nameplate_OnHide)
+        -- 框架剛建立時可能已可見，執行首次初始化
         Nameplate_OnShow(frame)
     end)
     nameplateDriver:SetRemovedCallback(function(frame)
@@ -999,6 +1006,7 @@ function LunarUI.CleanupNameplates()
     if npCombatWaitFrame then
         npCombatWaitFrame:UnregisterAllEvents()
         npCombatWaitFrame:SetScript("OnEvent", nil)
+        npCombatWaitFrame = nil
     end
     -- Unregister target change event handler
     if nameplateTargetFrame then
@@ -1016,6 +1024,8 @@ function LunarUI.CleanupNameplates()
     StopStackingDetection()
     -- Clear weak table references
     wipe(nameplateFrames)
+    -- Reset stale upvalue to prevent highlight on wrong frame after re-enable
+    lastTargetNameplate = nil
 end
 
 LunarUI:RegisterModule("Nameplates", {
