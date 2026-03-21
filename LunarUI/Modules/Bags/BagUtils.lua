@@ -239,20 +239,17 @@ LunarUI.BagsIsEquipment = IsEquipment
 LunarUI.BagsIsItemUpgrade = IsItemUpgrade
 LunarUI.BagsRefreshEquippedItemLevels = RefreshEquippedItemLevels
 LunarUI.BagsGetBagTypeColor = GetBagTypeColor
-LunarUI.BagsEquippedIlvlDirty = { value = equippedIlvlDirty }
 LunarUI.BagsClearBagTypeCache = function()
     wipe(bagTypeCache)
 end
 LunarUI.MaybeEvictCache = MaybeEvictCache
 
--- 向後相容匯出（主 Bags.lua 使用的名稱）
-LunarUI.BagsGetItemLevel = GetItemLevel
+-- 向後相容匯出（主 Bags.lua 和 spec 使用的短名稱）
 LunarUI.IsEquipment = IsEquipment
 LunarUI.IsItemUpgrade = IsItemUpgrade
 LunarUI.GetBagTypeColor = GetBagTypeColor
 LunarUI.BagsResetEquippedIlvlDirty = function()
     equippedIlvlDirty = true
-    LunarUI.BagsEquippedIlvlDirty.value = true
 end
 LunarUI.BagsClearItemLevelCache = function()
     wipe(itemLevelCache)
