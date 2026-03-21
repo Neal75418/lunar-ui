@@ -21,6 +21,7 @@ timeline
                : 文件整理
     2026-03-10 : EmmyLua + CI 改善
     2026-03-12 : v1.1.0 品質強化
+    2026-03-21 : 深度審查 + 風格統一
 ```
 
 ---
@@ -29,7 +30,35 @@ timeline
 
 ### Planned
 
-- Custom moon phase textures (hand-drawn)
+- 自訂月相材質（手繪）
+
+### Fixed
+
+- **深度代碼審查（8 輪 / 35 個 bug 修復）**
+  - pairs() 迴圈中刪除元素 — Lua 5.1 UB（5 處，改用 snapshot/wipe）
+  - C_Timer.After 無法取消的回呼加入 generation counter（Init、CooldownTracker、AuraFrames、SellJunk、bank batch）
+  - 框架生命週期：re-enable 時框架洩漏（AuraFrames icon、ActionBars combat retry、InstallWizard、PerformanceMonitor）
+  - Taint 修復：Loot Hide() in Show() hook、Tooltip GameTooltip guard
+  - Re-enable 修復：FCT queueFrame OnUpdate、Chat eventFrame、Minimap frame refs
+  - Config.lua pcall 漏傳 self、FrameMover wipe→hide+script、Skins retry/mark
+  - Bags SecureActionButtonTemplate + item2 屬性修復右鍵使用物品
+  - Minimap 按鈕佈局用可見計數取代原始索引
+  - Skins LoadAllSkins 檢查已載入 addon（/reload 後 ADDON_LOADED 不再觸發）
+
+### Changed
+
+- **代碼風格統一（4 輪）**
+  - 所有 22 個主要 Lua 檔案的註解統一為繁體中文
+  - Nameplates Fix #N 歷史標記清理（10 處）
+  - print() → LunarUI:Print() 日誌統一
+  - colon→dot 語法統一（Automation、Config、Minimap）
+  - 共用常數 CASTBAR_COLOR / BG_DARKEN 集中到 Core/Media.lua
+  - 本地化補齊（Minimap mail text、FCT label、DataTexts latency）
+  - FCT 熱路徑全域快取（math_floor、math_random、table_insert、table_remove）
+  - ClassResources / CooldownTracker 移除冗餘 inline 拖曳系統
+  - Dead code 清除（Bags 月相感知 section、ActionBars tombstone section、ClassResources _playerClass）
+  - AuraFrames CreateAuraIcon 死參數移除
+- 測試數量 920 → 994（+74 tests）
 
 ---
 

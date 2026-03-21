@@ -5,7 +5,7 @@
 - **平台**：WoW 12.0.1（Interface: 120001），Lua 5.1（LuaJIT）
 - **架構**：Ace3 + oUF + LibActionButton + LibSharedMedia
 - **組成**：
-  - `LunarUI/` &mdash; 主插件（59 個 Lua 檔案，~26,000 行）
+  - `LunarUI/` &mdash; 主插件（59 個 Lua 檔案，~27,300 行）
   - `LunarUI_Options/` &mdash; LoadOnDemand 設定介面
   - `LunarUI_Debug/` &mdash; LoadOnDemand 診斷工具（`/lunar debugvigor` 時自動載入）
 - **進入點**：`Core/Init.lua` 最先執行，建立 `Engine.LunarUI`
@@ -113,7 +113,7 @@ LunarUI.CreateIconBorder(parent, options)
 
 ## 程式碼慣例
 
-- 共用資源集中在 `Core/Media.lua`：backdrop 模板、`DEBUFF_TYPE_COLORS`、材質
+- 共用資源集中在 `Core/Media.lua`：backdrop 模板、`DEBUFF_TYPE_COLORS`、`CASTBAR_COLOR`、`BG_DARKEN`、材質
 - oUF 命名空間為 `LunarUF`（透過 TOC 的 `X-oUF` 設定）
 - LibActionButton：`local LAB = LibStub("LibActionButton-1.0", true)`
 - 字體統一使用 `LunarUI.SetFont(fs, size, flags)`，禁止硬編碼 `STANDARD_TEXT_FONT`
@@ -163,7 +163,7 @@ LunarUI.CreateIconBorder(parent, options)
 graph LR
     TypeDef["wow_api.def.lua / busted.def.lua<br/>EmmyLua 型別定義"] -.-> Mock
     Mock["wow_mock.lua<br/>WoW API Stub"] --> Loader["loader.lua<br/>Engine 建立"]
-    Loader --> Spec["*_spec.lua<br/>測試案例（28 檔 / 920 tests）"]
+    Loader --> Spec["*_spec.lua<br/>測試案例（29 檔 / 994 tests）"]
     Spec --> Busted["busted<br/>執行測試"]
     Busted --> Cov["luacov<br/>覆蓋率報告（門檻 43%）"]
 

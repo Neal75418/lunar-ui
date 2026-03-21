@@ -1,6 +1,6 @@
 <p align="center">
   <img src="https://img.shields.io/github/actions/workflow/status/Neal75418/lunar-ui/build.yml?branch=main&style=flat-square&label=build" alt="Build" />
-  <img src="https://img.shields.io/badge/tests-920_passing-brightgreen?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/tests-994_passing-brightgreen?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/WoW-12.0.1-0074e0?style=flat-square&logo=battledotnet&logoColor=white" alt="WoW 12.0.1" />
   <img src="https://img.shields.io/badge/Lua-5.1-2C2D72?style=flat-square&logo=lua&logoColor=white" alt="Lua 5.1" />
   <img src="https://img.shields.io/badge/skins-22-e67e22?style=flat-square" alt="22 Skins" />
@@ -348,7 +348,7 @@ LunarUI 是完整 UI 替換方案。以下插件功能重疊，不建議同時�
 ## 🧑‍💻 開發
 
 ```bash
-make test         # 執行 busted 單元測試（920 tests）
+make test         # 執行 busted 單元測試（994 tests）
 make lint         # 執行 luacheck 靜態分析
 make format       # 檢查 stylua 格式
 make format-fix   # 自動修正格式
@@ -417,7 +417,9 @@ gantt
     section Polish
     Code Review + 重構             :done, m11, 2026-02-28, 5d
     EmmyLua + CI 改善              :done, m12, 2026-03-10, 3d
-    完整風格套件                    :active, m13, 2026-03-01, 14d
+    完整風格套件                    :done, m13, 2026-03-01, 14d
+    深度審查 (8 輪 / 35 bug fixes)  :done, m14, 2026-03-21, 1d
+    代碼風格統一 (4 輪)              :done, m15, 2026-03-21, 1d
 ```
 
 ---
