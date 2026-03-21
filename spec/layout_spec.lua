@@ -25,6 +25,15 @@ _G.RAID_CLASS_COLORS = {
     WARRIOR = { r = 0.78, g = 0.61, b = 0.43, colorStr = "ffc79c6e" },
     PRIEST = { r = 1, g = 1, b = 1, colorStr = "ffffffff" },
 }
+_G.UnitExists = function()
+    return true
+end
+_G.UnitIsDeadOrGhost = function()
+    return false
+end
+_G.GetNetStats = function()
+    return 0, 0, 0, 50
+end
 _G.C_Timer = { After = function() end }
 _G.InCombatLockdown = function()
     return false
@@ -38,18 +47,27 @@ local LunarUI = {
         border = { 0.3, 0.3, 0.4, 1 },
         bgOverlay = { 0, 0, 0, 0.6 },
         borderSubtle = { 0.2, 0.2, 0.3, 1 },
+        bg = { 0, 0, 0, 0.8 },
+        transparent = { 0, 0, 0, 0 },
     },
     DEBUFF_TYPE_COLORS = {
         none = { r = 0.8, g = 0, b = 0 },
         Magic = { r = 0.2, g = 0.6, b = 1 },
     },
+    CASTBAR_COLOR = { 0.24, 0.54, 0.78, 1 },
+    BG_DARKEN = 0.3,
+    ICON_TEXCOORD = { 0.08, 0.92, 0.08, 0.92 },
     CreateBackdrop = function()
         return CreateFrame("Frame")
     end,
+    ApplyBackdrop = function() end,
     StyleAuraButton = function() end,
     SetFont = function() end,
     GetSelectedStatusBarTexture = function()
         return "Interface\\TargetingFrame\\UI-StatusBar"
+    end,
+    GetModuleDB = function(_key)
+        return nil
     end,
     RegisterModule = function() end,
     CreateEventHandler = function()
@@ -88,7 +106,11 @@ local oUFMock = {
     end,
 }
 
--- 載入 Layout.lua — 透過 extraEngine 提供 oUF mock
+-- 載入子模組（順序與 TOC 一致：Elements → CastBar → AuraSystem → Indicators → Layout）
+loader.loadAddonFile("LunarUI/UnitFrames/Elements.lua", LunarUI, { oUF = oUFMock })
+loader.loadAddonFile("LunarUI/UnitFrames/CastBar.lua", LunarUI, { oUF = oUFMock })
+loader.loadAddonFile("LunarUI/UnitFrames/AuraSystem.lua", LunarUI, { oUF = oUFMock })
+loader.loadAddonFile("LunarUI/UnitFrames/Indicators.lua", LunarUI, { oUF = oUFMock })
 loader.loadAddonFile("LunarUI/UnitFrames/Layout.lua", LunarUI, { oUF = oUFMock })
 
 --------------------------------------------------------------------------------

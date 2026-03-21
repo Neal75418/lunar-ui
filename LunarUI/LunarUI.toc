@@ -48,6 +48,10 @@ Core\Media.lua
 Media\Media.lua
 
 # UnitFrames
+UnitFrames\Elements.lua
+UnitFrames\CastBar.lua
+UnitFrames\AuraSystem.lua
+UnitFrames\Indicators.lua
 UnitFrames\Layout.lua
 
 # Nameplates
