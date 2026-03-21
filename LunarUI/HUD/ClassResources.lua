@@ -366,6 +366,10 @@ end
 --------------------------------------------------------------------------------
 
 local function SetupResourceDisplay()
+    -- 模組停用後 C_Timer.After 仍可能觸發此函數，需要提前退出
+    if not isInitialized then
+        return
+    end
     if not resourceFrame then
         resourceFrame = CreateResourceFrame()
     end
