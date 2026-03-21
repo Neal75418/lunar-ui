@@ -123,6 +123,9 @@ end
         local r, g, b = LunarUI.ThresholdColor(latency, {100, 200, 400}, false)
 ]]
 function LunarUI.ThresholdColor(value, thresholds, ascending)
+    if not value or not thresholds then
+        return 0.9, 0.9, 0.2
+    end
     if ascending then
         if value >= thresholds[1] then
             return 0.2, 0.8, 0.2
@@ -289,6 +292,9 @@ end
     @return string - 格式化座標字串
 ]]
 function LunarUI.FormatCoordinates(x, y)
+    if not x or not y then
+        return "-, -"
+    end
     return format("%.1f, %.1f", x, y)
 end
 

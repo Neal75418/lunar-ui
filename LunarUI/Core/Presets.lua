@@ -40,6 +40,9 @@ end
     @param role string "DAMAGER" / "TANK" / "HEALER"（可選，預設自動偵測）
 ]]
 function LunarUI:ApplyRolePreset(role)
+    if InCombatLockdown() then
+        return
+    end
     role = role or LunarUI.GetCurrentRole()
     local preset = ROLE_PRESETS[role]
     if not preset or not self.db or not self.db.profile then

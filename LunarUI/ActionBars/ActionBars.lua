@@ -1411,6 +1411,19 @@ local function CleanupActionBars()
     -- 清理微型按鈕列
     CleanupMicroBar()
 
+    -- 清理主動作條（bar1-6）的懸停框架旗標並重置 bars 表
+    for barKey, bar in pairs(bars) do
+        if type(bar) == "table" and bar._lunarHoverFrame then
+            bar._lunarHoverFrame:Hide()
+            bar._lunarHoverFrame = nil
+        end
+        if type(bar) == "table" then
+            bar._lunarFadeHooked = nil
+        end
+        bars[barKey] = nil
+    end
+    wipe(buttons) -- 清理全域按鈕表，避免 KeybindMode 累積陳舊參照
+
     -- 清理 Vigor debug trace
     if LunarUI.CleanupVigorTrace then
         LunarUI.CleanupVigorTrace()

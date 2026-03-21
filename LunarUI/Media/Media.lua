@@ -208,7 +208,7 @@ end
 
 --- 批次更新所有已註冊 FontString 的字體路徑（保留各自的 size 和 flags）
 function LunarUI:ApplyFontSettings()
-    local font = self.GetSelectedFont()
+    local font = LunarUI.GetSelectedFont()
     for fs in pairs(fontRegistry) do
         if fs and fs.GetFont and fs.SetFont then
             local _, size, flags = fs:GetFont()

@@ -60,6 +60,9 @@ end
 ]]
 function LunarUI:OnProfileChanged()
     local L = Engine.L or {}
+    if InCombatLockdown() then
+        return
+    end
     -- 套用精靈設定的 UI 縮放（若有儲存）
     if self.db and self.db.profile and self.db.profile.uiScale then
         UIParent:SetScale(self.db.profile.uiScale)

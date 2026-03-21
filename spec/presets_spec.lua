@@ -8,6 +8,9 @@ require("spec.wow_mock")
 local loader = require("spec.loader")
 
 -- Mock WoW APIs
+_G.InCombatLockdown = function()
+    return false
+end
 _G.GetSpecialization = function()
     return nil
 end

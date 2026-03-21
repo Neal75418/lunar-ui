@@ -24,6 +24,9 @@ _G.LibStub = function()
         end,
     }
 end
+_G.InCombatLockdown = function()
+    return false
+end
 _G.GetSpecialization = function()
     return 1
 end
