@@ -236,10 +236,13 @@ local function Initialize()
     if LunarUI.GetHUDSetting("performanceMonitor", true) == false then
         return
     end
+    local isNew = not perfFrame
     CreatePerfFrame()
 
-    -- 註冊至框架移動器
-    LunarUI.RegisterMovableFrame("PerformanceMonitor", perfFrame, "效能監控")
+    -- 只在首次建立時向移動器登錄（避免 disable/enable 週期重複登錄）
+    if isNew and perfFrame then
+        LunarUI.RegisterMovableFrame("PerformanceMonitor", perfFrame, "效能監控")
+    end
 
     -- 啟動更新
     StartUpdating()

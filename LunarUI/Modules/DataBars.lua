@@ -56,8 +56,8 @@ local eventFrame -- Shared event handler frame
 
 local function CreateDataBar(name, db)
     -- 重用已存在的具名 frame（re-enable 場景），避免 duplicate frame 錯誤
-    local bar = _G["LunarUI_DataBar_" .. name]
-        or CreateFrame("StatusBar", "LunarUI_DataBar_" .. name, UIParent, "BackdropTemplate")
+    local existingBar = _G["LunarUI_DataBar_" .. name]
+    local bar = existingBar or CreateFrame("StatusBar", "LunarUI_DataBar_" .. name, UIParent, "BackdropTemplate")
     bar:SetStatusBarTexture(GetStatusBarTexture())
     bar:SetSize(db.width or 400, db.height or 8)
     bar:SetPoint(db.point or "BOTTOM", UIParent, db.point or "BOTTOM", db.x or 0, db.y or 2)
@@ -69,27 +69,34 @@ local function CreateDataBar(name, db)
     -- Backdrop
     LunarUI.ApplyBackdrop(bar)
 
-    -- Background
-    bar.bg = bar:CreateTexture(nil, "BACKGROUND")
-    bar.bg:SetAllPoints()
-    bar.bg:SetTexture(GetStatusBarTexture())
-    bar.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
+    -- 子元件只在首次建立時建立（WoW CreateTexture/CreateFontString 不可刪除，重用 frame 時不重建）
+    if not existingBar then
+        -- Background
+        bar.bg = bar:CreateTexture(nil, "BACKGROUND")
+        bar.bg:SetAllPoints()
+        bar.bg:SetVertexColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
 
-    -- Text overlay
-    bar.text = bar:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(bar.text, 10, "OUTLINE")
-    bar.text:SetPoint("CENTER")
+        -- Text overlay
+        bar.text = bar:CreateFontString(nil, "OVERLAY")
+        LunarUI.SetFont(bar.text, 10, "OUTLINE")
+        bar.text:SetPoint("CENTER")
 
-    if not db.showText then
-        bar.text:Hide()
+        -- Rested XP overlay (experience bar only)
+        bar.rested = bar:CreateTexture(nil, "ARTWORK", nil, 1)
+        bar.rested:SetVertexColor(0.0, 0.4, 0.8, 0.4)
+        bar.rested:Hide()
     end
 
-    -- Rested XP overlay (experience bar only)
-    bar.rested = bar:CreateTexture(nil, "ARTWORK", nil, 1)
+    -- 每次都更新材質和大小（可能因 DB 設定改變）
+    bar.bg:SetTexture(GetStatusBarTexture())
     bar.rested:SetTexture(GetStatusBarTexture())
-    bar.rested:SetVertexColor(0.0, 0.4, 0.8, 0.4)
     bar.rested:SetHeight(db.height or 8)
-    bar.rested:Hide()
+
+    if db.showText then
+        bar.text:Show()
+    else
+        bar.text:Hide()
+    end
 
     -- Enable mouse for tooltip
     bar:EnableMouse(true)
@@ -285,7 +292,7 @@ local function UpdateReputation()
         end
     end
 
-    local cur = barValue - barMin
+    local cur = math.max(0, barValue - barMin)
     local max = barMax - barMin
     if max <= 0 then
         max = 1
@@ -526,14 +533,14 @@ function LunarUI.CleanupDataBars()
         eventFrame:SetScript("OnEvent", nil)
     end
     eventFrame = nil -- M-9: 清除參照，防止重複初始化防護邏輯失效
-    for name, bar in pairs(bars) do
+    for _, bar in pairs(bars) do
         if bar then
             bar:Hide()
             bar:SetScript("OnEnter", nil)
             bar:SetScript("OnLeave", nil)
         end
-        bars[name] = nil
     end
+    wipe(bars)
 end
 
 -- Export

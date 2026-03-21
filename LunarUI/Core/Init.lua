@@ -59,9 +59,13 @@ local function ExecuteModuleCallback(entry)
             if gen ~= enableGeneration then
                 return
             end
-            -- 延遲期間若插件已停用，跳過初始化但仍遞減計數器
+            -- 延遲期間若插件已停用，跳過初始化但仍遞減計數器並檢查是否觸發 READY
             if not LunarUI:IsEnabled() then
                 pendingDelayedModules = pendingDelayedModules - 1
+                if pendingDelayedModules == 0 and not modulesReadyFired then
+                    modulesReadyFired = true
+                    LunarUI:SendMessage("LUNARUI_MODULES_READY")
+                end
                 return
             end
             local ok, err

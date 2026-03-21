@@ -118,7 +118,8 @@ end
 local eventProfilingEnabled = false
 local eventCounts = {} -- { [eventName] = number }
 local eventProfilingFrame = nil
-local eventProfilingStart = 0 -- 啟用時的時間戳（毫秒）
+local eventProfilingStart = 0 -- 啟用時的時間戳（微秒）
+local eventProfilingEnd = nil -- 停用時的時間戳（微秒），nil 代表仍在監控中
 
 --[[
     啟用事件頻率監控
@@ -133,6 +134,7 @@ function LunarUI:EnableEventProfiling()
     wipe(eventCounts)
     eventProfilingEnabled = true
     eventProfilingStart = GetTimestamp()
+    eventProfilingEnd = nil -- 重置結束時間戳
 
     if not eventProfilingFrame then
         eventProfilingFrame = CreateFrame("Frame")
@@ -187,6 +189,7 @@ function LunarUI:DisableEventProfiling()
         return
     end
     eventProfilingEnabled = false
+    eventProfilingEnd = GetTimestamp() -- 記錄結束時間，確保 PrintEventTimings 使用正確的 elapsed
 
     if eventProfilingFrame then
         eventProfilingFrame:UnregisterAllEvents()
@@ -215,7 +218,8 @@ function LunarUI:PrintEventTimings()
         return a.count > b.count
     end)
 
-    local elapsed = (GetTimestamp() - eventProfilingStart) / 1000000 -- 微秒轉秒
+    -- 使用記錄的結束時間（若已停用），否則使用當前時間（仍在監控中）
+    local elapsed = ((eventProfilingEnd or GetTimestamp()) - eventProfilingStart) / 1000000 -- 微秒轉秒
     self:Print(string.format("|cff8882ff=== Event Frequency (%.1f sec) ===|r", elapsed))
 
     for _, e in ipairs(sorted) do

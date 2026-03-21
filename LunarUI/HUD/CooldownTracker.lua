@@ -196,6 +196,7 @@ local cooldownIcons = {}
 local trackedSpells = {}
 local updateTimer = 0
 local isInitialized = false
+local initGeneration = 0 -- 每次 Cleanup 遞增，使飛行中的 C_Timer.After 失效
 local spellTextureCache = {} -- 法術圖示快取，避免重複查詢 API
 local CACHE_MAX_SIZE = 2000 -- 快取上限，防止無限增長（每筆約 32 bytes，2000 筆 ≈ 64KB）
 local cacheSize = 0
@@ -251,11 +252,11 @@ local function GetSpellTexture(spellID)
     -- 插入快取並增加計數（只在實際插入時計數）
     if texture then
         spellTextureCache[spellID] = texture
-        cacheSize = cacheSize + 1
     else
-        -- 負面快取：避免重複查詢無效法術（不計入 cacheSize，避免佔用有效快取容量）
+        -- 負面快取：避免重複查詢無效法術
         spellTextureCache[spellID] = INVALID_TEXTURE
     end
+    cacheSize = cacheSize + 1
 
     return texture
 end
@@ -553,7 +554,12 @@ eventFrame = LunarUI.CreateEventHandler(
             if LunarUI.GetHUDSetting("cooldownTracker", true) == false then
                 return
             end
-            C_Timer.After(1.0, Initialize)
+            local gen = initGeneration
+            C_Timer.After(1.0, function()
+                if gen == initGeneration then
+                    Initialize()
+                end
+            end)
         elseif event == "PLAYER_SPECIALIZATION_CHANGED" or event == "SPELLS_CHANGED" then
             -- 僅在模組初始化後才更新追蹤法術（避免 disable 狀態下無意義的更新）
             if isInitialized then
@@ -617,6 +623,8 @@ end
 
 -- 清理函數
 function LunarUI.CleanupCooldownTracker()
+    -- 遞增世代使飛行中的 C_Timer.After callback 失效（避免 disable 後 Initialize 被重新呼叫）
+    initGeneration = initGeneration + 1
     if cooldownFrame then
         cooldownFrame:Hide()
     end

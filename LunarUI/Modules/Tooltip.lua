@@ -459,8 +459,8 @@ local function OnTooltipSetUnit(tooltip)
     -- 重新 Show 以更新 tooltip 大小（新增行後需要重新排版）
     -- 戰鬥中跳過：tooltip:Show() 會觸發 Backdrop:SetupTextureCoordinates，
     -- 而我們的修改（AddLine 等）taint 了 tooltip 的 width，導致安全程式碼計算錯誤
-    -- Blizzard 的 TooltipDataHandler 會自行處理顯示，此處不需要額外 Show
-    if not InCombatLockdown() then
+    -- 只對 GameTooltip 呼叫：其他 secure tooltip（NamePlateTooltip 等）由 Blizzard 自行管理顯示
+    if not InCombatLockdown() and tooltip == GameTooltip then
         tooltip:Show()
     end
 end
@@ -657,7 +657,12 @@ local function SetTooltipPosition()
     tooltipPositionHooked = true
 
     hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
-        if db.anchorCursor then
+        -- 動態查詢 db 以支援 profile 切換（hooksecurefunc 永久存在，不可依賴閉包捕捉的 db）
+        local currentDB = LunarUI.GetModuleDB("tooltip")
+        if not currentDB or not currentDB.enabled then
+            return
+        end
+        if currentDB.anchorCursor then
             tooltip:SetOwner(parent, "ANCHOR_CURSOR")
         else
             tooltip:SetOwner(parent, "ANCHOR_NONE")
