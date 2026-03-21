@@ -86,7 +86,9 @@ local function HandleDebugVigor(self, sub)
 
     -- 未知子命令或無參數時先執行一次性診斷
     if not sub or (sub ~= "on" and sub ~= "off") then
-        self:DebugVigorFrames()
+        if self.DebugVigorFrames then
+            self:DebugVigorFrames()
+        end
     end
 
     -- 純診斷指令（非 on/off/toggle）就結束
