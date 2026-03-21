@@ -370,19 +370,20 @@ local function HideSlotTooltip()
 end
 
 -- 物品格子點擊處理（template 預設 handler 依賴原生 ContainerFrame parent，無法在自訂框架下運作）
+-- 注意：C_Container.UseContainerItem 是 protected function，不能從 addon OnClick 呼叫；
+-- 右鍵使用由 SecureActionButtonTemplate 的 type2="item" 屬性在安全執行環境中處理。
 local function OnSlotClick(self, button)
-    local bag, slot = self:GetBagID(), self:GetID()
     if button == "RightButton" then
-        C_Container.UseContainerItem(bag, slot)
-    else
-        if IsShiftKeyDown() then
-            local link = C_Container.GetContainerItemLink(bag, slot)
-            if link and ChatEdit_InsertLink and ChatEdit_InsertLink(link) then
-                return
-            end
-        end
-        C_Container.PickupContainerItem(bag, slot)
+        return -- 由 type2="item" secure attribute 處理
     end
+    local bag, slot = self.bag, self.slot
+    if IsShiftKeyDown() then
+        local link = C_Container.GetContainerItemLink(bag, slot)
+        if link and ChatEdit_InsertLink and ChatEdit_InsertLink(link) then
+            return
+        end
+    end
+    C_Container.PickupContainerItem(bag, slot)
 end
 
 -- 隱藏格子上的所有指示器（重構：避免重複代碼）
@@ -417,6 +418,10 @@ end
 local function SetupSlotBase(button, bag, slot)
     button.bag = bag
     button.slot = slot
+    -- 設定 secure attribute 讓右鍵使用物品在安全執行環境中處理（C_Container.UseContainerItem 是 protected）
+    button:SetAttribute("type2", "item")
+    button:SetAttribute("bag", bag)
+    button:SetAttribute("slot", slot)
     button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
     -- 移除預設材質
@@ -514,7 +519,7 @@ local function SetupSlotBase(button, bag, slot)
     button:SetScript("OnClick", OnSlotClick)
     button:RegisterForDrag("LeftButton")
     button:SetScript("OnDragStart", function(self)
-        C_Container.PickupContainerItem(self:GetBagID(), self:GetID())
+        C_Container.PickupContainerItem(self.bag, self.slot)
     end)
     button.OnEnter = ShowSlotTooltip
     button.OnLeave = HideSlotTooltip
@@ -1712,6 +1717,10 @@ local function RefreshBagLayout()
         end
         button.bag = slotInfo.bag
         button.slot = slotInfo.slot
+        if not InCombatLockdown() then
+            button:SetAttribute("bag", slotInfo.bag)
+            button:SetAttribute("slot", slotInfo.slot)
+        end
 
         -- 分離背包視圖
         if db and db.splitBags and prevBag ~= nil and slotInfo.bag ~= prevBag then
