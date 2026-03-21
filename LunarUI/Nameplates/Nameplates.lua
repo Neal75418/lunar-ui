@@ -54,9 +54,9 @@ do
     end
 end
 
--- 共用顏色常數（與 UnitFrames/Layout.lua 一致）
-local CASTBAR_COLOR = { 0.4, 0.6, 0.8, 1 }
-local BG_DARKEN = 0.3
+-- 共用顏色常數（定義於 Core/Media.lua）
+local CASTBAR_COLOR = LunarUI.CASTBAR_COLOR
+local BG_DARKEN = LunarUI.BG_DARKEN
 
 -- Classification colors
 local CLASSIFICATION_COLORS = {

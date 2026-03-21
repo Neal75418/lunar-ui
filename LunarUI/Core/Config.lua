@@ -314,7 +314,7 @@ end
 --[[
     清除 HUD 框架註冊表（供單元測試使用）
 ]]
-LunarUI.ClearHUDFrameRegistry = function()
+function LunarUI.ClearHUDFrameRegistry()
     wipe(hudFrameNames)
 end
 

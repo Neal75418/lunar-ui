@@ -29,6 +29,12 @@ local pendingCriticals = {}
 local pendingTypes = {}
 local pendingCount = 0
 local POOL_SIZE = 20 -- 預建數量
+
+-- 效能：快取熱路徑全域變數
+local math_floor = math.floor
+local math_random = math.random
+local table_insert = table.insert
+local table_remove = table.remove
 local isEnabled = false
 
 -- M4 效能修復：快取 HUD DB 設定值，避免 ShowText 每次呼叫（戰鬥 AoE 中高頻）都查 DB
@@ -131,7 +137,7 @@ end
 local function InitPool(parent)
     for _ = 1, POOL_SIZE do
         local fs = CreatePooledText(parent)
-        table.insert(textPool, fs)
+        table_insert(textPool, fs)
     end
 end
 
@@ -139,7 +145,7 @@ local poolExhaustedLogged = false
 
 local function AcquireText()
     if #textPool > 0 then
-        return table.remove(textPool)
+        return table_remove(textPool)
     end
     -- 池耗盡：首次記錄警告，後續靜默丟棄（避免刷屏）
     if not poolExhaustedLogged then
@@ -165,7 +171,7 @@ local function RecycleText(fs)
         end
     end
 
-    table.insert(textPool, fs)
+    table_insert(textPool, fs)
 end
 
 --------------------------------------------------------------------------------
@@ -230,7 +236,7 @@ local function ShowText(amount, isCrit, textType)
     end -- 池耗盡
 
     -- 設定文字
-    local displayAmount = LunarUI.FormatValue(math.floor(amount))
+    local displayAmount = LunarUI.FormatValue(math_floor(amount))
 
     if isCrit then
         displayAmount = displayAmount .. "!"
@@ -239,7 +245,7 @@ local function ShowText(amount, isCrit, textType)
     fs:SetText(displayAmount)
 
     -- 設定大小與顏色
-    local size = isCrit and math.floor(fontSize * critScale) or fontSize
+    local size = isCrit and math_floor(fontSize * critScale) or fontSize
     local font = LunarUI.GetSelectedFont()
     fs:SetFont(font, size, "OUTLINE")
 
@@ -253,7 +259,7 @@ local function ShowText(amount, isCrit, textType)
     -- 水平分散（避免重疊）
     local offsetX = 0
     if #activeTexts > 0 then
-        offsetX = (math.random() - 0.5) * STAGGER_OFFSET * 2
+        offsetX = (math_random() - 0.5) * STAGGER_OFFSET * 2
     end
     fs._offsetX = offsetX
 
@@ -269,7 +275,7 @@ local function ShowText(amount, isCrit, textType)
     fs:SetAlpha(1)
     fs._isCrit = isCrit
 
-    table.insert(activeTexts, fs)
+    table_insert(activeTexts, fs)
     AnimateText(fs, startY, duration)
 end
 
@@ -426,7 +432,7 @@ local function CreateFCTFrame()
 
     -- 納入 HUD 縮放和框架移動
     LunarUI:RegisterHUDFrame("LunarUI_FCT")
-    LunarUI.RegisterMovableFrame("fct", fctFrame, "Floating Combat Text")
+    LunarUI.RegisterMovableFrame("fct", fctFrame, "浮動戰鬥數字")
 
     return fctFrame
 end

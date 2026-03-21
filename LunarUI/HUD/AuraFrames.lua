@@ -296,7 +296,7 @@ local function SetupFrames()
     -- 建立 Buff 圖示（從右到左排列，重用已存在的框架）
     for i = 1, MAX_BUFFS do
         if not buffIcons[i] then
-            buffIcons[i] = CreateAuraIcon(buffFrame, i)
+            buffIcons[i] = CreateAuraIcon(buffFrame)
         end
         local row = math_floor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
@@ -312,7 +312,7 @@ local function SetupFrames()
     -- 建立 Debuff 圖示（重用已存在的框架）
     for i = 1, MAX_DEBUFFS do
         if not debuffIcons[i] then
-            debuffIcons[i] = CreateAuraIcon(debuffFrame, i)
+            debuffIcons[i] = CreateAuraIcon(debuffFrame)
         end
         local row = math_floor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
@@ -751,7 +751,7 @@ function LunarUI.RebuildAuraFrames()
         end
     end
     for i = oldMaxBuffs + 1, MAX_BUFFS do
-        buffIcons[i] = CreateAuraIcon(buffFrame, i)
+        buffIcons[i] = CreateAuraIcon(buffFrame)
     end
     RelayoutIcons(buffIcons, buffFrame, MAX_BUFFS)
 
@@ -765,7 +765,7 @@ function LunarUI.RebuildAuraFrames()
         end
     end
     for i = oldMaxDebuffs + 1, MAX_DEBUFFS do
-        debuffIcons[i] = CreateAuraIcon(debuffFrame, i)
+        debuffIcons[i] = CreateAuraIcon(debuffFrame)
     end
     RelayoutIcons(debuffIcons, debuffFrame, MAX_DEBUFFS)
 

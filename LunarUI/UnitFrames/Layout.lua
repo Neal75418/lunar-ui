@@ -49,8 +49,8 @@ LunarUI.InvalidateStatusBarTextureCache = InvalidateStatusBarTexture
 local C = LunarUI.Colors
 
 -- 共用顏色常數
-local CASTBAR_COLOR = { 0.4, 0.6, 0.8, 1 }
-local BG_DARKEN = 0.3
+local CASTBAR_COLOR = LunarUI.CASTBAR_COLOR
+local BG_DARKEN = LunarUI.BG_DARKEN
 local REACTION_COLORS = {
     [1] = { 0.9, 0.2, 0.2 }, -- 仇恨
     [2] = { 0.9, 0.2, 0.2 }, -- 敵對

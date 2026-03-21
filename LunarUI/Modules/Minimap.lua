@@ -12,6 +12,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
 local C = LunarUI.Colors
 
 -- GetMinimapShape flag-based wrapper（避免 enable/disable 時全域還原衝突）
@@ -785,7 +786,7 @@ local function CreateMailIndicator()
 
     mail:SetScript("OnEnter", function(_self)
         GameTooltip:SetOwner(mail, "ANCHOR_BOTTOMLEFT")
-        GameTooltip:SetText("You have mail!")
+        GameTooltip:SetText(L["MinimapHaveMail"] or "You have mail!")
         GameTooltip:Show()
     end)
 
@@ -1257,8 +1258,6 @@ LunarUI.InitializeMinimap = InitializeMinimap
 
 LunarUI:RegisterModule("Minimap", {
     onEnable = InitializeMinimap,
-    onDisable = function()
-        LunarUI:CleanupMinimap()
-    end,
+    onDisable = LunarUI.CleanupMinimap,
     delay = 0.5,
 })

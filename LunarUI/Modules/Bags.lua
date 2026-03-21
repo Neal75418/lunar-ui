@@ -2002,9 +2002,6 @@ local function HookBagFunctions()
         KillAndHookShow(BankFrame)
     end
     -- 戰團銀行：保留原生 UI（C_Bank API 尚未完整整合）
-    -- if AccountBankPanel then
-    --     KillAndHookShow(AccountBankPanel)
-    -- end
 end
 
 --------------------------------------------------------------------------------
@@ -2143,10 +2140,6 @@ local function OnBagEvent(_self, event, ...)
 end
 
 --------------------------------------------------------------------------------
--- 月相感知
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
 -- 垃圾販賣
 --------------------------------------------------------------------------------
 
@@ -2216,7 +2209,7 @@ SellJunk = function()
             goldStr = goldStr .. format("|cffeda55f%d|rc", copper)
 
             local msg = L["SoldJunkItems"] or "Sold %d junk items for %s"
-            print(format("|cff00ccffLunarUI:|r " .. msg, itemCount, goldStr))
+            LunarUI:Print(format(msg, itemCount, goldStr))
             return
         end
 
