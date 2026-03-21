@@ -436,9 +436,9 @@ function LunarUI:ImportSettings(importString)
         return false, L["ImportTooLarge"] or "匯入字串過長（上限 100KB）"
     end
 
-    -- 檢查標頭
+    -- 檢查標頭（用 sub 做字面比對，避免 header 含 pattern 特殊字元時的誤匹配）
     local header = "LUNARUI"
-    if not importString:find("^" .. header) then
+    if importString:sub(1, #header) ~= header then
         return false, L["InvalidSettings"] or "無效的匯入字串（缺少標頭）"
     end
 

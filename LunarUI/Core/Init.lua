@@ -193,6 +193,10 @@ function LunarUI:OnEnable()
     self:Print(msg)
 end
 
+-- ESC 主選單按鈕旗標（前移至此，OnDisable 需要存取）
+local gameMenuHooked = false
+local gameMenuButtonAdded = false
+
 --[[
     OnDisable - 插件停用時呼叫
     清理所有事件與計時器以防止記憶體洩漏
@@ -204,6 +208,9 @@ function LunarUI:OnDisable()
     modulesReadyFired = false
     pendingDelayedModules = 0
     self._modulesEnabled = nil
+    -- hooksecurefunc 本身無法撤銷，但 gameMenuButtonAdded 必須重設，
+    -- 讓下次 InitButtons 觸發時能重新加入按鈕（disable 後按鈕已消失）
+    gameMenuButtonAdded = false
 
     -- 取消所有計時器
     self:CancelAllTimers()
@@ -232,9 +239,6 @@ end
 --------------------------------------------------------------------------------
 -- ESC 主選單按鈕 (WoW 11.0+)
 --------------------------------------------------------------------------------
-
-local gameMenuHooked = false
-local gameMenuButtonAdded = false
 
 function LunarUI.SetupGameMenuButton()
     if gameMenuHooked then
