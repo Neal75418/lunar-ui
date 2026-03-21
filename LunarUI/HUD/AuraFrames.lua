@@ -394,10 +394,11 @@ local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expira
     iconFrame.auraData.filter = filter
     iconFrame.auraData.isHarmful = (filter == "HARMFUL")
 
-    -- 淡入動畫
+    -- 淡入動畫：aura 替換時也需重播（不限於首次顯示）
     if iconFrame.currentAuraName ~= name then
         iconFrame.currentAuraName = name
-        if iconFrame.fadeIn and not iconFrame:IsShown() then
+        if iconFrame.fadeIn then
+            iconFrame.fadeIn:Stop()
             iconFrame.fadeIn:Play()
         end
     end
