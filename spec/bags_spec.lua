@@ -210,6 +210,10 @@ LunarUI.db = { profile = { bags = { enabled = true, showProfessionColors = true,
 
 -- Load Utils.lua first to get GetModuleDB
 loader.loadAddonFile("LunarUI/Core/Utils.lua", LunarUI)
+-- Load sub-modules before main Bags.lua (matches TOC order)
+loader.loadAddonFile("LunarUI/Modules/Bags/BagUtils.lua", LunarUI)
+loader.loadAddonFile("LunarUI/Modules/Bags/BankSystem.lua", LunarUI)
+loader.loadAddonFile("LunarUI/Modules/Bags/JunkSelling.lua", LunarUI)
 loader.loadAddonFile("LunarUI/Modules/Bags.lua", LunarUI)
 
 --------------------------------------------------------------------------------
