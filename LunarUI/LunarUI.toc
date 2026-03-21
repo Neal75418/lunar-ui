@@ -69,6 +69,8 @@ Modules\Automation.lua
 Modules\FrameMover.lua
 Modules\Minimap.lua
 Modules\Tooltip.lua
+Modules\Chat\ChatStyling.lua
+Modules\Chat\ChatFilters.lua
 Modules\Chat.lua
 Modules\Bags.lua
 Modules\DataBars.lua

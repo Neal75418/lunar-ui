@@ -135,6 +135,8 @@ local LunarUI = {
     Print = function() end,
 }
 
+loader.loadAddonFile("LunarUI/Modules/Chat/ChatStyling.lua", LunarUI)
+loader.loadAddonFile("LunarUI/Modules/Chat/ChatFilters.lua", LunarUI)
 loader.loadAddonFile("LunarUI/Modules/Chat.lua", LunarUI)
 
 -- Call InitializeChat to register filters (they're only registered during init)
