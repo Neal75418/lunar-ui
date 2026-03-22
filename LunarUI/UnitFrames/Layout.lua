@@ -488,8 +488,17 @@ end
 local unitFramesSpawned = false -- oUF:Spawn 是 singleton，同一個 unit 不能 spawn 兩次
 
 local function SpawnUnitFrames()
-    -- oUF:Spawn 的 unit frame 不能重複建立（re-enable 時跳過）
+    -- 已 spawn 過 → 只需重新啟用（Enable + Show）
     if unitFramesSpawned then
+        for _, frame in pairs(spawnedFrames) do
+            if frame then
+                if frame.Enable then
+                    frame:Enable() -- oUF API: RegisterUnitWatch + conditional Show
+                else
+                    frame:Show()
+                end
+            end
+        end
         return
     end
 
@@ -537,6 +546,25 @@ local playerEnterWorldFrame -- 前向宣告
 
 -- 清理函數
 local function CleanupUnitFrames()
+    -- 停用所有已生成的 oUF 框架（Disable = UnregisterUnitWatch + Hide）
+    for _, frame in pairs(spawnedFrames) do
+        if frame then
+            -- Group headers 需先取消 StateDriver（否則 state driver 會覆蓋 Hide）
+            if
+                frame.GetAttribute
+                and pcall(frame.GetAttribute, frame, "showRaid")
+                and frame:GetAttribute("showRaid")
+            then
+                pcall(_G.UnregisterStateDriver, frame, "visibility")
+            end
+            if frame.Disable then
+                frame:Disable() -- oUF API: UnregisterUnitWatch + Hide
+            else
+                frame:Hide()
+            end
+        end
+    end
+
     -- 清除 PLAYER_ENTERING_WORLD 事件框架
     if playerEnterWorldFrame then
         playerEnterWorldFrame:UnregisterAllEvents()
@@ -547,9 +575,8 @@ local function CleanupUnitFrames()
         combatWaitFrame:UnregisterAllEvents()
         combatWaitFrame:SetScript("OnEvent", nil)
     end
-    -- 重設重試計數器，讓下次 enable 從頭開始計算
     spawnRetries = 0
-    unitFramesSpawned = true
+    -- 注意：unitFramesSpawned 保持 true（oUF:Spawn 是 singleton，re-enable 走 Enable 路徑）
 end
 
 -- 匯出

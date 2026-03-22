@@ -37,6 +37,7 @@ end
 local statusBarTexture -- lazy: resolved after DB is ready
 local npCombatWaitFrame -- 戰鬥等待框架（singleton，避免重複呼叫建立多個 frame）
 local nameplatDriverSpawned = false -- oUF:SpawnNamePlates 是 singleton，只能呼叫一次
+local nameplateModuleEnabled = false -- runtime 啟用旗標（OnShow hook 用此判斷是否處理名牌）
 local function GetStatusBarTexture()
     if not statusBarTexture then
         statusBarTexture = LunarUI.GetSelectedStatusBarTexture()
@@ -594,6 +595,10 @@ local function Nameplate_OnShow(frame)
     if not frame then
         return
     end
+    -- 模組停用時不處理名牌（oUF driver 是 singleton 無法關閉，用旗標控制）
+    if not nameplateModuleEnabled then
+        return
+    end
 
     -- Re-register frame for tracking (removed on hide)
     nameplateFrames[frame] = true
@@ -910,19 +915,23 @@ local function SpawnNameplates()
 
     -- WoW 12.0.0 移除了 C_NamePlate.SetNamePlateSize 和 C_NamePlateManager.SetNamePlateHitTestInsets
     -- oUF issue #734 尚未修復（截至 13.3.1），在此提供 no-op stub 防止 Lua error
+    -- WoW 12.0 相容 shim：oUF 內部仍會呼叫已移除的 API
+    -- 加上 _lunarShimmed 標記讓其他 addon 可辨識這不是真實 API
     if not C_NamePlate.SetNamePlateSize then
         C_NamePlate.SetNamePlateSize = function() end -- luacheck: ignore 122
+        C_NamePlate._lunarShimmed = true -- luacheck: ignore 122
     end
     if not C_NamePlateManager then -- luacheck: ignore 113
-        C_NamePlateManager = {} -- luacheck: ignore 111
+        C_NamePlateManager = { _lunarShimmed = true } -- luacheck: ignore 111
     end
     if not C_NamePlateManager.SetNamePlateHitTestInsets then -- luacheck: ignore 113
         C_NamePlateManager.SetNamePlateHitTestInsets = function() end -- luacheck: ignore 112
     end
 
+    nameplateModuleEnabled = true
     oUF:SetActiveStyle("LunarUI_Nameplate")
 
-    -- oUF:SpawnNamePlates 是 singleton，只能呼叫一次（re-enable 時跳過）
+    -- oUF:SpawnNamePlates 是 singleton，只能呼叫一次（re-enable 時重新啟用輔助系統）
     if not nameplatDriverSpawned then
         nameplatDriverSpawned = true
         local nameplateDriver = oUF:SpawnNamePlates("LunarUI_Nameplate")
@@ -1002,6 +1011,16 @@ LunarUI.GetNPCRoleColor = GetNPCRoleColor
 
 -- 清理函數：防止 disable/reload 時記憶體洩漏
 function LunarUI.CleanupNameplates()
+    -- 停用模組（OnShow hook 會檢查此旗標，不再處理新名牌）
+    nameplateModuleEnabled = false
+
+    -- 隱藏所有已追蹤的名牌框架
+    for frame in pairs(nameplateFrames) do
+        if frame and frame.Hide then
+            pcall(frame.Hide, frame)
+        end
+    end
+
     -- 清理戰鬥等待框架
     if npCombatWaitFrame then
         npCombatWaitFrame:UnregisterAllEvents()

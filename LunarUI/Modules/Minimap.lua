@@ -587,27 +587,30 @@ local function HideBlizzardMinimapElements()
         end, "HybridMinimap mask")
     end
 
-    -- 9. 縮放
+    -- 9. 縮放（HookScript 是永久的，用 flag 防止 off/on 循環累積）
     Minimap:EnableMouseWheel(true)
-    Minimap:HookScript("OnMouseWheel", function(_self, delta)
-        if delta > 0 then
-            Minimap_ZoomIn()
-        else
-            Minimap_ZoomOut()
-        end
-        -- 縮放自動重置計時器
-        local db = LunarUI.GetModuleDB("minimap")
-        local delay = db and db.resetZoomTimer or 0
-        if delay > 0 then
-            if zoomResetHandle then
-                zoomResetHandle:Cancel()
+    if not Minimap._lunarMouseWheelHooked then
+        Minimap._lunarMouseWheelHooked = true
+        Minimap:HookScript("OnMouseWheel", function(_self, delta)
+            if delta > 0 then
+                Minimap_ZoomIn()
+            else
+                Minimap_ZoomOut()
             end
-            zoomResetHandle = C_Timer.NewTimer(delay, function()
-                Minimap:SetZoom(0)
-                zoomResetHandle = nil
-            end)
-        end
-    end)
+            -- 縮放自動重置計時器
+            local db = LunarUI.GetModuleDB("minimap")
+            local delay = db and db.resetZoomTimer or 0
+            if delay > 0 then
+                if zoomResetHandle then
+                    zoomResetHandle:Cancel()
+                end
+                zoomResetHandle = C_Timer.NewTimer(delay, function()
+                    Minimap:SetZoom(0)
+                    zoomResetHandle = nil
+                end)
+            end
+        end)
+    end
 end
 
 local function CreateMinimapFrame()
@@ -714,35 +717,37 @@ local function CreateMinimapFrame()
         end
     end)
 
-    -- 右鍵選單追蹤
-    -- 使用 HookScript 而非 SetScript 以避免 taint
-    Minimap:HookScript("OnMouseUp", function(_self, button)
-        if button == "RightButton" then
-            -- 使用安全的選單 API 而非直接 Click() 安全按鈕（避免 taint）
-            if MinimapCluster and MinimapCluster.Tracking and MinimapCluster.Tracking.Button then
-                local btn = MinimapCluster.Tracking.Button
-                if btn.OpenMenu then
-                    btn:OpenMenu()
-                elseif btn.ToggleMenu then
-                    btn:ToggleMenu()
-                else
-                    -- 最後手段：M-11: 加 InCombatLockdown 防護，避免 btn:Click() 在戰鬥中觸發 taint
-                    if not InCombatLockdown() then
-                        LunarUI.SafeCall(function()
-                            btn:Click()
-                        end, "TrackingButton Click")
+    -- 右鍵選單追蹤（HookScript 是永久的，用 flag 防止累積）
+    if not Minimap._lunarMouseUpHooked then
+        Minimap._lunarMouseUpHooked = true
+        Minimap:HookScript("OnMouseUp", function(_self, button)
+            if button == "RightButton" then
+                -- 使用安全的選單 API 而非直接 Click() 安全按鈕（避免 taint）
+                if MinimapCluster and MinimapCluster.Tracking and MinimapCluster.Tracking.Button then
+                    local btn = MinimapCluster.Tracking.Button
+                    if btn.OpenMenu then
+                        btn:OpenMenu()
+                    elseif btn.ToggleMenu then
+                        btn:ToggleMenu()
+                    else
+                        -- 最後手段：M-11: 加 InCombatLockdown 防護，避免 btn:Click() 在戰鬥中觸發 taint
+                        if not InCombatLockdown() then
+                            LunarUI.SafeCall(function()
+                                btn:Click()
+                            end, "TrackingButton Click")
+                        end
                     end
+                elseif MiniMapTracking then
+                    ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, "cursor")
                 end
-            elseif MiniMapTracking then
-                ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, "cursor")
+            elseif button == "MiddleButton" then
+                -- 切換行事曆
+                if C_Calendar and C_Calendar.OpenCalendar then
+                    C_Calendar.OpenCalendar()
+                end
             end
-        elseif button == "MiddleButton" then
-            -- 切換行事曆
-            if C_Calendar and C_Calendar.OpenCalendar then
-                C_Calendar.OpenCalendar()
-            end
-        end
-    end)
+        end)
+    end
 
     return minimapFrame
 end
@@ -1243,6 +1248,13 @@ function LunarUI.CleanupMinimap()
     end
     -- 停用方形小地圖（wrapper 仍在，但 flag 為 false 時直接透傳原始函數）
     lunarMinimapIsSquare = false
+    -- 還原 Minimap 到原始 parent（MinimapCluster）
+    if _G.Minimap and _G.MinimapCluster then
+        pcall(function()
+            _G.Minimap:SetParent(_G.MinimapCluster)
+            _G.MinimapCluster:Show()
+        end)
+    end
     -- 清除框架 upvalue 引用（WoW 框架不可銷毀但 upvalue 必須重置，避免 re-enable 指向 orphaned 物件）
     minimapFrame = nil
     zoneText = nil
