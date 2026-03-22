@@ -223,7 +223,7 @@ local function InstallTaintEventFilter()
         seterrorhandler(function(msg, ...)
             if taintFilterActive then
                 local msgStr = tostring(msg or "")
-                if msgStr:find("secret number value tainted") then
+                if msgStr:find("secret number value") then
                     return
                 end
             end
