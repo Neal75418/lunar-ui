@@ -174,6 +174,11 @@ function LunarUI.DisableModules()
     if LunarUI.RestoreBlizzardBars then
         LunarUI.RestoreBlizzardBars()
     end
+
+    -- 提示使用者：oUF singleton 模組（UnitFrames、Nameplates）為 soft disable，
+    -- 完全回到 Blizzard 原生需要 /reload
+    local L = Engine.L or {}
+    LunarUI:Print(L["LunarUIDisabledReload"] or "LunarUI disabled (requires UI reload)")
 end
 
 --------------------------------------------------------------------------------

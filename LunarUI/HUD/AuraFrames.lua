@@ -102,8 +102,11 @@ local AURA_THROTTLE = 0.1
 --------------------------------------------------------------------------------
 
 local function ShouldShowBuff(name, _duration)
-    -- name 已經過 tostring() 淨化，可直接作為 table index（rawget 不觸發 __index，不需要 pcall）
-    if FILTERED_BUFF_NAMES[name] then
+    -- WoW 12.0 taint：aura API 回傳值在戰鬥中可能帶有 taint 標記，
+    -- tostring() 不一定能完全斷開 taint chain。
+    -- 用 pcall + rawget 保護 table 查詢，避免 "table index is secret" 錯誤
+    local ok, filtered = pcall(rawget, FILTERED_BUFF_NAMES, name)
+    if ok and filtered then
         return false
     end
     return true
@@ -340,8 +343,11 @@ local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expira
 
     -- 邊框顏色
     if isDebuff then
-        local debuffType = tostring(auraData.dispelName or "")
-        local color = DEBUFF_TYPE_COLORS[debuffType] or DEBUFF_TYPE_COLORS[""]
+        local debuffType = "" .. tostring(auraData.dispelName or "")
+        local ok, color = pcall(rawget, DEBUFF_TYPE_COLORS, debuffType)
+        if not ok or not color then
+            color = DEBUFF_TYPE_COLORS[""] -- fallback to default debuff color
+        end
         iconFrame:SetBackdropBorderColor(color.r, color.g, color.b, 1)
     else
         iconFrame:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.8)
@@ -424,10 +430,10 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
             break
         end
 
-        -- taint 安全：tostring/tonumber 會斷開 CLEU/Aura API 回傳值的 taint 鏈
-        -- （與 FloatingCombatText.lua 的 Sanitize() 原理相同）
+        -- taint 安全：字串拼接 ("" ..) 強制建立新字串斷開 taint chain
+        -- tostring() 在 WoW 12.0 下不一定能完全斷開 taint（"table index is secret"）
         -- #8: 集中淨化所有欄位，UpdateAuraIcon 直接使用已淨化值
-        local name = tostring(auraData.name or "")
+        local name = "" .. tostring(auraData.name or "")
         local duration = tonumber(auraData.duration or 0) or 0
 
         local shouldShow

@@ -131,6 +131,12 @@ local oUFMock = {
     SpawnHeader = function()
         return CreateFrame("Frame")
     end,
+    SpawnNamePlates = function()
+        return {
+            SetAddedCallback = function() end,
+            SetRemovedCallback = function() end,
+        }
+    end,
 }
 
 loader.loadAddonFile("LunarUI/Nameplates/Nameplates.lua", LunarUI, { oUF = oUFMock })
@@ -298,5 +304,22 @@ describe("Nameplates lifecycle", function()
         assert.has_no_errors(function()
             LunarUI.CleanupNameplates()
         end)
+    end)
+
+    it("Spawn → Cleanup → Spawn 循環不報錯（soft disable re-enable）", function()
+        assert.has_no_errors(function()
+            LunarUI.SpawnNameplates()
+            LunarUI.CleanupNameplates()
+            LunarUI.SpawnNameplates() -- re-enable 路徑
+        end)
+    end)
+
+    it("多次 Spawn/Cleanup 循環不累積", function()
+        for _ = 1, 3 do
+            assert.has_no_errors(function()
+                LunarUI.SpawnNameplates()
+                LunarUI.CleanupNameplates()
+            end)
+        end
     end)
 end)

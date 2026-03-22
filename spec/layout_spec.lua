@@ -550,6 +550,23 @@ describe("SpawnUnitFrames lifecycle", function()
             LunarUI.SpawnUnitFrames()
         end)
     end)
+
+    it("Spawn → Cleanup → Spawn 循環不報錯（soft disable re-enable）", function()
+        assert.has_no_errors(function()
+            LunarUI.SpawnUnitFrames()
+            LunarUI.CleanupUnitFrames()
+            LunarUI.SpawnUnitFrames() -- re-enable 路徑
+        end)
+    end)
+
+    it("多次 Spawn/Cleanup 循環不累積", function()
+        for _ = 1, 3 do
+            assert.has_no_errors(function()
+                LunarUI.SpawnUnitFrames()
+                LunarUI.CleanupUnitFrames()
+            end)
+        end
+    end)
 end)
 
 --------------------------------------------------------------------------------

@@ -45,6 +45,9 @@ local buttonScanTimers = {} -- 按鈕掃描延遲計時器
 local mail -- 郵件通知框架
 local diff -- 難度圖示框架
 
+-- 還原用：mutation 前保存 Blizzard 實際狀態（不硬編碼預設值）
+local savedMinimapState = nil
+
 --------------------------------------------------------------------------------
 -- 輔助函數
 --------------------------------------------------------------------------------
@@ -380,6 +383,125 @@ end
 --------------------------------------------------------------------------------
 
 local minimapHooksInstalled = false -- hooksecurefunc 無法撤銷，需防止 enable/disable 循環堆疊
+
+local function SaveMinimapState()
+    if savedMinimapState then
+        return -- 已儲存，不覆寫（hide 可能被延遲重試多次呼叫）
+    end
+
+    local state = {}
+
+    -- 安全讀取 getter（部分 API 在某些版本可能不存在）
+    local function safeGet(obj, method, ...)
+        if not obj or not obj[method] then
+            return nil
+        end
+        local ok, result = pcall(obj[method], obj, ...)
+        if ok then
+            return result
+        end
+        return nil
+    end
+
+    -- safeGet 的 boolean 特化版：避免 `false or default` 的 Lua truthiness 陷阱
+    local function safeGetBool(obj, method, default)
+        local v = safeGet(obj, method)
+        if v == nil then
+            return default
+        end
+        return v
+    end
+
+    -- Minimap 本體
+    if Minimap then
+        local p1, p2, p3, p4, p5 = Minimap:GetPoint(1)
+        state.minimap = {
+            parent = safeGet(Minimap, "GetParent"),
+            points = { p1, p2, p3, p4, p5 },
+            maskTexture = safeGet(Minimap, "GetMaskTexture"),
+            layout = rawget(Minimap, "Layout"), -- 可能是 nil（Blizzard 預設）或被覆蓋
+            mouseWheelEnabled = safeGetBool(Minimap, "IsMouseWheelEnabled", false),
+        }
+    end
+
+    -- MinimapCluster
+    if MinimapCluster then
+        local clusterChildren = {}
+        pcall(function()
+            for _, child in ipairs({ MinimapCluster:GetChildren() }) do
+                if child and child ~= Minimap then
+                    table.insert(clusterChildren, {
+                        frame = child,
+                        alpha = child:GetAlpha(),
+                        mouseEnabled = safeGetBool(child, "IsMouseEnabled", true),
+                    })
+                end
+            end
+        end)
+        local clusterRegions = {}
+        pcall(function()
+            for _, region in ipairs({ MinimapCluster:GetRegions() }) do
+                table.insert(clusterRegions, {
+                    region = region,
+                    alpha = region:GetAlpha(),
+                    visible = region:IsShown(),
+                })
+            end
+        end)
+        local cp1, cp2, cp3, cp4, cp5 = MinimapCluster:GetPoint(1)
+        state.cluster = {
+            alpha = MinimapCluster:GetAlpha(),
+            mouseEnabled = safeGetBool(MinimapCluster, "IsMouseEnabled", true),
+            points = { cp1, cp2, cp3, cp4, cp5 },
+            visible = MinimapCluster:IsShown(),
+            children = clusterChildren,
+            regions = clusterRegions,
+        }
+    end
+
+    -- 裝飾框架（alpha + visibility）
+    local function SaveFrameAV(frame)
+        if not frame then
+            return nil
+        end
+        return { alpha = frame:GetAlpha(), visible = frame:IsShown() }
+    end
+    state.backdrop = SaveFrameAV(MinimapBackdrop)
+    state.zoomIn = SaveFrameAV(MinimapZoomIn)
+    state.zoomOut = SaveFrameAV(MinimapZoomOut)
+
+    -- Minimap 子框架（Backdrop/Border/Background 系列）
+    state.minimapChildren = {}
+    if Minimap then
+        pcall(function()
+            for _, child in ipairs({ Minimap:GetChildren() }) do
+                local name = child:GetName()
+                if name and (name:find("Backdrop") or name:find("Border") or name:find("Background")) then
+                    table.insert(state.minimapChildren, {
+                        frame = child,
+                        alpha = child:GetAlpha(),
+                        visible = child:IsShown(),
+                    })
+                end
+            end
+        end)
+    end
+
+    -- MiniMapTracking
+    if MiniMapTracking then
+        state.tracking = {
+            parent = safeGet(MiniMapTracking, "GetParent"),
+            bgVisible = MiniMapTrackingBackground and MiniMapTrackingBackground:IsShown() or nil,
+        }
+    end
+
+    -- HybridMinimap
+    if HybridMinimap and HybridMinimap.CircleMask then
+        state.hybridMask = safeGet(HybridMinimap.CircleMask, "GetTexture")
+    end
+
+    savedMinimapState = state
+end
 
 local function HideBlizzardMinimapElements()
     -- 1. 把有用的 MinimapCluster 子元素 reparent 到 Minimap 並重設位置
@@ -1149,6 +1271,7 @@ local function InitializeMinimap()
     end
     lunarMinimapIsSquare = true
 
+    SaveMinimapState() -- ★ 在任何 mutation 前保存 Blizzard 實際狀態
     CreateMinimapFrame() -- 先建立框架、reparent Minimap
     HideBlizzardMinimapElements() -- 再隱藏裝飾
 
@@ -1248,27 +1371,138 @@ function LunarUI.CleanupMinimap()
     end
     -- 停用方形小地圖（wrapper 仍在，但 flag 為 false 時直接透傳原始函數）
     lunarMinimapIsSquare = false
-    -- 還原 Minimap 到原始狀態
-    -- 初始化時做了三件事需要反向還原：
-    -- 1. Minimap:SetParent(minimapFrame) → 還原到 MinimapCluster
-    -- 2. MinimapCluster:SetAlpha(0) + SetPoint(螢幕外 -2000) → 還原可見性和位置
-    -- 3. MinimapCluster:EnableMouse(false) → 還原互動
-    if _G.Minimap and _G.MinimapCluster then
-        pcall(function()
-            -- 還原 MinimapCluster（初始化時被隱藏到螢幕外）
-            _G.MinimapCluster:SetAlpha(1)
-            _G.MinimapCluster:EnableMouse(true)
-            _G.MinimapCluster:ClearAllPoints()
-            _G.MinimapCluster:SetPoint("TOPRIGHT", _G.UIParent, "TOPRIGHT", -10, -10)
-            _G.MinimapCluster:Show()
 
-            -- 還原 Minimap 到 MinimapCluster
-            _G.Minimap:SetParent(_G.MinimapCluster)
+    -- 從 savedMinimapState 還原 Blizzard 實際狀態（不硬編碼預設值）
+    local state = savedMinimapState
+    if not state then
+        -- 未保存過狀態（Init 未執行或已 cleanup），跳過還原
+        savedMinimapState = nil
+        -- 清除框架 upvalue 引用
+        minimapFrame = nil
+        zoneText = nil
+        coordText = nil
+        clockText = nil
+        buttonFrame = nil
+        isInitialized = false
+        return
+    end
+
+    -- 還原 Minimap 本體
+    if state.minimap and _G.Minimap then
+        local ms = state.minimap
+        -- 遮罩
+        if ms.maskTexture then
+            pcall(_G.Minimap.SetMaskTexture, _G.Minimap, ms.maskTexture)
+        end
+        -- Layout（nil = 移除覆蓋，讓 Blizzard 接管）
+        _G.Minimap.Layout = ms.layout
+        -- 滑鼠滾輪（HookScript 是永久的，但 EnableMouseWheel 可控制開關）
+        pcall(_G.Minimap.EnableMouseWheel, _G.Minimap, ms.mouseWheelEnabled)
+        -- blob 環形：WoW 沒有 getter，無法保存原始值，用 nil 讓 Blizzard 重設
+        pcall(_G.Minimap.SetArchBlobRingScalar, _G.Minimap, 1)
+        pcall(_G.Minimap.SetArchBlobRingAlpha, _G.Minimap, 1)
+        pcall(_G.Minimap.SetQuestBlobRingScalar, _G.Minimap, 1)
+        pcall(_G.Minimap.SetQuestBlobRingAlpha, _G.Minimap, 1)
+        pcall(_G.Minimap.SetArchBlobInsideTexture, _G.Minimap, nil)
+        pcall(_G.Minimap.SetArchBlobOutsideTexture, _G.Minimap, nil)
+        pcall(_G.Minimap.SetQuestBlobInsideTexture, _G.Minimap, nil)
+        pcall(_G.Minimap.SetQuestBlobOutsideTexture, _G.Minimap, nil)
+    end
+
+    -- 還原 HybridMinimap CircleMask
+    if state.hybridMask and _G.HybridMinimap and _G.HybridMinimap.CircleMask then
+        pcall(_G.HybridMinimap.CircleMask.SetTexture, _G.HybridMinimap.CircleMask, state.hybridMask)
+        if _G.HybridMinimap.MapCanvas then
+            pcall(_G.HybridMinimap.MapCanvas.SetUseMaskTexture, _G.HybridMinimap.MapCanvas, false)
+            pcall(_G.HybridMinimap.MapCanvas.SetUseMaskTexture, _G.HybridMinimap.MapCanvas, true)
+        end
+    end
+
+    -- 還原裝飾框架（從 saved alpha/visibility）
+    local function RestoreFrameAV(frame, saved)
+        if not frame or not saved then
+            return
+        end
+        pcall(function()
+            frame:SetAlpha(saved.alpha)
+            if saved.visible then
+                frame:Show()
+            else
+                frame:Hide()
+            end
+        end)
+    end
+    RestoreFrameAV(_G.MinimapBackdrop, state.backdrop)
+    RestoreFrameAV(_G.MinimapZoomIn, state.zoomIn)
+    RestoreFrameAV(_G.MinimapZoomOut, state.zoomOut)
+
+    -- 還原 Minimap 子框架（Backdrop/Border/Background）
+    if state.minimapChildren then
+        for _, entry in ipairs(state.minimapChildren) do
+            RestoreFrameAV(entry.frame, entry)
+        end
+    end
+
+    -- 還原 MiniMapTracking
+    if state.tracking and _G.MiniMapTracking then
+        pcall(_G.MiniMapTracking.SetParent, _G.MiniMapTracking, state.tracking.parent)
+        if state.tracking.bgVisible and _G.MiniMapTrackingBackground then
+            pcall(_G.MiniMapTrackingBackground.Show, _G.MiniMapTrackingBackground)
+        end
+    end
+
+    -- 還原 MinimapCluster 及其子框架/regions
+    if state.cluster and _G.MinimapCluster then
+        pcall(function()
+            local cs = state.cluster
+            _G.MinimapCluster:SetAlpha(cs.alpha)
+            _G.MinimapCluster:EnableMouse(cs.mouseEnabled)
+            _G.MinimapCluster:ClearAllPoints()
+            if cs.points[1] then
+                _G.MinimapCluster:SetPoint(unpack(cs.points, 1, 5))
+            end
+            if cs.visible then
+                _G.MinimapCluster:Show()
+            end
+
+            -- 子框架
+            for _, entry in ipairs(cs.children) do
+                pcall(function()
+                    entry.frame:SetAlpha(entry.alpha)
+                    entry.frame:EnableMouse(entry.mouseEnabled)
+                end)
+            end
+
+            -- regions
+            for _, entry in ipairs(cs.regions) do
+                pcall(function()
+                    entry.region:SetAlpha(entry.alpha)
+                    if entry.visible and entry.region.Show then
+                        entry.region:Show()
+                    elseif not entry.visible and entry.region.Hide then
+                        entry.region:Hide()
+                    end
+                end)
+            end
+        end)
+    end
+
+    -- 還原 Minimap parent/position（最後做，因為需要 MinimapCluster 先就位）
+    if state.minimap and _G.Minimap then
+        pcall(function()
+            local ms = state.minimap
+            if ms.parent then
+                _G.Minimap:SetParent(ms.parent)
+            end
             _G.Minimap:ClearAllPoints()
-            _G.Minimap:SetPoint("CENTER", _G.MinimapCluster, "CENTER", 9, -5)
+            if ms.points[1] then
+                _G.Minimap:SetPoint(unpack(ms.points, 1, 5))
+            end
             _G.Minimap:Show()
         end)
     end
+
+    savedMinimapState = nil
     -- 清除框架 upvalue 引用（WoW 框架不可銷毀但 upvalue 必須重置，避免 re-enable 指向 orphaned 物件）
     minimapFrame = nil
     zoneText = nil

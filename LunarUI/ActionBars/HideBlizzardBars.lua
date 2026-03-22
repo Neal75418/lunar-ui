@@ -11,14 +11,25 @@ local LunarUI = Engine.LunarUI
 -- 隱藏暴雪動作條
 --------------------------------------------------------------------------------
 
--- 還原用：儲存被修改的框架原始狀態
+-- ★ 還原追蹤表（所有 mutation 都記錄在這裡，RestoreBlizzardBars 從這裡還原）
+-- 每個追蹤表對應一種 mutation 類型：
+--   savedBarStates  → MultiBar parent + EditMode 方法覆蓋
+--   hiddenFrames    → SetAlpha(0) + EnableMouse/Keyboard(false) 的框架
+--   hiddenRegions   → SetAlpha(0) 的 regions
+--   explicitlyHidden→ Hide() 的 regions/子物件
+--   hiddenTextures  → SetTexture(nil) + 原始材質路徑
 local savedBarStates = {} -- { [frame] = { parent, onEditModeEnter, onEditModeExit } }
-local hiddenFrames = {} -- { [frame] = true } 追蹤被 SetAlpha(0) 的框架
+local hiddenFrames = {} -- { [frame] = true }
+local hiddenRegions = {} -- { [region] = true }
+local explicitlyHidden = {} -- { [obj] = true }
+local hiddenTextures = {} -- { [texture] = originalTexturePath | false }
+local hideGeneration = 0 -- 世代計數器：防止 disable 後延遲 timer 仍執行 HideBlizzardBars
 
--- 安全隱藏框架：設置透明度為 0 並禁用互動
--- 不使用 RegisterStateDriver（會破壞 EditMode 佈局計算導致負數 scale）
--- 不使用 hooksecurefunc 或 rawset（會在安全框架上產生 taint）
--- 只做一次性 SetAlpha(0)，不 hook，不持續修改安全框架狀態
+--------------------------------------------------------------------------------
+-- Hide 操作（一次性 mutation，不 hook，不持續修改安全框架）
+--------------------------------------------------------------------------------
+
+-- 安全隱藏框架：透明度為 0 + 禁用互動
 local function HideFrameSafely(frame)
     if not frame then
         return
@@ -31,9 +42,7 @@ local function HideFrameSafely(frame)
     end)
 end
 
--- 隱藏框架的所有區域（材質）- 追蹤 alpha 和 visibility 以供對稱還原
-local hiddenRegions = {} -- { [region] = true } 被 SetAlpha(0) 的 regions
-local explicitlyHidden = {} -- { [obj] = true } 被 Hide() 的 regions/子物件
+-- 隱藏框架的所有區域（材質 alpha）
 local function HideFrameRegions(frame)
     if not frame then
         return
@@ -49,12 +58,7 @@ local function HideFrameRegions(frame)
     end
 end
 
--- 強力隱藏材質（Texture 物件）
--- 精簡為 3 種有效方法：透明 + 隱藏 + 清除材質
--- 原先 9 種方法（SetTexCoord/SetVertexColor/SetSize/ClearAllPoints/SetAtlas）為過度防禦，
--- 每個 pcall 都有開銷，且此函數在 HideBlizzardBars() 的延遲重試中會執行 3 次。
--- 儲存原始材質路徑/atlas，還原時用 SetTexture(path) 精確恢復
-local hiddenTextures = {} -- { [texture] = originalTexturePath }
+-- 強力隱藏材質：透明 + 隱藏 + 清除材質路徑（儲存原始路徑供還原）
 local function HideTextureForcefully(texture)
     if not texture then
         return
@@ -62,7 +66,7 @@ local function HideTextureForcefully(texture)
     -- 只在首次隱藏時儲存原始狀態（延遲重試會多次呼叫）
     if hiddenTextures[texture] == nil then
         local path = texture:GetTexture()
-        hiddenTextures[texture] = path or false -- false 代表原本就沒有材質
+        hiddenTextures[texture] = path or false -- false = 原本就沒有材質
     end
     pcall(function()
         texture:SetAlpha(0)
@@ -186,50 +190,48 @@ end
 -- 2. Backdrop.lua "secret number value tainted by 'LunarUI'"（addon 觸發 tooltip 時 backdrop 使用 tainted width）
 -- 3. ADDON_ACTION_BLOCKED / ADDON_ACTION_FORBIDDEN（UIErrorsFrame 的 "介面功能因插件而失效" 訊息）
 -- 以上皆為 UI addon 修改 Blizzard 框架的正常副作用，無功能影響
-local scaleErrorFilter -- 當前安裝的過濾函數引用（用於避免自我鏈接）
-local savedErrorHandler -- 安裝前的原始 error handler（供還原）
+-- error/taint 過濾器狀態
+-- ★ 設計：filter 函數安裝後永遠不從 handler chain 中移除（避免斷鏈風險）。
+-- 改用 active flag 控制：active=true 時過濾已知無害錯誤，active=false 時直接透傳。
+-- 這樣無論 BugSack 等 addon 是否在中間插入 handler，filter 都能正確停工。
+local scaleErrorFilterActive = false
+local scaleErrorFilterInstalled = false
 local taintEventsUnregistered = false
 local function InstallScaleErrorFilter()
     -- 抑制 "介面功能因插件而失效" 黃字訊息（ADDON_ACTION_BLOCKED 事件）
-    -- Blizzard 在 UIParent 的 OnEvent 處理此事件並顯示警告
-    -- seterrorhandler 無法攔截（非 Lua 錯誤），需從 UIParent 取消註冊
     if not taintEventsUnregistered then
         taintEventsUnregistered = true
         UIParent:UnregisterEvent("ADDON_ACTION_BLOCKED")
         UIParent:UnregisterEvent("ADDON_ACTION_FORBIDDEN")
     end
 
-    -- 注意：hooksecurefunc("seterrorhandler") 被 WoW 禁止，不能 hook error handler 的安裝
-    -- secureexecuterange 內的錯誤也繞過 seterrorhandler，此過濾器只能攔截一般 Lua 錯誤
-    -- Edit Mode 的 "Scale must be > 0" 透過覆蓋 OnEditModeEnter 為 no-op 從源頭避免
-    -- 此過濾器作為 fallback，攔截任何殘餘的 taint 警告
+    -- 啟用過濾
+    scaleErrorFilterActive = true
 
-    local prevHandler = geterrorhandler()
-    -- 已是我們的過濾器，跳過（避免自我鏈接）
-    if prevHandler == scaleErrorFilter then
+    -- filter 函數只安裝一次（永久駐留在 handler chain 中）
+    if scaleErrorFilterInstalled then
         return
     end
-    savedErrorHandler = prevHandler
-    scaleErrorFilter = function(msg, ...)
-        local msgStr = tostring(msg or "")
-        if msgStr:find("Scale must be > 0") or msgStr:find("secret number value tainted") then
-            return
+    scaleErrorFilterInstalled = true
+
+    local prevHandler = geterrorhandler()
+    seterrorhandler(function(msg, ...)
+        -- active=false 時直接透傳（不吃任何錯誤）
+        if scaleErrorFilterActive then
+            local msgStr = tostring(msg or "")
+            if msgStr:find("Scale must be > 0") or msgStr:find("secret number value tainted") then
+                return
+            end
         end
         if prevHandler then
             return prevHandler(msg, ...)
         end
-    end
-    seterrorhandler(scaleErrorFilter)
+    end)
 end
 
--- 還原全域副作用：error handler + UIParent 事件
+-- 停用過濾（不移除 handler，只關閉 active flag）
 local function UninstallScaleErrorFilter()
-    -- 還原 error handler（只在當前 handler 仍是我們的過濾器時才還原，避免斷鏈）
-    if scaleErrorFilter and geterrorhandler() == scaleErrorFilter and savedErrorHandler then
-        seterrorhandler(savedErrorHandler)
-    end
-    scaleErrorFilter = nil
-    savedErrorHandler = nil
+    scaleErrorFilterActive = false
 
     -- 重新註冊 UIParent 事件
     if taintEventsUnregistered then
@@ -554,13 +556,23 @@ local function HideBlizzardBarsDelayed()
         return
     end
 
+    hideGeneration = hideGeneration + 1
+    local gen = hideGeneration
+
     HideBlizzardBars()
     -- 延遲後再次執行以捕捉延遲建立的框架
-    C_Timer.After(1, HideBlizzardBars)
+    -- 使用世代計數器：如果 disable 後 generation 已遞增，延遲回呼不再執行
+    C_Timer.After(1, function()
+        if hideGeneration == gen then
+            HideBlizzardBars()
+        end
+    end)
     C_Timer.After(3, function()
-        HideBlizzardBars()
-        -- 在所有 addon 載入後安裝錯誤過濾（確保在 BugSack 等之後）
-        InstallScaleErrorFilter()
+        if hideGeneration == gen then
+            HideBlizzardBars()
+            -- 在所有 addon 載入後安裝錯誤過濾（確保在 BugSack 等之後）
+            InstallScaleErrorFilter()
+        end
     end)
 end
 
@@ -575,6 +587,9 @@ local function RestoreBlizzardBars()
         return
     end
 
+    -- 遞增世代計數器，使 HideBlizzardBarsDelayed 的延遲 timer 不再執行
+    hideGeneration = hideGeneration + 1
+
     -- 1. 還原 MultiBar 框架：parent + OnEditModeEnter/Exit
     for bar, state in pairs(savedBarStates) do
         pcall(function()
@@ -586,11 +601,12 @@ local function RestoreBlizzardBars()
     end
     wipe(savedBarStates)
 
-    -- 2. 還原被 SetAlpha(0) 的框架
+    -- 2. 還原被 SetAlpha(0) 的框架（HideFrameSafely 設了 alpha + mouse + keyboard）
     for frame in pairs(hiddenFrames) do
         pcall(function()
             frame:SetAlpha(1)
             frame:EnableMouse(true)
+            frame:EnableKeyboard(true)
         end)
     end
     wipe(hiddenFrames)

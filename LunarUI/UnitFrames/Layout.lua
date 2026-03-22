@@ -546,7 +546,11 @@ local playerEnterWorldFrame -- 前向宣告
 
 -- 清理函數
 local function CleanupUnitFrames()
-    -- 停用所有已生成的 oUF 框架（Disable = UnregisterUnitWatch + Hide）
+    -- Soft disable：隱藏 LunarUI 框架 + 停止事件，但不銷毀 oUF singleton
+    -- oUF:Spawn() 是一次性的（相同 unit 不可二次 spawn），因此：
+    -- - /lunar off：frame:Disable()（UnregisterUnitWatch + Hide）
+    -- - /lunar on：frame:Enable()（RegisterUnitWatch + conditional Show）
+    -- - 完全回到 Blizzard 原生框架：需要 /reload
     for _, frame in pairs(spawnedFrames) do
         if frame then
             -- Group headers（party/raid）需先取消 StateDriver（否則 state driver 會覆蓋 Hide）

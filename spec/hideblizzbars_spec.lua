@@ -252,6 +252,47 @@ describe("HideBlizzardBars", function()
             end
         end)
 
+        it("EnableKeyboard 在 hide 後被禁用，restore 後還原", function()
+            -- artFrame.LeftEndCap 會走 HideFrameSafely 路徑
+            assert.is_true(artFrame.LeftEndCap._keyboardEnabled)
+
+            LunarUI.HideBlizzardBarsDelayed()
+
+            -- HideFrameSafely 應設定 EnableKeyboard(false)
+            assert.is_false(artFrame.LeftEndCap._keyboardEnabled)
+
+            LunarUI.RestoreBlizzardBars()
+
+            -- restore 應還原 EnableKeyboard(true)
+            assert.is_true(artFrame.LeftEndCap._keyboardEnabled)
+        end)
+
+        it("延遲 timer 在 restore 後不再執行 hide", function()
+            -- 捕捉所有 C_Timer.After 回呼
+            local pendingCallbacks = {}
+            _G.C_Timer.After = function(_, fn)
+                table.insert(pendingCallbacks, fn)
+            end
+
+            LunarUI.HideBlizzardBarsDelayed()
+            -- 此時有 2 個延遲回呼等待執行
+
+            -- Restore 前先重置狀態
+            LunarUI.RestoreBlizzardBars()
+            assert.are.equal(multiBarOriginalParent, multiBar1._parent)
+
+            -- 模擬延遲 timer 觸發（restore 後的 generation 應使回呼跳過）
+            for _, cb in ipairs(pendingCallbacks) do
+                cb()
+            end
+
+            -- parent 應仍為原始值（timer 回呼被 generation guard 跳過）
+            assert.are.equal(multiBarOriginalParent, multiBar1._parent)
+
+            -- 清理：還原 C_Timer.After
+            _G.C_Timer.After = function() end
+        end)
+
         it("restore 在戰鬥中不執行", function()
             LunarUI.HideBlizzardBarsDelayed()
 

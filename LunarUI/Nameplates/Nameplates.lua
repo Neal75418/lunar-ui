@@ -1008,7 +1008,11 @@ LunarUI.GetNPCRoleColor = GetNPCRoleColor
 
 -- 清理函數：防止 disable/reload 時記憶體洩漏
 function LunarUI.CleanupNameplates()
-    -- 停用模組（OnShow hook 會檢查此旗標，不再處理新名牌）
+    -- Soft disable：停止 LunarUI 名牌增強，但不銷毀 oUF nameplate driver（singleton）
+    -- oUF:SpawnNamePlates() 只能呼叫一次，因此：
+    -- - /lunar off：設 nameplateModuleEnabled = false，OnShow hook 跳過處理
+    -- - /lunar on：設 nameplateModuleEnabled = true，對現存名牌重新觸發 OnShow
+    -- - 完全回到 Blizzard 原生名牌：需要 /reload
     -- 不呼叫 frame:Hide()：名牌框架由 WoW 引擎管理（secure），
     -- 強制 Hide 在戰鬥中會 taint，且框架不會自動恢復
     nameplateModuleEnabled = false

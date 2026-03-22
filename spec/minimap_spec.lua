@@ -262,3 +262,232 @@ describe("Minimap config guard", function()
         end)
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- Restore 對稱性（需要完整 MinimapCluster mock）
+--------------------------------------------------------------------------------
+
+describe("Minimap restore symmetry", function()
+    -- 用 stateful mock 追蹤 Init 時的 mutation 和 Cleanup 後的 restore
+    local statefulMinimap, statefulCluster, statefulBackdrop, statefulZoomIn, statefulZoomOut
+
+    -- 建立追蹤狀態的 mock
+    local function StatefulFrame(name)
+        local f = setmetatable({}, { __index = MockFrame })
+        f._name = name
+        f._alpha = 1
+        f._visible = true
+        f._parent = nil
+        f._mouseEnabled = true
+        f._maskTexture = nil
+        f._mouseWheelEnabled = false
+        f._children = {}
+        f._regions = {}
+        function f:GetName()
+            return self._name
+        end
+        function f:SetAlpha(a)
+            self._alpha = a
+        end
+        function f:GetAlpha()
+            return self._alpha
+        end
+        function f:Show()
+            self._visible = true
+        end
+        function f:Hide()
+            self._visible = false
+        end
+        function f:IsShown()
+            return self._visible
+        end
+        function f:SetParent(p)
+            self._parent = p
+        end
+        function f:GetParent()
+            return self._parent
+        end
+        function f:EnableMouse(v)
+            self._mouseEnabled = v
+        end
+        function f:EnableMouseWheel(v)
+            self._mouseWheelEnabled = v
+        end
+        function f:SetMaskTexture(t)
+            self._maskTexture = t
+        end
+        function f:GetMaskTexture()
+            return self._maskTexture
+        end
+        function f:IsMouseWheelEnabled()
+            return self._mouseWheelEnabled
+        end
+        function f:IsMouseEnabled()
+            return self._mouseEnabled
+        end
+        function f:GetTexture()
+            return self._maskTexture -- reuse for HybridMinimap CircleMask
+        end
+        function f:GetChildren()
+            return unpack(self._children)
+        end
+        function f:GetRegions()
+            return unpack(self._regions)
+        end
+        return f
+    end
+
+    before_each(function()
+        -- 建立 stateful mocks
+        statefulMinimap = StatefulFrame("Minimap")
+        statefulCluster = StatefulFrame("MinimapCluster")
+        statefulBackdrop = StatefulFrame("MinimapBackdrop")
+        statefulZoomIn = StatefulFrame("MinimapZoomIn")
+        statefulZoomOut = StatefulFrame("MinimapZoomOut")
+
+        -- 設定 Blizzard 預設狀態
+        statefulMinimap._parent = statefulCluster
+        statefulMinimap._maskTexture = "Textures\\MinimapMask"
+        statefulCluster._alpha = 1
+        statefulCluster._mouseEnabled = true
+        statefulCluster._visible = true
+        statefulBackdrop._alpha = 1
+        statefulBackdrop._visible = true
+        statefulZoomIn._alpha = 1
+        statefulZoomIn._visible = true
+        statefulZoomOut._alpha = 1
+        statefulZoomOut._visible = true
+
+        -- 注入全域
+        _G.Minimap = statefulMinimap
+        _G.MinimapCluster = statefulCluster
+        _G.MinimapBackdrop = statefulBackdrop
+        _G.MinimapZoomIn = statefulZoomIn
+        _G.MinimapZoomOut = statefulZoomOut
+    end)
+
+    it("CleanupMinimap 還原 Minimap parent 到 MinimapCluster", function()
+        -- Init 會改變 parent 到 minimapFrame
+        LunarUI.InitializeMinimap()
+        -- parent 應該不再是 MinimapCluster
+        assert.is_not.equal(statefulCluster, statefulMinimap._parent)
+
+        -- Cleanup 應還原
+        LunarUI.CleanupMinimap()
+        assert.are.equal(statefulCluster, statefulMinimap._parent)
+    end)
+
+    it("CleanupMinimap 還原 MinimapCluster 可見性", function()
+        LunarUI.InitializeMinimap()
+        -- Init 隱藏 MinimapCluster
+        assert.are.equal(0, statefulCluster._alpha)
+
+        LunarUI.CleanupMinimap()
+        -- Cleanup 應還原
+        assert.are.equal(1, statefulCluster._alpha)
+        assert.is_true(statefulCluster._mouseEnabled)
+        assert.is_true(statefulCluster._visible)
+    end)
+
+    it("CleanupMinimap 還原方形遮罩為圓形", function()
+        LunarUI.InitializeMinimap()
+        -- Init 設定方形遮罩
+        assert.are.equal("Interface\\BUTTONS\\WHITE8X8", statefulMinimap._maskTexture)
+
+        LunarUI.CleanupMinimap()
+        -- Cleanup 應還原圓形遮罩
+        assert.are.equal("Textures\\MinimapMask", statefulMinimap._maskTexture)
+    end)
+
+    it("CleanupMinimap 還原 Minimap.Layout", function()
+        LunarUI.InitializeMinimap()
+        -- Init 覆蓋 Layout 為 no-op
+        assert.is_function(statefulMinimap.Layout)
+
+        LunarUI.CleanupMinimap()
+        -- Cleanup 應移除覆蓋（nil = 讓 Blizzard 接管）
+        assert.is_nil(rawget(statefulMinimap, "Layout"))
+    end)
+
+    it("CleanupMinimap 還原 MinimapBackdrop 和縮放按鈕", function()
+        LunarUI.InitializeMinimap()
+        -- Init 隱藏裝飾
+        assert.are.equal(0, statefulBackdrop._alpha)
+        assert.are.equal(0, statefulZoomIn._alpha)
+        assert.are.equal(0, statefulZoomOut._alpha)
+
+        LunarUI.CleanupMinimap()
+        -- Cleanup 應還原
+        assert.are.equal(1, statefulBackdrop._alpha)
+        assert.is_true(statefulBackdrop._visible)
+        assert.are.equal(1, statefulZoomIn._alpha)
+        assert.is_true(statefulZoomIn._visible)
+        assert.are.equal(1, statefulZoomOut._alpha)
+        assert.is_true(statefulZoomOut._visible)
+    end)
+
+    it("CleanupMinimap 還原 EnableMouseWheel", function()
+        LunarUI.InitializeMinimap()
+        -- Init 啟用滑鼠滾輪
+        assert.is_true(statefulMinimap._mouseWheelEnabled)
+
+        LunarUI.CleanupMinimap()
+        -- Cleanup 應還原（Blizzard 預設關閉）
+        assert.is_false(statefulMinimap._mouseWheelEnabled)
+    end)
+
+    it("Init → Cleanup → Init → Cleanup 多次循環不累積", function()
+        for _ = 1, 3 do
+            LunarUI.InitializeMinimap()
+            assert.are.equal(0, statefulCluster._alpha)
+            assert.are.equal("Interface\\BUTTONS\\WHITE8X8", statefulMinimap._maskTexture)
+
+            LunarUI.CleanupMinimap()
+            assert.are.equal(1, statefulCluster._alpha)
+            assert.are.equal("Textures\\MinimapMask", statefulMinimap._maskTexture)
+            assert.are.equal(statefulCluster, statefulMinimap._parent)
+        end
+    end)
+
+    it("HookScript 不累積：多次 Init/Cleanup 後只安裝一次", function()
+        local hookCount = 0
+        local origHookScript = statefulMinimap.HookScript
+        function statefulMinimap:HookScript(event, _fn)
+            if event == "OnMouseWheel" or event == "OnMouseUp" then
+                hookCount = hookCount + 1
+            end
+            -- 呼叫原始方法（MockFrame 的 no-op）
+            if origHookScript then
+                origHookScript(self, event, _fn)
+            end
+        end
+
+        -- 第一次 Init 應安裝 hook
+        LunarUI.InitializeMinimap()
+        local firstCount = hookCount
+        assert.is_true(firstCount > 0)
+
+        LunarUI.CleanupMinimap()
+
+        -- 第二次 Init 不應再安裝新 hook
+        LunarUI.InitializeMinimap()
+        assert.are.equal(firstCount, hookCount)
+
+        LunarUI.CleanupMinimap()
+
+        -- 第三次 Init 同樣不應累積
+        LunarUI.InitializeMinimap()
+        assert.are.equal(firstCount, hookCount)
+
+        LunarUI.CleanupMinimap()
+    end)
+
+    -- 測試後還原全域（避免影響其他 describe）
+    after_each(function()
+        _G.Minimap = setmetatable({}, { __index = MockFrame })
+        _G.MinimapCluster = nil
+        _G.MinimapBackdrop = setmetatable({}, { __index = MockFrame })
+        _G.MinimapZoomIn = setmetatable({}, { __index = MockFrame })
+        _G.MinimapZoomOut = setmetatable({}, { __index = MockFrame })
+    end)
+end)
