@@ -614,7 +614,12 @@ local function Nameplate_OnShow(frame)
         frame.Backdrop:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
         frame.Backdrop:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
         -- 重設邊框為預設色（分類高亮會在下方覆蓋）
-        frame.Backdrop:SetBackdropBorderColor(C.borderSubtle[1], C.borderSubtle[2], C.borderSubtle[3], C.borderSubtle[4])
+        frame.Backdrop:SetBackdropBorderColor(
+            C.borderSubtle[1],
+            C.borderSubtle[2],
+            C.borderSubtle[3],
+            C.borderSubtle[4]
+        )
     end
 
     -- Performance: 標記堆疊偵測需要重新計算
