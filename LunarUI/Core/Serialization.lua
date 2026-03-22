@@ -514,15 +514,9 @@ function LunarUI:ShowExportFrame()
         title:SetText("|cff8882ffLunarUI|r " .. (L["ExportTitle"] or "匯出設定"))
 
         -- 關閉按鈕
-        local closeBtn = CreateFrame("Button", nil, frame)
-        closeBtn:SetSize(20, 20)
-        closeBtn:SetPoint("TOPRIGHT", -4, -4)
-        closeBtn:SetNormalFontObject(GameFontNormal)
-        closeBtn:SetText("×")
-        LunarUI.SetFont(closeBtn:GetFontString(), 16, "OUTLINE")
-        closeBtn:SetScript("OnClick", function()
-            frame:Hide()
-        end)
+        local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+        closeBtn:SetPoint("TOPRIGHT", 2, 2)
+        LunarUI.SkinCloseButton(closeBtn)
 
         -- 捲動框架
         local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
@@ -558,6 +552,7 @@ end
     顯示匯入視窗
 ]]
 function LunarUI:ShowImportFrame()
+    local L = Engine.L or {}
     -- 建立或顯示匯入視窗
     if not self.importFrame then
         local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
@@ -575,18 +570,12 @@ function LunarUI:ShowImportFrame()
         local title = frame:CreateFontString(nil, "OVERLAY")
         LunarUI.SetFont(title, 14, "OUTLINE")
         title:SetPoint("TOP", 0, -10)
-        title:SetText("|cff8882ffLunarUI|r 匯入設定")
+        title:SetText("|cff8882ffLunarUI|r " .. (L["ImportTitle"] or "Import Settings"))
 
         -- 關閉按鈕
-        local closeBtn = CreateFrame("Button", nil, frame)
-        closeBtn:SetSize(20, 20)
-        closeBtn:SetPoint("TOPRIGHT", -4, -4)
-        closeBtn:SetNormalFontObject(GameFontNormal)
-        closeBtn:SetText("×")
-        LunarUI.SetFont(closeBtn:GetFontString(), 16, "OUTLINE")
-        closeBtn:SetScript("OnClick", function()
-            frame:Hide()
-        end)
+        local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+        closeBtn:SetPoint("TOPRIGHT", 2, 2)
+        LunarUI.SkinCloseButton(closeBtn)
 
         -- 捲動框架
         local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
@@ -603,21 +592,11 @@ function LunarUI:ShowImportFrame()
         frame.editBox = editBox
 
         -- 匯入按鈕
-        local importBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
+        local importBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
         importBtn:SetSize(100, 25)
         importBtn:SetPoint("BOTTOM", 0, 10)
-        importBtn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        importBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-        importBtn:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
-
-        local btnText = importBtn:CreateFontString(nil, "OVERLAY")
-        LunarUI.SetFont(btnText, 12, "OUTLINE")
-        btnText:SetPoint("CENTER")
-        btnText:SetText("匯入")
+        importBtn:SetText(L["ImportButton"] or "匯入")
+        LunarUI.SkinButton(importBtn)
 
         importBtn:SetScript("OnClick", function()
             local importString = frame.editBox:GetText()
@@ -630,18 +609,11 @@ function LunarUI:ShowImportFrame()
             end
         end)
 
-        importBtn:SetScript("OnEnter", function(btn)
-            btn:SetBackdropColor(0.3, 0.5, 0.3, 1)
-        end)
-        importBtn:SetScript("OnLeave", function(btn)
-            btn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-        end)
-
         -- 說明
         local instructions = frame:CreateFontString(nil, "OVERLAY")
         LunarUI.SetFont(instructions, 10, "")
         instructions:SetPoint("BOTTOM", 0, 40)
-        instructions:SetText("貼上匯出字串，然後點擊匯入")
+        instructions:SetText(L["ImportInstructions"] or "Paste export string, then click Import")
         instructions:SetTextColor(C.textDim[1], C.textDim[2], C.textDim[3])
 
         self.importFrame = frame

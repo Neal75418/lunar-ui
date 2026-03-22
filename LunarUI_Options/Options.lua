@@ -55,10 +55,24 @@ local L = {
     nameplates = "Nameplates",
     nameplatesDesc = "Nameplate settings",
     enemy = "Enemy",
+    enemyNameplates = "Enemy Nameplates",
     friendly = "Friendly",
+    friendlyNameplates = "Friendly Nameplates",
     showHealth = "Show Health",
     showCastbar = "Show Castbar",
     showAuras = "Show Auras",
+
+    -- HUD
+    hud = "HUD",
+    hudDesc = "Head-Up Display settings",
+
+    -- Aura Filtering
+    auraFiltering = "Aura Filtering",
+    auraFilteringDesc = "Control which buffs/debuffs are shown on unit frames.\n",
+    auraWhitelist = "Whitelist (Always Show)",
+    auraWhitelistDesc = "Spell IDs that should always be displayed, bypassing all filters",
+    auraBlacklist = "Blacklist (Always Hide)",
+    auraBlacklistDesc = "Spell IDs that should never be displayed",
 
     -- Minimap
     minimap = "Minimap",
@@ -66,12 +80,63 @@ local L = {
     showCoords = "Show Coordinates",
     showClock = "Show Clock",
     organizeButtons = "Organize Buttons",
+    layout = "Layout",
+    size = "Size",
+    borderColor = "Border Color",
+    pinScale = "Pin Scale",
+    pinScaleDesc = "Scale of minimap pins (quests, herbs, nodes)",
+    display = "Display",
+    clockFormat = "Clock Format",
+    zoneText = "Zone Text",
+    zoneTextDesc = "Show zone text always, on mouseover, or hide",
+    fonts = "Fonts",
+    zoneTextSize = "Zone Text Size",
+    zoneTextOutline = "Zone Text Outline",
+    coordClockTextSize = "Coord / Clock Text Size",
+    behavior = "Behavior",
+    resetZoomTimer = "Reset Zoom Timer",
+    resetZoomTimerDesc = "Auto zoom-out after this many seconds (0 = disabled)",
+    fadeOnMouseLeave = "Fade on Mouse Leave",
+    fadeOnMouseLeaveDesc = "Fade the minimap when the mouse is not over it",
+    fadeAlpha = "Fade Alpha",
+    iconSettings = "Icon Settings",
+    hide = "Hide",
+    anchor = "Anchor",
+    scale = "Scale",
+    xOffset = "X Offset",
+    yOffset = "Y Offset",
 
     -- Bags
     bags = "Bags",
     bagsDesc = "Bag settings",
     autoSellJunk = "Auto Sell Junk",
     showItemLevel = "Show Item Level",
+    slotsPerRow = "Slots Per Row",
+    slotSize = "Slot Size",
+    slotSpacing = "Slot Spacing",
+    backgroundOpacity = "Background Opacity",
+    reverseBagSlots = "Reverse Bag Slots",
+    reverseBagSlotsDesc = "Reverse the order of items in the bag",
+    splitBags = "Split Bags",
+    splitBagsDesc = "Show each bag as a separate section with visual gaps",
+    ilvlThreshold = "Item Level Threshold",
+    ilvlThresholdDesc = "Only show item level for items at or above this level",
+    showBindType = "Show Bind Type",
+    showBindTypeDesc = "Show BoE/BoU text on item slots",
+    showCooldowns = "Show Cooldowns",
+    showCooldownsDesc = "Show cooldown animation on items in bags",
+    newItemGlow = "New Item Glow",
+    newItemGlowDesc = "Show a glow animation on newly acquired items",
+    showQuestItems = "Show Quest Items",
+    showQuestItemsDesc = "Show quest item indicator on bag slots",
+    professionBagColors = "Profession Bag Colors",
+    professionBagColorsDesc = "Color-code profession bag slots",
+    upgradeArrow = "Upgrade Arrow",
+    upgradeArrowDesc = "Show green arrow on items that are an upgrade",
+    clearSearchOnClose = "Clear Search On Close",
+    clearSearchOnCloseDesc = "Automatically clear the search box when closing bags",
+    resetPosition = "Reset Position",
+    resetPositionDesc = "Reset bag and bank frame positions to default",
 
     -- Chat
     chat = "Chat",
@@ -90,8 +155,35 @@ local L = {
     -- Tooltip
     tooltip = "Tooltip",
     tooltipDesc = "Tooltip settings",
+    anchorToCursor = "Anchor to Cursor",
     showSpellID = "Show Spell ID",
+    showItemID = "Show Item ID",
     showTargetTarget = "Show Target of Target",
+
+    -- Automation
+    automation = "Automation",
+    automationDesc = "Quality of life automation features",
+    automationHeader = "Convenience features that automate common tasks.\n\n",
+    autoRepair = "Auto Repair",
+    autoRepairDesc = "Automatically repair equipment when visiting a vendor",
+    useGuildFunds = "Use Guild Funds",
+    useGuildFundsDesc = "Prefer guild bank for repair costs when available",
+    autoRelease = "Auto Release Spirit (BG)",
+    autoReleaseDesc = "Automatically release spirit when dying in battlegrounds",
+    achievementScreenshot = "Achievement Screenshot",
+    achievementScreenshotDesc = "Automatically take a screenshot when earning an achievement",
+
+    -- ActionBars (extended)
+    petBar = "Pet Bar",
+    stanceBar = "Stance Bar",
+
+    -- Specialization
+    specAutoSwitch = "Specialization Auto-Switch",
+    specAutoSwitchDesc = "Automatically switch profiles when changing specialization.\n\n",
+    specProfile = "Profile to use for this specialization",
+
+    -- Debug
+    debugMode = "Debug Mode",
 
     -- Style
     style = "Visual Style",
@@ -226,7 +318,7 @@ local options = {
                 debug = {
                     order = 2,
                     type = "toggle",
-                    name = "Debug Mode",
+                    name = L.debugMode,
                     desc = L["DebugModeDesc"] or "Show debug overlay with FPS and memory info",
                     get = function()
                         return GetDB().debug
@@ -464,7 +556,7 @@ local options = {
                 enemyHeader = {
                     order = 11,
                     type = "header",
-                    name = "Enemy Nameplates",
+                    name = L.enemyNameplates,
                 },
                 enemyEnabled = {
                     order = 12,
@@ -532,7 +624,7 @@ local options = {
                 friendlyHeader = {
                     order = 21,
                     type = "header",
-                    name = "Friendly Nameplates",
+                    name = L.friendlyNameplates,
                 },
                 friendlyEnabled = {
                     order = 22,
@@ -579,8 +671,8 @@ local options = {
         hud = {
             order = 5.5,
             type = "group",
-            name = "HUD",
-            desc = "Head-Up Display settings",
+            name = L.hud,
+            desc = L.hudDesc,
             childGroups = "tab",
             args = {
                 -- 總覽分頁
@@ -871,20 +963,18 @@ local options = {
                 auraFiltering = {
                     order = 2.5,
                     type = "group",
-                    name = "Aura Filtering",
+                    name = L.auraFiltering,
                     args = {
                         desc = {
                             order = 0,
                             type = "description",
-                            name = "Control which buffs/debuffs are shown on unit frames.\n"
-                                .. "Enter spell IDs separated by commas (e.g. 1459, 21562, 6673).\n"
-                                .. "You can find spell IDs by holding Shift and hovering over a spell in the tooltip.\n\n",
+                            name = L.auraFilteringDesc,
                         },
                         whitelist = {
                             order = 1,
                             type = "input",
-                            name = "Whitelist (Always Show)",
-                            desc = "Spell IDs that should always be displayed, bypassing all filters",
+                            name = L.auraWhitelist,
+                            desc = L.auraWhitelistDesc,
                             multiline = 3,
                             width = "full",
                             get = function()
@@ -901,8 +991,8 @@ local options = {
                         blacklist = {
                             order = 2,
                             type = "input",
-                            name = "Blacklist (Always Hide)",
-                            desc = "Spell IDs that should never be displayed",
+                            name = L.auraBlacklist,
+                            desc = L.auraBlacklistDesc,
                             multiline = 3,
                             width = "full",
                             get = function()
@@ -1086,12 +1176,12 @@ local options = {
                 layoutHeader = {
                     order = 10,
                     type = "header",
-                    name = "Layout",
+                    name = L.layout,
                 },
                 size = {
                     order = 11,
                     type = "range",
-                    name = "Size",
+                    name = L.size,
                     min = 120,
                     max = 250,
                     step = 5,
@@ -1108,7 +1198,7 @@ local options = {
                 borderColor = {
                     order = 12,
                     type = "color",
-                    name = "Border Color",
+                    name = L.borderColor,
                     hasAlpha = true,
                     get = function()
                         local c = GetDB().minimap.borderColor
@@ -1125,8 +1215,8 @@ local options = {
                 pinScale = {
                     order = 13,
                     type = "range",
-                    name = "Pin Scale",
-                    desc = "Scale of minimap pins (quests, herbs, nodes)",
+                    name = L.pinScale,
+                    desc = L.pinScaleDesc,
                     min = 0.5,
                     max = 2.0,
                     step = 0.1,
@@ -1145,7 +1235,7 @@ local options = {
                 displayHeader = {
                     order = 20,
                     type = "header",
-                    name = "Display",
+                    name = L.display,
                 },
                 showCoords = {
                     order = 21,
@@ -1178,7 +1268,7 @@ local options = {
                 clockFormat = {
                     order = 23,
                     type = "select",
-                    name = "Clock Format",
+                    name = L.clockFormat,
                     values = { ["24h"] = "24-Hour", ["12h"] = "12-Hour" },
                     get = function()
                         return GetDB().minimap.clockFormat
@@ -1193,8 +1283,8 @@ local options = {
                 zoneTextDisplay = {
                     order = 24,
                     type = "select",
-                    name = "Zone Text",
-                    desc = "Show zone text always, on mouseover, or hide",
+                    name = L.zoneText,
+                    desc = L.zoneTextDesc,
                     values = {
                         ["SHOW"] = "Always Show",
                         ["MOUSEOVER"] = "Show on Mouseover",
@@ -1229,12 +1319,12 @@ local options = {
                 fontHeader = {
                     order = 30,
                     type = "header",
-                    name = "Fonts",
+                    name = L.fonts,
                 },
                 zoneFontSize = {
                     order = 31,
                     type = "range",
-                    name = "Zone Text Size",
+                    name = L.zoneTextSize,
                     min = 8,
                     max = 24,
                     step = 1,
@@ -1251,7 +1341,7 @@ local options = {
                 zoneFontOutline = {
                     order = 32,
                     type = "select",
-                    name = "Zone Text Outline",
+                    name = L.zoneTextOutline,
                     values = {
                         ["NONE"] = "None",
                         ["OUTLINE"] = "Outline",
@@ -1271,7 +1361,7 @@ local options = {
                 coordFontSize = {
                     order = 33,
                     type = "range",
-                    name = "Coord / Clock Text Size",
+                    name = L.coordClockTextSize,
                     min = 8,
                     max = 18,
                     step = 1,
@@ -1290,13 +1380,13 @@ local options = {
                 behaviorHeader = {
                     order = 40,
                     type = "header",
-                    name = "Behavior",
+                    name = L.behavior,
                 },
                 resetZoomTimer = {
                     order = 41,
                     type = "range",
-                    name = "Reset Zoom Timer",
-                    desc = "Auto zoom-out after this many seconds (0 = disabled)",
+                    name = L.resetZoomTimer,
+                    desc = L.resetZoomTimerDesc,
                     min = 0,
                     max = 15,
                     step = 1,
@@ -1310,8 +1400,8 @@ local options = {
                 fadeOnMouseLeave = {
                     order = 42,
                     type = "toggle",
-                    name = "Fade on Mouse Leave",
-                    desc = "Fade the minimap when the mouse is not over it",
+                    name = L.fadeOnMouseLeave,
+                    desc = L.fadeOnMouseLeaveDesc,
                     get = function()
                         return GetDB().minimap.fadeOnMouseLeave
                     end,
@@ -1325,7 +1415,7 @@ local options = {
                 fadeAlpha = {
                     order = 43,
                     type = "range",
-                    name = "Fade Alpha",
+                    name = L.fadeAlpha,
                     min = 0.1,
                     max = 0.9,
                     step = 0.05,
@@ -1348,7 +1438,7 @@ local options = {
                 iconsGroup = {
                     order = 50,
                     type = "group",
-                    name = "Icon Settings",
+                    name = L.iconSettings,
                     inline = true,
                     args = (function()
                         local ICON_NAMES = {
@@ -1385,7 +1475,7 @@ local options = {
                             args[iconKey .. "Hide"] = {
                                 order = o + 1,
                                 type = "toggle",
-                                name = "Hide",
+                                name = L.hide,
                                 width = "half",
                                 get = function()
                                     return GetDB().minimap.icons[iconKey].hide
@@ -1400,7 +1490,7 @@ local options = {
                             args[iconKey .. "Position"] = {
                                 order = o + 2,
                                 type = "select",
-                                name = "Anchor",
+                                name = L.anchor,
                                 values = POSITION_VALUES,
                                 disabled = function()
                                     return GetDB().minimap.icons[iconKey].hide
@@ -1418,7 +1508,7 @@ local options = {
                             args[iconKey .. "Scale"] = {
                                 order = o + 3,
                                 type = "range",
-                                name = "Scale",
+                                name = L.scale,
                                 min = 0.5,
                                 max = 2.0,
                                 step = 0.1,
@@ -1438,7 +1528,7 @@ local options = {
                             args[iconKey .. "XOffset"] = {
                                 order = o + 4,
                                 type = "range",
-                                name = "X Offset",
+                                name = L.xOffset,
                                 min = -50,
                                 max = 50,
                                 step = 1,
@@ -1458,7 +1548,7 @@ local options = {
                             args[iconKey .. "YOffset"] = {
                                 order = o + 5,
                                 type = "range",
-                                name = "Y Offset",
+                                name = L.yOffset,
                                 min = -50,
                                 max = 50,
                                 step = 1,
@@ -1504,12 +1594,12 @@ local options = {
                 layoutHeader = {
                     order = 2,
                     type = "header",
-                    name = "Layout",
+                    name = L.layout,
                 },
                 slotsPerRow = {
                     order = 3,
                     type = "range",
-                    name = "Slots Per Row",
+                    name = L.slotsPerRow,
                     min = 8,
                     max = 16,
                     step = 1,
@@ -1526,7 +1616,7 @@ local options = {
                 slotSize = {
                     order = 4,
                     type = "range",
-                    name = "Slot Size",
+                    name = L.slotSize,
                     min = 28,
                     max = 48,
                     step = 1,
@@ -1543,7 +1633,7 @@ local options = {
                 slotSpacing = {
                     order = 5,
                     type = "range",
-                    name = "Slot Spacing",
+                    name = L.slotSpacing,
                     min = 0,
                     max = 8,
                     step = 1,
@@ -1560,7 +1650,7 @@ local options = {
                 frameAlpha = {
                     order = 6,
                     type = "range",
-                    name = "Background Opacity",
+                    name = L.backgroundOpacity,
                     min = 0.3,
                     max = 1.0,
                     step = 0.05,
@@ -1578,8 +1668,8 @@ local options = {
                 reverseBagSlots = {
                     order = 7,
                     type = "toggle",
-                    name = "Reverse Bag Slots",
-                    desc = "Reverse the order of items in the bag",
+                    name = L.reverseBagSlots,
+                    desc = L.reverseBagSlotsDesc,
                     get = function()
                         return GetDB().bags.reverseBagSlots
                     end,
@@ -1593,8 +1683,8 @@ local options = {
                 splitBags = {
                     order = 8,
                     type = "toggle",
-                    name = "Split Bags",
-                    desc = "Show each bag as a separate section with visual gaps",
+                    name = L.splitBags,
+                    desc = L.splitBagsDesc,
                     get = function()
                         return GetDB().bags.splitBags
                     end,
@@ -1608,7 +1698,7 @@ local options = {
                 displayHeader = {
                     order = 10,
                     type = "header",
-                    name = "Display",
+                    name = L.display,
                 },
                 showItemLevel = {
                     order = 11,
@@ -1624,8 +1714,8 @@ local options = {
                 ilvlThreshold = {
                     order = 12,
                     type = "range",
-                    name = "Item Level Threshold",
-                    desc = "Only show item level for items at or above this level",
+                    name = L.ilvlThreshold,
+                    desc = L.ilvlThresholdDesc,
                     min = 1,
                     max = 600,
                     step = 1,
@@ -1639,8 +1729,8 @@ local options = {
                 showBindType = {
                     order = 13,
                     type = "toggle",
-                    name = "Show Bind Type",
-                    desc = "Show BoE/BoU text on item slots",
+                    name = L.showBindType,
+                    desc = L.showBindTypeDesc,
                     get = function()
                         return GetDB().bags.showBindType
                     end,
@@ -1651,8 +1741,8 @@ local options = {
                 showCooldown = {
                     order = 14,
                     type = "toggle",
-                    name = "Show Cooldowns",
-                    desc = "Show cooldown animation on items in bags",
+                    name = L.showCooldowns,
+                    desc = L.showCooldownsDesc,
                     get = function()
                         return GetDB().bags.showCooldown
                     end,
@@ -1663,8 +1753,8 @@ local options = {
                 showNewGlow = {
                     order = 15,
                     type = "toggle",
-                    name = "New Item Glow",
-                    desc = "Show a glow animation on newly acquired items",
+                    name = L.newItemGlow,
+                    desc = L.newItemGlowDesc,
                     get = function()
                         return GetDB().bags.showNewGlow
                     end,
@@ -1675,8 +1765,8 @@ local options = {
                 showQuestItems = {
                     order = 16,
                     type = "toggle",
-                    name = "Show Quest Items",
-                    desc = "Show quest item indicator on bag slots",
+                    name = L.showQuestItems,
+                    desc = L.showQuestItemsDesc,
                     get = function()
                         return GetDB().bags.showQuestItems
                     end,
@@ -1687,8 +1777,8 @@ local options = {
                 showProfessionColors = {
                     order = 17,
                     type = "toggle",
-                    name = "Profession Bag Colors",
-                    desc = "Color-code profession bag slots",
+                    name = L.professionBagColors,
+                    desc = L.professionBagColorsDesc,
                     get = function()
                         return GetDB().bags.showProfessionColors
                     end,
@@ -1699,8 +1789,8 @@ local options = {
                 showUpgradeArrow = {
                     order = 18,
                     type = "toggle",
-                    name = "Upgrade Arrow",
-                    desc = "Show green arrow on items that are an upgrade",
+                    name = L.upgradeArrow,
+                    desc = L.upgradeArrowDesc,
                     get = function()
                         return GetDB().bags.showUpgradeArrow
                     end,
@@ -1711,7 +1801,7 @@ local options = {
                 behaviorHeader = {
                     order = 20,
                     type = "header",
-                    name = "Behavior",
+                    name = L.behavior,
                 },
                 autoSellJunk = {
                     order = 21,
@@ -1727,8 +1817,8 @@ local options = {
                 clearSearchOnClose = {
                     order = 22,
                     type = "toggle",
-                    name = "Clear Search On Close",
-                    desc = "Automatically clear the search box when closing bags",
+                    name = L.clearSearchOnClose,
+                    desc = L.clearSearchOnCloseDesc,
                     get = function()
                         return GetDB().bags.clearSearchOnClose
                     end,
@@ -1739,8 +1829,8 @@ local options = {
                 resetPosition = {
                     order = 30,
                     type = "execute",
-                    name = "Reset Position",
-                    desc = "Reset bag and bank frame positions to default",
+                    name = L.resetPosition,
+                    desc = L.resetPositionDesc,
                     func = function()
                         local bagDb = GetDB().bags
                         bagDb.bagPosition = nil
@@ -1776,6 +1866,7 @@ local options = {
                     order = 2,
                     type = "range",
                     name = L.width,
+                    hidden = true, -- 尚未接到聊天框實際佈局
                     min = 200,
                     max = 600,
                     step = 10,
@@ -1790,6 +1881,7 @@ local options = {
                     order = 3,
                     type = "range",
                     name = L.height,
+                    hidden = true, -- 尚未接到聊天框實際佈局
                     min = 100,
                     max = 400,
                     step = 10,
@@ -1928,7 +2020,7 @@ local options = {
                 anchorCursor = {
                     order = 2,
                     type = "toggle",
-                    name = "Anchor to Cursor",
+                    name = L.anchorToCursor,
                     get = function()
                         return GetDB().tooltip.anchorCursor
                     end,
@@ -1961,7 +2053,7 @@ local options = {
                 showItemID = {
                     order = 5,
                     type = "toggle",
-                    name = "Show Item ID",
+                    name = L.showItemID,
                     get = function()
                         return GetDB().tooltip.showItemID
                     end,
@@ -2198,19 +2290,19 @@ local options = {
         automation = {
             order = 10.5,
             type = "group",
-            name = "Automation",
-            desc = "Quality of life automation features",
+            name = L.automation,
+            desc = L.automationDesc,
             args = {
                 desc = {
                     order = 0,
                     type = "description",
-                    name = "Convenience features that automate common tasks.\n\n",
+                    name = L.automationHeader,
                 },
                 autoRepair = {
                     order = 1,
                     type = "toggle",
-                    name = "Auto Repair",
-                    desc = "Automatically repair equipment when visiting a vendor",
+                    name = L.autoRepair,
+                    desc = L.autoRepairDesc,
                     get = function()
                         return GetDB().automation.autoRepair
                     end,
@@ -2222,8 +2314,8 @@ local options = {
                 useGuildRepair = {
                     order = 2,
                     type = "toggle",
-                    name = "Use Guild Funds",
-                    desc = "Prefer guild bank for repair costs when available",
+                    name = L.useGuildFunds,
+                    desc = L.useGuildFundsDesc,
                     disabled = function()
                         return not GetDB().automation.autoRepair
                     end,
@@ -2239,8 +2331,8 @@ local options = {
                 autoRelease = {
                     order = 6,
                     type = "toggle",
-                    name = "Auto Release Spirit (BG)",
-                    desc = "Automatically release spirit when dying in battlegrounds",
+                    name = L.autoRelease,
+                    desc = L.autoReleaseDesc,
                     get = function()
                         return GetDB().automation.autoRelease
                     end,
@@ -2253,8 +2345,8 @@ local options = {
                 autoScreenshot = {
                     order = 11,
                     type = "toggle",
-                    name = "Achievement Screenshot",
-                    desc = "Automatically take a screenshot when earning an achievement",
+                    name = L.achievementScreenshot,
+                    desc = L.achievementScreenshotDesc,
                     get = function()
                         return GetDB().automation.autoScreenshot
                     end,
@@ -2576,7 +2668,7 @@ end
 options.args.actionbars.args.petbar = {
     order = 10,
     type = "group",
-    name = "Pet Bar",
+    name = L.petBar,
     args = {
         enabled = {
             order = 1,
@@ -2597,7 +2689,7 @@ options.args.actionbars.args.petbar = {
 options.args.actionbars.args.stancebar = {
     order = 11,
     type = "group",
-    name = "Stance Bar",
+    name = L.stanceBar,
     args = {
         enabled = {
             order = 1,
@@ -2928,12 +3020,12 @@ local function RegisterOptions()
         profileOptions.args.specHeader = {
             order = 100,
             type = "header",
-            name = "Specialization Auto-Switch",
+            name = L.specAutoSwitch,
         }
         profileOptions.args.specDesc = {
             order = 101,
             type = "description",
-            name = "Automatically switch profiles when changing specialization.\n\n",
+            name = L.specAutoSwitchDesc,
         }
         local numSpecs = GetNumSpecializations and GetNumSpecializations(false) or 0
         for i = 1, numSpecs do
@@ -2942,7 +3034,7 @@ local function RegisterOptions()
                 order = 101 + i,
                 type = "select",
                 name = (specName or ("Spec " .. i)),
-                desc = "Profile to use for this specialization",
+                desc = L.specProfile,
                 values = function()
                     local t = { [""] = "(None)" }
                     for _, p in ipairs(LunarUI.db:GetProfiles()) do

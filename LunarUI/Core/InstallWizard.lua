@@ -7,6 +7,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local L = Engine.L or {}
+local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
 -- 常數
@@ -71,25 +72,19 @@ local wizardChoices = {
 local function CreateWizardButton(parent, text, width)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetSize(width or BUTTON_WIDTH, BUTTON_HEIGHT)
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    btn:SetBackdropColor(0.15, 0.13, 0.25, 1)
-    btn:SetBackdropBorderColor(0.40, 0.35, 0.60, 1)
+    LunarUI.ApplyBackdrop(btn, nil, C.bg, C.border)
 
     btn.text = btn:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(btn.text, 12, "OUTLINE")
     btn.text:SetPoint("CENTER")
     btn.text:SetText(text)
-    btn.text:SetTextColor(0.85, 0.85, 1.0)
+    btn.text:SetTextColor(1, 1, 1)
 
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.25, 0.22, 0.40, 1)
+        self:SetBackdropColor(C.bgButtonHover[1], C.bgButtonHover[2], C.bgButtonHover[3], C.bgButtonHover[4])
     end)
     btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.15, 0.13, 0.25, 1)
+        self:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
     end)
 
     return btn
@@ -115,19 +110,19 @@ local function CreateLayoutButton(parent, key, preset, x, y)
     btn.desc:SetPoint("TOP", btn.label, "BOTTOM", 0, -6)
     btn.desc:SetWidth(125)
     btn.desc:SetText(preset.desc)
-    btn.desc:SetTextColor(0.7, 0.7, 0.7)
+    btn.desc:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
 
     btn.layoutKey = key
 
     local function UpdateAppearance()
         if wizardChoices.layout == key then
-            btn:SetBackdropColor(0.30, 0.25, 0.55, 1)
-            btn:SetBackdropBorderColor(0.53, 0.51, 1.0, 1)
-            btn.label:SetTextColor(0.85, 0.85, 1.0)
+            btn:SetBackdropColor(C.borderGold[1], C.borderGold[2], C.borderGold[3], 0.3)
+            btn:SetBackdropBorderColor(C.borderGold[1], C.borderGold[2], C.borderGold[3], 1)
+            btn.label:SetTextColor(1, 1, 1)
         else
-            btn:SetBackdropColor(0.10, 0.10, 0.15, 1)
-            btn:SetBackdropBorderColor(0.25, 0.22, 0.35, 1)
-            btn.label:SetTextColor(0.6, 0.6, 0.7)
+            btn:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
+            btn:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
+            btn.label:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
         end
     end
 
@@ -174,14 +169,14 @@ local function BuildStep1(parent)
         L["InstallWelcomeBody"]
             or "Welcome to |cff8882ffLunar|r|cffffffffUI|r!\n\nThis wizard will help you configure the essential settings. You can always change these later via |cff8882ff/lunar config|r.\n"
     )
-    welcome:SetTextColor(0.85, 0.85, 0.90)
+    welcome:SetTextColor(C.textPrimary[1], C.textPrimary[2], C.textPrimary[3])
 
     -- UI Scale 滑桿
     local scaleLabel = f:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(scaleLabel, 12, "OUTLINE")
     scaleLabel:SetPoint("TOPLEFT", welcome, "BOTTOMLEFT", 0, -20)
     scaleLabel:SetText(L["InstallUIScale"] or "UI Scale")
-    scaleLabel:SetTextColor(0.80, 0.78, 1.0)
+    scaleLabel:SetTextColor(C.moonSilver[1], C.moonSilver[2], C.moonSilver[3])
 
     local scaleValue = f:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(scaleValue, 12, "OUTLINE")
@@ -201,12 +196,12 @@ local function BuildStep1(parent)
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    slider:SetBackdropColor(0.08, 0.08, 0.12, 1)
-    slider:SetBackdropBorderColor(0.25, 0.22, 0.35, 1)
+    slider:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
+    slider:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
 
     local thumb = slider:CreateTexture(nil, "ARTWORK")
     thumb:SetSize(14, 14)
-    thumb:SetColorTexture(0.53, 0.51, 1.0, 1)
+    thumb:SetColorTexture(C.accentPurple[1], C.accentPurple[2], C.accentPurple[3], C.accentPurple[4])
     slider:SetThumbTexture(thumb)
 
     -- 讀取當前 UI 縮放，並過濾非法值（NaN、Infinity、非數字型別）
@@ -231,13 +226,13 @@ local function BuildStep1(parent)
     LunarUI.SetFont(minLabel, 9, "")
     minLabel:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -2)
     minLabel:SetText("0.50")
-    minLabel:SetTextColor(0.5, 0.5, 0.5)
+    minLabel:SetTextColor(C.textDim[1], C.textDim[2], C.textDim[3])
 
     local maxLabel = f:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(maxLabel, 9, "")
     maxLabel:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -2)
     maxLabel:SetText("1.10")
-    maxLabel:SetTextColor(0.5, 0.5, 0.5)
+    maxLabel:SetTextColor(C.textDim[1], C.textDim[2], C.textDim[3])
 
     -- 提示
     local hint = f:CreateFontString(nil, "OVERLAY")
@@ -266,7 +261,7 @@ local function BuildStep2(parent)
         L["InstallLayoutTitle"]
             or "Choose your primary role. This adjusts the size and layout of raid/party frames to match your playstyle.\n"
     )
-    title:SetTextColor(0.85, 0.85, 0.90)
+    title:SetTextColor(C.textPrimary[1], C.textPrimary[2], C.textPrimary[3])
 
     f.layoutButtons = {}
     local presets = GetLayoutPresets()
@@ -297,7 +292,7 @@ local function BuildStep3(parent)
     title:SetText(
         L["InstallActionBarTitle"] or "Action Bar Options\n\nConfigure how your action bars behave outside of combat.\n"
     )
-    title:SetTextColor(0.85, 0.85, 0.90)
+    title:SetTextColor(C.textPrimary[1], C.textPrimary[2], C.textPrimary[3])
 
     -- 淡出開關
     local fadeCheck = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
@@ -311,7 +306,7 @@ local function BuildStep3(parent)
     LunarUI.SetFont(fadeLabel, 12, "")
     fadeLabel:SetPoint("LEFT", fadeCheck, "RIGHT", 4, 0)
     fadeLabel:SetText(L["InstallActionBarFade"] or "Fade action bars when out of combat")
-    fadeLabel:SetTextColor(0.85, 0.85, 0.90)
+    fadeLabel:SetTextColor(C.textPrimary[1], C.textPrimary[2], C.textPrimary[3])
 
     -- 描述
     local fadeDesc = f:CreateFontString(nil, "OVERLAY")
@@ -341,7 +336,7 @@ local function BuildStep4(parent)
     summary:SetPoint("TOP", title, "BOTTOM", 0, -20)
     summary:SetWidth(WIZARD_WIDTH - 80)
     summary:SetJustifyH("CENTER")
-    summary:SetTextColor(0.85, 0.85, 0.90)
+    summary:SetTextColor(C.textPrimary[1], C.textPrimary[2], C.textPrimary[3])
 
     f.summary = summary
 
@@ -452,11 +447,11 @@ local function UpdateStepDisplay()
     for i = 1, TOTAL_STEPS do
         if wizardFrame.dots and wizardFrame.dots[i] then
             if i == currentStep then
-                wizardFrame.dots[i]:SetColorTexture(0.53, 0.51, 1.0, 1)
+                wizardFrame.dots[i]:SetColorTexture(C.accentPurple[1], C.accentPurple[2], C.accentPurple[3], 1)
             elseif i < currentStep then
-                wizardFrame.dots[i]:SetColorTexture(0.35, 0.33, 0.65, 1)
+                wizardFrame.dots[i]:SetColorTexture(C.borderGold[1], C.borderGold[2], C.borderGold[3], 1)
             else
-                wizardFrame.dots[i]:SetColorTexture(0.20, 0.18, 0.30, 1)
+                wizardFrame.dots[i]:SetColorTexture(C.border[1], C.border[2], C.border[3], 1)
             end
         end
     end
@@ -536,12 +531,12 @@ local function CreateCloseButton(f)
     LunarUI.SetFont(closeBtn.text, 14, "OUTLINE")
     closeBtn.text:SetPoint("CENTER")
     closeBtn.text:SetText("×")
-    closeBtn.text:SetTextColor(0.6, 0.5, 0.5)
+    closeBtn.text:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
     closeBtn:SetScript("OnEnter", function()
         closeBtn.text:SetTextColor(1, 0.4, 0.4)
     end)
     closeBtn:SetScript("OnLeave", function()
-        closeBtn.text:SetTextColor(0.6, 0.5, 0.5)
+        closeBtn.text:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
     end)
     closeBtn:SetScript("OnClick", function()
         f:Hide()
@@ -576,8 +571,8 @@ local function CreateWizardFrame()
         edgeSize = 1,
         insets = { left = 0, right = 0, top = 0, bottom = 0 },
     })
-    f:SetBackdropColor(0.06, 0.06, 0.08, 0.97)
-    f:SetBackdropBorderColor(0.30, 0.25, 0.50, 1)
+    f:SetBackdropColor(C.bgSolid[1], C.bgSolid[2], C.bgSolid[3], C.bgSolid[4])
+    f:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
 
     -- 頂部漸層
     local gradient = f:CreateTexture(nil, "ARTWORK", nil, 1)
@@ -585,7 +580,11 @@ local function CreateWizardFrame()
     gradient:SetPoint("TOPRIGHT", -1, -1)
     gradient:SetHeight(50)
     gradient:SetTexture("Interface\\Buttons\\WHITE8x8")
-    gradient:SetGradient("VERTICAL", CreateColor(0.53, 0.51, 1.0, 0.0), CreateColor(0.53, 0.51, 1.0, 0.08))
+    gradient:SetGradient(
+        "VERTICAL",
+        CreateColor(C.borderGold[1], C.borderGold[2], C.borderGold[3], 0.0),
+        CreateColor(C.borderGold[1], C.borderGold[2], C.borderGold[3], 0.08)
+    )
 
     -- 標題
     local title = f:CreateFontString(nil, "OVERLAY")
@@ -604,7 +603,7 @@ local function CreateWizardFrame()
         local dot = f:CreateTexture(nil, "ARTWORK")
         dot:SetSize(dotSize, dotSize)
         dot:SetPoint("TOP", dotStartX + (i - 1) * (dotSize + dotSpacing), -42)
-        dot:SetColorTexture(0.20, 0.18, 0.30, 1)
+        dot:SetColorTexture(C.border[1], C.border[2], C.border[3], 1)
         f.dots[i] = dot
     end
 
@@ -612,7 +611,7 @@ local function CreateWizardFrame()
     f.stepText = f:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(f.stepText, 10, "")
     f.stepText:SetPoint("TOP", 0, -55)
-    f.stepText:SetTextColor(0.5, 0.5, 0.6)
+    f.stepText:SetTextColor(C.textDim[1], C.textDim[2], C.textDim[3])
 
     -- 建立各步驟內容
     BuildStep1(f)
