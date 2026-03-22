@@ -7,6 +7,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local C = LunarUI.Colors
+local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -62,7 +63,16 @@ local function StyleChatTab(chatFrame)
         tab.glow:SetAlpha(0)
     end
 
-    -- 強化 active/inactive 狀態區分：active 白色較亮，inactive 灰色偏暗
+    -- Active tab 底線指示器
+    if not tab._lunarActiveIndicator then
+        tab._lunarActiveIndicator = tab:CreateTexture(nil, "OVERLAY")
+        tab._lunarActiveIndicator:SetHeight(2)
+        tab._lunarActiveIndicator:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 4, 0)
+        tab._lunarActiveIndicator:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -4, 0)
+        tab._lunarActiveIndicator:SetColorTexture(C.borderGold[1], C.borderGold[2], C.borderGold[3], C.borderGold[4])
+    end
+
+    -- 強化 active/inactive 狀態區分
     local function UpdateTabActiveState()
         if not tabText then
             return
@@ -72,8 +82,14 @@ local function StyleChatTab(chatFrame)
         local tabID = tab:GetID()
         if tabID == selectedTab then
             tabText:SetTextColor(1, 1, 1, 1) -- active：白色
+            if tab._lunarActiveIndicator then
+                tab._lunarActiveIndicator:Show()
+            end
         else
             tabText:SetTextColor(0.6, 0.6, 0.6, 0.8) -- inactive：灰色偏暗
+            if tab._lunarActiveIndicator then
+                tab._lunarActiveIndicator:Hide()
+            end
         end
     end
 
@@ -202,8 +218,27 @@ local function StyleChatFrame(chatFrame)
         end
     end)
 
+    -- 檢查滑鼠是否仍在聊天區域內（含 editbox、tab、resize grip）
+    local function IsMouseOverChatArea(cf)
+        if MouseIsOver(cf) then
+            return true
+        end
+        local editBox = _G[cf:GetName() .. "EditBox"]
+        if editBox and MouseIsOver(editBox) then
+            return true
+        end
+        local cfTab = _G[cf:GetName() .. "Tab"]
+        if cfTab and MouseIsOver(cfTab) then
+            return true
+        end
+        if cf._lunarGrip and MouseIsOver(cf._lunarGrip) then
+            return true
+        end
+        return false
+    end
+
     chatFrame:HookScript("OnLeave", function(self)
-        if self.LunarBackdrop and not MouseIsOver(self) then
+        if self.LunarBackdrop and not IsMouseOverChatArea(self) then
             self.LunarBackdrop._fadeTarget = 0
             startFadeAnimation(self.LunarBackdrop)
         end
@@ -294,11 +329,13 @@ local function StyleChatFrame(chatFrame)
         chatFrame:SetMaxResize(800, 600)
     end
     local grip = CreateFrame("Button", nil, chatFrame)
-    grip:SetSize(16, 16)
+    chatFrame._lunarGrip = grip
+    grip:SetSize(12, 12)
     grip:SetPoint("BOTTOMRIGHT", 0, 0)
-    grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-    grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
-    grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    -- LunarUI 風格：小三角標記取代 Blizzard grabber
+    local gripTex = grip:CreateTexture(nil, "OVERLAY")
+    gripTex:SetAllPoints()
+    gripTex:SetColorTexture(1, 1, 1, 0.15)
     grip:SetScript("OnMouseDown", function()
         chatFrame:StartSizing("BOTTOMRIGHT")
     end)
@@ -308,6 +345,48 @@ local function StyleChatFrame(chatFrame)
             _G.FCF_SavePositionAndDimensions(chatFrame)
         end
     end)
+    grip:SetScript("OnEnter", function()
+        gripTex:SetColorTexture(1, 1, 1, 0.3)
+    end)
+    grip:SetScript("OnLeave", function()
+        gripTex:SetColorTexture(1, 1, 1, 0.15)
+    end)
+
+    -- EditBox / Tab enter/leave 也觸發背景 fade
+    local editBox = _G[name .. "EditBox"]
+    if editBox then
+        editBox:HookScript("OnEnter", function()
+            if chatFrame.LunarBackdrop then
+                chatFrame.LunarBackdrop:Show()
+                chatFrame.LunarBackdrop._fadeTarget = 1
+                chatFrame.LunarBackdrop:SetAlpha(chatFrame.LunarBackdrop:GetAlpha() or 0)
+                startFadeAnimation(chatFrame.LunarBackdrop)
+            end
+        end)
+        editBox:HookScript("OnLeave", function()
+            if chatFrame.LunarBackdrop and not IsMouseOverChatArea(chatFrame) then
+                chatFrame.LunarBackdrop._fadeTarget = 0
+                startFadeAnimation(chatFrame.LunarBackdrop)
+            end
+        end)
+    end
+
+    if tab then
+        tab:HookScript("OnEnter", function()
+            if chatFrame.LunarBackdrop then
+                chatFrame.LunarBackdrop:Show()
+                chatFrame.LunarBackdrop._fadeTarget = 1
+                chatFrame.LunarBackdrop:SetAlpha(chatFrame.LunarBackdrop:GetAlpha() or 0)
+                startFadeAnimation(chatFrame.LunarBackdrop)
+            end
+        end)
+        tab:HookScript("OnLeave", function()
+            if chatFrame.LunarBackdrop and not IsMouseOverChatArea(chatFrame) then
+                chatFrame.LunarBackdrop._fadeTarget = 0
+                startFadeAnimation(chatFrame.LunarBackdrop)
+            end
+        end)
+    end
 
     LunarUI._chatStyledFrames[name] = true
 end
@@ -348,7 +427,7 @@ local function CreateCopyFrame()
     local titleText = titleBar:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(titleText, 12, "OUTLINE")
     titleText:SetPoint("LEFT", 8, 0)
-    titleText:SetText("Copy Chat")
+    titleText:SetText(L["CopyChat"] or "Copy Chat")
     titleText:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
 
     -- 關閉按鈕（使用標準模板確保點擊區域正確）
@@ -419,7 +498,8 @@ local function AddCopyOption()
     -- WoW 12.0：直接掛鉤每個標籤的 OnClick，而非全域 FCFTab_OnClick
     for i = 1, NUM_CHAT_WINDOWS do
         local tab = _G["ChatFrame" .. i .. "Tab"]
-        if tab then
+        if tab and not tab._lunarCopyHooked then
+            tab._lunarCopyHooked = true
             tab:HookScript("OnClick", function(_self, button)
                 if button == "RightButton" then
                     local chatFrame = _G["ChatFrame" .. i]

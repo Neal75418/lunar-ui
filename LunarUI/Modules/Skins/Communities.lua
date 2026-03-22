@@ -6,6 +6,18 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local C = LunarUI.Colors
+
+-- 為子面板建立內嵌 backdrop（區分層次）
+local function AddPanelBackdrop(panel)
+    if not panel or panel._lunarPanelBG or panel._lunarSkinBG then
+        return
+    end
+    panel._lunarPanelBG = CreateFrame("Frame", nil, panel, "BackdropTemplate")
+    panel._lunarPanelBG:SetAllPoints()
+    panel._lunarPanelBG:SetFrameLevel(math.max(panel:GetFrameLevel() - 1, 0))
+    LunarUI.ApplyBackdrop(panel._lunarPanelBG, nil, C.bgIcon, C.borderSubtle)
+end
 
 local function SkinCommunities()
     local frame = LunarUI:SkinStandardFrame("CommunitiesFrame", {
@@ -23,6 +35,7 @@ local function SkinCommunities()
     -- Member list
     if frame.MemberList then
         LunarUI.StripTextures(frame.MemberList)
+        AddPanelBackdrop(frame.MemberList)
         if frame.MemberList.ColumnDisplay then
             LunarUI.StripTextures(frame.MemberList.ColumnDisplay)
         end
@@ -31,6 +44,7 @@ local function SkinCommunities()
     -- Chat area
     if frame.Chat then
         LunarUI.StripTextures(frame.Chat)
+        AddPanelBackdrop(frame.Chat)
         local messageFrame = frame.Chat.MessageFrame
         if messageFrame then
             if messageFrame.ScrollBar then
@@ -72,10 +86,11 @@ local function SkinCommunities()
     -- Community list (left sidebar)
     if frame.CommunitiesList then
         LunarUI.StripTextures(frame.CommunitiesList)
+        AddPanelBackdrop(frame.CommunitiesList)
         if frame.CommunitiesList.InsetFrame then
             LunarUI.StripTextures(frame.CommunitiesList.InsetFrame)
         end
-        -- 左側列表背景統一
+        -- 左側列表裝飾
         if frame.CommunitiesList.FilligreeOverlay then
             frame.CommunitiesList.FilligreeOverlay:Hide()
         end
@@ -87,12 +102,12 @@ local function SkinCommunities()
         end
     end
 
-    -- 主內容區 Inset（減少中間聊天區與左側卡片的對比感）
+    -- 主內容區 Inset
     if frame.InsetFrame then
         LunarUI.StripTextures(frame.InsetFrame)
     end
 
-    -- 右上角功能按鈕區（減少擁擠感）
+    -- 右上角功能按鈕區
     if frame.StreamDropDownMenu then
         LunarUI.StripTextures(frame.StreamDropDownMenu)
     end
@@ -116,11 +131,13 @@ local function SkinCommunities()
     -- Guild benefits frame
     if frame.GuildBenefitsFrame then
         LunarUI.StripTextures(frame.GuildBenefitsFrame)
+        AddPanelBackdrop(frame.GuildBenefitsFrame)
     end
 
     -- Guild info frame
     if frame.GuildDetailsFrame then
         LunarUI.StripTextures(frame.GuildDetailsFrame)
+        AddPanelBackdrop(frame.GuildDetailsFrame)
     end
 
     -- Guild rewards

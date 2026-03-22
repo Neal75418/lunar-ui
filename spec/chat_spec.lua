@@ -108,6 +108,7 @@ local LunarUI = {
         bg = { 0.05, 0.05, 0.05 },
         bgSolid = { 0.05, 0.05, 0.05, 1 },
         border = { 0.3, 0.3, 0.4 },
+        borderGold = { 0.4, 0.35, 0.2, 1 },
         textSecondary = { 0.6, 0.6, 0.6 },
     },
     ICON_TEXCOORD = { 0.08, 0.92, 0.08, 0.92 },

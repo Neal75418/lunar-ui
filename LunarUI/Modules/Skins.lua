@@ -180,13 +180,22 @@ function LunarUI.SetFontLight(fontString)
     end
 end
 
---- 替換按鈕樣式（保留 Blizzard 原生材質，只標記已處理）
+--- 替換按鈕樣式（保留 Blizzard 原生材質，修正文字 + 懸停高亮）
 function LunarUI.SkinButton(btn)
     if not btn then
         return
     end
-
+    if btn._lunarButtonSkinned then
+        return
+    end
     btn._lunarButtonSkinned = true
+
+    -- 懸停高亮（不移除原生材質，只疊加）
+    if not btn._lunarHighlight then
+        btn._lunarHighlight = btn:CreateTexture(nil, "HIGHLIGHT")
+        btn._lunarHighlight:SetAllPoints()
+        btn._lunarHighlight:SetColorTexture(1, 1, 1, 0.08)
+    end
 end
 
 --- 替換關閉按鈕

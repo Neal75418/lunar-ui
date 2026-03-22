@@ -99,6 +99,7 @@ L["BagSearchError"] = "Bag search error"
 L["BankSearchError"] = "Bank search error"
 
 -- Chat
+L["CopyChat"] = "Copy Chat"
 L["PressToCopyURL"] = "Press Ctrl+C to copy URL:"
 L["KeywordAlert"] = "Keyword Alert"
 L["SpamFiltered"] = "Spam message filtered"

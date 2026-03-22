@@ -410,6 +410,20 @@ describe("SkinButton", function()
         LunarUI.SkinButton(btn)
         assert.is_not_equal(0, tex._alpha)
     end)
+
+    it("creates highlight texture", function()
+        local btn = MockFrame()
+        LunarUI.SkinButton(btn)
+        assert.is_not_nil(btn._lunarHighlight)
+    end)
+
+    it("does not duplicate on second call", function()
+        local btn = MockFrame()
+        LunarUI.SkinButton(btn)
+        local highlight = btn._lunarHighlight
+        LunarUI.SkinButton(btn)
+        assert.equals(highlight, btn._lunarHighlight)
+    end)
 end)
 
 --------------------------------------------------------------------------------
