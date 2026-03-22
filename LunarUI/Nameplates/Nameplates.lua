@@ -914,19 +914,7 @@ local function SpawnNameplates()
     end
 
     -- WoW 12.0.0 移除了 C_NamePlate.SetNamePlateSize 和 C_NamePlateManager.SetNamePlateHitTestInsets
-    -- oUF issue #734 尚未修復（截至 13.3.1），在此提供 no-op stub 防止 Lua error
-    -- WoW 12.0 相容 shim：oUF 內部仍會呼叫已移除的 API
-    -- 加上 _lunarShimmed 標記讓其他 addon 可辨識這不是真實 API
-    if not C_NamePlate.SetNamePlateSize then
-        C_NamePlate.SetNamePlateSize = function() end -- luacheck: ignore 122
-        C_NamePlate._lunarShimmed = true -- luacheck: ignore 122
-    end
-    if not C_NamePlateManager then -- luacheck: ignore 113
-        C_NamePlateManager = { _lunarShimmed = true } -- luacheck: ignore 111
-    end
-    if not C_NamePlateManager.SetNamePlateHitTestInsets then -- luacheck: ignore 113
-        C_NamePlateManager.SetNamePlateHitTestInsets = function() end -- luacheck: ignore 112
-    end
+    -- vendored oUF (ouf.lua:766) 已有 existence check，不需要全域 shim
 
     nameplateModuleEnabled = true
     oUF:SetActiveStyle("LunarUI_Nameplate")
