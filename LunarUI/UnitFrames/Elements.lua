@@ -193,7 +193,9 @@ local function CreateNameText(frame, unit)
     name:SetJustifyH("LEFT")
 
     -- 截斷長名稱（防止與血量文字重疊）
-    name:SetWidth(frame:GetWidth() * 0.6)
+    -- raid/pet/targettarget 不顯示血量文字，名字可以更寬
+    local nameWidthPct = (unit == "raid" or unit == "pet" or unit == "targettarget") and 0.9 or 0.6
+    name:SetWidth(frame:GetWidth() * nameWidthPct)
     if unit == "raid" or unit == "party" then
         frame:Tag(name, "[name:short]")
     else
@@ -332,8 +334,9 @@ local function CreatePortrait(frame, unit)
         frame.Health:ClearAllPoints()
         frame.Health:SetPoint("TOPLEFT", frame, "TOPLEFT", size + 2, -1)
         frame.Health:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
-        local heightPercent = (unit == "raid") and 0.85 or 0.65
-        frame.Health:SetHeight(frame:GetHeight() * heightPercent)
+        -- 與 CreateHealthBar 相同的固定像素計算（不用舊的百分比）
+        local powerHeight = (unitKey == "pet" or unitKey == "targettarget") and 0 or (unitKey == "raid") and 4 or 6
+        frame.Health:SetHeight(frame:GetHeight() - powerHeight - 2)
     end
 
     return frame.Portrait
