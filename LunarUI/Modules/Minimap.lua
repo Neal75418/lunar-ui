@@ -1248,15 +1248,25 @@ function LunarUI.CleanupMinimap()
     end
     -- 停用方形小地圖（wrapper 仍在，但 flag 為 false 時直接透傳原始函數）
     lunarMinimapIsSquare = false
-    -- 還原 Minimap 到原始 parent（MinimapCluster）並重設錨點
-    -- 初始化時 Minimap 被 reparent 到 minimapFrame 並 ClearAllPoints + SetAllPoints，
-    -- 還原時必須重設錨點，否則 Minimap 的 anchor 仍指向已隱藏的 minimapFrame
+    -- 還原 Minimap 到原始狀態
+    -- 初始化時做了三件事需要反向還原：
+    -- 1. Minimap:SetParent(minimapFrame) → 還原到 MinimapCluster
+    -- 2. MinimapCluster:SetAlpha(0) + SetPoint(螢幕外 -2000) → 還原可見性和位置
+    -- 3. MinimapCluster:EnableMouse(false) → 還原互動
     if _G.Minimap and _G.MinimapCluster then
         pcall(function()
+            -- 還原 MinimapCluster（初始化時被隱藏到螢幕外）
+            _G.MinimapCluster:SetAlpha(1)
+            _G.MinimapCluster:EnableMouse(true)
+            _G.MinimapCluster:ClearAllPoints()
+            _G.MinimapCluster:SetPoint("TOPRIGHT", _G.UIParent, "TOPRIGHT", -10, -10)
+            _G.MinimapCluster:Show()
+
+            -- 還原 Minimap 到 MinimapCluster
             _G.Minimap:SetParent(_G.MinimapCluster)
             _G.Minimap:ClearAllPoints()
             _G.Minimap:SetPoint("CENTER", _G.MinimapCluster, "CENTER", 9, -5)
-            _G.MinimapCluster:Show()
+            _G.Minimap:Show()
         end)
     end
     -- 清除框架 upvalue 引用（WoW 框架不可銷毀但 upvalue 必須重置，避免 re-enable 指向 orphaned 物件）
