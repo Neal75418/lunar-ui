@@ -29,15 +29,16 @@ local combatWaitFrame -- 戰鬥等待框架（重用避免洩漏）
 local CreateBackdrop = LunarUI.CreateBackdrop
 
 -- 框架尺寸
+-- ElvUI-inspired compact sizes（fallback，正常由 Defaults.lua 的 DB 值覆蓋）
 local SIZES = {
-    player = { width = 220, height = 50 },
-    target = { width = 220, height = 50 },
-    focus = { width = 180, height = 40 },
-    pet = { width = 120, height = 30 },
-    targettarget = { width = 120, height = 30 },
-    boss = { width = 180, height = 40 },
-    party = { width = 160, height = 35 },
-    raid = { width = 80, height = 30 },
+    player = { width = 220, height = 26 },
+    target = { width = 220, height = 26 },
+    focus = { width = 180, height = 22 },
+    pet = { width = 120, height = 16 },
+    targettarget = { width = 120, height = 16 },
+    boss = { width = 180, height = 24 },
+    party = { width = 150, height = 22 },
+    raid = { width = 80, height = 20 },
 }
 
 --------------------------------------------------------------------------------
@@ -69,7 +70,7 @@ local function PlayerLayout(frame, unit)
     LunarUI.UFCreateHealthText(frame, unit)
     LunarUI.UFCreateCastbar(frame, unit)
     LunarUI.UFCreateBuffs(frame, unit)
-    LunarUI.UFCreateLevelText(frame, unit)
+    -- player 不顯示等級（滿等場景無意義）
     LunarUI.UFCreateRestingIndicator(frame)
     LunarUI.UFCreateCombatIndicator(frame)
     LunarUI.UFCreateThreatIndicator(frame)
@@ -124,6 +125,7 @@ local function FocusLayout(frame, unit)
     LunarUI.UFCreateHealthText(frame, unit)
     LunarUI.UFCreateCastbar(frame, unit)
     LunarUI.UFCreateDebuffs(frame, unit)
+    LunarUI.UFCreateLevelText(frame, unit)
 
     return frame
 end
@@ -135,7 +137,7 @@ local function PetLayout(frame, unit)
     frame:SetSize(size.width, size.height)
 
     Shared(frame, unit)
-    LunarUI.UFCreatePowerBar(frame)
+    -- pet 不顯示能量條（框架太小，資訊價值低）
     LunarUI.UFCreateThreatIndicator(frame)
 
     return frame
@@ -163,6 +165,7 @@ local function BossLayout(frame, unit)
     LunarUI.UFCreateHealthText(frame, unit)
     LunarUI.UFCreateCastbar(frame, unit)
     LunarUI.UFCreateDebuffs(frame, unit)
+    LunarUI.UFCreateLevelText(frame, unit)
 
     return frame
 end

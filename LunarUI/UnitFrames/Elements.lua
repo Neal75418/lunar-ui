@@ -64,14 +64,16 @@ local function CreateHealthBar(frame, unit)
     health:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
     health:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
 
-    -- 高度依單位類型而異
-    local heightPercent = (unit == "raid") and 0.85 or 0.65
-    health:SetHeight(frame:GetHeight() * heightPercent)
+    -- 高度：框架總高度減去能量條高度（嵌入式佈局）
+    -- pet/targettarget 無能量條，血條填滿整個框架（減去邊框）
+    local powerHeight = (unit == "pet" or unit == "targettarget") and 0 or (unit == "raid") and 4 or 6
+    health:SetHeight(frame:GetHeight() - powerHeight - 2) -- -2 for top+bottom border
 
-    -- 顏色設定
+    -- 顏色設定：職業顏色優先，NPC 用反應顏色
     health.colorClass = true
     health.colorReaction = true
-    health.colorHealth = true
+    health.colorTapping = true
+    health.colorDisconnected = true
     health.colorSmooth = false
 
     -- 背景
@@ -182,13 +184,17 @@ end
 
 local function CreateNameText(frame, unit)
     local name = frame.Health:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(name, 12, "OUTLINE")
+    -- 字型大小依框架類型
+    local fontSize = (unit == "player" or unit == "target") and 11
+        or (unit == "raid" or unit == "pet" or unit == "targettarget") and 9
+        or 10
+    LunarUI.SetFont(name, fontSize, "OUTLINE")
     name:SetPoint("LEFT", frame.Health, "LEFT", 5, 0)
     name:SetJustifyH("LEFT")
 
-    -- 較小框架截斷長名稱
+    -- 截斷長名稱（防止與血量文字重疊）
+    name:SetWidth(frame:GetWidth() * 0.6)
     if unit == "raid" or unit == "party" then
-        name:SetWidth(frame:GetWidth() - 10)
         frame:Tag(name, "[name:short]")
     else
         frame:Tag(name, "[name]")
@@ -203,21 +209,19 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateHealthText(frame, unit)
-    -- 團隊框架太小，跳過
-    if unit == "raid" then
+    -- raid/pet/targettarget 太小，不顯示血量百分比
+    if unit == "raid" or unit == "pet" or unit == "targettarget" then
         return
     end
 
     local healthText = frame.Health:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(healthText, 10, "OUTLINE")
+    local fontSize = (unit == "player" or unit == "target") and 11 or 10
+    LunarUI.SetFont(healthText, fontSize, "OUTLINE")
     healthText:SetPoint("RIGHT", frame.Health, "RIGHT", -5, 0)
     healthText:SetJustifyH("RIGHT")
 
-    if unit == "player" or unit == "target" then
-        frame:Tag(healthText, "[curhp] / [maxhp]")
-    else
-        frame:Tag(healthText, "[perhp]%")
-    end
+    -- 統一使用百分比（ElvUI 風格）
+    frame:Tag(healthText, "[perhp]%")
 
     frame.HealthText = healthText
     return healthText
