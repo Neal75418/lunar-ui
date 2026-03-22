@@ -213,11 +213,11 @@ end
 --[[ Name Text ]]
 local function CreateNameText(frame)
     local name = frame:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(name, 8, "OUTLINE")
+    LunarUI.SetFont(name, 9, "OUTLINE")
     name:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
     name:SetJustifyH("LEFT")
     name:SetWidth(frame:GetWidth())
-    name:SetTextColor(0.85, 0.85, 0.85)
+    name:SetTextColor(0.9, 0.9, 0.9)
 
     frame:Tag(name, "[name]")
     frame.Name = name
