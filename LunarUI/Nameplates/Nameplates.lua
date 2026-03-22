@@ -604,6 +604,19 @@ local function Nameplate_OnShow(frame)
     -- Re-register frame for tracking (removed on hide)
     nameplateFrames[frame] = true
 
+    -- Shift+V 關再開時 WoW 重用框架但 OnHide 已重設錨點，需要重新確認樣式
+    if frame.Health then
+        frame.Health:ClearAllPoints()
+        frame.Health:SetAllPoints(frame)
+    end
+    if frame.Backdrop then
+        frame.Backdrop:ClearAllPoints()
+        frame.Backdrop:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
+        frame.Backdrop:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
+        -- 重設邊框為預設色（分類高亮會在下方覆蓋）
+        frame.Backdrop:SetBackdropBorderColor(C.borderSubtle[1], C.borderSubtle[2], C.borderSubtle[3], C.borderSubtle[4])
+    end
+
     -- Performance: 標記堆疊偵測需要重新計算
     MarkStackingDirty()
 
