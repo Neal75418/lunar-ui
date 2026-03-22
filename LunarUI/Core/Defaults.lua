@@ -398,6 +398,9 @@ local defaults = {
             linkTooltipPreview = true, -- 連結懸停 Tooltip 預覽
             showTimestamps = false, -- 時間戳記
             timestampFormat = "%H:%M", -- 時間戳記格式
+            backdropAlpha = 0.75, -- 聊天框背景透明度
+            inactiveTabAlpha = 0.6, -- 非活躍標籤文字不透明度
+            editBoxOffset = 8, -- 輸入框與聊天框間距
         },
 
         -- 滑鼠提示設定

@@ -198,6 +198,55 @@ function LunarUI.SkinButton(btn)
     end
 end
 
+--- 替換捲動條樣式（極簡窄軌 + 暗色滑塊）
+function LunarUI.SkinScrollBar(scrollBar)
+    if not scrollBar or scrollBar._lunarScrollSkinned then
+        return
+    end
+    scrollBar._lunarScrollSkinned = true
+
+    -- WoW 12.0 MinimalScrollBar 是 EventFrame，不是 Slider
+    -- 只對 Slider 類型做窄化，EventFrame 類型只做材質清理
+    local isSlider = scrollBar.GetObjectType and scrollBar:GetObjectType() == "Slider"
+
+    StripTextures(scrollBar)
+
+    -- 窄化捲動條（僅 Slider 類型）
+    if isSlider and scrollBar.SetWidth then
+        scrollBar:SetWidth(6)
+    end
+
+    -- 滑塊（Thumb）樣式
+    local thumb = (scrollBar.GetThumbTexture and scrollBar:GetThumbTexture())
+        or scrollBar.thumbTexture
+        or scrollBar.Thumb
+    if thumb then
+        thumb:SetColorTexture(C.borderWarm[1], C.borderWarm[2], C.borderWarm[3], 0.6)
+        if isSlider then
+            thumb:SetWidth(6)
+        end
+    end
+
+    -- 上下按鈕隱藏
+    local scrollUp = scrollBar.ScrollUpButton or scrollBar.Back or scrollBar.UpButton
+    if scrollUp then
+        scrollUp:SetAlpha(0)
+        scrollUp:SetSize(1, 1)
+    end
+    local scrollDown = scrollBar.ScrollDownButton or scrollBar.Forward or scrollBar.DownButton
+    if scrollDown then
+        scrollDown:SetAlpha(0)
+        scrollDown:SetSize(1, 1)
+    end
+
+    -- 軌道背景
+    if not scrollBar._lunarTrackBG then
+        scrollBar._lunarTrackBG = scrollBar:CreateTexture(nil, "BACKGROUND")
+        scrollBar._lunarTrackBG:SetAllPoints()
+        scrollBar._lunarTrackBG:SetColorTexture(0, 0, 0, 0.3)
+    end
+end
+
 --- 替換關閉按鈕
 function LunarUI.SkinCloseButton(btn)
     if not btn then

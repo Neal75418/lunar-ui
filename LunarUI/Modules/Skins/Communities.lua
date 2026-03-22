@@ -39,6 +39,21 @@ local function SkinCommunities()
         if frame.MemberList.ColumnDisplay then
             LunarUI.StripTextures(frame.MemberList.ColumnDisplay)
         end
+        if frame.MemberList.ScrollBar then
+            LunarUI.SkinScrollBar(frame.MemberList.ScrollBar)
+        end
+        -- 列表內的分隔線（ColumnDisplay header）
+        if frame.MemberList.ColumnDisplay then
+            local headerCount = select("#", frame.MemberList.ColumnDisplay:GetChildren())
+            if headerCount > 0 then
+                local headers = { frame.MemberList.ColumnDisplay:GetChildren() }
+                for i = 1, headerCount do
+                    if headers[i] then
+                        LunarUI.StripTextures(headers[i])
+                    end
+                end
+            end
+        end
     end
 
     -- Chat area
@@ -48,7 +63,7 @@ local function SkinCommunities()
         local messageFrame = frame.Chat.MessageFrame
         if messageFrame then
             if messageFrame.ScrollBar then
-                LunarUI.StripTextures(messageFrame.ScrollBar)
+                LunarUI.SkinScrollBar(messageFrame.ScrollBar)
             end
             if messageFrame.ScrollBox then
                 LunarUI.StripTextures(messageFrame.ScrollBox)
@@ -89,6 +104,9 @@ local function SkinCommunities()
         AddPanelBackdrop(frame.CommunitiesList)
         if frame.CommunitiesList.InsetFrame then
             LunarUI.StripTextures(frame.CommunitiesList.InsetFrame)
+        end
+        if frame.CommunitiesList.ScrollBar then
+            LunarUI.SkinScrollBar(frame.CommunitiesList.ScrollBar)
         end
         -- 左側列表裝飾
         if frame.CommunitiesList.FilligreeOverlay then

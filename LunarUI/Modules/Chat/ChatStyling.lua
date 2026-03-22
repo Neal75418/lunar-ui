@@ -28,6 +28,10 @@ local function StyleChatTab(chatFrame)
         return
     end
 
+    -- 快取設定值（避免每次 tab 切換時查 DB）
+    local chatDB = LunarUI.GetModuleDB("chat")
+    local cachedInactiveTabAlpha = chatDB and chatDB.inactiveTabAlpha or 0.6
+
     -- 簡化標籤外觀
     local tabText = _G[chatFrame:GetName() .. "TabText"] or tab.Text
     if tabText then
@@ -86,7 +90,7 @@ local function StyleChatTab(chatFrame)
                 tab._lunarActiveIndicator:Show()
             end
         else
-            tabText:SetTextColor(0.6, 0.6, 0.6, 0.8) -- inactive：灰色偏暗
+            tabText:SetTextColor(0.6, 0.6, 0.6, cachedInactiveTabAlpha) -- inactive
             if tab._lunarActiveIndicator then
                 tab._lunarActiveIndicator:Hide()
             end
@@ -147,9 +151,11 @@ local function StyleChatEditBox(chatFrame)
     end
 
     -- 設定輸入框位置（在聊天視窗下方）
+    local chatDB = LunarUI.GetModuleDB("chat")
+    local ebOffset = chatDB and chatDB.editBoxOffset or 8
     editBox:ClearAllPoints()
-    editBox:SetPoint("TOPLEFT", chatFrame, "BOTTOMLEFT", -4, -8)
-    editBox:SetPoint("TOPRIGHT", chatFrame, "BOTTOMRIGHT", 4, -8)
+    editBox:SetPoint("TOPLEFT", chatFrame, "BOTTOMLEFT", -4, -ebOffset)
+    editBox:SetPoint("TOPRIGHT", chatFrame, "BOTTOMRIGHT", 4, -ebOffset)
     editBox:SetHeight(22)
 
     -- 設定文字樣式
@@ -172,7 +178,9 @@ local function StyleChatFrame(chatFrame)
         backdrop:SetPoint("TOPLEFT", -4, 4)
         backdrop:SetPoint("BOTTOMRIGHT", 4, -4)
         backdrop:SetBackdrop(backdropTemplate)
-        backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], 0.75)
+        local chatDB = LunarUI.GetModuleDB("chat")
+        local bdAlpha = chatDB and chatDB.backdropAlpha or 0.75
+        backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], bdAlpha)
         backdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.8)
         backdrop:SetFrameLevel(chatFrame:GetFrameLevel() - 1)
         backdrop:SetAlpha(0)
