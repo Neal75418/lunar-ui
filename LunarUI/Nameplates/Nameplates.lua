@@ -946,6 +946,15 @@ local function SpawnNameplates()
         nameplateDriver:SetRemovedCallback(function(frame)
             Nameplate_OnHide(frame)
         end)
+    else
+        -- re-enable：對當前已可見的名牌重新觸發 OnShow（HookScript 只在下次 Show 時觸發）
+        if C_NamePlate and C_NamePlate.GetNamePlates then
+            for _, plate in ipairs(C_NamePlate.GetNamePlates()) do
+                if plate and plate.unitFrame then
+                    Nameplate_OnShow(plate.unitFrame)
+                end
+            end
+        end
     end
 
     -- 堆疊偵測
@@ -1012,14 +1021,9 @@ LunarUI.GetNPCRoleColor = GetNPCRoleColor
 -- 清理函數：防止 disable/reload 時記憶體洩漏
 function LunarUI.CleanupNameplates()
     -- 停用模組（OnShow hook 會檢查此旗標，不再處理新名牌）
+    -- 不呼叫 frame:Hide()：名牌框架由 WoW 引擎管理（secure），
+    -- 強制 Hide 在戰鬥中會 taint，且框架不會自動恢復
     nameplateModuleEnabled = false
-
-    -- 隱藏所有已追蹤的名牌框架
-    for frame in pairs(nameplateFrames) do
-        if frame and frame.Hide then
-            pcall(frame.Hide, frame)
-        end
-    end
 
     -- 清理戰鬥等待框架
     if npCombatWaitFrame then

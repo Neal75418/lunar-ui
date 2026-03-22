@@ -549,13 +549,12 @@ local function CleanupUnitFrames()
     -- 停用所有已生成的 oUF 框架（Disable = UnregisterUnitWatch + Hide）
     for _, frame in pairs(spawnedFrames) do
         if frame then
-            -- Group headers 需先取消 StateDriver（否則 state driver 會覆蓋 Hide）
-            if
-                frame.GetAttribute
-                and pcall(frame.GetAttribute, frame, "showRaid")
-                and frame:GetAttribute("showRaid")
-            then
-                pcall(_G.UnregisterStateDriver, frame, "visibility")
+            -- Group headers（party/raid）需先取消 StateDriver（否則 state driver 會覆蓋 Hide）
+            if frame.GetAttribute then
+                local isGroupHeader = frame:GetAttribute("showRaid") or frame:GetAttribute("showParty")
+                if isGroupHeader then
+                    pcall(_G.UnregisterStateDriver, frame, "visibility")
+                end
             end
             if frame.Disable then
                 frame:Disable() -- oUF API: UnregisterUnitWatch + Hide
