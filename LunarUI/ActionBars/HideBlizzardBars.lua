@@ -206,6 +206,7 @@ end
 -- - 延遲 3 秒重新安裝到 chain 頂部（確保在 BugSack 等之後）
 local taintEventsUnregistered = false
 local taintFilterActive = false
+local taintFilterGeneration = 0 -- 世代計數器：防止 /lunar off 後延遲 timer 重新啟用 filter
 local taintFilterFn -- 過濾函數引用（用於辨識是否已在 chain 頂部）
 local function InstallTaintErrorFilter()
     taintFilterActive = true
@@ -242,11 +243,19 @@ local function InstallTaintEventFilter()
     -- 立即安裝 error filter
     InstallTaintErrorFilter()
     -- 延遲 3 秒重新安裝（確保在 BugSack 等 addon 載入後仍在 chain 頂部）
-    C_Timer.After(3, InstallTaintErrorFilter)
+    -- 使用世代計數器：/lunar off 後 generation 遞增，pending timer 不再執行
+    taintFilterGeneration = taintFilterGeneration + 1
+    local gen = taintFilterGeneration
+    C_Timer.After(3, function()
+        if taintFilterGeneration == gen then
+            InstallTaintErrorFilter()
+        end
+    end)
 end
 
 local function UninstallTaintEventFilter()
     taintFilterActive = false
+    taintFilterGeneration = taintFilterGeneration + 1 -- 使 pending timer 失效
     if taintEventsUnregistered then
         taintEventsUnregistered = false
         UIParent:RegisterEvent("ADDON_ACTION_BLOCKED")
