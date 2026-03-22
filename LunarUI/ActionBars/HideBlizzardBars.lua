@@ -325,8 +325,9 @@ end
 -- ❌ 替換 SetScale — taint SecureUtil "secret number" 運算
 -- ❌ hooksecurefunc("seterrorhandler") — WoW 禁止 hook 此全域函數
 -- ❌ SetParent(HiddenFrame) — Edit Mode 用 registeredSystemFrames 列表找框架，不看 parent
--- ✓ 覆蓋 OnEditModeEnter/OnEditModeExit 為 no-op — secureexecuterange 呼叫時什麼都不做，
---   scale 計算永遠不會執行。沒有 UnregisterSystemFrame API，但直接覆蓋方法不需要修改列表。
+-- ✓ 覆蓋 OnEditModeEnter/OnEditModeExit 為 no-op — secureexecuterange 呼叫時什麼都不做
+-- ✓ 覆蓋 SetScale 攔截負值 — UpdateRightActionBarPositions 也從 ActionBar visibility 路徑
+--   被呼叫（上坐騎等），OnEditModeEnter no-op 擋不住這條路徑
 local function HideMultiActionBars()
     -- 使用共用的 MULTIBAR_NAMES（與 EDIT_MODE_PROTECTED_FRAMES 同步）
     for _, barName in ipairs(MULTIBAR_NAMES) do
@@ -338,6 +339,7 @@ local function HideMultiActionBars()
                     parent = bar:GetParent(),
                     onEditModeEnter = bar.OnEditModeEnter,
                     onEditModeExit = bar.OnEditModeExit,
+                    setScale = rawget(bar, "SetScale"), -- nil = 使用 metatable 的 C 方法
                 }
             end
             -- 1. 移到隱藏父框架：視覺上隱藏（由父框架 Hide() 使其不可見）
@@ -347,6 +349,15 @@ local function HideMultiActionBars()
             -- 2. 中和 Edit Mode：覆蓋為 no-op，防止 scale 計算
             bar.OnEditModeEnter = function() end
             bar.OnEditModeExit = function() end
+            -- 3. 攔截負值 SetScale：UpdateRightActionBarPositions 在多條路徑被呼叫
+            --    （Edit Mode 進入、上坐騎 visibility 變化等），隱藏後 availableSpace
+            --    可能為負 → newScale < 0 → C++ 層拋出 "Scale must be > 0"
+            bar.SetScale = function(self, scale)
+                if scale and scale > 0 then
+                    -- 呼叫 C 方法（繞過我們的 Lua 覆蓋）
+                    getmetatable(self).__index.SetScale(self, scale)
+                end
+            end
         end
     end
 
@@ -498,7 +509,7 @@ local function RestoreBlizzardBars()
     -- 遞增世代計數器，使 HideBlizzardBarsDelayed 的延遲 timer 不再執行
     hideGeneration = hideGeneration + 1
 
-    -- 1. 還原 MultiBar 框架：parent + OnEditModeEnter/Exit
+    -- 1. 還原 MultiBar 框架：parent + OnEditModeEnter/Exit + SetScale
     for bar, state in pairs(savedBarStates) do
         pcall(function()
             bar:SetParent(state.parent)
@@ -506,6 +517,7 @@ local function RestoreBlizzardBars()
         end)
         bar.OnEditModeEnter = state.onEditModeEnter
         bar.OnEditModeExit = state.onEditModeExit
+        bar.SetScale = state.setScale -- nil = 移除 Lua 覆蓋，恢復 metatable 的 C 方法
     end
     wipe(savedBarStates)
 
