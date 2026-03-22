@@ -243,9 +243,13 @@ local function HideArtFrameCompletely(artFrame)
         "BarArt",
     }
     for _, key in ipairs(knownChildren) do
-        if artFrame[key] then
-            HideFrameSafely(artFrame[key])
-            HideTextureForcefully(artFrame[key])
+        local child = artFrame[key]
+        if child then
+            HideFrameSafely(child)
+            -- HideTextureForcefully 只適用於 Texture 物件（有 GetTexture 方法）
+            if child.GetTexture then
+                HideTextureForcefully(child)
+            end
         end
     end
     -- EndCaps 容器
