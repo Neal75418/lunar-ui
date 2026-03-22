@@ -92,17 +92,24 @@ local HiddenBarParent = CreateFrame("Frame", "LunarUIHiddenBars", UIParent)
 HiddenBarParent:SetAllPoints()
 HiddenBarParent:Hide()
 
--- Edit Mode 保護框架：HideFrameRecursive 遇到這些框架時不設 SetAlpha(0)
--- 改為 SetParent(HiddenBarParent)，讓 Edit Mode 看不到它們
-local EDIT_MODE_PROTECTED_FRAMES = {
-    ["MultiBarBottomLeft"] = true,
-    ["MultiBarBottomRight"] = true,
-    ["MultiBarRight"] = true,
-    ["MultiBarLeft"] = true,
-    ["MultiBar5"] = true,
-    ["MultiBar6"] = true,
-    ["MultiBar7"] = true,
+-- MultiBar 名稱清單（Edit Mode 保護 + HideMultiActionBars 共用）
+-- 這些框架不能用 SetAlpha(0) 隱藏（會導致 Edit Mode scale=0 錯誤），
+-- 必須用 SetParent(HiddenBarParent) + 覆蓋 OnEditModeEnter/Exit 為 no-op
+local MULTIBAR_NAMES = {
+    "MultiBarBottomLeft",
+    "MultiBarBottomRight",
+    "MultiBarRight",
+    "MultiBarLeft",
+    "MultiBar5",
+    "MultiBar6",
+    "MultiBar7",
 }
+
+-- Edit Mode 保護查詢表（HideFrameRecursive 用，從 MULTIBAR_NAMES 生成）
+local EDIT_MODE_PROTECTED_FRAMES = {}
+for _, name in ipairs(MULTIBAR_NAMES) do
+    EDIT_MODE_PROTECTED_FRAMES[name] = true
+end
 
 -- 遞迴隱藏框架及其所有子框架/區域
 -- 回傳 true 代表此框架或其後代包含 vigor 保護框架
@@ -328,16 +335,8 @@ end
 -- ✓ 覆蓋 OnEditModeEnter/OnEditModeExit 為 no-op — secureexecuterange 呼叫時什麼都不做，
 --   scale 計算永遠不會執行。沒有 UnregisterSystemFrame API，但直接覆蓋方法不需要修改列表。
 local function HideMultiActionBars()
-    local barsToHide = {
-        "MultiBarBottomLeft",
-        "MultiBarBottomRight",
-        "MultiBarRight",
-        "MultiBarLeft",
-        "MultiBar5",
-        "MultiBar6",
-        "MultiBar7",
-    }
-    for _, barName in ipairs(barsToHide) do
+    -- 使用共用的 MULTIBAR_NAMES（與 EDIT_MODE_PROTECTED_FRAMES 同步）
+    for _, barName in ipairs(MULTIBAR_NAMES) do
         local bar = _G[barName]
         if bar then
             -- 儲存原始狀態（供還原）
@@ -518,6 +517,9 @@ local function HideBlizzardBars()
         return
     end
 
+    -- 四階段掃描：多階段可能掃描重疊的框架樹（例如 MainMenuBarArtFrame）。
+    -- 所有操作皆為冪等（pcall 保護，SetAlpha 重複呼叫無害）。
+    -- 延遲重試（1s/3s）會再次執行整個流程，冪等確保不會產生副作用。
     HideMainActionBar()
     HideMultiActionBars()
     HideBarDecorations()

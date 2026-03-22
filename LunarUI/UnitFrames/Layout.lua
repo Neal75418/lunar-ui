@@ -23,6 +23,7 @@ end
 
 -- 前向宣告（供後續函數使用）
 local spawnedFrames = {}
+local savedStateDrivers = {} -- { [frame] = conditionString } — re-enable 時重新註冊
 local combatWaitFrame -- 戰鬥等待框架（重用避免洩漏）
 
 local CreateBackdrop = LunarUI.CreateBackdrop
@@ -348,7 +349,9 @@ local function SpawnGroupFrames(uf)
             uf.party.x or -500,
             uf.party.y or 0
         )
-        _G.RegisterStateDriver(partyHeader, "visibility", "[@raid6,exists] hide; [group:party,nogroup:raid] show; hide")
+        local partyVis = "[@raid6,exists] hide; [group:party,nogroup:raid] show; hide"
+        _G.RegisterStateDriver(partyHeader, "visibility", partyVis)
+        savedStateDrivers[partyHeader] = partyVis
         spawnedFrames.party = partyHeader
     end
 
@@ -432,6 +435,7 @@ local function SpawnGroupFrames(uf)
                 )
                 header:SetPoint(raidPoint, UIParent, raidPoint, raidX, raidY)
                 _G.RegisterStateDriver(header, "visibility", cfg.vis)
+                savedStateDrivers[header] = cfg.vis
                 spawnedFrames[cfg.key] = header
             end
         else
@@ -479,7 +483,9 @@ local function SpawnGroupFrames(uf)
                 uf.raid.x or 20,
                 uf.raid.y or -20
             )
-            _G.RegisterStateDriver(raidHeader, "visibility", "[group:raid] show; hide")
+            local raidVis = "[group:raid] show; hide"
+            _G.RegisterStateDriver(raidHeader, "visibility", raidVis)
+            savedStateDrivers[raidHeader] = raidVis
             spawnedFrames.raid = raidHeader
         end
     end
@@ -488,10 +494,15 @@ end
 local unitFramesSpawned = false -- oUF:Spawn 是 singleton，同一個 unit 不能 spawn 兩次
 
 local function SpawnUnitFrames()
-    -- 已 spawn 過 → 只需重新啟用（Enable + Show）
+    -- 已 spawn 過 → 只需重新啟用（Enable + Show + 重新註冊 StateDriver）
     if unitFramesSpawned then
         for _, frame in pairs(spawnedFrames) do
             if frame then
+                -- Group headers 需重新註冊 StateDriver（CleanupUnitFrames 會 Unregister）
+                local vis = savedStateDrivers[frame]
+                if vis then
+                    pcall(_G.RegisterStateDriver, frame, "visibility", vis)
+                end
                 if frame.Enable then
                     frame:Enable() -- oUF API: RegisterUnitWatch + conditional Show
                 else

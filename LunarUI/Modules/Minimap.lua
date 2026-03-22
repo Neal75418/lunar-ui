@@ -47,6 +47,7 @@ local diff -- 難度圖示框架
 
 -- 還原用：mutation 前保存 Blizzard 實際狀態（不硬編碼預設值）
 local savedMinimapState = nil
+local isInitialized = false -- HookScript runtime guard（hook 無法解除，用此 flag 控制行為）
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -421,6 +422,9 @@ local function SaveMinimapState()
             maskTexture = safeGet(Minimap, "GetMaskTexture"),
             layout = rawget(Minimap, "Layout"), -- 可能是 nil（Blizzard 預設）或被覆蓋
             mouseWheelEnabled = safeGetBool(Minimap, "IsMouseWheelEnabled", false),
+            width = safeGet(Minimap, "GetWidth"),
+            height = safeGet(Minimap, "GetHeight"),
+            frameLevel = safeGet(Minimap, "GetFrameLevel"),
         }
     end
 
@@ -498,6 +502,49 @@ local function SaveMinimapState()
     -- HybridMinimap
     if HybridMinimap and HybridMinimap.CircleMask then
         state.hybridMask = safeGet(HybridMinimap.CircleMask, "GetTexture")
+    end
+
+    -- Reparented 按鈕（HideBlizzardMinimapElements 會把它們從原始 parent 移到 Minimap）
+    local function SaveButtonState(btn)
+        if not btn then
+            return nil
+        end
+        local bp1, bp2, bp3, bp4, bp5 = btn:GetPoint(1)
+        return {
+            frame = btn,
+            parent = safeGet(btn, "GetParent"),
+            points = { bp1, bp2, bp3, bp4, bp5 },
+            alpha = btn:GetAlpha(),
+            visible = btn:IsShown(),
+            frameLevel = safeGet(btn, "GetFrameLevel"),
+            width = safeGet(btn, "GetWidth"),
+            height = safeGet(btn, "GetHeight"),
+        }
+    end
+    state.reparentedButtons = {}
+    local buttons = {
+        GameTimeFrame,
+        AddonCompartmentFrame,
+        QueueStatusMinimapButton,
+        ExpansionLandingPageMinimapButton,
+    }
+    -- MinimapCluster 子元素（可能不存在）
+    if MinimapCluster then
+        if MinimapCluster.Tracking then
+            table.insert(buttons, MinimapCluster.Tracking)
+        end
+        if MinimapCluster.InstanceDifficulty then
+            table.insert(buttons, MinimapCluster.InstanceDifficulty)
+        end
+        if MinimapCluster.IndicatorFrame then
+            table.insert(buttons, MinimapCluster.IndicatorFrame)
+        end
+    end
+    for _, btn in ipairs(buttons) do
+        local saved = SaveButtonState(btn)
+        if saved then
+            table.insert(state.reparentedButtons, saved)
+        end
     end
 
     savedMinimapState = state
@@ -714,6 +761,10 @@ local function HideBlizzardMinimapElements()
     if not Minimap._lunarMouseWheelHooked then
         Minimap._lunarMouseWheelHooked = true
         Minimap:HookScript("OnMouseWheel", function(_self, delta)
+            -- HookScript 無法解除，用 isInitialized 做 runtime guard
+            if not isInitialized then
+                return
+            end
             if delta > 0 then
                 Minimap_ZoomIn()
             else
@@ -843,6 +894,10 @@ local function CreateMinimapFrame()
     if not Minimap._lunarMouseUpHooked then
         Minimap._lunarMouseUpHooked = true
         Minimap:HookScript("OnMouseUp", function(_self, button)
+            -- HookScript 無法解除，用 isInitialized 做 runtime guard
+            if not isInitialized then
+                return
+            end
             if button == "RightButton" then
                 -- 使用安全的選單 API 而非直接 Click() 安全按鈕（避免 taint）
                 if MinimapCluster and MinimapCluster.Tracking and MinimapCluster.Tracking.Button then
@@ -1240,8 +1295,6 @@ end
 -- 初始化
 --------------------------------------------------------------------------------
 
-local isInitialized = false
-
 local function InitializeMinimap()
     if isInitialized then
         return
@@ -1487,7 +1540,35 @@ function LunarUI.CleanupMinimap()
         end)
     end
 
-    -- 還原 Minimap parent/position（最後做，因為需要 MinimapCluster 先就位）
+    -- 還原 reparented 按鈕（在 Minimap parent 還原前，否則按鈕會跟著 Minimap 移走）
+    if state.reparentedButtons then
+        for _, entry in ipairs(state.reparentedButtons) do
+            pcall(function()
+                local btn = entry.frame
+                if entry.parent then
+                    btn:SetParent(entry.parent)
+                end
+                if entry.frameLevel then
+                    btn:SetFrameLevel(entry.frameLevel)
+                end
+                btn:ClearAllPoints()
+                if entry.points[1] then
+                    btn:SetPoint(unpack(entry.points, 1, 5))
+                end
+                btn:SetAlpha(entry.alpha)
+                if entry.width and entry.height then
+                    btn:SetSize(entry.width, entry.height)
+                end
+                if entry.visible then
+                    btn:Show()
+                else
+                    btn:Hide()
+                end
+            end)
+        end
+    end
+
+    -- 還原 Minimap parent/position/size（最後做，因為需要 MinimapCluster 先就位）
     if state.minimap and _G.Minimap then
         pcall(function()
             local ms = state.minimap
@@ -1497,6 +1578,12 @@ function LunarUI.CleanupMinimap()
             _G.Minimap:ClearAllPoints()
             if ms.points[1] then
                 _G.Minimap:SetPoint(unpack(ms.points, 1, 5))
+            end
+            if ms.width and ms.height then
+                _G.Minimap:SetSize(ms.width, ms.height)
+            end
+            if ms.frameLevel then
+                _G.Minimap:SetFrameLevel(ms.frameLevel)
             end
             _G.Minimap:Show()
         end)

@@ -272,22 +272,23 @@ function LunarUI:ToggleAddon(cmd)
     elseif cmd == "off" then
         self.db.profile.enabled = false
         -- 真的停用所有模組（呼叫 onDisable + 還原暴雪動作條）
+        -- DisableModules 會輸出 LunarUIDisabledReload 訊息，不需額外 print
         if LunarUI.DisableModules then
             LunarUI.DisableModules()
         end
-        self:Print(L["Disabled"] or "Disabled")
     else
         self.db.profile.enabled = not self.db.profile.enabled
         if self.db.profile.enabled then
             if LunarUI.EnableModules then
                 LunarUI.EnableModules()
             end
+            self:Print(L["Enabled"] or "Enabled")
         else
+            -- DisableModules 會輸出 LunarUIDisabledReload 訊息，不需額外 print
             if LunarUI.DisableModules then
                 LunarUI.DisableModules()
             end
         end
-        self:Print(self.db.profile.enabled and (L["Enabled"] or "Enabled") or (L["Disabled"] or "Disabled"))
     end
 end
 
