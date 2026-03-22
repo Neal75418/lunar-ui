@@ -193,22 +193,49 @@ end
 -- 對它們呼叫 SetAlpha/EnableMouse 會產生 taint，阻止 WoW C++ 側正常管理狀態轉換。
 
 -- Taint 副作用管理：
--- 1. "Scale must be > 0" → OnEditModeEnter = no-op 從源頭避免（不需要 error filter）
--- 2. "secret number value tainted" → Tooltip.lua 的 pcall(tooltip.Show) 從源頭捕捉
+-- 1. "Scale must be > 0" → SetScale clamp 覆蓋從源頭攔截（不需要 error filter）
+-- 2. "secret number value tainted"：
+--    a. Tooltip 路徑 → Tooltip.lua 的 pcall(tooltip.Show) 從源頭捕捉
+--    b. CompactUnitFrame 路徑 → 無法源頭修復（oUF 修改血條顏色，Blizzard 在 Edit Mode
+--       退出的 secure context 讀回 tainted color value），必須用 error filter 抑制
 -- 3. ADDON_ACTION_BLOCKED / ADDON_ACTION_FORBIDDEN → UIParent:UnregisterEvent 抑制黃字
--- 不再需要全域 seterrorhandler 過濾器（消除 session 級副作用）
+--
+-- ★ error filter 設計：
+-- - 只攔截 "secret number value tainted"（CompactUnitFrame 路徑無法源頭修復）
+-- - 使用 active flag 控制：active=true 時過濾，active=false 時透傳
+-- - filter 函數永久駐留在 handler chain 中（避免與 BugSack 等斷鏈）
 local taintEventsUnregistered = false
+local taintFilterActive = false
+local taintFilterInstalled = false
 local function InstallTaintEventFilter()
-    -- 抑制 "介面功能因插件而失效" 黃字訊息（ADDON_ACTION_BLOCKED 事件）
-    -- Blizzard 在 UIParent 的 OnEvent 處理此事件並顯示警告
+    -- 抑制 "介面功能因插件而失效" 黃字訊息
     if not taintEventsUnregistered then
         taintEventsUnregistered = true
         UIParent:UnregisterEvent("ADDON_ACTION_BLOCKED")
         UIParent:UnregisterEvent("ADDON_ACTION_FORBIDDEN")
     end
+
+    -- 啟用 "secret number value tainted" 過濾
+    taintFilterActive = true
+    if not taintFilterInstalled then
+        taintFilterInstalled = true
+        local prevHandler = geterrorhandler()
+        seterrorhandler(function(msg, ...)
+            if taintFilterActive then
+                local msgStr = tostring(msg or "")
+                if msgStr:find("secret number value tainted") then
+                    return
+                end
+            end
+            if prevHandler then
+                return prevHandler(msg, ...)
+            end
+        end)
+    end
 end
 
 local function UninstallTaintEventFilter()
+    taintFilterActive = false
     if taintEventsUnregistered then
         taintEventsUnregistered = false
         UIParent:RegisterEvent("ADDON_ACTION_BLOCKED")
