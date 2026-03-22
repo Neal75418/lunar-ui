@@ -216,77 +216,98 @@ local function UninstallTaintEventFilter()
     end
 end
 
--- 隱藏主動作條及 ArtFrame 裝飾（獅鷲獸/背景/頁碼等）
+-- 隱藏主動作條裝飾（獅鷲獸/EndCap/背景/頁碼等）
 -- 微型按鈕已由 ActionBars 模組 SetParent 至自訂框架，不在 MainMenuBar 子樹中
-local function HideMainActionBar()
-    HideFramesByName({
-        "MainMenuBar",
-        "MainMenuBarArtFrame",
-        "MainMenuBarArtFrameBackground",
-    }, HideFrameRecursive)
-
-    -- WoW 現代版本的獅鷲獸是透過 Lua 屬性存取，必須直接從 MainMenuBarArtFrame 取得
-    if not MainMenuBarArtFrame then
+--
+-- WoW 12.0 框架結構：
+--   MainMenuBar（C++ engine 框架，仍然存在）
+--   MainActionBar（10.0+ 取代 MainMenuBarArtFrame）
+--     ├ EndCaps.LeftEndCap / RightEndCap（取代 MainMenuBarLeftEndCap/RightEndCap）
+--     ├ ActionBarPageNumber.UpButton / DownButton（取代 ActionBarUpButton/DownButton）
+--     └ BorderArt（取代 MainMenuBarBackgroundArt）
+--   MainMenuBarArtFrame 在 12.0 可能已不存在，但保留 fallback 避免降級
+local function HideArtFrameCompletely(artFrame)
+    if not artFrame then
         return
     end
-
-    -- 獅鷲裝飾（左右兩側）- 使用多種方法強制隱藏
-    if MainMenuBarArtFrame.LeftEndCap then
-        HideFrameSafely(MainMenuBarArtFrame.LeftEndCap)
-        HideTextureForcefully(MainMenuBarArtFrame.LeftEndCap)
+    -- 1. 已知子元素（explicit list）
+    local knownChildren = {
+        "LeftEndCap",
+        "RightEndCap",
+        "PageNumber",
+        "ActionBarPageNumber",
+        "Background",
+        "BackgroundLarge",
+        "BackgroundSmall",
+        "BorderArt",
+        "BarArt",
+    }
+    for _, key in ipairs(knownChildren) do
+        if artFrame[key] then
+            HideFrameSafely(artFrame[key])
+            HideTextureForcefully(artFrame[key])
+        end
     end
-    if MainMenuBarArtFrame.RightEndCap then
-        HideFrameSafely(MainMenuBarArtFrame.RightEndCap)
-        HideTextureForcefully(MainMenuBarArtFrame.RightEndCap)
-    end
-
-    -- 頁碼、背景、其他子元素
-    local namedElements = { "PageNumber", "Background", "BackgroundLarge", "BackgroundSmall" }
-    for _, elemName in ipairs(namedElements) do
-        if MainMenuBarArtFrame[elemName] then
-            HideFrameSafely(MainMenuBarArtFrame[elemName])
+    -- EndCaps 容器
+    if artFrame.EndCaps then
+        HideFrameSafely(artFrame.EndCaps)
+        if artFrame.EndCaps.LeftEndCap then
+            HideTextureForcefully(artFrame.EndCaps.LeftEndCap)
+        end
+        if artFrame.EndCaps.RightEndCap then
+            HideTextureForcefully(artFrame.EndCaps.RightEndCap)
         end
     end
 
-    -- 遍歷所有 Lua 屬性，隱藏所有可能的子框架/材質
-    for _, value in pairs(MainMenuBarArtFrame) do
-        if type(value) == "table" and value.SetAlpha then
-            hiddenRegions[value] = true
-            pcall(function()
-                value:SetAlpha(0)
-            end)
+    -- 2. Pattern match 掃描（捕捉未知的 EndCap/Gryphon/Art/Background 子元素）
+    for key, value in pairs(artFrame) do
+        if type(key) == "string" and type(value) == "table" and value.SetAlpha then
+            if key:find("EndCap") or key:find("Gryphon") or key:find("Art") or key:find("Background") then
+                hiddenRegions[value] = true
+                pcall(value.SetAlpha, value, 0)
+                if value.Hide then
+                    explicitlyHidden[value] = true
+                    pcall(value.Hide, value)
+                end
+            end
         end
     end
 
-    -- 遍歷所有區域（材質），包括獅鷲獸材質
-    local regions = { MainMenuBarArtFrame:GetRegions() }
-    for _, region in ipairs(regions) do
+    -- 3. 所有 regions（材質）
+    for _, region in ipairs({ artFrame:GetRegions() }) do
         if region then
             if region.SetAlpha then
                 hiddenRegions[region] = true
-                pcall(function()
-                    region:SetAlpha(0)
-                end)
+                pcall(region.SetAlpha, region, 0)
             end
             if region.Hide then
                 explicitlyHidden[region] = true
-                pcall(function()
-                    region:Hide()
-                end)
+                pcall(region.Hide, region)
             end
         end
     end
 
-    -- 遍歷所有子框架（使用 select 安全遍歷，避免 nil gap）
-    local artChildCount = select("#", MainMenuBarArtFrame:GetChildren())
-    if artChildCount > 0 then
-        local children = { MainMenuBarArtFrame:GetChildren() }
-        for i = 1, artChildCount do
+    -- 4. 遞迴子框架
+    local childCount = select("#", artFrame:GetChildren())
+    if childCount > 0 then
+        local children = { artFrame:GetChildren() }
+        for i = 1, childCount do
             if children[i] then
                 HideFrameRecursive(children[i])
             end
         end
     end
+end
+
+local function HideMainActionBar()
+    -- MainMenuBar（C++ engine 框架）
+    if MainMenuBar then
+        HideFrameRecursive(MainMenuBar)
+    end
+    -- MainActionBar（WoW 12.0+ 裝飾框架）
+    HideArtFrameCompletely(_G.MainActionBar)
+    -- MainMenuBarArtFrame（pre-12.0 fallback，可能已不存在）
+    HideArtFrameCompletely(MainMenuBarArtFrame)
 end
 
 -- 隱藏多重動作條、WoW 12.0 動作條、容器
@@ -325,15 +346,7 @@ local function HideMultiActionBars()
         end
     end
 
-    -- WoW 12.0 動作條（ActionBar1-8）
-    for i = 1, 8 do
-        local bar = _G["ActionBar" .. i]
-        if bar then
-            HideFrameRecursive(bar)
-        end
-    end
-
-    -- WoW TWW: 新的動作條容器系統
+    -- WoW TWW: 動作條容器系統（ActionBar1-8 只是 Edit Mode display name，不是 frame name）
     for i = 1, 12 do
         local container = _G["MainActionBarButtonContainer" .. i]
         if container then
@@ -348,27 +361,10 @@ local function HideMultiActionBars()
     }, HideFrameRecursive)
 end
 
--- 隱藏舊版裝飾、狀態條、姿態條、寵物條、WoW 12.0 特定框架
+-- 隱藏狀態條、姿態條、寵物條、PossessActionBar
+-- 注意：OverrideActionBar 不隱藏（飛龍騎術等需要），MainMenuBarManager 不隱藏（encounter bar 生命週期）
+-- 裝飾框架（獅鷲/EndCap/背景）已由 HideMainActionBar → HideArtFrameCompletely 處理
 local function HideBarDecorations()
-    -- 舊版獅鷲裝飾（跨 WoW 版本的所有可能框架名稱）
-    local artFrames = {
-        "MainMenuBarLeftEndCap",
-        "MainMenuBarRightEndCap",
-        "MainMenuBarPageNumber",
-        "ActionBarUpButton",
-        "ActionBarDownButton",
-        "MainMenuBarTexture0",
-        "MainMenuBarTexture1",
-        "MainMenuBarTexture2",
-        "MainMenuBarTexture3",
-        "MainMenuExpBar",
-        "ReputationWatchBar",
-        "MainMenuBarBackgroundArt",
-        "MainMenuBarBackground",
-    }
-    HideFramesByName(artFrames, HideFrameRecursive)
-
-    -- 狀態追蹤條（經驗/聲望/榮譽）
     if StatusTrackingBarManager then
         HideFrameRecursive(StatusTrackingBarManager)
     end
@@ -378,63 +374,8 @@ local function HideBarDecorations()
     if PetActionBar then
         HideFrameSafely(PetActionBar)
     end
-
-    -- WoW 12.0 特定框架
-    -- 注意：OverrideActionBar 不隱藏，由暴雪管理（飛龍騎術等）
-    -- 注意：MainMenuBarManager 不隱藏！它管理 encounter bar / widget bar 生命週期
-    HideFramesByName({
-        "PossessActionBar",
-        "MainMenuBarArtFrame",
-        "MainMenuBarArtFrameBackground",
-    }, HideFrameSafely)
-
-    -- WoW 12.0 TWW: 嘗試更多可能的獅鷲容器
-    local gryphonContainers = {
-        "MainMenuBarArtFrame.EndCapContainer",
-        "MainMenuBarArtFrame.BorderArt",
-        "MainMenuBarArtFrame.BarArt",
-    }
-    for _, path in ipairs(gryphonContainers) do
-        local frame = MainMenuBarArtFrame
-        if frame then
-            local parts = { strsplit(".", path) }
-            for i = 2, #parts do
-                if frame and frame[parts[i]] then
-                    frame = frame[parts[i]]
-                else
-                    frame = nil
-                    break
-                end
-            end
-            if frame and frame.SetAlpha then
-                HideFrameSafely(frame)
-            end
-        end
-    end
-
-    -- 遍歷 MainMenuBarArtFrame 所有以 EndCap/Gryphon/Art/Background 命名的子元素
-    if MainMenuBarArtFrame then
-        for key, value in pairs(MainMenuBarArtFrame) do
-            if
-                type(key) == "string"
-                and (key:find("EndCap") or key:find("Gryphon") or key:find("Art") or key:find("Background"))
-            then
-                if type(value) == "table" then
-                    if value.SetAlpha then
-                        hiddenRegions[value] = true
-                        pcall(function()
-                            value:SetAlpha(0)
-                        end)
-                    end
-                    if value.Hide then
-                        explicitlyHidden[value] = true
-                        pcall(function()
-                            value:Hide()
-                        end)
-                    end
-                end
-            end
-        end
+    if PossessActionBar then
+        HideFrameSafely(PossessActionBar)
     end
 end
 
@@ -458,17 +399,10 @@ local function HideActionButtons()
         end
     end
 
-    -- 獅鷲/EndCap 框架（重複呼叫以確保跨版本相容）
-    HideFramesByName({
-        "MainMenuBarArtFrameBackground",
-        "MainMenuBarArtFrame",
-    }, HideFrameSafely)
-
-    -- WoW 12.0 編輯模式框架
-    HideFramesByName({
-        "EditModeExpandedActionBarFrame",
-        "QuickKeybindFrame",
-    }, HideFrameSafely)
+    -- QuickKeybindFrame（快速綁定 UI，非動作條但視覺上重疊）
+    if _G.QuickKeybindFrame then
+        HideFrameSafely(_G.QuickKeybindFrame)
+    end
 end
 
 local function HideBlizzardBars()
@@ -477,7 +411,7 @@ local function HideBlizzardBars()
         return
     end
 
-    -- 安裝 SetScale 錯誤過濾器（首次呼叫即安裝，確保在錯誤發生前就位）
+    -- 抑制 taint 警告事件（ADDON_ACTION_BLOCKED/FORBIDDEN）
     InstallTaintEventFilter()
 
     -- testvigor 模式：暫停所有隱藏操作，讓暴雪動作條完全顯示
@@ -485,9 +419,11 @@ local function HideBlizzardBars()
         return
     end
 
-    -- 四階段掃描：多階段可能掃描重疊的框架樹（例如 MainMenuBarArtFrame）。
-    -- 所有操作皆為冪等（pcall 保護，SetAlpha 重複呼叫無害）。
-    -- 延遲重試（1s/3s）會再次執行整個流程，冪等確保不會產生副作用。
+    -- 四階段掃描（所有操作冪等，延遲重試 1s/3s 會再次執行整個流程）：
+    -- 1. HideMainActionBar — MainMenuBar + MainActionBar/MainMenuBarArtFrame 裝飾
+    -- 2. HideMultiActionBars — MultiBar 1-7 + EditMode workaround + 容器
+    -- 3. HideBarDecorations — 狀態條/姿態條/寵物條/PossessActionBar
+    -- 4. HideActionButtons — ActionButton 1-12 + MultiBar 按鈕
     HideMainActionBar()
     HideMultiActionBars()
     HideBarDecorations()
