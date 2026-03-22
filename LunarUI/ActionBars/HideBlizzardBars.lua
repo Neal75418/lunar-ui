@@ -192,55 +192,23 @@ end
 -- 這些是安全/受管理框架，用於 boss encounter 技能條等場景。
 -- 對它們呼叫 SetAlpha/EnableMouse 會產生 taint，阻止 WoW C++ 側正常管理狀態轉換。
 
--- 過濾已知無害的 Blizzard 錯誤與 taint 警告：
--- 1. UpdateRightActionBarPositions 的 "Scale must be > 0"（隱藏動作條後佈局計算出負數 scale）
--- 2. Backdrop.lua "secret number value tainted by 'LunarUI'"（addon 觸發 tooltip 時 backdrop 使用 tainted width）
--- 3. ADDON_ACTION_BLOCKED / ADDON_ACTION_FORBIDDEN（UIErrorsFrame 的 "介面功能因插件而失效" 訊息）
--- 以上皆為 UI addon 修改 Blizzard 框架的正常副作用，無功能影響
--- error/taint 過濾器狀態
--- ★ 設計：filter 函數安裝後永遠不從 handler chain 中移除（避免斷鏈風險）。
--- 改用 active flag 控制：active=true 時過濾已知無害錯誤，active=false 時直接透傳。
--- 這樣無論 BugSack 等 addon 是否在中間插入 handler，filter 都能正確停工。
-local scaleErrorFilterActive = false
-local scaleErrorFilterInstalled = false
+-- Taint 副作用管理：
+-- 1. "Scale must be > 0" → OnEditModeEnter = no-op 從源頭避免（不需要 error filter）
+-- 2. "secret number value tainted" → Tooltip.lua 的 pcall(tooltip.Show) 從源頭捕捉
+-- 3. ADDON_ACTION_BLOCKED / ADDON_ACTION_FORBIDDEN → UIParent:UnregisterEvent 抑制黃字
+-- 不再需要全域 seterrorhandler 過濾器（消除 session 級副作用）
 local taintEventsUnregistered = false
-local function InstallScaleErrorFilter()
+local function InstallTaintEventFilter()
     -- 抑制 "介面功能因插件而失效" 黃字訊息（ADDON_ACTION_BLOCKED 事件）
+    -- Blizzard 在 UIParent 的 OnEvent 處理此事件並顯示警告
     if not taintEventsUnregistered then
         taintEventsUnregistered = true
         UIParent:UnregisterEvent("ADDON_ACTION_BLOCKED")
         UIParent:UnregisterEvent("ADDON_ACTION_FORBIDDEN")
     end
-
-    -- 啟用過濾
-    scaleErrorFilterActive = true
-
-    -- filter 函數只安裝一次（永久駐留在 handler chain 中）
-    if scaleErrorFilterInstalled then
-        return
-    end
-    scaleErrorFilterInstalled = true
-
-    local prevHandler = geterrorhandler()
-    seterrorhandler(function(msg, ...)
-        -- active=false 時直接透傳（不吃任何錯誤）
-        if scaleErrorFilterActive then
-            local msgStr = tostring(msg or "")
-            if msgStr:find("Scale must be > 0") or msgStr:find("secret number value tainted") then
-                return
-            end
-        end
-        if prevHandler then
-            return prevHandler(msg, ...)
-        end
-    end)
 end
 
--- 停用過濾（不移除 handler，只關閉 active flag）
-local function UninstallScaleErrorFilter()
-    scaleErrorFilterActive = false
-
-    -- 重新註冊 UIParent 事件
+local function UninstallTaintEventFilter()
     if taintEventsUnregistered then
         taintEventsUnregistered = false
         UIParent:RegisterEvent("ADDON_ACTION_BLOCKED")
@@ -510,7 +478,7 @@ local function HideBlizzardBars()
     end
 
     -- 安裝 SetScale 錯誤過濾器（首次呼叫即安裝，確保在錯誤發生前就位）
-    InstallScaleErrorFilter()
+    InstallTaintEventFilter()
 
     -- testvigor 模式：暫停所有隱藏操作，讓暴雪動作條完全顯示
     if LunarUI.db and LunarUI.db.global and LunarUI.db.global._testVigorMode then
@@ -572,8 +540,6 @@ local function HideBlizzardBarsDelayed()
     C_Timer.After(3, function()
         if hideGeneration == gen then
             HideBlizzardBars()
-            -- 在所有 addon 載入後安裝錯誤過濾（確保在 BugSack 等之後）
-            InstallScaleErrorFilter()
         end
     end)
 end
@@ -642,7 +608,7 @@ local function RestoreBlizzardBars()
     wipe(hiddenTextures)
 
     -- 5. 還原全域副作用（error handler + UIParent 事件）
-    UninstallScaleErrorFilter()
+    UninstallTaintEventFilter()
 end
 
 LunarUI.RestoreBlizzardBars = RestoreBlizzardBars

@@ -243,7 +243,7 @@ local inspectEventFrame = LunarUI.CreateEventHandler({ "INSPECT_READY" }, functi
                     if ilvl then
                         GameTooltip:AddLine("|cff888888" .. (L["TooltipILvl"] or "iLvl:") .. "|r " .. ilvl, 1, 1, 1)
                     end
-                    GameTooltip:Show()
+                    pcall(GameTooltip.Show, GameTooltip)
                 end
             end
         end
@@ -461,11 +461,12 @@ local function OnTooltipSetUnit(tooltip)
     end
 
     -- 重新 Show 以更新 tooltip 大小（新增行後需要重新排版）
-    -- 戰鬥中跳過：tooltip:Show() 會觸發 Backdrop:SetupTextureCoordinates，
-    -- 而我們的修改（AddLine 等）taint 了 tooltip 的 width，導致安全程式碼計算錯誤
+    -- pcall 保護：AddLine 等操作 taint 了 tooltip 的 width，Show() 觸發
+    -- Backdrop.lua:SetupTextureCoordinates 在 secure context 中讀取 tainted width
+    -- 會拋出 "secret number value tainted"。pcall 在源頭捕捉，不依賴全域 error filter
     -- 只對 GameTooltip 呼叫：其他 secure tooltip（NamePlateTooltip 等）由 Blizzard 自行管理顯示
     if not InCombatLockdown() and tooltip == GameTooltip then
-        tooltip:Show()
+        pcall(tooltip.Show, tooltip)
     end
 end
 
@@ -573,7 +574,7 @@ local function OnTooltipSetItem(tooltip)
     end
 
     if not InCombatLockdown() and tooltip == GameTooltip then
-        tooltip:Show()
+        pcall(tooltip.Show, tooltip)
     end
 end
 
@@ -597,7 +598,7 @@ local function OnTooltipSetSpell(tooltip)
     if spellID then
         tooltip:AddLine("|cff888888法術 ID: " .. spellID .. "|r")
         if not InCombatLockdown() and tooltip == GameTooltip then
-            tooltip:Show()
+            pcall(tooltip.Show, tooltip)
         end
     end
 end
