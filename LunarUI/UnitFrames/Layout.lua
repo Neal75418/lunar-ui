@@ -25,6 +25,7 @@ end
 local spawnedFrames = {}
 local savedStateDrivers = {} -- { [frame] = conditionString } — re-enable 時重新註冊
 local combatWaitFrame -- 戰鬥等待框架（重用避免洩漏）
+local ufGeneration = 0 -- 世代計數器：防止 disable 後延遲 timer 仍觸發 spawn/update
 
 local CreateBackdrop = LunarUI.CreateBackdrop
 
@@ -265,7 +266,11 @@ local function SpawnPlayerFrames(uf)
             f:SetPoint(uf.player.point, UIParent, "CENTER", uf.player.x, uf.player.y)
         end)
         -- 特殊處理：玩家框架需要延遲顯示 + 強制更新
+        local gen = ufGeneration
         C_Timer.After(0.2, function()
+            if ufGeneration ~= gen then
+                return
+            end
             if frame then
                 frame:Show()
                 if frame.UpdateAllElements then
@@ -535,7 +540,12 @@ local function SpawnUnitFrames()
     if not LunarUI.db or not LunarUI.db.profile then
         spawnRetries = spawnRetries + 1
         if spawnRetries < MAX_SPAWN_RETRIES then
-            C_Timer.After(0.2, SpawnUnitFrames)
+            local gen = ufGeneration
+            C_Timer.After(0.2, function()
+                if ufGeneration == gen then
+                    SpawnUnitFrames()
+                end
+            end)
         end
         return
     end
@@ -593,6 +603,8 @@ local function CleanupUnitFrames()
         combatWaitFrame:SetScript("OnEvent", nil)
     end
     spawnRetries = 0
+    -- 遞增世代計數器，使所有飛行中的延遲 timer 失效
+    ufGeneration = ufGeneration + 1
     -- 注意：unitFramesSpawned 保持 true（oUF:Spawn 是 singleton，re-enable 走 Enable 路徑）
 end
 
@@ -604,7 +616,11 @@ LunarUI.CleanupUnitFrames = CleanupUnitFrames
 -- 在 PLAYER_ENTERING_WORLD 時強制更新玩家框架
 -- 確保玩家資料在更新元素前可用
 playerEnterWorldFrame = LunarUI.CreateEventHandler({ "PLAYER_ENTERING_WORLD" }, function(_self, _event)
+    local gen = ufGeneration
     C_Timer.After(0.3, function()
+        if ufGeneration ~= gen then
+            return
+        end
         if spawnedFrames.player then
             spawnedFrames.player:Show()
             if spawnedFrames.player.UpdateAllElements then

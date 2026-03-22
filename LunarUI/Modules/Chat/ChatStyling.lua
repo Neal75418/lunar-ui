@@ -61,6 +61,39 @@ local function StyleChatTab(chatFrame)
     if tab.glow then
         tab.glow:SetAlpha(0)
     end
+
+    -- 強化 active/inactive 狀態區分：active 白色較亮，inactive 灰色偏暗
+    local function UpdateTabActiveState()
+        if not tabText then
+            return
+        end
+        -- FCF_Tab_OnClick 設定 chatFrame 的 selected tab index
+        local selectedTab = chatFrame.selectedTab or 0
+        local tabID = tab:GetID()
+        if tabID == selectedTab then
+            tabText:SetTextColor(1, 1, 1, 1) -- active：白色
+        else
+            tabText:SetTextColor(0.6, 0.6, 0.6, 0.8) -- inactive：灰色偏暗
+        end
+    end
+
+    tab:HookScript("OnClick", function()
+        -- 點擊後延遲一幀更新所有同框架的 tab（FCF_Tab_OnClick 先執行）
+        C_Timer.After(0, function()
+            for i = 1, NUM_CHAT_WINDOWS do
+                local otherFrame = _G["ChatFrame" .. i]
+                if otherFrame then
+                    local otherTab = _G["ChatFrame" .. i .. "Tab"]
+                    if otherTab and otherTab._lunarUpdateActive then
+                        otherTab._lunarUpdateActive()
+                    end
+                end
+            end
+        end)
+    end)
+
+    tab._lunarUpdateActive = UpdateTabActiveState
+    UpdateTabActiveState()
 end
 
 local function StyleChatEditBox(chatFrame)
@@ -123,8 +156,8 @@ local function StyleChatFrame(chatFrame)
         backdrop:SetPoint("TOPLEFT", -4, 4)
         backdrop:SetPoint("BOTTOMRIGHT", 4, -4)
         backdrop:SetBackdrop(backdropTemplate)
-        backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], 0.5)
-        backdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.6)
+        backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], 0.75)
+        backdrop:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], 0.8)
         backdrop:SetFrameLevel(chatFrame:GetFrameLevel() - 1)
         backdrop:SetAlpha(0)
         backdrop:Hide()

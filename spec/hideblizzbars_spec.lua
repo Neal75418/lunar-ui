@@ -306,7 +306,7 @@ describe("HideBlizzardBars", function()
             -- 應該沒還原（仍在隱藏狀態）
             assert.is_not.equal(multiBarOriginalParent, multiBar1._parent)
 
-            -- 結束戰鬥
+            -- 清理：結束戰鬥
             _G.InCombatLockdown = function()
                 return false
             end
@@ -314,6 +314,65 @@ describe("HideBlizzardBars", function()
             -- 現在可以還原
             LunarUI.RestoreBlizzardBars()
             assert.are.equal(multiBarOriginalParent, multiBar1._parent)
+        end)
+    end)
+
+    describe("taint filter lifecycle", function()
+        it("Install/Uninstall 後 UIParent 事件正確還原", function()
+            -- 保存 UIParent 事件 mock 狀態
+            local blockedUnregistered = false
+            local blockedRegistered = false
+            _G.UIParent.UnregisterEvent = function(_, event)
+                if event == "ADDON_ACTION_BLOCKED" then
+                    blockedUnregistered = true
+                end
+            end
+            _G.UIParent.RegisterEvent = function(_, event)
+                if event == "ADDON_ACTION_BLOCKED" then
+                    blockedRegistered = true
+                end
+            end
+
+            LunarUI.HideBlizzardBarsDelayed()
+            assert.is_true(blockedUnregistered, "ADDON_ACTION_BLOCKED should be unregistered")
+
+            LunarUI.RestoreBlizzardBars()
+            assert.is_true(blockedRegistered, "ADDON_ACTION_BLOCKED should be re-registered after restore")
+
+            -- 還原 mock
+            _G.UIParent.UnregisterEvent = function() end
+            _G.UIParent.RegisterEvent = function() end
+        end)
+
+        it("taint filter 延遲 timer 在 Restore 後不回魂", function()
+            local taintTimerCallbacks = {}
+            _G.C_Timer.After = function(_delay, fn)
+                taintTimerCallbacks[#taintTimerCallbacks + 1] = fn
+            end
+
+            LunarUI.HideBlizzardBarsDelayed()
+            local timerCount = #taintTimerCallbacks
+            assert.is_true(timerCount > 0, "Should have pending taint filter timers")
+
+            LunarUI.RestoreBlizzardBars()
+
+            -- 觸發所有 timer — 世代已遞增，不應報錯或重新啟用
+            for _, cb in ipairs(taintTimerCallbacks) do
+                assert.has_no_errors(cb)
+            end
+
+            _G.C_Timer.After = function() end
+        end)
+
+        it("5 次 off/on 循環不報錯", function()
+            for _ = 1, 5 do
+                assert.has_no_errors(function()
+                    LunarUI.HideBlizzardBarsDelayed()
+                end)
+                assert.has_no_errors(function()
+                    LunarUI.RestoreBlizzardBars()
+                end)
+            end
         end)
     end)
 end)

@@ -476,88 +476,40 @@ local nameplateFrames = setmetatable({}, { __mode = "k" })
 -- 佈局函數
 --------------------------------------------------------------------------------
 
---[[ Enemy Nameplate Layout ]]
-local function EnemyNameplateLayout(frame, _unit)
+--[[ Unified Nameplate Layout ]]
+-- oUF 會跨類型回收名牌框架（友方框架可能被回收給敵方使用），
+-- style callback 只在首次建立時呼叫，因此必須建立所有可能需要的元素。
+-- 元素可見性由 Nameplate_OnShow 根據當前單位的反應值動態控制。
+local function NameplateLayout(frame, _unit)
     local db = LunarUI.GetModuleDB("nameplates")
     local width = db and db.width or 120
     local height = db and db.height or 12
 
+    -- 覆蓋 oUF 的 SetAllPoints()（ouf.lua:900）：清除雙錨點改用固定尺寸
+    -- WoW 12.0 移除 C_NamePlate.SetNamePlateSize，父框架尺寸不受控制
+    -- 若不清除，SetSize 被錨點覆蓋，導致回收時名牌尺寸不一致
+    frame:ClearAllPoints()
+    frame:SetPoint("CENTER")
     frame:SetSize(width, height)
 
+    -- 共用元素（敵方/友方皆需要）
     CreateBackdrop(frame)
     CreateHealthBar(frame)
     CreateNameText(frame)
+    CreateLevelText(frame)
+    CreateRaidTargetIndicator(frame)
+    CreateTargetIndicator(frame)
 
-    if db and db.enemy then
-        if db.enemy.showCastbar then
-            CreateCastbar(frame)
-        end
-        if db.enemy.showAuras then
-            CreateDebuffs(frame)
-        end
-        if db.enemy.showBuffs then
-            CreateNameplateBuffs(frame)
-        end
-        if db.enemy.showLevel then
-            CreateLevelText(frame)
-        end
-    else
-        CreateCastbar(frame)
-        CreateDebuffs(frame)
-        CreateLevelText(frame)
-    end
-
+    -- 敵方專用元素（無條件建立，可見性在 OnShow 控制）
+    CreateCastbar(frame)
+    CreateDebuffs(frame)
+    CreateNameplateBuffs(frame)
     CreateThreatIndicator(frame)
     CreateClassificationIndicator(frame)
     CreateClassificationGlow(frame)
-    CreateRaidTargetIndicator(frame)
-    CreateTargetIndicator(frame)
-
-    -- 任務目標高亮
-    if db and db.enemy and db.enemy.showQuestIcon then
-        CreateQuestIndicator(frame)
-    end
+    CreateQuestIndicator(frame)
 
     return frame
-end
-
---[[ Friendly Nameplate Layout ]]
-local function FriendlyNameplateLayout(frame, _unit)
-    local db = LunarUI.GetModuleDB("nameplates")
-    local width = db and db.width or 120
-    local height = db and db.height or 12 -- 與敵方名牌相同高度
-
-    frame:SetSize(width, height)
-
-    CreateBackdrop(frame)
-    CreateHealthBar(frame)
-    CreateNameText(frame)
-
-    if db and db.friendly and db.friendly.showCastbar then
-        CreateCastbar(frame)
-    end
-    if db and db.friendly and db.friendly.showLevel then
-        CreateLevelText(frame)
-    end
-
-    CreateRaidTargetIndicator(frame)
-    CreateTargetIndicator(frame)
-
-    return frame
-end
-
---[[ Shared Nameplate Layout (for callback) ]]
-local function NameplateLayout(frame, unit)
-    -- 判斷敵方或友方
-    local reaction = UnitReaction(unit, "player")
-
-    -- nil 或敵對（1-4）使用敵方佈局
-    -- 反應值：1-3 = 敵對，4 = 中立，5-8 = 友善
-    if not reaction or reaction <= 4 then
-        return EnemyNameplateLayout(frame, unit)
-    else
-        return FriendlyNameplateLayout(frame, unit)
-    end
 end
 
 --------------------------------------------------------------------------------
@@ -604,6 +556,14 @@ local function Nameplate_OnShow(frame)
     -- Re-register frame for tracking (removed on hide)
     nameplateFrames[frame] = true
 
+    -- 重新強制固定尺寸（Blizzard 名牌系統可能在回收時重設錨點/尺寸）
+    local db = LunarUI.GetModuleDB("nameplates")
+    local width = db and db.width or 120
+    local height = db and db.height or 12
+    frame:ClearAllPoints()
+    frame:SetPoint("CENTER")
+    frame:SetSize(width, height)
+
     -- Shift+V 關再開時 WoW 重用框架但 OnHide 已重設錨點，需要重新確認樣式
     if frame.Health then
         frame.Health:ClearAllPoints()
@@ -625,16 +585,100 @@ local function Nameplate_OnShow(frame)
     -- Performance: 標記堆疊偵測需要重新計算
     MarkStackingDirty()
 
+    -- 根據當前單位類型控制元素可見性（oUF 會跨類型回收框架）
+    -- reaction 1-3 = 敵對，4 = 中立（視為敵方處理），5-8 = 友善
+    local isEnemy
+    if not frame.unit then
+        -- frame.unit 尚未設定（框架首次建立時 oUF 尚未 assign unit）
+        -- 預設隱藏敵方專用元素，避免友方名牌短暫閃現敵方 UI
+        if frame.Debuffs then
+            frame.Debuffs:Hide()
+        end
+        if frame.Buffs then
+            frame.Buffs:Hide()
+        end
+        if frame.ClassificationIndicator then
+            frame.ClassificationIndicator:Hide()
+        end
+        if frame.ClassificationGlow then
+            frame.ClassificationGlow:Hide()
+        end
+        if frame.QuestIndicator then
+            frame.QuestIndicator:Hide()
+        end
+    else
+        local reaction = UnitReaction(frame.unit, "player")
+        isEnemy = not reaction or reaction <= 4
+
+        -- 敵方/友方專用元素可見性（只在類型變更時切換，避免重複呼叫）
+        if isEnemy ~= frame._lastIsEnemy then
+            frame._lastIsEnemy = isEnemy
+
+            local enemyDb = db and db.enemy
+            local friendlyDb = db and db.friendly
+
+            -- LevelText（FontString，show/hide 安全）
+            if frame.LevelText then
+                if isEnemy then
+                    frame.LevelText:SetShown(not enemyDb or enemyDb.showLevel ~= false)
+                else
+                    frame.LevelText:SetShown(friendlyDb and friendlyDb.showLevel or false)
+                end
+            end
+
+            -- Castbar（oUF 元素，用 EnableElement/DisableElement 控制更新週期）
+            if frame.Castbar then
+                local showCastbar = isEnemy and (not enemyDb or enemyDb.showCastbar ~= false)
+                    or (not isEnemy and friendlyDb and friendlyDb.showCastbar)
+                if showCastbar then
+                    frame:EnableElement("Castbar")
+                else
+                    frame:DisableElement("Castbar")
+                    frame.Castbar:Hide()
+                end
+            end
+
+            -- Debuffs / Buffs（oUF 註冊為單一 "Auras" 元素，無法個別 enable/disable）
+            -- 只用 Show/Hide 控制可見性，oUF UNIT_AURA 處理仍會執行（已知限制）
+            -- Debuffs 預設顯示（opt-out），Buffs 預設隱藏（opt-in）— 與原始 EnemyNameplateLayout 一致
+            if frame.Debuffs then
+                frame.Debuffs:SetShown(isEnemy and (not enemyDb or enemyDb.showAuras ~= false))
+            end
+            if frame.Buffs then
+                frame.Buffs:SetShown(isEnemy and enemyDb and enemyDb.showBuffs or false)
+            end
+
+            -- ThreatIndicator（oUF 元素）
+            if frame.ThreatIndicator then
+                if isEnemy then
+                    frame:EnableElement("ThreatIndicator")
+                else
+                    frame:DisableElement("ThreatIndicator")
+                    frame.ThreatIndicator:SetVertexColor(0, 0, 0, 0)
+                end
+            end
+
+            -- 敵方專用手動元素
+            if frame.ClassificationIndicator then
+                frame.ClassificationIndicator:SetShown(isEnemy)
+            end
+            if frame.QuestIndicator then
+                frame.QuestIndicator:SetShown(false) -- 由 UpdateQuestIndicator 控制
+            end
+        end
+    end
+
     -- 更新目標指示器
     UpdateTargetIndicator(frame)
 
-    -- 更新任務指示器
-    UpdateQuestIndicator(frame)
+    -- 更新任務指示器（只對敵方顯示）
+    if isEnemy then
+        UpdateQuestIndicator(frame)
+    end
 
     -- 更新分類高亮 + 光暈
     if frame.unit then
         local classification = GetUnitClassification(frame.unit)
-        local db = LunarUI.GetModuleDB("nameplates")
         -- M6 效能修復：直接用已讀取的 classification 判斷，避免 IsImportantTarget 內第二次呼叫 UnitClassification
         local isImportant = classification == "worldboss"
             or classification == "rareelite"
@@ -655,7 +699,7 @@ local function Nameplate_OnShow(frame)
 
         -- 重要目標顯示分類光暈
         if frame.ClassificationGlow then
-            if isImportant then
+            if isEnemy and isImportant then
                 local color = CLASSIFICATION_COLORS[classification]
                 if color then
                     frame.ClassificationGlow:SetVertexColor(color.r, color.g, color.b, 0.4)
@@ -683,8 +727,9 @@ local function Nameplate_OnHide(frame)
     -- 隱藏時移除框架引用
     nameplateFrames[frame] = nil
 
-    -- 清除 NPC 顏色快取（H2），避免框架回收後帶有前一個 NPC 的顏色
+    -- 清除快取狀態，避免框架回收後帶有前一個 NPC 的資料
     frame._npcColorCache = nil
+    frame._lastIsEnemy = nil -- 強制下次 OnShow 重新判斷敵友類型
 
     -- 清除堆疊偏移狀態，避免框架被回收再用時帶有舊 NPC 的偏移
     if frame._lunarStackShift then
@@ -912,6 +957,15 @@ end
 
 oUF:RegisterStyle("LunarUI_Nameplate", NameplateLayout)
 
+-- 早期事件緩衝：捕捉 SpawnNameplates 延遲期間被錯過的 NAME_PLATE_UNIT_ADDED
+-- 模組有 delay=0.2，reload 後事件可能在 oUF driver 註冊前就觸發
+local earlyPlateBuffer = CreateFrame("Frame")
+earlyPlateBuffer._units = {}
+earlyPlateBuffer:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+earlyPlateBuffer:SetScript("OnEvent", function(_self, _event, unit)
+    earlyPlateBuffer._units[#earlyPlateBuffer._units + 1] = unit
+end)
+
 local function SpawnNameplates()
     local db = LunarUI.GetModuleDB("nameplates")
     if not db or not db.enabled then
@@ -953,6 +1007,26 @@ local function SpawnNameplates()
         nameplateDriver:SetRemovedCallback(function(frame)
             Nameplate_OnHide(frame)
         end)
+
+        -- 回放早期緩衝：將 delay 期間錯過的 NAME_PLATE_UNIT_ADDED 事件送給 oUF
+        if earlyPlateBuffer then
+            -- 停止捕捉（oUF driver 已註冊，後續事件由 oUF 直接處理）
+            earlyPlateBuffer:UnregisterAllEvents()
+            earlyPlateBuffer:SetScript("OnEvent", nil)
+
+            local driverHandler = nameplateDriver.GetScript and nameplateDriver:GetScript("OnEvent")
+            if driverHandler then
+                for _, unit in ipairs(earlyPlateBuffer._units) do
+                    -- 只處理 oUF 尚未建立 unitFrame 的名牌
+                    local plate = C_NamePlate.GetNamePlateForUnit(unit)
+                    if plate and not plate.unitFrame then
+                        driverHandler(nameplateDriver, "NAME_PLATE_UNIT_ADDED", unit)
+                    end
+                end
+            end
+            earlyPlateBuffer._units = nil
+            earlyPlateBuffer = nil -- 釋放框架引用，允許 GC
+        end
     else
         -- re-enable：對當前已可見的名牌重新觸發 OnShow（HookScript 只在下次 Show 時觸發）
         if C_NamePlate and C_NamePlate.GetNamePlates then

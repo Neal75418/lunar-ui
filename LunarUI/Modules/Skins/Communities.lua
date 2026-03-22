@@ -45,20 +45,56 @@ local function SkinCommunities()
     -- Chat edit box
     if frame.ChatEditBox then
         LunarUI.SkinEditBox(frame.ChatEditBox)
+        -- StripTextures 移除了撐高度的材質，明確設定高度
+        frame.ChatEditBox:SetHeight(22)
     end
 
-    -- Invite button
+    -- 底部按鈕統一 skin
     if frame.InviteButton then
         LunarUI.SkinButton(frame.InviteButton)
+    end
+    -- 公會招募按鈕（WoW 12.0 CommunitiesFrame.GuildFinderButton 或 CommunitiesControlFrame 內）
+    if frame.GuildFinderButton then
+        LunarUI.SkinButton(frame.GuildFinderButton)
+    end
+    if frame.CommunitiesControlFrame then
+        if frame.CommunitiesControlFrame.GuildFinderButton then
+            LunarUI.SkinButton(frame.CommunitiesControlFrame.GuildFinderButton)
+        end
+        if frame.CommunitiesControlFrame.GuildRecruitmentButton then
+            LunarUI.SkinButton(frame.CommunitiesControlFrame.GuildRecruitmentButton)
+        end
+        if frame.CommunitiesControlFrame.CommunitiesSettingsButton then
+            LunarUI.SkinButton(frame.CommunitiesControlFrame.CommunitiesSettingsButton)
+        end
     end
 
     -- Community list (left sidebar)
     if frame.CommunitiesList then
         LunarUI.StripTextures(frame.CommunitiesList)
-        -- Inset
         if frame.CommunitiesList.InsetFrame then
             LunarUI.StripTextures(frame.CommunitiesList.InsetFrame)
         end
+        -- 左側列表背景統一
+        if frame.CommunitiesList.FilligreeOverlay then
+            frame.CommunitiesList.FilligreeOverlay:Hide()
+        end
+        if frame.CommunitiesList.Delimiter then
+            frame.CommunitiesList.Delimiter:Hide()
+        end
+        if frame.CommunitiesList.DecorationOverlay then
+            frame.CommunitiesList.DecorationOverlay:Hide()
+        end
+    end
+
+    -- 主內容區 Inset（減少中間聊天區與左側卡片的對比感）
+    if frame.InsetFrame then
+        LunarUI.StripTextures(frame.InsetFrame)
+    end
+
+    -- 右上角功能按鈕區（減少擁擠感）
+    if frame.StreamDropDownMenu then
+        LunarUI.StripTextures(frame.StreamDropDownMenu)
     end
 
     -- Guild member detail frame
@@ -85,6 +121,11 @@ local function SkinCommunities()
     -- Guild info frame
     if frame.GuildDetailsFrame then
         LunarUI.StripTextures(frame.GuildDetailsFrame)
+    end
+
+    -- Guild rewards
+    if frame.GuildBenefitsFrame and frame.GuildBenefitsFrame.Rewards then
+        LunarUI.StripTextures(frame.GuildBenefitsFrame.Rewards)
     end
 
     return true

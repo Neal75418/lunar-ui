@@ -1020,6 +1020,10 @@ local function CreateDifficultyIndicator()
     diff.text = text
 
     local function UpdateDifficulty()
+        -- diff 可能在 CleanupMinimap 後為 nil（C_Timer.After 無法取消，timer 可能在 cleanup 後觸發）
+        if not diff then
+            return
+        end
         local _, instanceType = GetInstanceInfo()
         local difficulty = select(3, GetInstanceInfo())
         local diffName = GetDifficultyInfo(difficulty) or ""

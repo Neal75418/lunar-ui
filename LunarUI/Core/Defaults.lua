@@ -383,8 +383,8 @@ local defaults = {
         -- 聊天設定
         chat = {
             enabled = true,
-            width = 400,
-            height = 180,
+            width = 380,
+            height = 150,
             improvedColors = true,
             classColors = true,
             fadeTime = 120,
