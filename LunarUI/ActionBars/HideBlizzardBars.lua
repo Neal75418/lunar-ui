@@ -201,12 +201,37 @@ end
 -- 3. ADDON_ACTION_BLOCKED / ADDON_ACTION_FORBIDDEN → UIParent:UnregisterEvent 抑制黃字
 --
 -- ★ error filter 設計：
--- - 只攔截 "secret number value tainted"（CompactUnitFrame 路徑無法源頭修復）
+-- - 只攔截 "secret number value"（CompactUnitFrame/SecureUtil 路徑無法源頭修復）
 -- - 使用 active flag 控制：active=true 時過濾，active=false 時透傳
--- - filter 函數永久駐留在 handler chain 中（避免與 BugSack 等斷鏈）
+-- - 延遲 3 秒重新安裝到 chain 頂部（確保在 BugSack 等之後）
 local taintEventsUnregistered = false
 local taintFilterActive = false
-local taintFilterInstalled = false
+local taintFilterFn -- 過濾函數引用（用於辨識是否已在 chain 頂部）
+local function InstallTaintErrorFilter()
+    taintFilterActive = true
+    -- 如果已在 chain 頂部，不重複安裝
+    if taintFilterFn and geterrorhandler() == taintFilterFn then
+        return
+    end
+    local prevHandler = geterrorhandler()
+    -- 避免自我鏈接（prevHandler 是自己的舊版本）
+    if prevHandler == taintFilterFn then
+        prevHandler = nil
+    end
+    taintFilterFn = function(msg, ...)
+        if taintFilterActive then
+            local msgStr = tostring(msg or "")
+            if msgStr:find("secret number value") then
+                return
+            end
+        end
+        if prevHandler then
+            return prevHandler(msg, ...)
+        end
+    end
+    seterrorhandler(taintFilterFn)
+end
+
 local function InstallTaintEventFilter()
     -- 抑制 "介面功能因插件而失效" 黃字訊息
     if not taintEventsUnregistered then
@@ -214,24 +239,10 @@ local function InstallTaintEventFilter()
         UIParent:UnregisterEvent("ADDON_ACTION_BLOCKED")
         UIParent:UnregisterEvent("ADDON_ACTION_FORBIDDEN")
     end
-
-    -- 啟用 "secret number value tainted" 過濾
-    taintFilterActive = true
-    if not taintFilterInstalled then
-        taintFilterInstalled = true
-        local prevHandler = geterrorhandler()
-        seterrorhandler(function(msg, ...)
-            if taintFilterActive then
-                local msgStr = tostring(msg or "")
-                if msgStr:find("secret number value") then
-                    return
-                end
-            end
-            if prevHandler then
-                return prevHandler(msg, ...)
-            end
-        end)
-    end
+    -- 立即安裝 error filter
+    InstallTaintErrorFilter()
+    -- 延遲 3 秒重新安裝（確保在 BugSack 等 addon 載入後仍在 chain 頂部）
+    C_Timer.After(3, InstallTaintErrorFilter)
 end
 
 local function UninstallTaintEventFilter()
