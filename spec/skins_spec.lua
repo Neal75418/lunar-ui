@@ -169,7 +169,6 @@ local LunarUI = {
         border = { 0.3, 0.3, 0.3, 1 },
         background = { 0.1, 0.1, 0.1, 0.9 },
         bg = { 0.1, 0.1, 0.1 },
-        bgButton = { 0.2, 0.2, 0.2, 0.8 },
         bgIcon = { 0.15, 0.15, 0.15, 0.9 },
         borderGold = { 0.8, 0.6, 0.2, 1 },
     },
@@ -399,31 +398,17 @@ describe("SkinButton", function()
         end)
     end)
 
-    it("creates background texture", function()
+    it("marks button as skinned", function()
         local btn = MockFrame()
         LunarUI.SkinButton(btn)
-        assert.is_not_nil(btn._lunarSkinBG)
+        assert.is_truthy(btn._lunarButtonSkinned)
     end)
 
-    it("creates highlight texture", function()
-        local btn = MockFrame()
-        LunarUI.SkinButton(btn)
-        assert.is_not_nil(btn._lunarHighlight)
-    end)
-
-    it("strips existing textures", function()
+    it("preserves original textures", function()
         local tex = MockTexture("BACKGROUND")
         local btn = MockFrame({ regions = { tex } })
         LunarUI.SkinButton(btn)
-        assert.equals(0, tex._alpha)
-    end)
-
-    it("does not create duplicate background", function()
-        local btn = MockFrame()
-        LunarUI.SkinButton(btn)
-        local firstBG = btn._lunarSkinBG
-        LunarUI.SkinButton(btn)
-        assert.equals(firstBG, btn._lunarSkinBG)
+        assert.is_not_equal(0, tex._alpha)
     end)
 end)
 

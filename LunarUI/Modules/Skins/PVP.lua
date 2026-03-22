@@ -11,7 +11,6 @@ local function SkinPVPFrame()
     local frame = LunarUI:SkinStandardFrame("PVPUIFrame", {
         tabPrefix = "PVPUIFrameTab",
         tabCount = 3,
-        textDepth = 3,
     })
     if not frame then
         return
@@ -19,19 +18,16 @@ local function SkinPVPFrame()
 
     -- 榮譽面板
     if _G.HonorFrame then
-        LunarUI.StripTextures(_G.HonorFrame)
-        LunarUI:SkinFrameText(_G.HonorFrame, 2)
-
         if _G.HonorFrame.QueueButton then
             LunarUI.SkinButton(_G.HonorFrame.QueueButton)
         end
     end
+    if _G.HonorFrameQueueButton then
+        LunarUI.SkinButton(_G.HonorFrameQueueButton)
+    end
 
     -- 征服面板
     if _G.ConquestFrame then
-        LunarUI.StripTextures(_G.ConquestFrame)
-        LunarUI:SkinFrameText(_G.ConquestFrame, 2)
-
         if _G.ConquestFrame.JoinButton then
             LunarUI.SkinButton(_G.ConquestFrame.JoinButton)
         end
@@ -39,9 +35,12 @@ local function SkinPVPFrame()
 
     -- 戰場得分面板
     if _G.PVPMatchScoreboard then
-        LunarUI:SkinStandardFrame("PVPMatchScoreboard", {
-            textDepth = 2,
-        })
+        LunarUI:SkinStandardFrame("PVPMatchScoreboard")
+    end
+
+    -- 戰場結果面板
+    if _G.PVPMatchResults then
+        LunarUI:SkinStandardFrame("PVPMatchResults")
     end
 
     return true

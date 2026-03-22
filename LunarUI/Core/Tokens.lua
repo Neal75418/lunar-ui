@@ -25,7 +25,6 @@ LunarUI.Colors = {
 
     -- 圖示/按鈕
     bgIcon = { 0.1, 0.1, 0.1, 0.8 },
-    bgButton = { 0.15, 0.15, 0.15, 0.8 },
     bgButtonHover = { 0.2, 0.2, 0.2, 0.8 },
     borderIcon = { 0.2, 0.2, 0.2, 1 },
 
