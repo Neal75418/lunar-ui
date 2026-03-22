@@ -221,7 +221,7 @@ local function InstallTaintErrorFilter()
     taintFilterFn = function(msg, ...)
         if taintFilterActive then
             local msgStr = tostring(msg or "")
-            if msgStr:find("secret number value") then
+            if msgStr:find("secret number value") or msgStr:find("Scale must be > 0") then
                 return
             end
         end
@@ -364,8 +364,10 @@ end
 -- ❌ hooksecurefunc("seterrorhandler") — WoW 禁止 hook 此全域函數
 -- ❌ SetParent(HiddenFrame) — Edit Mode 用 registeredSystemFrames 列表找框架，不看 parent
 -- ✓ 覆蓋 OnEditModeEnter/OnEditModeExit 為 no-op — secureexecuterange 呼叫時什麼都不做
--- ✓ 覆蓋 SetScale 攔截負值 — UpdateRightActionBarPositions 也從 ActionBar visibility 路徑
---   被呼叫（上坐騎等），OnEditModeEnter no-op 擋不住這條路徑
+-- ✓ error filter 攔截 "Scale must be > 0" — UpdateRightActionBarPositions 從 ActionBar
+--   visibility 路徑被呼叫（上坐騎等），該路徑不在 secureexecuterange 內，可被 seterrorhandler 攔截
+-- ❌ 覆蓋 SetScale — Lua 覆蓋會 taint 框架，secureexecuterange 在 Edit Mode 退出時觸發
+--   "secret number value" C++ 錯誤（無法被 seterrorhandler 攔截），已移除此策略
 local function HideMultiActionBars()
     -- 使用共用的 MULTIBAR_NAMES（與 EDIT_MODE_PROTECTED_FRAMES 同步）
     for _, barName in ipairs(MULTIBAR_NAMES) do
@@ -377,7 +379,7 @@ local function HideMultiActionBars()
                     parent = bar:GetParent(),
                     onEditModeEnter = bar.OnEditModeEnter,
                     onEditModeExit = bar.OnEditModeExit,
-                    setScale = rawget(bar, "SetScale"), -- nil = 使用 metatable 的 C 方法
+                    -- 注意：不保存/覆蓋 SetScale（Lua 覆蓋會 taint 框架，見下方註解）
                 }
             end
             -- 1. 移到隱藏父框架：視覺上隱藏（由父框架 Hide() 使其不可見）
@@ -387,15 +389,9 @@ local function HideMultiActionBars()
             -- 2. 中和 Edit Mode：覆蓋為 no-op，防止 scale 計算
             bar.OnEditModeEnter = function() end
             bar.OnEditModeExit = function() end
-            -- 3. 攔截負值 SetScale：UpdateRightActionBarPositions 在多條路徑被呼叫
-            --    （Edit Mode 進入、上坐騎 visibility 變化等），隱藏後 availableSpace
-            --    可能為負 → newScale < 0 → C++ 層拋出 "Scale must be > 0"
-            bar.SetScale = function(self, scale)
-                if scale and scale > 0 then
-                    -- 呼叫 C 方法（繞過我們的 Lua 覆蓋）
-                    getmetatable(self).__index.SetScale(self, scale)
-                end
-            end
+            -- 注意：不覆蓋 SetScale！Lua 覆蓋會 taint 框架，導致 secureexecuterange
+            -- 在 Edit Mode 退出時觸發 "secret number value" C++ 錯誤（無法被 seterrorhandler 攔截）。
+            -- 上坐騎路徑的 "Scale must be > 0" 改由 error filter 攔截（該路徑不在 secureexecuterange 內）。
         end
     end
 
@@ -555,7 +551,6 @@ local function RestoreBlizzardBars()
         end)
         bar.OnEditModeEnter = state.onEditModeEnter
         bar.OnEditModeExit = state.onEditModeExit
-        bar.SetScale = state.setScale -- nil = 移除 Lua 覆蓋，恢復 metatable 的 C 方法
     end
     wipe(savedBarStates)
 
