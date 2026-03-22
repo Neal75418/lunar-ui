@@ -191,6 +191,9 @@ local VALIDATION_RULES = {
     { path = "chat.width", type = "number", min = 100, max = 1000 },
     { path = "chat.height", type = "number", min = 50, max = 600 },
     { path = "chat.fadeTime", type = "number", min = 0, max = 600 },
+    { path = "chat.backdropAlpha", type = "number", min = 0, max = 1 },
+    { path = "chat.inactiveTabAlpha", type = "number", min = 0.1, max = 1 },
+    { path = "chat.editBoxOffset", type = "number", min = 0, max = 20 },
     -- 視覺風格
     { path = "style.theme", type = "string", enum = { lunar = true, parchment = true, minimal = true } },
     { path = "style.fontSize", type = "number", min = 6, max = 32 },
