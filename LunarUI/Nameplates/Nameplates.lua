@@ -525,7 +525,7 @@ end
 local function FriendlyNameplateLayout(frame, _unit)
     local db = LunarUI.GetModuleDB("nameplates")
     local width = db and db.width or 120
-    local height = (db and db.height or 12) * 0.8 -- Slightly smaller
+    local height = db and db.height or 12 -- 與敵方名牌相同高度
 
     frame:SetSize(width, height)
 
