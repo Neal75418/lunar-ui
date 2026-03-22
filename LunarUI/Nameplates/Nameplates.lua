@@ -136,7 +136,8 @@ local function CreateHealthBar(frame)
     health:SetStatusBarTexture(GetStatusBarTexture())
     health:SetAllPoints()
 
-    -- 反應顏色（敵對/友善）
+    -- 職業顏色優先，NPC 用反應顏色（與 UnitFrames 一致）
+    health.colorClass = true
     health.colorReaction = true
     health.colorTapping = true
     health.colorDisconnected = true
@@ -155,8 +156,10 @@ local function CreateHealthBar(frame)
     local healthText
     if db and db.showHealthText then
         healthText = health:CreateFontString(nil, "OVERLAY")
-        LunarUI.SetFont(healthText, 8, "OUTLINE")
-        healthText:SetPoint("CENTER", health, "CENTER", 0, 0)
+        LunarUI.SetFont(healthText, 7, "OUTLINE")
+        healthText:SetPoint("RIGHT", health, "RIGHT", -2, 0)
+        healthText:SetJustifyH("RIGHT")
+        healthText:SetTextColor(0.9, 0.9, 0.9)
         frame.HealthText = healthText
     end
 
@@ -210,12 +213,12 @@ end
 --[[ Name Text ]]
 local function CreateNameText(frame)
     local name = frame:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(name, 9, "OUTLINE")
-    name:SetPoint("BOTTOM", frame, "TOP", 0, 2)
-    name:SetJustifyH("CENTER")
-    name:SetWidth(frame:GetWidth() * 1.5)
+    LunarUI.SetFont(name, 8, "OUTLINE")
+    name:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 2)
+    name:SetJustifyH("LEFT")
+    name:SetWidth(frame:GetWidth())
+    name:SetTextColor(0.85, 0.85, 0.85)
 
-    -- [name:abbrev] 不是標準 oUF tag，改用 [name]
     frame:Tag(name, "[name]")
     frame.Name = name
     return name
@@ -225,8 +228,9 @@ end
 local function CreateLevelText(frame)
     local level = frame:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(level, 8, "OUTLINE")
-    level:SetPoint("BOTTOMRIGHT", frame, "TOPLEFT", -2, 2)
+    level:SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", 0, 2)
     level:SetJustifyH("RIGHT")
+    level:SetTextColor(0.7, 0.7, 0.7)
 
     frame:Tag(level, "[difficulty][level]")
     frame.LevelText = level
@@ -381,26 +385,23 @@ local function CreateNameplateBuffs(frame)
     return buffs
 end
 
---[[ Threat Indicator ]]
+--[[ Threat Indicator — 血條頂部 1px 細線（取代粗邊框） ]]
 local function CreateThreatIndicator(frame)
-    local threat = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    threat:SetPoint("TOPLEFT", -2, 2)
-    threat:SetPoint("BOTTOMRIGHT", 2, -2)
-    threat:SetBackdrop({
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    threat:SetBackdropBorderColor(0, 0, 0, 0)
-    threat:SetFrameLevel(frame:GetFrameLevel() + 5)
+    local threat = frame:CreateTexture(nil, "OVERLAY")
+    threat:SetHeight(1)
+    threat:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 1)
+    threat:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 1)
+    threat:SetTexture("Interface\\Buttons\\WHITE8x8")
+    threat:SetVertexColor(0, 0, 0, 0)
 
     threat.PostUpdate = function(self, _unit, status, r, g, b)
         if not self then
             return
         end
         if status and status > 0 and r and g and b then
-            self:SetBackdropBorderColor(r, g, b, 0.8)
+            self:SetVertexColor(r, g, b, 0.9)
         else
-            self:SetBackdropBorderColor(0, 0, 0, 0)
+            self:SetVertexColor(0, 0, 0, 0)
         end
     end
 
