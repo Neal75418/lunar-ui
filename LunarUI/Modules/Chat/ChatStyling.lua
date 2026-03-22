@@ -28,10 +28,6 @@ local function StyleChatTab(chatFrame)
         return
     end
 
-    -- 快取設定值（避免每次 tab 切換時查 DB）
-    local chatDB = LunarUI.GetModuleDB("chat")
-    local cachedInactiveTabAlpha = chatDB and chatDB.inactiveTabAlpha or 0.6
-
     -- 簡化標籤外觀
     local tabText = _G[chatFrame:GetName() .. "TabText"] or tab.Text
     if tabText then
@@ -90,7 +86,9 @@ local function StyleChatTab(chatFrame)
                 tab._lunarActiveIndicator:Show()
             end
         else
-            tabText:SetTextColor(0.6, 0.6, 0.6, cachedInactiveTabAlpha) -- inactive
+            local cDB = LunarUI.GetModuleDB("chat")
+            local inactiveAlpha = cDB and cDB.inactiveTabAlpha or 0.6
+            tabText:SetTextColor(0.6, 0.6, 0.6, inactiveAlpha) -- inactive
             if tab._lunarActiveIndicator then
                 tab._lunarActiveIndicator:Hide()
             end
@@ -286,6 +284,16 @@ local function StyleChatFrame(chatFrame)
     chatFrame:SetFont(font or LunarUI.GetSelectedFont(), 13, flags or "")
     LunarUI.RegisterFontString(chatFrame)
 
+    -- 聊天文字淡出時間（0 = 不淡出，映射為極大值）
+    local chatDB = LunarUI.GetModuleDB("chat")
+    local fadeTime = chatDB and chatDB.fadeTime or 120
+    if fadeTime <= 0 then
+        fadeTime = 86400
+    end
+    if chatFrame.SetTimeVisible then
+        chatFrame:SetTimeVisible(fadeTime)
+    end
+
     -- 啟用滑鼠滾輪捲動（使用 HookScript 避免覆蓋原有腳本）
     chatFrame:EnableMouseWheel(true)
     chatFrame:HookScript("OnMouseWheel", function(self, delta)
@@ -438,9 +446,10 @@ local function CreateCopyFrame()
     titleText:SetText(L["CopyChat"] or "Copy Chat")
     titleText:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
 
-    -- 關閉按鈕（使用標準模板確保點擊區域正確）
+    -- 關閉按鈕
     local closeBtn = CreateFrame("Button", nil, copyFrame, "UIPanelCloseButton")
     closeBtn:SetPoint("TOPRIGHT", 2, 2)
+    LunarUI.SkinCloseButton(closeBtn)
 
     -- 捲動框架
     local scrollFrame = CreateFrame("ScrollFrame", "LunarUI_ChatCopyScroll", copyFrame, "UIPanelScrollFrameTemplate")
@@ -462,7 +471,7 @@ local function CreateCopyFrame()
     -- 樣式化捲軸
     local scrollBar = _G["LunarUI_ChatCopyScrollScrollBar"]
     if scrollBar then
-        scrollBar:SetWidth(12)
+        LunarUI.SkinScrollBar(scrollBar)
     end
 
     return copyFrame

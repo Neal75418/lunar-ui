@@ -78,6 +78,14 @@ local L = {
     chatDesc = "Chat frame settings",
     improvedColors = "Improved Colors",
     classColors = "Class Colors",
+    fadeTime = "Text Fade Time",
+    fadeTimeDesc = "Seconds before chat text fades out (0 = never fade)",
+    backdropAlpha = "Backdrop Opacity",
+    backdropAlphaDesc = "Chat frame backdrop opacity",
+    inactiveTabAlpha = "Inactive Tab Opacity",
+    inactiveTabAlphaDesc = "Opacity of inactive chat tab text",
+    editBoxOffset = "Edit Box Spacing",
+    editBoxOffsetDesc = "Spacing between chat frame and input box",
 
     -- Tooltip
     tooltip = "Tooltip",
@@ -1812,6 +1820,87 @@ local options = {
                     end,
                     set = function(_, v)
                         GetDB().chat.classColors = v
+                    end,
+                },
+                fadeTime = {
+                    order = 9,
+                    type = "range",
+                    name = L.fadeTime,
+                    desc = L.fadeTimeDesc,
+                    min = 0,
+                    max = 600,
+                    step = 10,
+                    get = function()
+                        return GetDB().chat.fadeTime
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.fadeTime = v
+                        local ft = v <= 0 and 86400 or v
+                        for i = 1, NUM_CHAT_WINDOWS do
+                            local cf = _G["ChatFrame" .. i]
+                            if cf and cf.SetTimeVisible then
+                                cf:SetTimeVisible(ft)
+                            end
+                        end
+                    end,
+                },
+                backdropAlpha = {
+                    order = 10,
+                    type = "range",
+                    name = L.backdropAlpha,
+                    desc = L.backdropAlphaDesc,
+                    min = 0,
+                    max = 1,
+                    step = 0.05,
+                    get = function()
+                        return GetDB().chat.backdropAlpha
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.backdropAlpha = v
+                        local C = LunarUI.Colors
+                        for i = 1, NUM_CHAT_WINDOWS do
+                            local cf = _G["ChatFrame" .. i]
+                            if cf and cf.LunarBackdrop then
+                                cf.LunarBackdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], v)
+                            end
+                        end
+                    end,
+                },
+                inactiveTabAlpha = {
+                    order = 11,
+                    type = "range",
+                    name = L.inactiveTabAlpha,
+                    desc = L.inactiveTabAlphaDesc,
+                    min = 0.1,
+                    max = 1,
+                    step = 0.05,
+                    get = function()
+                        return GetDB().chat.inactiveTabAlpha
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.inactiveTabAlpha = v
+                        -- 立即更新所有 tab 狀態
+                        for i = 1, NUM_CHAT_WINDOWS do
+                            local tab = _G["ChatFrame" .. i .. "Tab"]
+                            if tab and tab._lunarUpdateActive then
+                                tab._lunarUpdateActive()
+                            end
+                        end
+                    end,
+                },
+                editBoxOffset = {
+                    order = 12,
+                    type = "range",
+                    name = L.editBoxOffset,
+                    desc = L.editBoxOffsetDesc .. " (requires reload)",
+                    min = 0,
+                    max = 20,
+                    step = 1,
+                    get = function()
+                        return GetDB().chat.editBoxOffset
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.editBoxOffset = v
                     end,
                 },
             },

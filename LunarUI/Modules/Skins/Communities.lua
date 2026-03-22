@@ -67,6 +67,7 @@ local function SkinCommunities()
             end
             if messageFrame.ScrollBox then
                 LunarUI.StripTextures(messageFrame.ScrollBox)
+                AddPanelBackdrop(messageFrame.ScrollBox)
             end
         end
     end
