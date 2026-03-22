@@ -1248,10 +1248,14 @@ function LunarUI.CleanupMinimap()
     end
     -- 停用方形小地圖（wrapper 仍在，但 flag 為 false 時直接透傳原始函數）
     lunarMinimapIsSquare = false
-    -- 還原 Minimap 到原始 parent（MinimapCluster）
+    -- 還原 Minimap 到原始 parent（MinimapCluster）並重設錨點
+    -- 初始化時 Minimap 被 reparent 到 minimapFrame 並 ClearAllPoints + SetAllPoints，
+    -- 還原時必須重設錨點，否則 Minimap 的 anchor 仍指向已隱藏的 minimapFrame
     if _G.Minimap and _G.MinimapCluster then
         pcall(function()
             _G.Minimap:SetParent(_G.MinimapCluster)
+            _G.Minimap:ClearAllPoints()
+            _G.Minimap:SetPoint("CENTER", _G.MinimapCluster, "CENTER", 9, -5)
             _G.MinimapCluster:Show()
         end)
     end
