@@ -28,6 +28,7 @@ local BINDING_FORMATS = {
 local keybindMode = false
 local keybindCombatFrame = nil -- 戰鬥自動退出 keybind mode（避免 secure button taint）
 local microMenuLayoutHooked = false
+local editModeExitHooked = false -- Edit Mode 退出重新套用位置（singleton hook）
 local savedExtraActionPos = nil
 local savedZoneAbilityPos = nil
 
@@ -51,6 +52,34 @@ local function RestoreFramePoints(frame, points)
     for _, p in ipairs(points) do
         frame:SetPoint(p[1], p[2], p[3], p[4], p[5])
     end
+end
+
+-- Edit Mode 退出時重新套用 ExtraAction/ZoneAbility 位置
+-- Blizzard 的 EditModeManager:ExitEditMode() 會重新套用 saved layout，覆蓋我們的 SetPoint
+local function HookEditModeExit()
+    if editModeExitHooked then
+        return
+    end
+    if not _G.EditModeManagerFrame or not _G.EditModeManagerFrame.ExitEditMode then
+        return
+    end
+    editModeExitHooked = true
+    hooksecurefunc(_G.EditModeManagerFrame, "ExitEditMode", function()
+        if not LunarUI._modulesEnabled then
+            return
+        end
+        if InCombatLockdown() then
+            return
+        end
+        -- 延遲一幀：讓 Blizzard 先完成 layout 套用，再覆蓋
+        C_Timer.After(0, function()
+            if not LunarUI._modulesEnabled or InCombatLockdown() then
+                return
+            end
+            LunarUI.ABStyleExtraActionButton()
+            LunarUI.ABStyleZoneAbilityButton()
+        end)
+    end)
 end
 
 --------------------------------------------------------------------------------
@@ -116,6 +145,9 @@ local function StyleExtraActionButton()
     -- 註冊到月相感知（跟隨動作條透明度）
     local bars = LunarUI._actionBars
     bars.extraActionButton = extra
+
+    -- Edit Mode 退出時重新套用位置（singleton hook，只安裝一次）
+    HookEditModeExit()
 end
 
 -- Zone Ability Button（龍島飛行等區域技能）

@@ -125,8 +125,8 @@ region1._texturePath = "Interface\\MainMenuBar\\MainMenuBar"
 local region2 = CreateMockFrame("region2")
 region2._texturePath = "Interface\\MainMenuBar\\Gryphon"
 
--- MainMenuBarArtFrame mock
-local artFrame = CreateMockFrame("MainMenuBarArtFrame")
+-- MainActionBar mock（12.0 取代 MainMenuBarArtFrame）
+local artFrame = CreateMockFrame("MainActionBar")
 artFrame._regions = { region1, region2 }
 artFrame.LeftEndCap = CreateMockFrame("LeftEndCap")
 artFrame.LeftEndCap._texturePath = "Interface\\MainMenuBar\\UI-MainMenuBar-EndCap-Human"
@@ -136,14 +136,14 @@ artFrame.RightEndCap._texturePath = "Interface\\MainMenuBar\\UI-MainMenuBar-EndC
 -- 註冊全域框架
 _G.MultiBarBottomLeft = multiBar1
 _G.MultiBarRight = multiBar2
-_G.MainMenuBarArtFrame = artFrame
+_G.MainActionBar = artFrame
+_G.MainMenuBarArtFrame = nil -- 12.0 已不存在
 _G.MainMenuBar = nil -- 簡化：不測試 MainMenuBar 隱藏（減少 mock 複雜度）
 _G.OverrideActionBar = nil
 _G.MicroMenu = nil
 _G.StanceBar = nil
 _G.PetActionBar = nil
 _G.StatusTrackingBarManager = nil
-_G.MainMenuBarArtFrameBackground = nil
 
 -- 建立 LunarUI 表並載入模組
 local LunarUI = {

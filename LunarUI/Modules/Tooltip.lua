@@ -625,10 +625,9 @@ local function OnTooltipSetItem(tooltip)
 
     -- 依物品品質著色邊框
     local itemID = itemLink:match("item:(%d+)")
+    -- 12.0: GetItemQualityByID 是正確 API，GetItemInfo 已 deprecated
+    -- 物品未快取時兩者都回傳 nil（async），不做 fallback 避免呼叫 deprecated API
     local quality = itemID and C_Item.GetItemQualityByID(tonumber(itemID))
-    if not quality then
-        quality = select(3, C_Item.GetItemInfo(itemLink))
-    end
     if quality and quality > 1 then
         local qr, qg, qb = C_Item.GetItemQualityColor(quality)
         if qr and qg and qb then
@@ -661,10 +660,16 @@ local function OnTooltipSetSpell(tooltip)
         return
     end
 
-    if not tooltip.GetSpell then
-        return
+    -- 12.0 優先路徑：GetTooltipData().id（GetSpell() 在 TooltipDataProcessor 回呼中可能回傳 nil）
+    local spellID
+    local tooltipData = tooltip.GetTooltipData and tooltip:GetTooltipData()
+    if tooltipData then
+        spellID = tooltipData.id
     end
-    local spellID = select(2, tooltip:GetSpell())
+    -- 經典版 / 舊版 fallback
+    if not spellID and tooltip.GetSpell then
+        spellID = select(2, tooltip:GetSpell())
+    end
     if spellID then
         tooltip:AddLine("|cff888888法術 ID: " .. spellID .. "|r")
         if not InCombatLockdown() and tooltip == GameTooltip then

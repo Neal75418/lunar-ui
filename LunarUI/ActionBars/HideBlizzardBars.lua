@@ -275,7 +275,7 @@ end
 --     ├ EndCaps.LeftEndCap / RightEndCap（取代 MainMenuBarLeftEndCap/RightEndCap）
 --     ├ ActionBarPageNumber.UpButton / DownButton（取代 ActionBarUpButton/DownButton）
 --     └ BorderArt（取代 MainMenuBarBackgroundArt）
---   MainMenuBarArtFrame 在 12.0 可能已不存在，但保留 fallback 避免降級
+--   MainMenuBarArtFrame 在 12.0 已不存在（10.0 由 MainActionBar 取代）
 local function HideArtFrameCompletely(artFrame)
     if not artFrame then
         return
@@ -360,8 +360,7 @@ local function HideMainActionBar()
     end
     -- MainActionBar（WoW 12.0+ 裝飾框架）
     HideArtFrameCompletely(_G.MainActionBar)
-    -- MainMenuBarArtFrame（pre-12.0 fallback，可能已不存在）
-    HideArtFrameCompletely(MainMenuBarArtFrame)
+    -- 注意：MainMenuBarArtFrame 在 12.0 已不存在（10.0 由 MainActionBar 取代），不再 fallback
 end
 
 -- 隱藏多重動作條、WoW 12.0 動作條、容器
@@ -481,7 +480,7 @@ local function HideBlizzardBars()
     end
 
     -- 四階段掃描（所有操作冪等，延遲重試 1s/3s 會再次執行整個流程）：
-    -- 1. HideMainActionBar — MainMenuBar + MainActionBar/MainMenuBarArtFrame 裝飾
+    -- 1. HideMainActionBar — MainMenuBar + MainActionBar 裝飾
     -- 2. HideMultiActionBars — MultiBar 1-7 + EditMode workaround + 容器
     -- 3. HideBarDecorations — 狀態條/姿態條/寵物條/PossessActionBar
     -- 4. HideActionButtons — ActionButton 1-12 + MultiBar 按鈕
