@@ -32,6 +32,7 @@ local floor = math.floor
 local providers = {} -- 已註冊的資料文字 provider
 local onUpdateProviders = {} -- 僅包含 onUpdate=true 的 provider（Fix 1）
 local panels = {} -- 已建立的面板框架
+local panelFrameCache = {} -- 命名 frame 快取，防止 off/on 重名
 local slotsByProvider = {} -- 反向查找：providerName → { slot1, slot2, ... }（Fix 5）
 local eventFrame -- 共用事件處理框架
 local eventToProviders = {} -- event → { providerName1, providerName2, ... }（Fix 2）
@@ -489,7 +490,17 @@ RegisterProvider("coords", {
 --------------------------------------------------------------------------------
 
 local function CreateDataPanel(name, db)
-    local panel = CreateFrame("Frame", "LunarUI_DataPanel_" .. name, UIParent, "BackdropTemplate")
+    local frameName = "LunarUI_DataPanel_" .. name
+    local panel = panelFrameCache[frameName]
+    if panel then
+        -- 重用既有 frame，更新尺寸/位置後 Show
+        panel:SetSize(db.width or 400, db.height or 22)
+        panel:SetPoint(db.point or "BOTTOM", UIParent, db.point or "BOTTOM", db.x or 0, db.y or 0)
+        panel:Show()
+        return panel
+    end
+    panel = CreateFrame("Frame", frameName, UIParent, "BackdropTemplate")
+    panelFrameCache[frameName] = panel
     panel:SetSize(db.width or 400, db.height or 22)
     panel:SetPoint(db.point or "BOTTOM", UIParent, db.point or "BOTTOM", db.x or 0, db.y or 0)
     panel:SetFrameStrata("LOW")

@@ -20,6 +20,7 @@ end
 --------------------------------------------------------------------------------
 
 local automationFrame = CreateFrame("Frame")
+local automationGeneration = 0 -- 遞增 token，讓 pending timer 在 cleanup 後失效
 
 --------------------------------------------------------------------------------
 -- 自動修裝
@@ -77,7 +78,11 @@ local function OnPlayerDead()
     local instanceType = select(2, IsInInstance())
     if instanceType == "pvp" then
         -- 延遲一小段時間再釋放（避免復活技能衝突）
+        local gen = automationGeneration
         C_Timer.After(0.3, function()
+            if gen ~= automationGeneration then
+                return
+            end
             if UnitIsDeadOrGhost("player") and not UnitIsFeignDeath("player") then
                 RepopMe()
             end
@@ -96,7 +101,11 @@ local function OnAchievementEarned()
     end
 
     -- 延遲截圖讓成就提示先顯示
+    local gen = automationGeneration
     C_Timer.After(1, function()
+        if gen ~= automationGeneration then
+            return
+        end
         Screenshot()
     end)
 end
@@ -194,6 +203,7 @@ function LunarUI.InitAutomation()
 end
 
 function LunarUI.CleanupAutomation()
+    automationGeneration = automationGeneration + 1
     automationFrame:UnregisterAllEvents()
     automationFrame:SetScript("OnEvent", nil)
 end
