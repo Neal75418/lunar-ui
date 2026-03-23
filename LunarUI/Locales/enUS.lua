@@ -437,6 +437,7 @@ L["HealerLayoutDesc"] = "Large raid frames centered for heal targeting"
 L["FeatureUnavailable"] = "This feature is not available"
 L["ImportTooLarge"] = "Import string is too large"
 L["KeybindCombatLocked"] = "Cannot change keybinds during combat"
+L["KeybindCombatExited"] = "Keybind mode auto-exited (entering combat)"
 L["CombatLocked"] = "Cannot perform this action during combat"
 
 -- Export

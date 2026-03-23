@@ -26,6 +26,7 @@ local BINDING_FORMATS = {
 --------------------------------------------------------------------------------
 
 local keybindMode = false
+local keybindCombatFrame = nil -- 戰鬥自動退出 keybind mode（避免 secure button taint）
 local microMenuLayoutHooked = false
 local savedExtraActionPos = nil
 local savedZoneAbilityPos = nil
@@ -302,6 +303,10 @@ end
 -- 快捷鍵模式
 --------------------------------------------------------------------------------
 
+-- 前向宣告（EnterKeybindMode 的戰鬥事件回呼需要呼叫 ExitKeybindMode）
+---@type fun()
+local ExitKeybindMode
+
 local function EnterKeybindMode()
     if InCombatLockdown() then
         LunarUI:Print(L["KeybindCombatLocked"] or "Cannot change keybinds during combat")
@@ -345,15 +350,34 @@ local function EnterKeybindMode()
         end
     end
 
+    -- 註冊戰鬥事件：進入戰鬥時自動退出 keybind mode
+    -- SecureActionButtonTemplate 上的 OnKeyDown handler 是 tainted Lua，
+    -- 戰鬥中會觸發 ADDON_ACTION_BLOCKED
+    if not keybindCombatFrame then
+        keybindCombatFrame = CreateFrame("Frame")
+        keybindCombatFrame:SetScript("OnEvent", function()
+            if keybindMode then
+                ExitKeybindMode()
+                LunarUI:Print(L["KeybindCombatExited"] or "Keybind mode auto-exited (entering combat)")
+            end
+        end)
+    end
+    keybindCombatFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+
     local msg = L["KeybindEnabled"] or "Keybind mode enabled. Hover over a button and press a key. Press ESC to exit."
     LunarUI:Print(msg)
 end
 
-local function ExitKeybindMode()
+ExitKeybindMode = function()
     if not keybindMode then
         return
     end
     keybindMode = false
+
+    -- 解除戰鬥自動退出事件
+    if keybindCombatFrame then
+        keybindCombatFrame:UnregisterAllEvents()
+    end
 
     local buttons = LunarUI._actionBarButtons
     for _name, button in pairs(buttons) do
@@ -393,6 +417,10 @@ end
 LunarUI._ABSpecialButtonsState = {
     resetKeybindMode = function()
         keybindMode = false
+        -- 解除戰鬥自動退出事件（CleanupActionBars 在戰鬥中無法呼叫 ExitKeybindMode）
+        if keybindCombatFrame then
+            keybindCombatFrame:UnregisterAllEvents()
+        end
     end,
     isKeybindMode = function()
         return keybindMode
