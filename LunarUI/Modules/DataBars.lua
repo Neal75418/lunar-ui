@@ -555,4 +555,5 @@ LunarUI:RegisterModule("DataBars", {
         LunarUI.CleanupDataBars()
     end,
     delay = 0.3,
+    lifecycle = "reversible",
 })

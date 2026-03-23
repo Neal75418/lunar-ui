@@ -704,4 +704,5 @@ LunarUI:RegisterModule("InstallWizard", {
     onDisable = function()
         LunarUI:CleanupInstallWizard()
     end,
+    lifecycle = "reversible",
 })

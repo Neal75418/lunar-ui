@@ -81,7 +81,7 @@ LunarUI:RegisterModule("ModuleName", {
 -- lifecycle 類型：
 --   "reversible"       — onDisable 完全還原 Blizzard 預設狀態（預設值；ActionBars、Minimap、Bags、Chat、Tooltip）
 --   "soft_disable"     — 僅隱藏框架，不還原 Blizzard，需 /reload（UnitFrames、Nameplates）
---   "reload_required"  — 深度修改無法撤銷，需 /reload（目前未使用，保留語義）
+--   "reload_required"  — 深度修改無法撤銷，需 /reload（Chat、Skins）
 
 -- 註冊 HUD 框架 → 自動納入 ApplyHUDScale（Config.lua）
 LunarUI:RegisterHUDFrame("FrameName")

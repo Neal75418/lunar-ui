@@ -504,4 +504,5 @@ LunarUI:RegisterModule("FrameMover", {
     onEnable = ApplyAllSavedPositions,
     onDisable = LunarUI.CleanupFrameMover,
     delay = 2.0,
+    lifecycle = "reversible",
 })

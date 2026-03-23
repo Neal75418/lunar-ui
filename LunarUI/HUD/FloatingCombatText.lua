@@ -507,4 +507,5 @@ LunarUI:RegisterModule("FloatingCombatText", {
     end,
 
     delay = 0.5,
+    lifecycle = "reversible",
 })

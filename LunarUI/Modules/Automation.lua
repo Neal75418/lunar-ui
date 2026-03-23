@@ -223,4 +223,5 @@ LunarUI:RegisterModule("Automation", {
     onDisable = function()
         LunarUI.CleanupAutomation()
     end,
+    lifecycle = "reversible",
 })

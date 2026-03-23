@@ -474,4 +474,5 @@ LunarUI:RegisterModule("Skins", {
         LunarUI.CleanupSkins()
     end,
     delay = 1.5,
+    lifecycle = "reload_required",
 })

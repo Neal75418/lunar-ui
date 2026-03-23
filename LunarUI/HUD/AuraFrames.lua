@@ -978,4 +978,5 @@ LunarUI:RegisterModule("AuraFrames", {
     onEnable = Initialize,
     onDisable = LunarUI.CleanupAuraFrames,
     delay = 0.3,
+    lifecycle = "reversible",
 })

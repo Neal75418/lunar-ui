@@ -516,4 +516,5 @@ LunarUI:RegisterModule("ClassResources", {
     onEnable = Initialize,
     onDisable = LunarUI.CleanupClassResources,
     delay = 1.0,
+    lifecycle = "reversible",
 })

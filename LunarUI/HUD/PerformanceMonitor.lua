@@ -271,4 +271,5 @@ LunarUI:RegisterModule("PerformanceMonitor", {
     onEnable = Initialize,
     onDisable = LunarUI.CleanupPerformanceMonitor,
     delay = 0.5,
+    lifecycle = "reversible",
 })

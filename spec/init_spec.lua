@@ -256,6 +256,49 @@ describe("DisableModules", function()
         assert.is_true(hasReloadMsg)
     end)
 
+    it("prints reload message when reload_required modules exist", function()
+        LunarUI:RegisterModule("ReloadRequiredMsg", {
+            onEnable = function() end,
+            lifecycle = "reload_required",
+        })
+
+        LunarUI.EnableModules()
+        wipe(aceAddonObj._printLog)
+        LunarUI.DisableModules()
+
+        local hasReloadMsg = false
+        for _, msg in ipairs(aceAddonObj._printLog) do
+            if msg:find("requires UI reload") or msg:find("需重載") then
+                hasReloadMsg = true
+            end
+        end
+        assert.is_true(hasReloadMsg)
+    end)
+
+    it("prints reload message when mixed reversible + soft_disable modules", function()
+        LunarUI:RegisterModule("MixedReversible", {
+            onEnable = function() end,
+            onDisable = function() end,
+            lifecycle = "reversible",
+        })
+        LunarUI:RegisterModule("MixedSoftDisable", {
+            onEnable = function() end,
+            lifecycle = "soft_disable",
+        })
+
+        LunarUI.EnableModules()
+        wipe(aceAddonObj._printLog)
+        LunarUI.DisableModules()
+
+        local hasReloadMsg = false
+        for _, msg in ipairs(aceAddonObj._printLog) do
+            if msg:find("requires UI reload") or msg:find("需重載") then
+                hasReloadMsg = true
+            end
+        end
+        assert.is_true(hasReloadMsg)
+    end)
+
     it("prints clean message when only reversible modules exist", function()
         LunarUI:RegisterModule("ReversibleOnly", {
             onEnable = function() end,

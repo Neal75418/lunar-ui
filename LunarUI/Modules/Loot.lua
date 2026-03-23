@@ -434,4 +434,5 @@ LunarUI.CleanupLoot = CleanupLoot
 LunarUI:RegisterModule("Loot", {
     onEnable = InitializeLoot,
     onDisable = CleanupLoot,
+    lifecycle = "reversible",
 })

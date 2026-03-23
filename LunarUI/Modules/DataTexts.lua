@@ -829,4 +829,5 @@ LunarUI:RegisterModule("DataTexts", {
         LunarUI.CleanupDataTexts()
     end,
     delay = 0.4,
+    lifecycle = "reversible",
 })

@@ -642,4 +642,5 @@ LunarUI:RegisterModule("CooldownTracker", {
     onEnable = Initialize,
     onDisable = LunarUI.CleanupCooldownTracker,
     delay = 1.5,
+    lifecycle = "reversible",
 })
