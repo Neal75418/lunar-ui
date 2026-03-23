@@ -89,6 +89,7 @@ local buffIcons = {}
 local debuffIcons = {}
 local isInitialized = false
 local auraInitGeneration = 0
+local auraCombatDeferFrame = nil -- singleton：戰鬥中 cleanup 時延遲還原 Blizzard 框架
 
 -- /reload 時舊框架已在正確位置，不隱藏它（避免閃爍和位置跳動）
 
@@ -792,7 +793,7 @@ function LunarUI.CleanupAuraFrames()
     buffFrame = nil
     debuffFrame = nil
 
-    -- 還原暴雪框架（恢復 scale / alpha / 可見性）
+    -- 還原暴雪框架（恢復 scale / alpha — HideBlizzardBuffFrames 不使用 Hide，故不需 Show）
     if not InCombatLockdown() then
         for _, frameName in ipairs(BLIZZARD_BUFF_FRAME_NAMES) do
             local frame = _G[frameName]
@@ -800,10 +801,30 @@ function LunarUI.CleanupAuraFrames()
                 pcall(function()
                     frame:SetScale(1)
                     frame:SetAlpha(1)
-                    frame:Show()
                 end)
             end
         end
+    else
+        -- 戰鬥中無法操作框架屬性，延遲至脫戰後還原
+        if not auraCombatDeferFrame then
+            auraCombatDeferFrame = CreateFrame("Frame")
+            auraCombatDeferFrame:SetScript("OnEvent", function(self)
+                self:UnregisterAllEvents()
+                if LunarUI._modulesEnabled then
+                    return
+                end -- 脫戰前又重新啟用了，不需還原
+                for _, frameName in ipairs(BLIZZARD_BUFF_FRAME_NAMES) do
+                    local frame = _G[frameName]
+                    if frame then
+                        pcall(function()
+                            frame:SetScale(1)
+                            frame:SetAlpha(1)
+                        end)
+                    end
+                end
+            end)
+        end
+        auraCombatDeferFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     end
 
     -- 停止 OnUpdate 避免空轉（Initialize 會重新設定）
