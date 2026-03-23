@@ -104,6 +104,7 @@ local LunarUI = {
         }, {})
     end,
     HideBlizzardBarsDelayed = function() end,
+    RestoreBlizzardBars = function() end,
     Print = function() end,
     db = {
         profile = {
@@ -200,6 +201,17 @@ describe("ActionBars lifecycle", function()
         assert.has_no_errors(function()
             LunarUI.ToggleKeybindMode()
         end)
+    end)
+
+    it("CleanupActionBars calls RestoreBlizzardBars", function()
+        local restoreCalled = false
+        local origRestore = LunarUI.RestoreBlizzardBars
+        LunarUI.RestoreBlizzardBars = function()
+            restoreCalled = true
+        end
+        LunarUI.CleanupActionBars()
+        assert.is_true(restoreCalled)
+        LunarUI.RestoreBlizzardBars = origRestore
     end)
 
     it("SpawnActionBars creates bar entries", function()

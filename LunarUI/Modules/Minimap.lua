@@ -1661,4 +1661,5 @@ LunarUI:RegisterModule("Minimap", {
     onEnable = InitializeMinimap,
     onDisable = LunarUI.CleanupMinimap,
     delay = 0.5,
+    lifecycle = "reversible",
 })

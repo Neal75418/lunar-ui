@@ -112,6 +112,16 @@ end
 
 -- SafeCall 定義在 Core/Utils.lua（統一版本）
 
+-- 模組生命週期類型
+-- reversible:    onDisable 完全還原 Blizzard 預設狀態（如 ActionBars、Minimap、Bags）
+-- hook-guarded:  永久 hook 搭配 _modulesEnabled guard，無法完全撤銷（如 Chat、Tooltip）
+-- soft-disable:  僅隱藏 LunarUI 框架，不還原 Blizzard 狀態，需 /reload（如 UnitFrames、Nameplates）
+local VALID_LIFECYCLES = {
+    ["reversible"] = true,
+    ["hook-guarded"] = true,
+    ["soft-disable"] = true,
+}
+
 --[[
     RegisterModule - 註冊模組至中央管理表
     @param name     string   模組名稱（用於除錯與記錄）
@@ -119,16 +129,26 @@ end
         onEnable   function  插件啟用時呼叫（可選）
         onDisable  function  插件停用時呼叫（可選）
         delay      number    onEnable 延遲秒數，預設 0（可選）
+        lifecycle  string    生命週期類型："reversible"/"hook-guarded"/"soft-disable"（預設）
 ]]
 function LunarUI:RegisterModule(name, callbacks)
     if not name or not callbacks then
         return
+    end
+    local lifecycle = callbacks.lifecycle or "soft-disable"
+    if not VALID_LIFECYCLES[lifecycle] then
+        self:Error(string.format("Module '%s': invalid lifecycle '%s'", name, tostring(lifecycle)))
+        lifecycle = "soft-disable"
+    end
+    if lifecycle == "reversible" and not callbacks.onDisable then
+        self:Error(string.format("Module '%s': lifecycle 'reversible' requires onDisable", name))
     end
     local entry = {
         name = name,
         onEnable = callbacks.onEnable or function() end,
         onDisable = callbacks.onDisable or function() end,
         delay = callbacks.delay or 0,
+        lifecycle = lifecycle,
     }
     moduleRegistry[#moduleRegistry + 1] = entry
 
@@ -136,6 +156,14 @@ function LunarUI:RegisterModule(name, callbacks)
     if self._modulesEnabled then
         ExecuteModuleCallback(entry)
     end
+end
+
+-- 測試用：重置模組登錄表（僅供 spec 環境）
+LunarUI._resetModuleRegistry = function()
+    wipe(moduleRegistry)
+    enableGeneration = enableGeneration + 1
+    pendingDelayedModules = 0
+    modulesReadyFired = false
 end
 
 --[[
@@ -159,7 +187,6 @@ end
 --[[
     DisableModules - 停用所有已註冊的模組（反向迭代）
     供 /lunar off（ToggleAddon）呼叫，讓「停用」語義完整
-    包含 HideBlizzardBars 的還原
 ]]
 function LunarUI.DisableModules()
     if not LunarUI._modulesEnabled then
@@ -188,15 +215,22 @@ function LunarUI.DisableModules()
         end
     end
 
-    -- 還原暴雪動作條（HideBlizzardBars 的全域副作用）
-    if LunarUI.RestoreBlizzardBars then
-        LunarUI.RestoreBlizzardBars()
+    -- 根據已註冊模組的 lifecycle 類型決定提示訊息
+    -- 目前正式 build 一定有 soft-disable 模組，else 分支為未來個別停用模組預留
+    local hasSoftDisable = false
+    for _, mod in ipairs(moduleRegistry) do
+        if mod.lifecycle == "soft-disable" then
+            hasSoftDisable = true
+            break
+        end
     end
 
-    -- 提示使用者：oUF singleton 模組（UnitFrames、Nameplates）為 soft disable，
-    -- 完全回到 Blizzard 原生需要 /reload
     local L = Engine.L or {}
-    LunarUI:Print(L["LunarUIDisabledReload"] or "LunarUI disabled (requires UI reload)")
+    if hasSoftDisable then
+        LunarUI:Print(L["LunarUIDisabledReload"] or "LunarUI disabled (requires UI reload)")
+    else
+        LunarUI:Print(L["LunarUIDisabled"] or "LunarUI disabled")
+    end
 end
 
 --------------------------------------------------------------------------------

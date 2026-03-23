@@ -215,4 +215,5 @@ LunarUI:RegisterModule("Chat", {
     onEnable = InitializeChat,
     onDisable = CleanupChat,
     delay = 0.1,
+    lifecycle = "hook-guarded",
 })

@@ -600,6 +600,9 @@ local function CleanupActionBars()
     if LunarUI.CleanupVigorTrace then
         LunarUI.CleanupVigorTrace()
     end
+
+    -- 還原暴雪動作條（HideBlizzardBars 的全域副作用，從 Core/Init.lua 移入）
+    LunarUI.RestoreBlizzardBars()
 end
 
 -- 微型按鈕診斷（/lunar debugmicro）
@@ -695,6 +698,7 @@ LunarUI:RegisterModule("ActionBars", {
     onEnable = SpawnActionBars,
     onDisable = CleanupActionBars,
     delay = 0.3,
+    lifecycle = "reversible",
 })
 
 -- 註冊快捷鍵切換函數

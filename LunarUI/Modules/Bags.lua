@@ -1518,4 +1518,5 @@ LunarUI:RegisterModule("Bags", {
     onEnable = InitializeBags,
     onDisable = LunarUI.CleanupBags,
     delay = INIT_DELAY,
+    lifecycle = "reversible",
 })
