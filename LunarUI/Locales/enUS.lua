@@ -133,6 +133,8 @@ L["ProfilerInitHeader"] = "Module Init Timings"
 L["ProfilerTotal"] = "Total"
 L["ProfilerEventHeader"] = "Event Frequency"
 L["ProfilerFires"] = "fires"
+L["ProfilerProfiling"] = "Profiling"
+L["ProfilerEventProfiling"] = "Event profiling"
 
 -- Auras
 L["Auras"] = "Auras"

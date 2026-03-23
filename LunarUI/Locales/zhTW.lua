@@ -138,6 +138,8 @@ L["ProfilerInitHeader"] = "模組初始化耗時"
 L["ProfilerTotal"] = "總計"
 L["ProfilerEventHeader"] = "事件頻率"
 L["ProfilerFires"] = "次觸發"
+L["ProfilerProfiling"] = "效能分析"
+L["ProfilerEventProfiling"] = "事件監控"
 
 -- 光環
 L["Auras"] = "光環"
