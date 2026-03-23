@@ -164,10 +164,7 @@ end
 local function GetInspectSpec(unit)
     -- if not unit or not UnitIsPlayer(unit) then return nil end (Caller ensures)
 
-    local specID
-    if GetInspectSpecialization then
-        specID = GetInspectSpecialization(unit)
-    end
+    local specID = GetInspectSpecialization(unit)
 
     if specID and specID > 0 then
         local _, specName = GetSpecializationInfoByID(specID)

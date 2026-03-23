@@ -67,6 +67,9 @@ end
 -- invert=true: 值越小越好（latency）; false: 值越大越好（fps）
 ---@return number, number
 local function StatusColor(value, greenThreshold, yellowThreshold, invert)
+    if not value then
+        return 1, 0.3
+    end
     local good, warn
     if invert then
         good = value <= greenThreshold
@@ -383,19 +386,14 @@ RegisterProvider("spec", {
         return specName or (L["Spec"] or "Spec")
     end,
     click = function()
-        -- M-8: ToggleTalentFrame 在 WoW 12.0 已改為 C_ClassTalents API
-        if _G.ToggleTalentFrame then
-            ToggleTalentFrame()
-        elseif C_ClassTalents and C_ClassTalents.OpenTalentUI then
-            C_ClassTalents.OpenTalentUI()
-        end
+        ToggleTalentFrame()
     end,
     tooltip = function(slot)
         local specIndex = GetSpecialization()
         if not specIndex then
             return
         end
-        local _, specName, _, _icon = GetSpecializationInfo(specIndex)
+        local _, specName = GetSpecializationInfo(specIndex)
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
         GameTooltip:AddLine(L["Spec"] or "Specialization", 1, 1, 1)

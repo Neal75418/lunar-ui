@@ -305,10 +305,6 @@ describe("Chat lifecycle", function()
         assert.is_function(LunarUI.InitializeChat)
     end)
 
-    it("exports ShowChatCopy function", function()
-        assert.is_function(LunarUI.ShowChatCopy)
-    end)
-
     it("filters passthrough when _modulesEnabled is false", function()
         LunarUI._modulesEnabled = false
         for _, entry in ipairs(registeredFilters) do

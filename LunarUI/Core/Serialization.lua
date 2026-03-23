@@ -92,7 +92,6 @@ local function DeserializeStringInner(str)
             return nil, "預期字串"
         end
         pos = pos + 1
-        local _startPos = pos -- 用於除錯
         local result = ""
 
         while pos <= len do

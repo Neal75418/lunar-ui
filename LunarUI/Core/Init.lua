@@ -337,9 +337,7 @@ function LunarUI.SetupGameMenuButton()
 
         self:AddButton("LunarUI", function()
             PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
-            if _G.HideUIPanel then
-                _G.HideUIPanel(_G.GameMenuFrame)
-            end
+            _G.HideUIPanel(_G.GameMenuFrame)
             local AceConfigDialog = LibStub("AceConfigDialog-3.0", true)
             if AceConfigDialog then
                 AceConfigDialog:Open("LunarUI")

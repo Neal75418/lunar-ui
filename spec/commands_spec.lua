@@ -282,18 +282,6 @@ describe("SlashCommand integration", function()
         assert.is_true(found)
     end)
 
-    it("dispatches 'test' with scenario arg", function()
-        LunarUI:SlashCommand("test mytest")
-        local found = false
-        for _, msg in ipairs(printLog) do
-            if msg:find("mytest") then
-                found = true
-                break
-            end
-        end
-        assert.is_true(found)
-    end)
-
     it("dispatches 'config' command without error", function()
         assert.has_no_errors(function()
             LunarUI:SlashCommand("config")

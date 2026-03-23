@@ -249,7 +249,7 @@ local function UpdateReputation()
         return
     end
 
-    -- GetWatchedFactionInfo 在所有 WoW 版本均可用
+    -- 使用 C_Reputation API 取得監視中的聲望資料
     local name, standing, barMin, barMax, barValue, factionID
     if _G.C_Reputation and _G.C_Reputation.GetWatchedFactionData then
         -- pcall 保護：WoW 12.0 可能將部分聲望欄位標記為 secret values
@@ -262,12 +262,6 @@ local function UpdateReputation()
             barValue = data.currentStanding or 0
             factionID = data.factionID
         end
-    elseif _G.GetWatchedFactionInfo then
-        name, standing, barMin, barMax, barValue, factionID = _G.GetWatchedFactionInfo()
-        -- 提供預設值防止 nil 錯誤
-        barMin = barMin or 0
-        barMax = barMax or 1
-        barValue = barValue or 0
     end
 
     if not name then

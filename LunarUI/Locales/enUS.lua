@@ -75,10 +75,6 @@ L["StatusTitle"] = "|cff8882ffLunarUI Status:|r"
 L["StatusVersion"] = "Version: %s"
 L["StatusEnabled"] = "Enabled: %s"
 L["StatusDebug"] = "Debug: %s"
-L["TestMode"] = "Test mode: %s"
-L["AvailableTests"] = "Available tests:"
-L["CmdTestDesc"] = "Show test help"
-
 -- Combat Messages
 L["CombatEnter"] = "Entering combat"
 L["CombatLeave"] = "Leaving combat"

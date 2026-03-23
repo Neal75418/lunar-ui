@@ -689,10 +689,7 @@ end
 
 -- 匯出
 LunarUI.SpawnActionBars = SpawnActionBars
-LunarUI.EnterKeybindMode = LunarUI.ABEnterKeybindMode
-LunarUI.ExitKeybindMode = LunarUI.ABExitKeybindMode
 LunarUI.CleanupActionBars = CleanupActionBars
-LunarUI.actionBars = bars
 
 LunarUI:RegisterModule("ActionBars", {
     onEnable = SpawnActionBars,

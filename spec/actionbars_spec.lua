@@ -149,20 +149,8 @@ describe("ActionBars exports", function()
         assert.is_function(LunarUI.CleanupActionBars)
     end)
 
-    it("exports EnterKeybindMode as function", function()
-        assert.is_function(LunarUI.EnterKeybindMode)
-    end)
-
-    it("exports ExitKeybindMode as function", function()
-        assert.is_function(LunarUI.ExitKeybindMode)
-    end)
-
     it("exports ToggleKeybindMode as function", function()
         assert.is_function(LunarUI.ToggleKeybindMode)
-    end)
-
-    it("exports actionBars as table", function()
-        assert.is_table(LunarUI.actionBars)
     end)
 end)
 
@@ -191,12 +179,6 @@ describe("ActionBars lifecycle", function()
         end)
     end)
 
-    it("ExitKeybindMode does not error when not active", function()
-        assert.has_no_errors(function()
-            LunarUI.ExitKeybindMode()
-        end)
-    end)
-
     it("ToggleKeybindMode does not error", function()
         assert.has_no_errors(function()
             LunarUI.ToggleKeybindMode()
@@ -217,10 +199,10 @@ describe("ActionBars lifecycle", function()
     it("SpawnActionBars creates bar entries", function()
         LunarUI.CleanupActionBars()
         LunarUI.SpawnActionBars()
-        assert.is_table(LunarUI.actionBars)
+        assert.is_table(LunarUI._actionBars)
         -- verify at least one bar was created (bar1..bar6 are created by SpawnActionBars)
         local count = 0
-        for _ in pairs(LunarUI.actionBars) do
+        for _ in pairs(LunarUI._actionBars) do
             count = count + 1
         end
         assert.is_true(count > 0)

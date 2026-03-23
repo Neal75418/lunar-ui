@@ -21,24 +21,9 @@ end
 -- Media Paths
 --------------------------------------------------------------------------------
 
-local MEDIA_PATH = "Interface\\AddOns\\LunarUI\\Media\\"
-local FONT_PATH = MEDIA_PATH .. "Fonts\\"
-
 --------------------------------------------------------------------------------
 -- Texture Definitions
 --------------------------------------------------------------------------------
-
--- Core textures — custom LunarUI paths stored for future asset creation,
--- effective paths use WoW built-in fallbacks until custom assets are ready.
-local _TEXTURE_CUSTOM = {
-    gradient = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarGradient",
-    smooth = "Interface\\AddOns\\LunarUI\\Media\\Textures\\LunarSmooth",
-    borderInk = "Interface\\AddOns\\LunarUI\\Media\\Textures\\InkBorder",
-    borderGlow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\GlowBorder",
-    parchment = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Parchment",
-    glow = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Glow",
-    spark = "Interface\\AddOns\\LunarUI\\Media\\Textures\\Spark",
-}
 
 -- Effective textures: built-in paths used at runtime
 local TEXTURES = {
@@ -65,34 +50,6 @@ local TEXTURES = {
 -- Color Palettes
 --------------------------------------------------------------------------------
 
--- Lunar color palette (擴充 Tokens.lua 定義的 LunarUI.Colors)
--- 基礎 design tokens（bg, border, text 等）已在 Core/Tokens.lua 定義
--- 此處僅新增 Media 專用的延伸色彩
-local Colors = LunarUI.Colors
-Colors.moonlight = { 0.85, 0.90, 1.00, 1.0 } -- Soft blue-white
-Colors.moonGlow = { 0.70, 0.80, 0.95, 0.8 } -- Subtle glow
-Colors.nightSky = { 0.08, 0.08, 0.12, 0.95 } -- Dark background
-Colors.borderHighlight = { 0.40, 0.45, 0.55, 1.0 } -- Highlighted border
-Colors.text = { 0.90, 0.90, 0.88, 1.0 } -- Off-white text
-Colors.healthLow = { 0.75, 0.25, 0.20, 1.0 } -- Muted red
-
--- Class colors (slightly desaturated for Lunar theme)
-Colors.classColors = {
-    WARRIOR = { 0.78, 0.61, 0.43 },
-    PALADIN = { 0.96, 0.55, 0.73 },
-    HUNTER = { 0.67, 0.83, 0.45 },
-    ROGUE = { 1.00, 0.96, 0.41 },
-    PRIEST = { 1.00, 1.00, 1.00 },
-    DEATHKNIGHT = { 0.77, 0.12, 0.23 },
-    SHAMAN = { 0.00, 0.44, 0.87 },
-    MAGE = { 0.41, 0.80, 0.94 },
-    WARLOCK = { 0.58, 0.51, 0.79 },
-    MONK = { 0.00, 0.78, 0.59 },
-    DRUID = { 1.00, 0.49, 0.04 },
-    DEMONHUNTER = { 0.64, 0.19, 0.79 },
-    EVOKER = { 0.20, 0.58, 0.50 },
-}
-
 --------------------------------------------------------------------------------
 -- Font Definitions
 --------------------------------------------------------------------------------
@@ -109,18 +66,7 @@ local FONTS = {
     header = "Fonts\\MORPHEUS.TTF",
 
     -- Custom fonts: placeholder for future custom font
-    -- lunar = FONT_PATH .. "LunarFont.ttf",
-}
-
--- Font sizes based on context
-LunarUI.FontSizes = {
-    tiny = 9,
-    small = 10,
-    normal = 12,
-    medium = 14,
-    large = 16,
-    huge = 20,
-    header = 24,
+    -- lunar = "Interface\\AddOns\\LunarUI\\Media\\Fonts\\LunarFont.ttf",
 }
 
 --------------------------------------------------------------------------------
@@ -157,16 +103,6 @@ end
 --------------------------------------------------------------------------------
 -- Texture Getter
 --------------------------------------------------------------------------------
-
--- Get texture path (TEXTURES already contains effective runtime paths)
-function LunarUI.GetTexture(name)
-    return TEXTURES[name] or TEXTURES.flat
-end
-
--- Get font path
-function LunarUI.GetFont(name)
-    return FONTS[name] or FONTS.normal
-end
 
 -- Get user-selected font from LSM (reads db.profile.style.font)
 function LunarUI.GetSelectedFont()
@@ -232,58 +168,6 @@ function LunarUI.GetSelectedStatusBarTexture()
     return "Interface\\TargetingFrame\\UI-StatusBar"
 end
 
--- Get color by name
-function LunarUI:GetColor(name)
-    return self.Colors[name]
-end
-
---------------------------------------------------------------------------------
--- Backdrop Templates
---------------------------------------------------------------------------------
-
--- Standard Lunar backdrop
-LunarUI.Backdrops = {
-    default = {
-        bgFile = TEXTURES.flat,
-        edgeFile = TEXTURES.borderThin,
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    },
-
-    thin = {
-        bgFile = TEXTURES.flat,
-        edgeFile = TEXTURES.borderThin,
-        edgeSize = 1,
-        insets = { left = 0, right = 0, top = 0, bottom = 0 },
-    },
-
-    panel = {
-        bgFile = TEXTURES.flat,
-        edgeFile = TEXTURES.borderThin,
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 },
-    },
-
-    tooltip = {
-        bgFile = TEXTURES.flat,
-        edgeFile = TEXTURES.borderThin,
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
-    },
-
-    glow = {
-        bgFile = nil,
-        edgeFile = TEXTURES.glow,
-        edgeSize = 8,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 },
-    },
-}
-
--- Get backdrop colors
-function LunarUI:GetBackdropColors()
-    return self.Colors.nightSky, self.Colors.border
-end
-
 --------------------------------------------------------------------------------
 -- Initialization
 --------------------------------------------------------------------------------
@@ -292,8 +176,3 @@ end
 hooksecurefunc(LunarUI, "OnInitialize", function()
     RegisterMedia()
 end)
-
--- Export paths for direct access
-LunarUI.MediaPath = MEDIA_PATH
-LunarUI.TexturePath = MEDIA_PATH .. "Textures\\"
-LunarUI.FontPath = FONT_PATH

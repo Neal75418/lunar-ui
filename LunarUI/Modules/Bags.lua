@@ -136,7 +136,6 @@ LunarUI.BagsConstants = setmetatable({}, {
     end,
 })
 
-LunarUI.BagsGetDB = GetBagDB
 LunarUI.BagsLoadSettings = LoadBagSettings
 LunarUI.BagsSetSorting = function(value)
     isSorting = value
@@ -1508,9 +1507,6 @@ end
 
 -- 匯出
 LunarUI.InitializeBags = InitializeBags
-LunarUI.ToggleBags = ToggleBags
-LunarUI.OpenBags = OpenBags
-LunarUI.CloseBags = CloseBags
 LunarUI.GetTotalSlots = GetTotalSlots
 LunarUI.GetTotalFreeSlots = GetTotalFreeSlots
 

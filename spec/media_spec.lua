@@ -70,8 +70,6 @@ describe("Media constants", function()
 
     it("defines textures table", function()
         assert.truthy(LunarUI.textures)
-        assert.truthy(LunarUI.textures.statusBar)
-        assert.truthy(LunarUI.textures.blank)
         assert.truthy(LunarUI.textures.glow)
     end)
 end)

@@ -363,7 +363,7 @@ local function EnterKeybindMode()
             button:EnableKeyboard(true)
             button:SetScript("OnKeyDown", function(self, key)
                 if key == "ESCAPE" then
-                    LunarUI.ExitKeybindMode() -- dot 語法：ExitKeybindMode 是 plain function，非 method
+                    LunarUI.ABExitKeybindMode()
                     return
                 end
 

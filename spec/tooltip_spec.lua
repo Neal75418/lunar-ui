@@ -341,11 +341,6 @@ describe("GetInspectSpec", function()
         assert.equals("Arcane", LunarUI.GetInspectSpec("target"))
     end)
 
-    it("returns nil when GetInspectSpecialization not available", function()
-        _G.GetInspectSpecialization = nil
-        assert.is_nil(LunarUI.GetInspectSpec("target"))
-    end)
-
     it("returns nil when specID is nil", function()
         _G.GetInspectSpecialization = function()
             return nil

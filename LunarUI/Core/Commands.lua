@@ -188,8 +188,6 @@ function LunarUI:SlashCommand(input)
         else
             self:ResetPosition()
         end
-    elseif cmd == "test" then
-        self:RunTest(args[2])
     elseif cmd == "install" then
         if self.db.global then
             self.db.global.installComplete = false
@@ -356,20 +354,5 @@ function LunarUI:ResetPosition()
     -- 委派給 FrameMover 的 ResetAllPositions（含 defaultPoints 還原與訊息輸出）
     if LunarUI.ResetAllPositions then
         LunarUI.ResetAllPositions()
-    end
-end
-
---------------------------------------------------------------------------------
--- 測試功能
---------------------------------------------------------------------------------
-
--- Stub: test runner placeholder for future test scenarios (e.g., /lunar test <name>)
-function LunarUI:RunTest(scenario)
-    local L = Engine.L or {}
-    if scenario then
-        self:Print(string.format(L["TestMode"] or "Test mode: %s", scenario))
-    else
-        self:Print(L["AvailableTests"] or "Available tests:")
-        self:Print("  |cffffd100/lunar test|r - " .. (L["CmdTestDesc"] or "Show test help"))
     end
 end

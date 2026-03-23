@@ -209,8 +209,6 @@ end
 
 -- 匯出
 LunarUI.InitializeChat = InitializeChat
-LunarUI.ShowChatCopy = LunarUI.ChatShowCopyFrame
-
 LunarUI:RegisterModule("Chat", {
     onEnable = InitializeChat,
     onDisable = CleanupChat,

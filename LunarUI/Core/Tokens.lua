@@ -42,16 +42,7 @@ LunarUI.Colors = {
     info = { 0.41, 0.8, 0.94, 1 },
 
     -- 羊皮紙風格（手繪風）
-    parchment = { 0.85, 0.78, 0.65, 0.95 },
     inkDark = { 0.15, 0.12, 0.08, 1 },
-    inkFaded = { 0.4, 0.35, 0.25, 1 },
-
-    -- 生命值/能量
-    health = { 0.6, 0.1, 0.1, 1 },
-    mana = { 0.2, 0.3, 0.5, 1 },
-    energy = { 0.9, 0.8, 0.3, 1 },
-    rage = { 0.8, 0.2, 0.2, 1 },
-    focus = { 0.7, 0.5, 0.3, 1 },
 
     -- 透明（backdrop 填充用）
     transparent = { 0, 0, 0, 0 },
@@ -69,39 +60,7 @@ LunarUI.Colors = {
 
     -- 月光主題
     moonSilver = { 0.75, 0.78, 0.85, 1 },
-    nightPurple = { 0.25, 0.2, 0.4, 1 },
-    starGold = { 0.9, 0.8, 0.5, 1 },
-    lunarGlow = { 0.6, 0.7, 0.9, 0.5 },
     accentPurple = { 0.53, 0.51, 1.0, 1 },
-}
-
---------------------------------------------------------------------------------
--- 主題色彩組
---------------------------------------------------------------------------------
-
-LunarUI.ThemeColors = {
-    parchment = {
-        bg = { 0.18, 0.15, 0.12, 0.92 },
-        bgSolid = { 0.18, 0.15, 0.12, 0.98 },
-        border = { 0.35, 0.28, 0.18, 1 },
-        borderGold = { 0.55, 0.45, 0.25, 1 },
-        textPrimary = { 0.15, 0.12, 0.08, 1 },
-        textSecondary = { 0.30, 0.25, 0.18, 1 },
-        textMuted = { 0.45, 0.40, 0.30, 1 },
-        bgHUD = { 0.15, 0.12, 0.10, 0.80 },
-        borderHUD = { 0.40, 0.32, 0.22, 0.90 },
-    },
-    minimal = {
-        bg = { 0.08, 0.08, 0.08, 0.85 },
-        bgSolid = { 0.08, 0.08, 0.08, 0.95 },
-        border = { 0.20, 0.20, 0.20, 1 },
-        borderGold = { 0.50, 0.50, 0.50, 1 },
-        textPrimary = { 0.95, 0.95, 0.95, 1 },
-        textSecondary = { 0.75, 0.75, 0.75, 1 },
-        textMuted = { 0.55, 0.55, 0.55, 1 },
-        bgHUD = { 0.06, 0.06, 0.06, 0.75 },
-        borderHUD = { 0.25, 0.25, 0.25, 0.90 },
-    },
 }
 
 --------------------------------------------------------------------------------
@@ -115,10 +74,6 @@ LunarUI.ThemeColors = {
     d: duration (usually 1)
 ]]
 LunarUI.Easing = {
-    -- 線性
-    Linear = function(t, b, c, d)
-        return c * t / d + b
-    end,
     -- 二次平滑輸入
     InQuad = function(t, b, c, d)
         t = t / d
@@ -128,15 +83,6 @@ LunarUI.Easing = {
     OutQuad = function(t, b, c, d)
         t = t / d
         return -c * t * (t - 2) + b
-    end,
-    -- 二次平滑輸入輸出
-    InOutQuad = function(t, b, c, d)
-        t = t / (d / 2)
-        if t < 1 then
-            return c / 2 * t * t + b
-        end
-        t = t - 1
-        return -c / 2 * (t * (t - 2) - 1) + b
     end,
 }
 

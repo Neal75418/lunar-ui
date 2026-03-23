@@ -45,7 +45,7 @@ function LunarUI:InitDB()
             return
         end
 
-        local specIndex = GetSpecialization and GetSpecialization()
+        local specIndex = GetSpecialization()
         if specIndex and self.db.char.specProfiles then
             local target = self.db.char.specProfiles[specIndex]
             if target and target ~= self.db:GetCurrentProfile() then

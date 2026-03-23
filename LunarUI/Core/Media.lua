@@ -29,18 +29,10 @@ LunarUI.iconBackdropTemplate = {
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
--- 共用減益類型顏色（WoW 12.0 中 DebuffTypeColor 可能不存在）
+-- 共用減益類型顏色
 --------------------------------------------------------------------------------
 
 LunarUI.DEBUFF_TYPE_COLORS = _G.DebuffTypeColor
-    or {
-        none = { r = 0.8, g = 0.0, b = 0.0 },
-        Magic = { r = 0.2, g = 0.6, b = 1.0 },
-        Curse = { r = 0.6, g = 0.0, b = 1.0 },
-        Disease = { r = 0.6, g = 0.4, b = 0.0 },
-        Poison = { r = 0.0, g = 0.6, b = 0.0 },
-        [""] = { r = 0.8, g = 0.0, b = 0.0 },
-    }
 
 --------------------------------------------------------------------------------
 -- 共用顏色常數
@@ -54,8 +46,6 @@ LunarUI.BG_DARKEN = 0.3
 --------------------------------------------------------------------------------
 
 LunarUI.textures = {
-    statusBar = "Interface\\TargetingFrame\\UI-StatusBar",
-    blank = "Interface\\Buttons\\WHITE8x8",
     glow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
 }
 

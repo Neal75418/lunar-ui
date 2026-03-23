@@ -80,10 +80,6 @@ L["StatusTitle"] = "|cff8882ffLunarUI 狀態：|r"
 L["StatusVersion"] = "版本：%s"
 L["StatusEnabled"] = "啟用：%s"
 L["StatusDebug"] = "除錯：%s"
-L["TestMode"] = "測試模式：%s"
-L["AvailableTests"] = "可用測試："
-L["CmdTestDesc"] = "顯示測試說明"
-
 -- 戰鬥訊息
 L["CombatEnter"] = "進入戰鬥"
 L["CombatLeave"] = "脫離戰鬥"

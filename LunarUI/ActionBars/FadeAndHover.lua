@@ -360,8 +360,3 @@ end
 
 LunarUI.ABInitializeFade = InitializeFade
 LunarUI.ABCleanupFade = CleanupFade
-LunarUI.ABSetupBarHoverDetection = SetupBarHoverDetection
-LunarUI.ABRefreshFadeSettingsCache = RefreshFadeSettingsCache
-LunarUI.ABGetFadeSettings = function()
-    return cachedFadeEnabled, cachedFadeAlpha, cachedFadeDelay, cachedFadeDuration
-end
