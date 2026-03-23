@@ -513,6 +513,12 @@ local function CreateDataPanel(name, db)
             slot.highlight = slot:CreateTexture(nil, "HIGHLIGHT")
             slot.highlight:SetAllPoints()
             slot.highlight:SetColorTexture(1, 1, 1, 0.05)
+            if i > 1 then
+                local sep = panel:CreateTexture(nil, "ARTWORK")
+                sep:SetSize(1, (db.height or 22) - 6)
+                sep:SetPoint("LEFT", slot, "LEFT", 0, 0)
+                sep:SetColorTexture(0.3, 0.3, 0.3, 0.5)
+            end
             slot.slotIndex = i
             slot.panelName = name
             panel.slots[i] = slot

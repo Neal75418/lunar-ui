@@ -560,6 +560,7 @@ local function SpawnUnitFrames()
     SpawnPlayerFrames(uf)
     SpawnBossFrames(uf)
     SpawnGroupFrames(uf)
+    unitFramesSpawned = true
 end
 
 -- 編輯模式退出時清除 focus（暴雪編輯模式會將玩家設為 focus 用於預覽，退出時不清除）

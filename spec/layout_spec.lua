@@ -568,19 +568,22 @@ describe("SpawnUnitFrames lifecycle", function()
         end
     end)
 
-    it("Cleanup 後 DB 未就緒 retry timer 不回魂", function()
+    it("re-enable 時 DB 未就緒不會建立 retry timer（走 Enable 路徑）", function()
+        -- 先確保已 spawn 過（前面的測試已執行 SpawnUnitFrames）
         -- 捕捉 C_Timer.After callback
         local pendingCallbacks = {}
         _G.C_Timer.After = function(_delay, fn)
             pendingCallbacks[#pendingCallbacks + 1] = fn
         end
 
-        -- 模擬 DB 未就緒 → 安排 retry timer
+        -- Cleanup 後模擬 DB 未就緒
+        LunarUI.CleanupUnitFrames()
         LunarUI.db = nil
         LunarUI.SpawnUnitFrames()
-        assert.is_true(#pendingCallbacks > 0, "Should have retry timer")
+        -- re-enable 走 Enable 路徑，不需要 DB，不應建立 retry timer
+        assert.is_true(#pendingCallbacks == 0, "Re-enable should not create retry timers")
 
-        -- 還原 DB 並 Cleanup（遞增世代計數器）
+        -- 還原 DB 與 C_Timer
         LunarUI.db = {
             profile = {
                 auraWhitelist = "",
@@ -589,14 +592,6 @@ describe("SpawnUnitFrames lifecycle", function()
                 unitframes = makeDisabledUF(),
             },
         }
-        LunarUI.CleanupUnitFrames()
-
-        -- 觸發 retry timer — 世代已遞增，不應重新 spawn
-        for _, cb in ipairs(pendingCallbacks) do
-            assert.has_no_errors(cb)
-        end
-
-        -- 還原 C_Timer
         _G.C_Timer.After = function() end
     end)
 end)

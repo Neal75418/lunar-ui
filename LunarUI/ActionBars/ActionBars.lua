@@ -590,6 +590,7 @@ local function CleanupActionBars()
     wipe(masqueGroups) -- 清理 Masque 群組（下次 enable 重新建立）
 
     -- 清理戰鬥等待框架（防止脫戰後 SpawnActionBars 回魂）
+    -- 不 nil 變數：frame 為 singleton，SpawnActionBars 的 nil check 只防重複 CreateFrame
     if actionBarsCombatWaitFrame then
         actionBarsCombatWaitFrame:UnregisterAllEvents()
         actionBarsCombatWaitFrame:SetScript("OnEvent", nil)
