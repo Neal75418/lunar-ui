@@ -327,6 +327,9 @@ end
 --------------------------------------------------------------------------------
 
 local function OnTooltipSetUnit(tooltip)
+    if not LunarUI._modulesEnabled then
+        return
+    end
     local db = LunarUI.GetModuleDB("tooltip")
     if not db or not db.enabled then
         return
@@ -450,6 +453,9 @@ end
 --------------------------------------------------------------------------------
 
 local function OnTooltipSetItem(tooltip)
+    if not LunarUI._modulesEnabled then
+        return
+    end
     local db = LunarUI.GetModuleDB("tooltip")
     if not db or not db.enabled then
         return
@@ -558,6 +564,9 @@ end
 --------------------------------------------------------------------------------
 
 local function OnTooltipSetSpell(tooltip)
+    if not LunarUI._modulesEnabled then
+        return
+    end
     local db = LunarUI.GetModuleDB("tooltip")
     if not db or not db.enabled then
         return
@@ -637,6 +646,9 @@ local function SetTooltipPosition()
     tooltipPositionHooked = true
 
     hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
+        if not LunarUI._modulesEnabled then
+            return
+        end
         -- 動態查詢 db 以支援 profile 切換（hooksecurefunc 永久存在，不可依賴閉包捕捉的 db）
         local currentDB = LunarUI.GetModuleDB("tooltip")
         if not currentDB or not currentDB.enabled then
@@ -653,7 +665,13 @@ local function SetTooltipPosition()
 
     if GameTooltip then
         GameTooltip:HookScript("OnShow", function(self)
+            if not LunarUI._modulesEnabled then
+                return
+            end
             C_Timer.After(0, function()
+                if not LunarUI._modulesEnabled then
+                    return
+                end
                 AdjustTooltipPosition(self)
             end)
         end)
@@ -706,11 +724,17 @@ local function InitializeTooltip()
 
         -- 顯示時重新樣式化
         GameTooltip:HookScript("OnShow", function(self)
+            if not LunarUI._modulesEnabled then
+                return
+            end
             StyleTooltip(self)
         end)
 
         -- 清除時重設邊框顏色
         GameTooltip:HookScript("OnTooltipCleared", function(self)
+            if not LunarUI._modulesEnabled then
+                return
+            end
             if self.SetBackdropBorderColor then
                 self:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
             elseif self.LunarBackdrop then

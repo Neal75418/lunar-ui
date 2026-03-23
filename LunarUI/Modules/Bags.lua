@@ -1465,8 +1465,33 @@ function LunarUI.CleanupBags()
     CloseBank()
     -- 清理快取，避免 re-enable 時殘留 stale entries
     LunarUI.BagsClearAllCaches()
+    -- 使飛行中的 SellJunk 販賣鏈失效
+    if LunarUI.InvalidateSellJunk then
+        LunarUI.InvalidateSellJunk()
+    end
+    -- 還原被 KillBlizzardFrame 壓制的原生背包框架
+    local function RestoreBlizzardFrame(frame)
+        if not frame then
+            return
+        end
+        pcall(function()
+            frame:SetAlpha(1)
+            frame:EnableMouse(true)
+            for _, child in ipairs({ frame:GetChildren() }) do
+                pcall(function()
+                    child:EnableMouse(true)
+                end)
+            end
+        end)
+    end
+    for i = 1, 13 do
+        RestoreBlizzardFrame(_G["ContainerFrame" .. i])
+    end
+    RestoreBlizzardFrame(_G.ContainerFrameCombinedBags)
+    RestoreBlizzardFrame(_G.BankFrame)
     -- 注意：hooksRegistered 不重設，因為 hooksecurefunc hook 無法取消，
     -- re-enable 時重新呼叫 HookBagFunctions() 會因 hooksRegistered=true 跳過（正確行為）
+    -- 注意：不還原 ClearAllPoints/SetPoint — Blizzard 框架下次 Show 時會自行重設定位
 end
 
 -- 匯出

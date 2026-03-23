@@ -67,6 +67,10 @@ local function SellJunk()
         if myGen ~= sellJunkGeneration then
             return
         end
+        -- 全域停用時中止販賣鏈
+        if not LunarUI._modulesEnabled then
+            return
+        end
         -- 確保商人視窗仍然開啟，玩家可能在販賣過程中關閉商人
         if not MerchantFrame or not MerchantFrame:IsShown() then
             return
@@ -97,3 +101,7 @@ end
 
 LunarUI.BagsSellJunk = SellJunk
 LunarUI.SellJunk = SellJunk
+-- 供 CleanupBags 使飛行中販賣鏈失效
+LunarUI.InvalidateSellJunk = function()
+    sellJunkGeneration = sellJunkGeneration + 1
+end
