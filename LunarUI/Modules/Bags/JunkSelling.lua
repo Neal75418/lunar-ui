@@ -26,6 +26,9 @@ local sellJunkGeneration = 0
     增強型自動販賣：包含安全檢查與統計資訊
 ]]
 local function SellJunk()
+    if not LunarUI._modulesEnabled then
+        return
+    end
     sellJunkGeneration = sellJunkGeneration + 1
     local myGen = sellJunkGeneration
     local db = GetBagDB()

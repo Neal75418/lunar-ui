@@ -1239,6 +1239,13 @@ local function HookBagFunctions()
 
     -- 掛鉤 Show：暴雪每次打開背包都會 Show 這些框架，需持續壓制
     local function KillAndHookShow(frame)
+        -- 儲存原始定位，供 CleanupBags 還原
+        if not frame._lunarSavedPoint then
+            local point, relativeTo, relativePoint, x, y = frame:GetPoint()
+            if point then
+                frame._lunarSavedPoint = { point, relativeTo, relativePoint, x, y }
+            end
+        end
         KillBlizzardFrame(frame)
         pcall(function()
             hooksecurefunc(frame, "Show", function(self)
@@ -1477,6 +1484,12 @@ function LunarUI.CleanupBags()
         pcall(function()
             frame:SetAlpha(1)
             frame:EnableMouse(true)
+            -- 還原原始定位（KillBlizzardFrame 移到了螢幕外）
+            if frame._lunarSavedPoint then
+                local p = frame._lunarSavedPoint
+                frame:ClearAllPoints()
+                frame:SetPoint(p[1], p[2], p[3], p[4], p[5])
+            end
             for _, child in ipairs({ frame:GetChildren() }) do
                 pcall(function()
                     child:EnableMouse(true)
@@ -1491,7 +1504,6 @@ function LunarUI.CleanupBags()
     RestoreBlizzardFrame(_G.BankFrame)
     -- 注意：hooksRegistered 不重設，因為 hooksecurefunc hook 無法取消，
     -- re-enable 時重新呼叫 HookBagFunctions() 會因 hooksRegistered=true 跳過（正確行為）
-    -- 注意：不還原 ClearAllPoints/SetPoint — Blizzard 框架下次 Show 時會自行重設定位
 end
 
 -- 匯出

@@ -695,6 +695,8 @@ local function InitializeTooltip()
         if inspectEventFrame then
             inspectEventFrame:RegisterEvent("INSPECT_READY")
         end
+        -- 重新套用樣式（CleanupTooltip 不重設 tooltipStyled 以避免 HookScript 累積）
+        StyleAllTooltips()
         return
     end
     tooltipStyled = true
