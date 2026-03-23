@@ -303,8 +303,19 @@ RegisterProvider("friends", {
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
         GameTooltip:AddLine(L["Friends"] or "Friends", 1, 1, 1)
-        GameTooltip:AddDoubleLine("WoW", (onlineFriends or 0) .. " " .. (L["Online"] or "online"), 1, 1, 1, 0.3, 1, 0.3)
-        GameTooltip:AddDoubleLine("Battle.net", bnOnline .. " " .. (L["Online"] or "online"), 1, 1, 1, 0, 0.7, 1)
+        local wowLabel = _G.FRIENDS_LIST_WOW or "WoW"
+        local bnetLabel = _G.FRIENDS_LIST_BNET or "Battle.net"
+        GameTooltip:AddDoubleLine(
+            wowLabel,
+            (onlineFriends or 0) .. " " .. (L["Online"] or "online"),
+            1,
+            1,
+            1,
+            0.3,
+            1,
+            0.3
+        )
+        GameTooltip:AddDoubleLine(bnetLabel, bnOnline .. " " .. (L["Online"] or "online"), 1, 1, 1, 0, 0.7, 1)
         GameTooltip:Show()
     end,
 })
@@ -473,10 +484,12 @@ local function CreateDataPanel(name, db)
         slot:SetSize(slotWidth, db.height or 22)
         slot:SetPoint("LEFT", panel, "LEFT", (i - 1) * slotWidth, 0)
 
-        -- 文字
+        -- 文字（限制寬度避免溢出）
         slot.text = slot:CreateFontString(nil, "OVERLAY")
         LunarUI.SetFont(slot.text, 11, "OUTLINE")
         slot.text:SetPoint("CENTER")
+        slot.text:SetWidth(slotWidth - 8)
+        slot.text:SetWordWrap(false)
         slot.text:SetTextColor(0.9, 0.9, 0.9)
 
         -- 滑鼠懸停高亮

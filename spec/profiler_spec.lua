@@ -136,7 +136,7 @@ describe("PrintProfilingResults", function()
 
     it("prints no-data message when empty", function()
         LunarUI:PrintProfilingResults()
-        assert.truthy(printLog[1]:find("無分析資料"))
+        assert.truthy(printLog[1]:find("No profiling data"))
     end)
 
     it("sorts modules by init time descending", function()

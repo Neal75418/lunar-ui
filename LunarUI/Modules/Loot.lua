@@ -153,6 +153,7 @@ local function CreateLootFrame()
     end)
     titleBar:SetScript("OnDragStop", function()
         frame:StopMovingOrSizing()
+        frame._lunarUserMoved = true
     end)
 
     -- 標題文字
@@ -164,12 +165,9 @@ local function CreateLootFrame()
     frame.title = title
 
     -- 關閉按鈕
-    local closeBtn = CreateFrame("Button", nil, frame)
-    closeBtn:SetSize(16, 16)
-    closeBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -FRAME_PADDING, -FRAME_PADDING)
-    closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-    closeBtn:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
-    closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight", "ADD")
+    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    closeBtn:SetPoint("TOPRIGHT", 2, 2)
+    LunarUI.SkinCloseButton(closeBtn)
     closeBtn:SetScript("OnClick", function()
         _G.CloseLoot()
     end)
@@ -319,11 +317,13 @@ local function OnEvent(_self, event)
             lootFrame = CreateLootFrame()
         end
 
-        -- 定位在游標附近
-        lootFrame:ClearAllPoints()
-        local x, y = _G.GetCursorPosition()
-        local scale = UIParent:GetEffectiveScale()
-        lootFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x / scale - 40, y / scale + 20)
+        -- 定位：若使用者曾拖曳則保留位置，否則跟隨游標
+        if not lootFrame._lunarUserMoved then
+            lootFrame:ClearAllPoints()
+            local x, y = _G.GetCursorPosition()
+            local scale = UIParent:GetEffectiveScale()
+            lootFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x / scale - 40, y / scale + 20)
+        end
         lootFrame:SetClampedToScreen(true)
 
         UpdateLootFrame()

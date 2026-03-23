@@ -7,6 +7,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
 -- 分析資料儲存
@@ -70,11 +71,14 @@ end
 ]]
 function LunarUI:PrintProfilingResults()
     if #moduleTimings == 0 then
-        self:Print("|cff8882ff[Profiler]|r 無分析資料。請先 /lunar profile on 然後 /reload")
+        self:Print(
+            "|cff8882ff[Profiler]|r "
+                .. (L["ProfilerNoData"] or "No profiling data. Run /lunar profile on then /reload")
+        )
         return
     end
 
-    self:Print("|cff8882ff=== Module Init Timings ===|r")
+    self:Print("|cff8882ff=== " .. (L["ProfilerInitHeader"] or "Module Init Timings") .. " ===|r")
 
     -- 按耗時降序排列
     table.sort(moduleTimings, function(a, b)
@@ -89,7 +93,13 @@ function LunarUI:PrintProfilingResults()
             or "|cff00ff00"
         self:Print(string.format("  %s%-25s %.2f ms|r", color, m.name, m.initTime))
     end
-    self:Print(string.format("  |cffffffff--- Total: %.2f ms (%d modules)|r", totalInit, #moduleTimings))
+    self:Print(
+        string.format(
+            "  |cffffffff--- " .. (L["ProfilerTotal"] or "Total") .. ": %.2f ms (%d modules)|r",
+            totalInit,
+            #moduleTimings
+        )
+    )
 end
 
 --------------------------------------------------------------------------------
@@ -99,7 +109,10 @@ end
 function LunarUI:EnableProfiling()
     profilingEnabled = true
     wipe(moduleTimings)
-    self:Print("|cff8882ff[Profiler]|r Profiling |cff00ff00ON|r — /reload 後再 /lunar profile show 查看結果")
+    self:Print(
+        "|cff8882ff[Profiler]|r Profiling |cff00ff00ON|r — "
+            .. (L["ProfilerReloadHint"] or "/reload then /lunar profile show")
+    )
 end
 
 function LunarUI:DisableProfiling()
@@ -127,7 +140,7 @@ local eventProfilingEnd = nil -- 停用時的時間戳（微秒），nil 代表�
 ]]
 function LunarUI:EnableEventProfiling()
     if eventProfilingEnabled then
-        self:Print("|cff8882ff[Profiler]|r Event profiling already active")
+        self:Print("|cff8882ff[Profiler]|r " .. (L["ProfilerEventActive"] or "Event profiling already active"))
         return
     end
 
@@ -173,7 +186,8 @@ function LunarUI:EnableEventProfiling()
         eventCounts[event] = (eventCounts[event] or 0) + 1
     end)
 
-    local msg = "|cff8882ff[Profiler]|r Event profiling |cff00ff00ON|r — use /lunar profile events to view"
+    local msg = "|cff8882ff[Profiler]|r Event profiling |cff00ff00ON|r — "
+        .. (L["ProfilerEventViewHint"] or "/lunar profile events to view")
     if failed > 0 then
         msg = msg .. string.format(" |cffffcc00(%d events failed to register)|r", failed)
     end
@@ -185,7 +199,7 @@ end
 ]]
 function LunarUI:DisableEventProfiling()
     if not eventProfilingEnabled then
-        self:Print("|cff8882ff[Profiler]|r Event profiling not active")
+        self:Print("|cff8882ff[Profiler]|r " .. (L["ProfilerEventNotActive"] or "Event profiling not active"))
         return
     end
     eventProfilingEnabled = false
@@ -210,7 +224,10 @@ function LunarUI:PrintEventTimings()
     end
 
     if #sorted == 0 then
-        self:Print("|cff8882ff[Profiler]|r No event data. Use /lunar profile events on first")
+        self:Print(
+            "|cff8882ff[Profiler]|r "
+                .. (L["ProfilerNoEventData"] or "No event data. Use /lunar profile events on first")
+        )
         return
     end
 
@@ -220,11 +237,17 @@ function LunarUI:PrintEventTimings()
 
     -- 使用記錄的結束時間（若已停用），否則使用當前時間（仍在監控中）
     local elapsed = ((eventProfilingEnd or GetTimestamp()) - eventProfilingStart) / 1000000 -- 微秒轉秒
-    self:Print(string.format("|cff8882ff=== Event Frequency (%.1f sec) ===|r", elapsed))
+    self:Print(
+        string.format(
+            "|cff8882ff=== " .. (L["ProfilerEventHeader"] or "Event Frequency") .. " (%.1f sec) ===|r",
+            elapsed
+        )
+    )
 
     for _, e in ipairs(sorted) do
         local rate = elapsed > 0 and (e.count / elapsed) or 0
         local color = rate > EVENT_RATE_CRIT and "|cffff4444" or rate > EVENT_RATE_WARN and "|cffffcc00" or "|cff00ff00"
-        self:Print(string.format("  %s%-35s %6d fires  (%.1f/sec)|r", color, e.event, e.count, rate))
+        local firesLabel = L["ProfilerFires"] or "fires"
+        self:Print(string.format("  %s%-35s %6d " .. firesLabel .. "  (%.1f/sec)|r", color, e.event, e.count, rate))
     end
 end

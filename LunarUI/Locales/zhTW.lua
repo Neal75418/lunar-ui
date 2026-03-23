@@ -127,6 +127,18 @@ L["DebugVigorOn"] = "持續監控已啟動"
 L["DebugVigorOff"] = "持續監控已停止"
 L["DebugLoadFailed"] = "LunarUI_Debug 載入失敗"
 
+-- 效能分析
+L["ProfilerNoData"] = "無分析資料。請先 /lunar profile on 然後 /reload"
+L["ProfilerReloadHint"] = "/reload 後再 /lunar profile show 查看結果"
+L["ProfilerEventActive"] = "事件監控已啟用"
+L["ProfilerEventViewHint"] = "/lunar profile events 查看結果"
+L["ProfilerEventNotActive"] = "事件監控未啟用"
+L["ProfilerNoEventData"] = "無事件資料。請先 /lunar profile events on"
+L["ProfilerInitHeader"] = "模組初始化耗時"
+L["ProfilerTotal"] = "總計"
+L["ProfilerEventHeader"] = "事件頻率"
+L["ProfilerFires"] = "次觸發"
+
 -- 光環
 L["Auras"] = "光環"
 L["UnitFrameAuras"] = "單位框架光環"

@@ -122,6 +122,18 @@ L["DebugVigorOn"] = "Continuous monitoring started"
 L["DebugVigorOff"] = "Continuous monitoring stopped"
 L["DebugLoadFailed"] = "LunarUI_Debug failed to load"
 
+-- Profiler
+L["ProfilerNoData"] = "No profiling data. Run /lunar profile on then /reload"
+L["ProfilerReloadHint"] = "/reload then /lunar profile show"
+L["ProfilerEventActive"] = "Event profiling already active"
+L["ProfilerEventViewHint"] = "/lunar profile events to view"
+L["ProfilerEventNotActive"] = "Event profiling not active"
+L["ProfilerNoEventData"] = "No event data. Use /lunar profile events on first"
+L["ProfilerInitHeader"] = "Module Init Timings"
+L["ProfilerTotal"] = "Total"
+L["ProfilerEventHeader"] = "Event Frequency"
+L["ProfilerFires"] = "fires"
+
 -- Auras
 L["Auras"] = "Auras"
 L["UnitFrameAuras"] = "Unit Frame Auras"
