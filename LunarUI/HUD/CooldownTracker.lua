@@ -360,9 +360,11 @@ local function CreateCooldownFrame()
     cooldownFrame:SetFrameStrata("HIGH")
     cooldownFrame:SetClampedToScreen(true)
 
-    -- 建立圖示
-    for i = 1, MAX_ICONS do
-        cooldownIcons[i] = CreateCooldownIcon(cooldownFrame)
+    -- 建立圖示（重用時跳過已存在的圖示）
+    if not cooldownIcons[1] then
+        for i = 1, MAX_ICONS do
+            cooldownIcons[i] = CreateCooldownIcon(cooldownFrame)
+        end
     end
 
     return cooldownFrame

@@ -95,33 +95,36 @@ local function CreatePerfFrame()
     -- 背景樣式
     LunarUI.ApplyBackdrop(perfFrame, LunarUI.iconBackdropTemplate, C.bgHUD, C.borderHUD)
 
-    -- FPS 文字（左側）
-    local fpsText = perfFrame:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(fpsText, 13, "OUTLINE")
-    fpsText:SetPoint("LEFT", 8, 5)
-    fpsText:SetJustifyH("LEFT")
-    perfFrame.fpsText = fpsText
+    -- 文字層（重用時跳過已存在的 FontString）
+    if not perfFrame.fpsText then
+        -- FPS 文字（左側）
+        local fpsText = perfFrame:CreateFontString(nil, "OVERLAY")
+        LunarUI.SetFont(fpsText, 13, "OUTLINE")
+        fpsText:SetPoint("LEFT", 8, 5)
+        fpsText:SetJustifyH("LEFT")
+        perfFrame.fpsText = fpsText
 
-    -- FPS 標籤
-    local fpsLabel = perfFrame:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(fpsLabel, 9, "OUTLINE")
-    fpsLabel:SetPoint("TOPLEFT", fpsText, "BOTTOMLEFT", 0, -1)
-    fpsLabel:SetText("|cff666688FPS|r")
-    perfFrame.fpsLabel = fpsLabel
+        -- FPS 標籤
+        local fpsLabel = perfFrame:CreateFontString(nil, "OVERLAY")
+        LunarUI.SetFont(fpsLabel, 9, "OUTLINE")
+        fpsLabel:SetPoint("TOPLEFT", fpsText, "BOTTOMLEFT", 0, -1)
+        fpsLabel:SetText("|cff666688FPS|r")
+        perfFrame.fpsLabel = fpsLabel
 
-    -- 延遲文字（右側）
-    local latencyText = perfFrame:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(latencyText, 13, "OUTLINE")
-    latencyText:SetPoint("RIGHT", -8, 5)
-    latencyText:SetJustifyH("RIGHT")
-    perfFrame.latencyText = latencyText
+        -- 延遲文字（右側）
+        local latencyText = perfFrame:CreateFontString(nil, "OVERLAY")
+        LunarUI.SetFont(latencyText, 13, "OUTLINE")
+        latencyText:SetPoint("RIGHT", -8, 5)
+        latencyText:SetJustifyH("RIGHT")
+        perfFrame.latencyText = latencyText
 
-    -- 延遲標籤
-    local latencyLabel = perfFrame:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(latencyLabel, 9, "OUTLINE")
-    latencyLabel:SetPoint("TOPRIGHT", latencyText, "BOTTOMRIGHT", 0, -1)
-    latencyLabel:SetText("|cff666688MS|r")
-    perfFrame.latencyLabel = latencyLabel
+        -- 延遲標籤
+        local latencyLabel = perfFrame:CreateFontString(nil, "OVERLAY")
+        LunarUI.SetFont(latencyLabel, 9, "OUTLINE")
+        latencyLabel:SetPoint("TOPRIGHT", latencyText, "BOTTOMRIGHT", 0, -1)
+        latencyLabel:SetText("|cff666688MS|r")
+        perfFrame.latencyLabel = latencyLabel
+    end
 
     -- 提示
     perfFrame:SetScript("OnEnter", function(self)
