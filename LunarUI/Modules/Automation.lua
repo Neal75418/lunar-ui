@@ -83,6 +83,10 @@ local function OnPlayerDead()
             if gen ~= automationGeneration then
                 return
             end
+            local latestCfg = GetAutoConfig()
+            if not latestCfg or not latestCfg.autoRelease then
+                return
+            end
             if UnitIsDeadOrGhost("player") and not UnitIsFeignDeath("player") then
                 RepopMe()
             end
@@ -104,6 +108,10 @@ local function OnAchievementEarned()
     local gen = automationGeneration
     C_Timer.After(1, function()
         if gen ~= automationGeneration then
+            return
+        end
+        local latestCfg = GetAutoConfig()
+        if not latestCfg or not latestCfg.autoScreenshot then
             return
         end
         Screenshot()
