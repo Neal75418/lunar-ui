@@ -797,12 +797,9 @@ local function CreateBagFrame()
     bagFrame.title = title
 
     -- 關閉按鈕
-    closeButton = CreateFrame("Button", nil, bagFrame)
-    closeButton:SetSize(20, 20)
-    closeButton:SetPoint("TOPRIGHT", -4, -4)
-    closeButton:SetNormalFontObject(GameFontNormal)
-    closeButton:SetText("×")
-    LunarUI.SetFont(closeButton:GetFontString(), 16, "OUTLINE")
+    closeButton = CreateFrame("Button", nil, bagFrame, "UIPanelCloseButton")
+    closeButton:SetPoint("TOPRIGHT", 2, 2)
+    LunarUI.SkinCloseButton(closeButton)
     closeButton:SetScript("OnClick", function()
         CloseAllBags()
     end)
@@ -827,18 +824,11 @@ local function CreateBagFrame()
     end)
 
     -- 排序按鈕
-    sortButton = CreateFrame("Button", nil, bagFrame, "BackdropTemplate")
+    sortButton = CreateFrame("Button", nil, bagFrame, "UIPanelButtonTemplate")
     sortButton:SetSize(60, 20)
     sortButton:SetPoint("TOPLEFT", title, "TOPRIGHT", 10, 2)
-    sortButton:SetBackdrop(backdropTemplate)
-    sortButton:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
-    sortButton:SetBackdropBorderColor(BORDER_COLOR_DEFAULT[1], BORDER_COLOR_DEFAULT[2], BORDER_COLOR_DEFAULT[3], 1)
-
-    local sortText = sortButton:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(sortText, 11, "OUTLINE")
-    sortText:SetPoint("CENTER")
-    sortText:SetText(L["Sort"] or "Sort")
-    sortText:SetTextColor(0.8, 0.8, 0.8)
+    sortButton:SetText(L["Sort"] or "Sort")
+    LunarUI.SkinButton(sortButton)
 
     sortButton:SetScript("OnClick", function()
         if InCombatLockdown() then
@@ -846,14 +836,6 @@ local function CreateBagFrame()
         end
         isSorting = true
         C_Container.SortBags()
-    end)
-
-    sortButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(C.bgButtonHover[1], C.bgButtonHover[2], C.bgButtonHover[3], C.bgButtonHover[4])
-    end)
-
-    sortButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     end)
 
     -- 格子容器

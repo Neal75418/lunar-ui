@@ -354,48 +354,23 @@ local function OnTooltipSetUnit(tooltip)
         statusBar:SetStatusBarColor(r, g, b)
     end
 
-    -- === 新增：AFK / DND 狀態 ===
+    -- === 新增：AFK / DND 狀態（使用 Blizzard 本地化全域字串）===
     if UnitIsPlayer(unit) then
         if UnitIsAFK(unit) then
-            tooltip:AppendText(" |cffff9900<AFK>|r")
+            local afkFlag = _G.CHAT_FLAG_AFK or "<AFK>"
+            tooltip:AppendText(" |cffff9900" .. afkFlag .. "|r")
         elseif UnitIsDND(unit) then
-            tooltip:AppendText(" |cffff3333<DND>|r")
+            local dndFlag = _G.CHAT_FLAG_DND or "<DND>"
+            tooltip:AppendText(" |cffff3333" .. dndFlag .. "|r")
         end
     end
 
-    -- === 新增：等級著色 ===
+    -- === 新增：等級著色（等級行固定在 line 2）===
     local level = UnitLevel(unit)
     if level and level > 0 then
-        -- 尋找等級行並著色（優先使用 GetTooltipData 結構化 API）
-        local tooltipData = tooltip.GetTooltipData and tooltip:GetTooltipData()
-        -- M1 效能修復：等級行幾乎總是在第 2-4 行，限制掃描範圍避免遍歷全部 tooltip 行
-        if tooltipData and tooltipData.lines then
-            for i = 2, math.min(4, #tooltipData.lines) do
-                local lineData = tooltipData.lines[i]
-                if
-                    lineData
-                    and lineData.leftText
-                    and (lineData.leftText:find("Level") or lineData.leftText:find("等級"))
-                then
-                    local fontStr = _G[tooltip:GetName() .. "TextLeft" .. i]
-                    if fontStr then
-                        fontStr:SetTextColor(GetLevelDifficultyColor(level))
-                    end
-                    break
-                end
-            end
-        else
-            -- fallback: 舊版 _G 掃描（同樣限制在前 4 行）
-            for i = 2, math.min(4, tooltip:NumLines()) do
-                local line = _G[tooltip:GetName() .. "TextLeft" .. i]
-                if line then
-                    local text = line:GetText()
-                    if text and (text:find("Level") or text:find("等級")) then
-                        line:SetTextColor(GetLevelDifficultyColor(level))
-                        break
-                    end
-                end
-            end
+        local levelLine = _G[tooltip:GetName() .. "TextLeft2"]
+        if levelLine then
+            levelLine:SetTextColor(GetLevelDifficultyColor(level))
         end
     end
 

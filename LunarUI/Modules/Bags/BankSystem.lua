@@ -234,12 +234,9 @@ local function CreateBankFrame()
     bankFrame.title = title
 
     -- 關閉按鈕
-    local bankCloseButton = CreateFrame("Button", nil, bankFrame)
-    bankCloseButton:SetSize(20, 20)
-    bankCloseButton:SetPoint("TOPRIGHT", -4, -4)
-    bankCloseButton:SetNormalFontObject(GameFontNormal)
-    bankCloseButton:SetText("×")
-    LunarUI.SetFont(bankCloseButton:GetFontString(), 16, "OUTLINE")
+    local bankCloseButton = CreateFrame("Button", nil, bankFrame, "UIPanelCloseButton")
+    bankCloseButton:SetPoint("TOPRIGHT", 2, 2)
+    LunarUI.SkinCloseButton(bankCloseButton)
     bankCloseButton:SetScript("OnClick", function()
         if LunarUI.CloseBank then
             LunarUI.CloseBank()

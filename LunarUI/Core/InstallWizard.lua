@@ -297,9 +297,34 @@ local function BuildStep3(parent)
     -- 淡出開關
     local fadeCheck = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
     fadeCheck:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -15)
+    fadeCheck:SetSize(20, 20)
     fadeCheck:SetChecked(wizardChoices.actionBarFade)
+    -- LunarUI 風格 checkbox：strip 原生材質 + 自訂邊框
+    LunarUI.StripTextures(fadeCheck)
+    if fadeCheck.SetNormalTexture then
+        fadeCheck:SetNormalTexture("")
+    end
+    if fadeCheck.SetPushedTexture then
+        fadeCheck:SetPushedTexture("")
+    end
+    if fadeCheck.SetHighlightTexture then
+        fadeCheck:SetHighlightTexture("")
+    end
+    local checkBG = fadeCheck:CreateTexture(nil, "BACKGROUND")
+    checkBG:SetAllPoints()
+    checkBG:SetColorTexture(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
+    local checkBorder = CreateFrame("Frame", nil, fadeCheck, "BackdropTemplate")
+    checkBorder:SetAllPoints()
+    LunarUI.ApplyBackdrop(checkBorder, nil, { 0, 0, 0, 0 }, C.border)
+    checkBorder:SetFrameLevel(fadeCheck:GetFrameLevel() + 1)
+    -- 勾選標記（使用 Blizzard 材質確保字型相容性）
+    local checkMark = fadeCheck:CreateTexture(nil, "OVERLAY")
+    checkMark:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+    checkMark:SetAllPoints()
+    checkMark:SetShown(fadeCheck:GetChecked())
     fadeCheck:SetScript("OnClick", function(self)
         wizardChoices.actionBarFade = self:GetChecked()
+        checkMark:SetShown(self:GetChecked())
     end)
 
     local fadeLabel = f:CreateFontString(nil, "OVERLAY")
@@ -524,20 +549,9 @@ end
 
 -- 建立右上角關閉按鈕
 local function CreateCloseButton(f)
-    local closeBtn = CreateFrame("Button", nil, f)
-    closeBtn:SetSize(20, 20)
-    closeBtn:SetPoint("TOPRIGHT", -5, -5)
-    closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(closeBtn.text, 14, "OUTLINE")
-    closeBtn.text:SetPoint("CENTER")
-    closeBtn.text:SetText("×")
-    closeBtn.text:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
-    closeBtn:SetScript("OnEnter", function()
-        closeBtn.text:SetTextColor(1, 0.4, 0.4)
-    end)
-    closeBtn:SetScript("OnLeave", function()
-        closeBtn.text:SetTextColor(C.textSecondary[1], C.textSecondary[2], C.textSecondary[3])
-    end)
+    local closeBtn = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    closeBtn:SetPoint("TOPRIGHT", 2, 2)
+    LunarUI.SkinCloseButton(closeBtn)
     closeBtn:SetScript("OnClick", function()
         f:Hide()
     end)

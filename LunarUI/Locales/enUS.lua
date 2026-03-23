@@ -118,6 +118,9 @@ L["ImportInstructions"] = "Paste export string, then click Import"
 L["CombatLockdown"] = "Cannot import settings during combat"
 L["VersionUnknown"] = "unknown"
 L["DebugTitle"] = "Debug"
+L["DebugVigorOn"] = "Continuous monitoring started"
+L["DebugVigorOff"] = "Continuous monitoring stopped"
+L["DebugLoadFailed"] = "LunarUI_Debug failed to load"
 
 -- Auras
 L["Auras"] = "Auras"

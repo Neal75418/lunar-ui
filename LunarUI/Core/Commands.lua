@@ -82,6 +82,7 @@ local function HandleProfile(sub, sub2)
 end
 
 local function HandleDebugVigor(self, sub)
+    local _L = Engine.L or {}
     C_AddOns.LoadAddOn("LunarUI_Debug")
 
     -- 未知子命令或無參數時先執行一次性診斷
@@ -108,12 +109,14 @@ local function HandleDebugVigor(self, sub)
         if LunarUI.SetupVigorTrace then
             LunarUI.SetupVigorTrace()
         end
-        self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cff00ff00ON|r")
+        self:Print("|cffffcc00[DebugVigor]|r " .. (_L["DebugVigorOn"] or "Continuous monitoring") .. " |cff00ff00ON|r")
     else
         if LunarUI.CleanupVigorTrace then
             LunarUI.CleanupVigorTrace()
         end
-        self:Print("|cffffcc00[DebugVigor]|r 持續監控 |cffff0000OFF|r")
+        self:Print(
+            "|cffffcc00[DebugVigor]|r " .. (_L["DebugVigorOff"] or "Continuous monitoring") .. " |cffff0000OFF|r"
+        )
     end
 end
 
@@ -191,7 +194,7 @@ function LunarUI:SlashCommand(input)
         if self.ToggleTestVigor then
             self:ToggleTestVigor()
         else
-            self:Print("LunarUI_Debug failed to load — ToggleTestVigor unavailable")
+            self:Print(_L["DebugLoadFailed"] or "LunarUI_Debug failed to load")
         end
     else
         self:Print(string.format(_L["UnknownCommand"] or "Unknown command: %s", cmd))

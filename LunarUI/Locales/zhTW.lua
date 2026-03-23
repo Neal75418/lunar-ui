@@ -123,6 +123,9 @@ L["ImportInstructions"] = "貼上匯出字串，然後點擊匯入"
 L["CombatLockdown"] = "戰鬥中無法匯入設定"
 L["VersionUnknown"] = "未知"
 L["DebugTitle"] = "除錯"
+L["DebugVigorOn"] = "持續監控已啟動"
+L["DebugVigorOff"] = "持續監控已停止"
+L["DebugLoadFailed"] = "LunarUI_Debug 載入失敗"
 
 -- 光環
 L["Auras"] = "光環"
