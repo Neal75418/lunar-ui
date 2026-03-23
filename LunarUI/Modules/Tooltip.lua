@@ -271,12 +271,29 @@ local function StyleTooltip(tooltip)
             backdrop:SetFrameLevel(tooltip:GetFrameLevel())
             LunarUI.ApplyBackdrop(backdrop, nil, C.bgSolid)
             tooltip.LunarBackdrop = backdrop
+        else
+            -- re-enable 後重新顯示（UnstyleTooltip 會 Hide）
+            tooltip.LunarBackdrop:Show()
         end
     end
 
     -- 樣式化狀態列（血量條）
     if tooltip.StatusBar or GameTooltipStatusBar then
         local statusBar = tooltip.StatusBar or GameTooltipStatusBar
+        -- 儲存原始狀態（僅首次）
+        if not statusBar._lunarOrigTexture then
+            local tex = statusBar:GetStatusBarTexture()
+            statusBar._lunarOrigTexture = tex and tex:GetTexture()
+        end
+        if not statusBar._lunarOrigHeight then
+            statusBar._lunarOrigHeight = statusBar:GetHeight()
+        end
+        if not statusBar._lunarOrigPoints then
+            statusBar._lunarOrigPoints = {}
+            for i = 1, statusBar:GetNumPoints() do
+                statusBar._lunarOrigPoints[i] = { statusBar:GetPoint(i) }
+            end
+        end
         statusBar:SetStatusBarTexture(LunarUI.GetSelectedStatusBarTexture())
         statusBar:SetHeight(4)
         statusBar:ClearAllPoints()
@@ -289,6 +306,8 @@ local function StyleTooltip(tooltip)
             bg:SetTexture("Interface\\Buttons\\WHITE8x8")
             bg:SetVertexColor(0, 0, 0, 0.5)
             statusBar.LunarBG = bg
+        else
+            statusBar.LunarBG:Show()
         end
     end
 end
@@ -309,10 +328,22 @@ local function UnstyleTooltip(tooltip)
     -- 還原狀態列
     local statusBar = tooltip.StatusBar or _G.GameTooltipStatusBar
     if statusBar then
-        statusBar:SetHeight(8)
+        -- 還原材質
+        if statusBar._lunarOrigTexture then
+            statusBar:SetStatusBarTexture(statusBar._lunarOrigTexture)
+        end
+        -- 還原高度
+        statusBar:SetHeight(statusBar._lunarOrigHeight or 3)
+        -- 還原定位
         statusBar:ClearAllPoints()
-        statusBar:SetPoint("BOTTOMLEFT", tooltip, "BOTTOMLEFT", 2, 2)
-        statusBar:SetPoint("BOTTOMRIGHT", tooltip, "BOTTOMRIGHT", -2, 2)
+        if statusBar._lunarOrigPoints and #statusBar._lunarOrigPoints > 0 then
+            for _, pt in ipairs(statusBar._lunarOrigPoints) do
+                statusBar:SetPoint(pt[1], pt[2], pt[3], pt[4], pt[5])
+            end
+        else
+            statusBar:SetPoint("BOTTOMLEFT", tooltip, "BOTTOMLEFT", 0, 0)
+            statusBar:SetPoint("BOTTOMRIGHT", tooltip, "BOTTOMRIGHT", 0, 0)
+        end
         if statusBar.LunarBG then
             statusBar.LunarBG:Hide()
         end
