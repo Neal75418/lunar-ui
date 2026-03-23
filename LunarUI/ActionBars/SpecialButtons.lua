@@ -249,6 +249,9 @@ local function CreateMicroBar()
         if _G.MicroMenu.Layout and not microMenuLayoutHooked then
             microMenuLayoutHooked = true
             hooksecurefunc(_G.MicroMenu, "Layout", function()
+                if not LunarUI._modulesEnabled then
+                    return
+                end
                 if bars.microBar and bars.microBar._buttons and not InCombatLockdown() then
                     -- 從 DB 動態讀取（避免捕獲 stale upvalue）
                     local microDB = LunarUI.GetModuleDB("actionbars")

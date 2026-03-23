@@ -1196,16 +1196,25 @@ local function HookBagFunctions()
     -- WoW 12.0.1 的 ToggleAllBags 直接操作 ContainerFrameCombinedBags，
     -- 不再內部呼叫 OpenAllBags/CloseAllBags，因此必須獨立掛鉤
     hooksecurefunc("ToggleAllBags", function()
+        if not LunarUI._modulesEnabled then
+            return
+        end
         ToggleBags()
     end)
 
     -- 掛鉤 OpenAllBags / CloseAllBags（其他插件或遊戲系統直接呼叫的路徑）
     hooksecurefunc("OpenAllBags", function()
+        if not LunarUI._modulesEnabled then
+            return
+        end
         OpenBags()
     end)
 
     -- 掛鉤 CloseAllBags
     hooksecurefunc("CloseAllBags", function()
+        if not LunarUI._modulesEnabled then
+            return
+        end
         CloseBags()
     end)
 
@@ -1233,6 +1242,9 @@ local function HookBagFunctions()
         KillBlizzardFrame(frame)
         pcall(function()
             hooksecurefunc(frame, "Show", function(self)
+                if not LunarUI._modulesEnabled then
+                    return
+                end
                 KillBlizzardFrame(self)
             end)
         end)

@@ -259,12 +259,6 @@ local gameMenuButtonAdded = false
     清理所有事件與計時器以防止記憶體洩漏
 ]]
 function LunarUI:OnDisable()
-    -- 遞增世代，使所有飛行中的 C_Timer.After callback 失效
-    enableGeneration = enableGeneration + 1
-    -- 重置模組就緒狀態，確保重新啟用時能正確送出 LUNARUI_MODULES_READY
-    modulesReadyFired = false
-    pendingDelayedModules = 0
-    self._modulesEnabled = nil
     -- hooksecurefunc 本身無法撤銷，但 gameMenuButtonAdded 必須重設，
     -- 讓下次 InitButtons 觸發時能重新加入按鈕（disable 後按鈕已消失）
     gameMenuButtonAdded = false
@@ -281,22 +275,8 @@ function LunarUI:OnDisable()
         self:HideDebugOverlay()
     end
 
-    -- 停用所有已註冊的模組（反向迭代，後啟用的先清理）
-    for i = #moduleRegistry, 1, -1 do
-        local mod = moduleRegistry[i]
-        if mod then
-            local ok, err = pcall(mod.onDisable)
-            if not ok then
-                LunarUI:Error(
-                    string.format(
-                        (Engine.L or {})["ModuleCleanupFailed"] or "Module '%s' cleanup failed: %s",
-                        mod.name or "?",
-                        tostring(err)
-                    )
-                )
-            end
-        end
-    end
+    -- 統一走 DisableModules 路徑（設 _modulesEnabled=false、遞增 generation、反向停用所有模組）
+    self.DisableModules()
 end
 
 --------------------------------------------------------------------------------
