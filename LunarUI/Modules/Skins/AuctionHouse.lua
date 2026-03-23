@@ -39,9 +39,11 @@ local function SkinAuctionHouse()
         end
     end
 
-    -- Buy tab
-    if frame.BuyTab then
-        LunarUI.StripTextures(frame.BuyTab)
+    -- 底部模式切換 tab（購買 / 賣出 / 拍賣）
+    for _, tabKey in ipairs({ "BuyTab", "SellTab", "AuctionsTab" }) do
+        if frame[tabKey] then
+            LunarUI.SkinTab(frame[tabKey])
+        end
     end
 
     -- Commodities buy frame
