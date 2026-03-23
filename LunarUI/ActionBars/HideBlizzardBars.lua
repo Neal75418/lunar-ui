@@ -527,16 +527,27 @@ local function HideBlizzardBarsDelayed()
     local gen = hideGeneration
 
     HideBlizzardBars()
+    -- 強制 Blizzard 佈局系統立即重算右側容器位置
+    -- 否則 ObjectiveTracker 會偏左直到下次 Blizzard 內部事件觸發重算
+    if _G.UIParent_ManageFramePositions then
+        pcall(_G.UIParent_ManageFramePositions)
+    end
     -- 延遲後再次執行以捕捉延遲建立的框架
     -- 使用世代計數器：如果 disable 後 generation 已遞增，延遲回呼不再執行
     C_Timer.After(1, function()
         if hideGeneration == gen then
             HideBlizzardBars()
+            if _G.UIParent_ManageFramePositions then
+                pcall(_G.UIParent_ManageFramePositions)
+            end
         end
     end)
     C_Timer.After(3, function()
         if hideGeneration == gen then
             HideBlizzardBars()
+            if _G.UIParent_ManageFramePositions then
+                pcall(_G.UIParent_ManageFramePositions)
+            end
         end
     end)
 end

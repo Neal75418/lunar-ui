@@ -187,7 +187,6 @@ local function CreateMicroBar()
         "EJMicroButton",
         "StoreMicroButton",
         "MainMenuMicroButton",
-        "HelpMicroButton",
     }
     for _, btnName in ipairs(microButtonNames) do
         local btn = _G[btnName]

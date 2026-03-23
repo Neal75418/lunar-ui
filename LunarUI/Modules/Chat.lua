@@ -214,5 +214,5 @@ LunarUI.ShowChatCopy = LunarUI.ChatShowCopyFrame
 LunarUI:RegisterModule("Chat", {
     onEnable = InitializeChat,
     onDisable = CleanupChat,
-    delay = 0.8,
+    delay = 0.1,
 })

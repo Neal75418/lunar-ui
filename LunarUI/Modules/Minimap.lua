@@ -43,6 +43,7 @@ local zoomResetHandle -- 縮放自動重置計時器
 local addonLoadedFrame -- ADDON_LOADED 事件監聯框架
 local buttonScanTimers = {} -- 按鈕掃描延遲計時器
 local mail -- 郵件通知框架
+local mailDeferFrame -- 戰鬥中延遲隱藏 MiniMapMailFrame 用（singleton）
 local diff -- 難度圖示框架
 
 -- 還原用：mutation 前保存 Blizzard 實際狀態（不硬編碼預設值）
@@ -499,6 +500,13 @@ local function SaveMinimapState()
         }
     end
 
+    -- MiniMapMailFrame（CreateMailIndicator 會 Hide + UnregisterAllEvents）
+    if MiniMapMailFrame then
+        state.mailFrame = {
+            visible = MiniMapMailFrame:IsShown(),
+        }
+    end
+
     -- HybridMinimap
     if HybridMinimap and HybridMinimap.CircleMask then
         state.hybridMask = safeGet(HybridMinimap.CircleMask, "GetTexture")
@@ -649,8 +657,9 @@ local function HideBlizzardMinimapElements()
         SafeCall(function()
             MinimapCluster:EnableMouse(false)
             MinimapCluster:SetAlpha(0)
-            MinimapCluster:ClearAllPoints()
-            MinimapCluster:SetPoint("TOP", UIParent, "BOTTOM", 0, -2000)
+            -- 不移動位置 — 只用 SetScale(0.001) + SetAlpha(0) 隱藏
+            -- 移到螢幕外會觸發 EditMode 佈局系統重算，導致 ObjectiveTracker 等錨定框架跳位
+            MinimapCluster:SetScale(0.001)
 
             -- 隱藏剩餘的子框架（有用的已 reparent 走）
             for _, child in ipairs({ MinimapCluster:GetChildren() }) do
@@ -989,10 +998,16 @@ local function CreateMailIndicator()
             MiniMapMailFrame:Hide()
             MiniMapMailFrame:UnregisterAllEvents()
         else
-            local deferFrame = CreateFrame("Frame")
-            deferFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-            deferFrame:SetScript("OnEvent", function(self)
+            if not mailDeferFrame then
+                mailDeferFrame = CreateFrame("Frame")
+            end
+            mailDeferFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+            mailDeferFrame:SetScript("OnEvent", function(self)
                 self:UnregisterAllEvents()
+                self:SetScript("OnEvent", nil)
+                if not LunarUI._modulesEnabled then
+                    return
+                end
                 MiniMapMailFrame:Hide()
                 MiniMapMailFrame:UnregisterAllEvents()
             end)
@@ -1430,6 +1445,11 @@ function LunarUI.CleanupMinimap()
         mail:SetScript("OnEvent", nil)
         mail = nil
     end
+    -- 清理延遲隱藏框架（防止脫戰後 deferred callback 把原生郵件再藏掉）
+    if mailDeferFrame then
+        mailDeferFrame:UnregisterAllEvents()
+        mailDeferFrame:SetScript("OnEvent", nil)
+    end
     -- 清理難度圖示框架
     if diff then
         diff:UnregisterAllEvents()
@@ -1530,6 +1550,7 @@ function LunarUI.CleanupMinimap()
             local cs = state.cluster
             _G.MinimapCluster:SetAlpha(cs.alpha)
             _G.MinimapCluster:EnableMouse(cs.mouseEnabled)
+            _G.MinimapCluster:SetScale(1) -- 還原 SetScale(0.001)
             _G.MinimapCluster:ClearAllPoints()
             if cs.points[1] then
                 _G.MinimapCluster:SetPoint(unpack(cs.points, 1, 5))
@@ -1588,6 +1609,18 @@ function LunarUI.CleanupMinimap()
         end
     end
 
+    -- 還原 Blizzard MiniMapMailFrame（重新註冊事件 + 按保存狀態還原顯示）
+    if MiniMapMailFrame then
+        MiniMapMailFrame:RegisterEvent("UPDATE_PENDING_MAIL")
+        if state.mailFrame then
+            if state.mailFrame.visible or HasNewMail() then
+                MiniMapMailFrame:Show()
+            end
+        elseif HasNewMail() then
+            MiniMapMailFrame:Show()
+        end
+    end
+
     -- 還原 Minimap parent/position/size（最後做，因為需要 MinimapCluster 先就位）
     if state.minimap and _G.Minimap then
         pcall(function()
@@ -1611,6 +1644,7 @@ function LunarUI.CleanupMinimap()
 
     savedMinimapState = nil
     -- 清除框架 upvalue 引用（WoW 框架不可銷毀但 upvalue 必須重置，避免 re-enable 指向 orphaned 物件）
+    -- 注意：mailDeferFrame 不在此清除 — singleton 框架可跨 off/on 循環重用
     minimapFrame = nil
     zoneText = nil
     coordText = nil

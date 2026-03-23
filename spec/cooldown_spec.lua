@@ -50,6 +50,7 @@ _G.C_Spell = {
 require("spec.mock_frame")
 
 local LunarUI = {
+    _modulesEnabled = true,
     Colors = {
         bgIcon = { 0, 0, 0, 0.8 },
         borderIcon = { 0.3, 0.3, 0.4, 1 },
@@ -282,6 +283,45 @@ describe("CleanupCooldownTracker", function()
         assert.has_no_errors(function()
             LunarUI.CleanupCooldownTracker()
         end)
+    end)
+
+    it("PEW timer callback is no-op when _modulesEnabled is false", function()
+        -- Capture the C_Timer.After callback
+        local capturedCallback
+        local origAfter = _G.C_Timer.After
+        _G.C_Timer.After = function(_delay, fn)
+            capturedCallback = fn
+        end
+
+        -- Trigger PLAYER_ENTERING_WORLD to schedule the timer
+        -- Re-load to get a fresh eventFrame with our C_Timer mock
+        local origCreateEventHandler = LunarUI.CreateEventHandler
+        local capturedEventCb
+        LunarUI.CreateEventHandler = function(_events, callback)
+            capturedEventCb = callback
+            return origCreateEventHandler(_events, callback)
+        end
+        -- Reload the module to capture the event callback
+        loader.loadAddonFile("LunarUI/HUD/CooldownTracker.lua", LunarUI)
+        LunarUI.CreateEventHandler = origCreateEventHandler
+
+        -- Fire PEW event
+        if capturedEventCb then
+            capturedEventCb(nil, "PLAYER_ENTERING_WORLD")
+        end
+
+        -- Now disable modules and invoke the timer callback
+        LunarUI._modulesEnabled = false
+        if capturedCallback then
+            -- Should be a no-op (not call Initialize)
+            assert.has_no_errors(function()
+                capturedCallback()
+            end)
+        end
+
+        -- Restore
+        LunarUI._modulesEnabled = true
+        _G.C_Timer.After = origAfter
     end)
 end)
 

@@ -607,8 +607,6 @@ LunarUI.ShouldShowBuff = ShouldShowBuff
 
 -- 光環資料節流更新（用 C_Timer 取代 OnUpdate 輪詢）
 local auraUpdateScheduled = false
--- C-2: 防止 PLAYER_ENTERING_WORLD 與 RegisterModule delay 雙重觸發 Initialize
-local initScheduled = false
 -- B2 效能修復：提升為具名模組函數，避免 ScheduleAuraUpdate 每次觸發都建立新 closure
 local function OnAuraTimerFired()
     auraUpdateScheduled = false
@@ -628,19 +626,9 @@ eventFrame = LunarUI.CreateEventHandler(
     { "PLAYER_ENTERING_WORLD", "UNIT_AURA", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED" },
     function(_self, event, arg1)
         if event == "PLAYER_ENTERING_WORLD" then
-            if LunarUI.GetHUDSetting("auraFrames", true) == false then
-                return
-            end
-            -- C-2: 防止與 RegisterModule delay 競爭，只在尚未排程時才安排
-            if not isInitialized and not initScheduled then
-                initScheduled = true
-                local gen = auraInitGeneration
-                C_Timer.After(1.0, function()
-                    initScheduled = false
-                    if gen == auraInitGeneration then
-                        Initialize()
-                    end
-                end)
+            -- 初始化由 RegisterModule delay=0.3 統一處理，PEW 只負責已初始化後的強制更新
+            if isInitialized then
+                UpdateAuras()
             end
         elseif event == "UNIT_AURA" then
             if arg1 == "player" and isInitialized then
@@ -826,7 +814,6 @@ function LunarUI.CleanupAuraFrames()
 
     -- H-1: 重置排程旗標，避免 re-enable 後首次 UNIT_AURA 靜默失敗
     auraUpdateScheduled = false
-    initScheduled = false
     auraInitGeneration = auraInitGeneration + 1
 
     isInitialized = false
@@ -969,5 +956,5 @@ end
 LunarUI:RegisterModule("AuraFrames", {
     onEnable = Initialize,
     onDisable = LunarUI.CleanupAuraFrames,
-    delay = 1.5,
+    delay = 0.3,
 })

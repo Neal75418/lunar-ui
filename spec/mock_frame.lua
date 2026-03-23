@@ -78,6 +78,7 @@ end
 --------------------------------------------------------------------------------
 
 function MockFrame:SetMovable() end
+function MockFrame:SetResizable() end
 function MockFrame:EnableMouse() end
 function MockFrame:EnableMouseWheel() end
 function MockFrame:EnableKeyboard() end
@@ -87,6 +88,7 @@ function MockFrame:SetClampedToScreen() end
 function MockFrame:SetPropagateKeyboardInput() end
 function MockFrame:SetHitRectInsets() end
 function MockFrame:StartMoving() end
+function MockFrame:StartSizing() end
 function MockFrame:StopMovingOrSizing() end
 
 function MockFrame:IsMouseOver()

@@ -31,7 +31,7 @@ local function StyleChatTab(chatFrame)
     -- 簡化標籤外觀
     local tabText = _G[chatFrame:GetName() .. "TabText"] or tab.Text
     if tabText then
-        LunarUI.SetFont(tabText, 12, "OUTLINE")
+        LunarUI.SetFont(tabText, 16, "OUTLINE")
     end
 
     -- 隱藏標籤材質
@@ -81,14 +81,14 @@ local function StyleChatTab(chatFrame)
         local selectedTab = chatFrame.selectedTab or 0
         local tabID = tab:GetID()
         if tabID == selectedTab then
-            tabText:SetTextColor(1, 1, 1, 1) -- active：白色
+            tabText:SetTextColor(1, 0.82, 0, 1) -- active：金色（與底線一致）
             if tab._lunarActiveIndicator then
                 tab._lunarActiveIndicator:Show()
             end
         else
             local cDB = LunarUI.GetModuleDB("chat")
-            local inactiveAlpha = cDB and cDB.inactiveTabAlpha or 0.6
-            tabText:SetTextColor(0.6, 0.6, 0.6, inactiveAlpha) -- inactive
+            local inactiveAlpha = cDB and cDB.inactiveTabAlpha or 0.8
+            tabText:SetTextColor(0.7, 0.7, 0.7, inactiveAlpha) -- inactive：淺灰
             if tab._lunarActiveIndicator then
                 tab._lunarActiveIndicator:Hide()
             end
@@ -270,7 +270,26 @@ local function StyleChatFrame(chatFrame)
     -- 隱藏預設按鈕框架（捲動/最小化按鈕）
     local buttonFrame = _G[name .. "ButtonFrame"]
     if buttonFrame then
-        buttonFrame:Hide()
+        buttonFrame:SetAlpha(0)
+        buttonFrame:EnableMouse(false)
+        -- ButtonFrame 的子框架也需隱藏（ButtonFrameBackground 等材質）
+        for _, child in ipairs({ buttonFrame:GetRegions() }) do
+            if child.SetAlpha then
+                child:SetAlpha(0)
+            end
+        end
+    end
+
+    -- 隱藏 ChatFrameChannelButton 及語音按鈕（右側殘留邊框來源）
+    for _, btnName in ipairs({
+        name .. "ChannelButton",
+        name .. "EditBoxLanguage",
+    }) do
+        local btn = _G[btnName]
+        if btn then
+            btn:SetAlpha(0)
+            btn:EnableMouse(false)
+        end
     end
 
     -- 樣式化標籤
@@ -352,6 +371,7 @@ local function StyleChatFrame(chatFrame)
     local gripTex = grip:CreateTexture(nil, "OVERLAY")
     gripTex:SetAllPoints()
     gripTex:SetColorTexture(1, 1, 1, 0.15)
+    chatFrame:SetResizable(true)
     grip:SetScript("OnMouseDown", function()
         chatFrame:StartSizing("BOTTOMRIGHT")
     end)

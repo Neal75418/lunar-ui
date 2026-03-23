@@ -613,11 +613,21 @@ local function BindSlotToProvider(slot, providerName)
     slot.providerName = providerName
     slot.provider = provider
 
-    -- Fix 5: 登記到反查表
+    -- Fix 5: 登記到反查表（防止 off/on 循環用 panelFrameCache 重建時重複註冊）
     if not slotsByProvider[providerName] then
         slotsByProvider[providerName] = {}
     end
-    slotsByProvider[providerName][#slotsByProvider[providerName] + 1] = slot
+    local existing = slotsByProvider[providerName]
+    local alreadyRegistered = false
+    for _, s in ipairs(existing) do
+        if s == slot then
+            alreadyRegistered = true
+            break
+        end
+    end
+    if not alreadyRegistered then
+        existing[#existing + 1] = slot
+    end
 
     -- 點擊處理
     slot:SetScript("OnClick", function(_self, button)

@@ -546,9 +546,13 @@ eventFrame = LunarUI.CreateEventHandler(
             end
             local gen = initGeneration
             C_Timer.After(1.0, function()
-                if gen == initGeneration then
-                    Initialize()
+                if gen ~= initGeneration then
+                    return
                 end
+                if not LunarUI._modulesEnabled then
+                    return
+                end
+                Initialize()
             end)
         elseif event == "PLAYER_SPECIALIZATION_CHANGED" or event == "SPELLS_CHANGED" then
             -- 僅在模組初始化後才更新追蹤法術（避免 disable 狀態下無意義的更新）
