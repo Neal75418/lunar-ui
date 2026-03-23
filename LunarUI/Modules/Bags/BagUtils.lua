@@ -255,10 +255,6 @@ LunarUI.BagsClearItemLevelCache = function()
     wipe(itemLevelCache)
     itemLevelCacheMeta.n = 0
 end
-LunarUI.BagsClearEquipmentTypeCache = function()
-    wipe(equipmentTypeCache)
-    equipmentTypeCacheMeta.n = 0
-end
 LunarUI.BagsClearAllCaches = function()
     wipe(itemLevelCache)
     wipe(equipmentTypeCache)

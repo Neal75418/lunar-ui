@@ -1,7 +1,7 @@
 ---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for LunarUI/Core/Config.lua
-    Tests resolveDBPath, ValidateDB, GetModuleConfig, GetConfigValue
+    Tests resolveDBPath, ValidateDB, RegisterHUDFrame, ApplyHUDScale
 ]]
 
 require("spec.wow_mock")
@@ -218,63 +218,6 @@ describe("ValidateDB", function()
 end)
 
 --------------------------------------------------------------------------------
--- GetModuleConfig
---------------------------------------------------------------------------------
-
-describe("GetModuleConfig", function()
-    it("returns nil when db is nil", function()
-        local origDb = LunarUI.db
-        LunarUI.db = nil
-        assert.is_nil(LunarUI:GetModuleConfig("hud"))
-        LunarUI.db = origDb
-    end)
-
-    it("returns module config when it exists", function()
-        LunarUI.db = { profile = { hud = { scale = 1.5 } } }
-        local config = LunarUI:GetModuleConfig("hud")
-        assert.same({ scale = 1.5 }, config)
-    end)
-
-    it("returns nil for non-existent module", function()
-        LunarUI.db = { profile = { hud = { scale = 1.0 } } }
-        assert.is_nil(LunarUI:GetModuleConfig("nonexistent"))
-    end)
-end)
-
---------------------------------------------------------------------------------
--- GetConfigValue
---------------------------------------------------------------------------------
-
-describe("GetConfigValue", function()
-    it("returns nil when db is nil", function()
-        local origDb = LunarUI.db
-        LunarUI.db = nil
-        assert.is_nil(LunarUI:GetConfigValue("hud", "scale"))
-        LunarUI.db = origDb
-    end)
-
-    it("returns single-level value", function()
-        LunarUI.db = { profile = { enabled = true } }
-        assert.is_true(LunarUI:GetConfigValue("enabled"))
-    end)
-
-    it("returns multi-level value", function()
-        LunarUI.db = { profile = { hud = { scale = 1.5 } } }
-        assert.equals(1.5, LunarUI:GetConfigValue("hud", "scale"))
-    end)
-
-    it("returns nil for broken path", function()
-        LunarUI.db = { profile = { hud = { scale = 1.0 } } }
-        assert.is_nil(LunarUI:GetConfigValue("hud", "missing", "deep"))
-    end)
-
-    it("returns nil when intermediate is not a table", function()
-        LunarUI.db = { profile = { hud = "not a table" } }
-        assert.is_nil(LunarUI:GetConfigValue("hud", "scale"))
-    end)
-end)
-
---------------------------------------------------------------------------------
 -- OnProfileChanged
 --------------------------------------------------------------------------------
 
@@ -314,10 +257,6 @@ end)
 --------------------------------------------------------------------------------
 
 describe("RegisterHUDFrame", function()
-    after_each(function()
-        LunarUI.ClearHUDFrameRegistry()
-    end)
-
     it("registers frame name and applies scale", function()
         local mockFrame = {
             _scale = 1,
@@ -356,10 +295,6 @@ end)
 --------------------------------------------------------------------------------
 
 describe("ApplyHUDScale", function()
-    after_each(function()
-        LunarUI.ClearHUDFrameRegistry()
-    end)
-
     it("applies scale to registered HUD frames", function()
         local mockFrame = {
             _scale = 1,

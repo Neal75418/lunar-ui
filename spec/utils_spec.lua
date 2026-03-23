@@ -1,7 +1,7 @@
 ---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for LunarUI/Core/Utils.lua
-    Tests pure logic utility functions: FormatValue, FormatDuration,
+    Tests pure logic utility functions: FormatValue,
     ThresholdColor, FormatGameTime, FormatCoordinates, EscapePattern
 ]]
 
@@ -60,52 +60,6 @@ describe("FormatValue", function()
 
     it("returns '0' for nil", function()
         assert.equals("0", LunarUI.FormatValue(nil))
-    end)
-end)
-
---------------------------------------------------------------------------------
--- FormatDuration
---------------------------------------------------------------------------------
-
-describe("FormatDuration", function()
-    it("formats hours", function()
-        assert.equals("1h", LunarUI.FormatDuration(3600))
-    end)
-
-    it("formats multiple hours", function()
-        assert.equals("2h", LunarUI.FormatDuration(7200))
-    end)
-
-    it("formats hours with remainder (truncated)", function()
-        assert.equals("1h", LunarUI.FormatDuration(3700))
-    end)
-
-    it("formats minutes", function()
-        assert.equals("1m", LunarUI.FormatDuration(60))
-    end)
-
-    it("formats minutes with remainder", function()
-        assert.equals("1m", LunarUI.FormatDuration(90))
-    end)
-
-    it("formats seconds >= 10 (integer)", function()
-        assert.equals("30", LunarUI.FormatDuration(30))
-    end)
-
-    it("formats seconds < 10 with decimal", function()
-        assert.equals("5.5", LunarUI.FormatDuration(5.5))
-    end)
-
-    it("returns empty string for nil", function()
-        assert.equals("", LunarUI.FormatDuration(nil))
-    end)
-
-    it("returns empty string for zero", function()
-        assert.equals("", LunarUI.FormatDuration(0))
-    end)
-
-    it("returns empty string for negative", function()
-        assert.equals("", LunarUI.FormatDuration(-5))
     end)
 end)
 

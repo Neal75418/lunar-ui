@@ -27,30 +27,19 @@ local isInitialized = false
 -- 常數
 --------------------------------------------------------------------------------
 
--- 延遲門檻（毫秒）
-local LATENCY_THRESHOLDS = {
-    good = 100, -- 綠色
-    medium = 200, -- 黃色
-    bad = 400, -- 紅色
-}
-
 --------------------------------------------------------------------------------
 -- 輔助函數
 --------------------------------------------------------------------------------
 
 local FPS_THRESHOLDS = { 60, 30, 15 }
-local LATENCY_THRESHOLDS_LIST = {
-    LATENCY_THRESHOLDS.good,
-    LATENCY_THRESHOLDS.medium,
-    LATENCY_THRESHOLDS.bad,
-}
+local LATENCY_THRESHOLDS = { 100, 200, 400 } -- good, medium, bad（毫秒）
 
 local function GetFPSColor(fps)
     return LunarUI.ThresholdColor(fps, FPS_THRESHOLDS, true)
 end
 
 local function GetLatencyColor(ms)
-    return LunarUI.ThresholdColor(ms, LATENCY_THRESHOLDS_LIST, false)
+    return LunarUI.ThresholdColor(ms, LATENCY_THRESHOLDS, false)
 end
 
 --------------------------------------------------------------------------------

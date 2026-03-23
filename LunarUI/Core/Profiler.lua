@@ -126,10 +126,6 @@ function LunarUI:DisableProfiling()
     self:Print("|cff8882ff[Profiler]|r " .. label .. " |cffff0000" .. (L["Off"] or "OFF") .. "|r")
 end
 
-function LunarUI.IsProfilingEnabled()
-    return profilingEnabled
-end
-
 --------------------------------------------------------------------------------
 -- 事件頻率監控
 --------------------------------------------------------------------------------

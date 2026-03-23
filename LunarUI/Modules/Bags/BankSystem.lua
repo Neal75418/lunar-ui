@@ -677,7 +677,6 @@ end
 LunarUI.BagsOpenBank = OpenBank
 LunarUI.BagsCloseBank = CloseBank
 LunarUI.BagsUpdateAllBankSlots = UpdateAllBankSlots
-LunarUI.BagsRefreshBankLayout = RefreshBankLayout
 LunarUI.BagsUpdateBankSlot = UpdateBankSlot
 LunarUI.BagsIsBankOpen = function()
     return isBankOpen

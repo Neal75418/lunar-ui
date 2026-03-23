@@ -88,22 +88,6 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    取得模組設定
-    @param moduleName string - 模組名稱（如 "unitframes", "nameplates", "hud"）
-    @return table|nil - 模組設定表，若不存在則返回 nil
-
-    使用範例：
-        local db = LunarUI:GetModuleConfig("unitframes")
-        if not db or not db.enabled then return end
-]]
-function LunarUI:GetModuleConfig(moduleName)
-    if not self.db or not self.db.profile then
-        return nil
-    end
-    return self.db.profile[moduleName]
-end
-
---[[
     取得完整設定 profile（供 LunarUI_Options 等跨模組存取全域設定用）
     @return table|nil - 完整 profile 表，若 DB 未就緒則返回 nil
 ]]
@@ -112,33 +96,6 @@ function LunarUI.GetProfileDB()
         return nil
     end
     return LunarUI.db.profile
-end
-
---[[
-    取得嵌套設定路徑
-    @param ... string - 路徑層級（如 "hud", "scale"）
-    @return any - 設定值，若路徑不存在則返回 nil
-
-    使用範例：
-        local scale = LunarUI:GetConfigValue("hud", "scale")
-        local enabled = LunarUI:GetConfigValue("unitframes", "player", "enabled")
-]]
-function LunarUI:GetConfigValue(...)
-    if not self.db or not self.db.profile then
-        return nil
-    end
-    local config = self.db.profile
-    for i = 1, select("#", ...) do
-        local key = select(i, ...)
-        if type(config) ~= "table" then
-            return nil
-        end
-        config = config[key]
-        if config == nil then
-            return nil
-        end
-    end
-    return config
 end
 
 --------------------------------------------------------------------------------
@@ -312,13 +269,6 @@ function LunarUI:RegisterHUDFrame(name)
             frame:SetScale(scale)
         end
     end
-end
-
---[[
-    清除 HUD 框架註冊表（供單元測試使用）
-]]
-function LunarUI.ClearHUDFrameRegistry()
-    wipe(hudFrameNames)
 end
 
 --[[

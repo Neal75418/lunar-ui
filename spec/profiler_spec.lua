@@ -48,22 +48,7 @@ describe("Profiler enable/disable", function()
         end)
     end)
 
-    it("starts disabled", function()
-        assert.is_false(LunarUI.IsProfilingEnabled())
-    end)
-
-    it("enables profiling", function()
-        LunarUI:EnableProfiling()
-        assert.is_true(LunarUI.IsProfilingEnabled())
-    end)
-
-    it("disables profiling", function()
-        LunarUI:EnableProfiling()
-        LunarUI:DisableProfiling()
-        assert.is_false(LunarUI.IsProfilingEnabled())
-    end)
-
-    it("prints message on enable", function()
+    it("enables profiling and prints ON", function()
         LunarUI:EnableProfiling()
         assert.truthy(printLog[#printLog]:find("ON"))
     end)

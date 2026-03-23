@@ -553,9 +553,5 @@ end
 -- 匯出
 --------------------------------------------------------------------------------
 
-LunarUI.ChatStyleChatTab = StyleChatTab
-LunarUI.ChatStyleChatEditBox = StyleChatEditBox
 LunarUI.ChatStyleChatFrame = StyleChatFrame
-LunarUI.ChatCreateCopyFrame = CreateCopyFrame
-LunarUI.ChatShowCopyFrame = ShowCopyFrame
 LunarUI.ChatAddCopyOption = AddCopyOption

@@ -278,8 +278,6 @@ local function CreateCastbar(frame)
     castbar.PostCastStart = function(self, _unit)
         self:SetStatusBarColor(unpack(CASTBAR_COLOR))
     end
-    castbar.PostChannelStart = castbar.PostCastStart
-
     -- Spark
     local spark = castbar:CreateTexture(nil, "OVERLAY")
     spark:SetSize(10, 10)

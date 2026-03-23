@@ -214,11 +214,7 @@ local function RequestInspect(unit)
 end
 
 -- Inspect 回應事件（保留引用以便 Cleanup 解除註冊）
-local inspectEventFrame = LunarUI.CreateEventHandler({ "INSPECT_READY" }, function(_self, event, inspectGUID)
-    if event ~= "INSPECT_READY" then
-        return
-    end
-
+local inspectEventFrame = LunarUI.CreateEventHandler({ "INSPECT_READY" }, function(_self, _event, inspectGUID)
     -- 確認是我們請求的
     if pendingInspect and pendingInspect == inspectGUID then
         -- 從 inspect 結果取得資料

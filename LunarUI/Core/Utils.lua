@@ -8,7 +8,6 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local format = format
-local floor = math.floor
 
 --------------------------------------------------------------------------------
 -- Number Formatting
@@ -32,35 +31,6 @@ function LunarUI.FormatValue(value)
         return format("%.1fK", value / 1e3)
     end
     return tostring(value)
-end
-
---------------------------------------------------------------------------------
--- Duration Formatting
---------------------------------------------------------------------------------
-
---[[
-    Format duration in seconds to human-readable string
-    @param seconds number - Duration in seconds
-    @return string - Formatted string (e.g., "2h", "15m", "30", "5.5")
-
-    Usage:
-        local text = LunarUI.FormatDuration(3700)  -- "1h"
-        local text = LunarUI.FormatDuration(90)    -- "1m"
-        local text = LunarUI.FormatDuration(5.5)   -- "5.5"
-]]
-function LunarUI.FormatDuration(seconds)
-    if not seconds or seconds <= 0 then
-        return ""
-    end
-    if seconds >= 3600 then
-        return format("%dh", floor(seconds / 3600))
-    elseif seconds >= 60 then
-        return format("%dm", floor(seconds / 60))
-    elseif seconds >= 10 then
-        return format("%d", floor(seconds))
-    else
-        return format("%.1f", seconds)
-    end
 end
 
 --[[

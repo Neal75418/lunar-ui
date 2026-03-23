@@ -40,10 +40,6 @@ local TEXTURES = {
     -- Backgrounds
     parchment = "Interface\\ACHIEVEMENTFRAME\\UI-Achievement-Parchment-Horizontal",
     dark = "Interface\\Buttons\\WHITE8x8",
-
-    -- Effects
-    glow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
-    spark = "Interface\\Cooldown\\star4",
 }
 
 --------------------------------------------------------------------------------

@@ -9,37 +9,13 @@ local L = {}
 -- General
 L["Enabled"] = "Enabled"
 L["Disabled"] = "Disabled"
-L["Debug"] = "Debug"
 L["Yes"] = "Yes"
 L["No"] = "No"
 L["On"] = "ON"
 L["Off"] = "OFF"
 
--- Commands
-L["Commands"] = "Commands"
-L["Help"] = "Help"
-L["Toggle"] = "Toggle"
-L["Status"] = "Status"
-L["Config"] = "Config"
-L["Reset"] = "Reset"
-
--- UnitFrames
-L["Player"] = "Player"
-L["Target"] = "Target"
-L["Focus"] = "Focus"
-L["Pet"] = "Pet"
-L["Party"] = "Party"
-L["Raid"] = "Raid"
-L["Boss"] = "Boss"
-
 -- Settings
-L["General"] = "General"
-L["UnitFrames"] = "Unit Frames"
-L["ActionBars"] = "Action Bars"
 L["Minimap"] = "Minimap"
-L["Bags"] = "Bags"
-L["Chat"] = "Chat"
-L["Tooltip"] = "Tooltip"
 
 -- System Messages
 L["AddonLoaded"] = "Addon loaded"
@@ -75,10 +51,6 @@ L["StatusTitle"] = "|cff8882ffLunarUI Status:|r"
 L["StatusVersion"] = "Version: %s"
 L["StatusEnabled"] = "Enabled: %s"
 L["StatusDebug"] = "Debug: %s"
--- Combat Messages
-L["CombatEnter"] = "Entering combat"
-L["CombatLeave"] = "Leaving combat"
-
 -- Keybind Messages
 L["KeybindEnabled"] = "Keybind mode: Hover over a button and press a key to bind"
 L["KeybindDisabled"] = "Keybind mode: Disabled"
@@ -97,9 +69,6 @@ L["BankSearchError"] = "Bank search error"
 -- Chat
 L["CopyChat"] = "Copy Chat"
 L["PressToCopyURL"] = "Press Ctrl+C to copy URL:"
-L["KeywordAlert"] = "Keyword Alert"
-L["SpamFiltered"] = "Spam message filtered"
-
 -- Config
 L["SettingsImported"] = "Settings imported successfully"
 L["SettingsImportedVersion"] = "Settings imported successfully (version: %s)"
@@ -354,8 +323,6 @@ L["BoU"] = "BoU"
 
 -- Errors
 L["ErrorOUFNotFound"] = "Error: oUF framework not found"
-L["ErrorAddonInit"] = "Error: Failed to initialize addon"
-
 -- HUD Options
 L["HUDOverview"] = "Overview"
 L["HUDOverviewDesc"] = "HUD overlay element settings. Some changes require /reload to take effect.\n\n"
@@ -412,11 +379,8 @@ L["MoverAlpha"] = "Mover Opacity"
 L["MoverAlphaDesc"] = "Opacity of mover blocks when unlocked"
 
 -- Options Panel
-L["AddonHeader"] = "|cff8882ffLunarUI|r - Modern Combat UI System"
 L["OptionsDesc"] = "Modern combat UI replacement with Lunar theme"
 L["EnableLunarUI"] = "Enable LunarUI"
-L["EnableLunarUIDesc"] = "Enable or disable LunarUI"
-L["LunarUIEnabled"] = "LunarUI enabled"
 L["LunarUIDisabled"] = "LunarUI disabled"
 L["LunarUIDisabledReload"] = "LunarUI disabled (requires UI reload)"
 L["DebugModeDesc"] = "Show debug overlay with FPS and memory info"

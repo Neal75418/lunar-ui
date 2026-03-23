@@ -103,7 +103,6 @@ end
 --------------------------------------------------------------------------------
 
 LunarUI.BagsSellJunk = SellJunk
-LunarUI.SellJunk = SellJunk
 -- 供 CleanupBags 使飛行中販賣鏈失效
 LunarUI.InvalidateSellJunk = function()
     sellJunkGeneration = sellJunkGeneration + 1

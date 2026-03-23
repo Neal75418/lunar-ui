@@ -12,7 +12,6 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
-local _L = Engine.L or {}
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
