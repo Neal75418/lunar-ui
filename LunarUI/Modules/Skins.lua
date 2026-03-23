@@ -255,29 +255,12 @@ function LunarUI.SkinCloseButton(btn)
     btn._lunarCloseSkinned = true
 end
 
---- 替換分頁按鈕（底線指示器風格 + 半透明背景）
+--- 替換分頁按鈕（保留 Blizzard 原生材質，只標記已處理）
 function LunarUI.SkinTab(tab)
     if not tab then
         return
     end
-
-    StripTextures(tab)
-
-    -- 半透明背景（讓 tab 可見，不再全透明）
-    if not tab._lunarTabBG then
-        tab._lunarTabBG = tab:CreateTexture(nil, "BACKGROUND")
-        tab._lunarTabBG:SetAllPoints()
-        tab._lunarTabBG:SetColorTexture(C.bg[1], C.bg[2], C.bg[3], 0.9)
-    end
-
-    -- 底線指示器取代凸出分頁
-    if not tab._lunarIndicator then
-        tab._lunarIndicator = tab:CreateTexture(nil, "OVERLAY")
-        tab._lunarIndicator:SetHeight(2)
-        tab._lunarIndicator:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 4, 0)
-        tab._lunarIndicator:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -4, 0)
-        tab._lunarIndicator:SetColorTexture(C.borderGold[1], C.borderGold[2], C.borderGold[3], C.borderGold[4])
-    end
+    tab._lunarTabSkinned = true
 end
 
 --- 標準框架 Skin 工廠：處理共用的 SkinFrame + TitleText + CloseButton + Tabs 流程

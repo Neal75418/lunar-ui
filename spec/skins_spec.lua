@@ -462,33 +462,17 @@ describe("SkinTab", function()
         end)
     end)
 
-    it("creates tab background", function()
+    it("marks tab as skinned", function()
         local tab = MockFrame()
         LunarUI.SkinTab(tab)
-        assert.is_not_nil(tab._lunarTabBG)
+        assert.is_truthy(tab._lunarTabSkinned)
     end)
 
-    it("creates indicator line", function()
-        local tab = MockFrame()
-        LunarUI.SkinTab(tab)
-        assert.is_not_nil(tab._lunarIndicator)
-    end)
-
-    it("strips existing textures", function()
+    it("preserves original textures", function()
         local tex = MockTexture("BACKGROUND")
         local tab = MockFrame({ regions = { tex } })
         LunarUI.SkinTab(tab)
-        assert.equals(0, tex._alpha)
-    end)
-
-    it("does not create duplicate elements", function()
-        local tab = MockFrame()
-        LunarUI.SkinTab(tab)
-        local firstBG = tab._lunarTabBG
-        local firstInd = tab._lunarIndicator
-        LunarUI.SkinTab(tab)
-        assert.equals(firstBG, tab._lunarTabBG)
-        assert.equals(firstInd, tab._lunarIndicator)
+        assert.is_not_equal(0, tex._alpha)
     end)
 end)
 
@@ -650,8 +634,8 @@ describe("SkinStandardFrame", function()
         _G["TestTab2"] = tab2
         local frame = MockFrame()
         LunarUI:SkinStandardFrame(frame, { tabPrefix = "TestTab", tabCount = 2 })
-        assert.is_not_nil(tab1._lunarTabBG)
-        assert.is_not_nil(tab2._lunarTabBG)
+        assert.is_truthy(tab1._lunarTabSkinned)
+        assert.is_truthy(tab2._lunarTabSkinned)
         _G["TestTab1"] = nil
         _G["TestTab2"] = nil
     end)
@@ -662,8 +646,8 @@ describe("SkinStandardFrame", function()
         local frame = MockFrame()
         frame.Tabs = { tab1, tab2 }
         LunarUI:SkinStandardFrame(frame, { tabProperty = "Tabs" })
-        assert.is_not_nil(tab1._lunarTabBG)
-        assert.is_not_nil(tab2._lunarTabBG)
+        assert.is_truthy(tab1._lunarTabSkinned)
+        assert.is_truthy(tab2._lunarTabSkinned)
     end)
 
     it("skins tabs via useTabSystem", function()
@@ -671,7 +655,7 @@ describe("SkinStandardFrame", function()
         local frame = MockFrame()
         frame.TabSystem = { tabs = { tab1 } }
         LunarUI:SkinStandardFrame(frame, { useTabSystem = true })
-        assert.is_not_nil(tab1._lunarTabBG)
+        assert.is_truthy(tab1._lunarTabSkinned)
     end)
 
     it("resolves frame from global name string", function()
