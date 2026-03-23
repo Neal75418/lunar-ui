@@ -183,10 +183,23 @@ local function UpdateFadeAndHover(_self, elapsed)
     -- 執行懸停偵測
     UpdateHoverDetection(fadeEnabled, fadeAlpha, fadeDelay, elapsed)
 
-    -- 自動停止：無動畫且不需要懸停輪詢時（fade 停用、在戰鬥中、或解鎖狀態）
-    -- 當 fadeEnabled 且非戰鬥狀態，懸停偵測需持續輪詢，不可停止 OnUpdate
-    if not anyAnimActive and (not fadeEnabled or isInCombat or isBarsUnlocked) then
-        fadeAnimFrame:SetScript("OnUpdate", nil)
+    -- 自動停止：無動畫且不需要懸停輪詢時
+    -- 懸停輪詢需繼續的條件：有 bar 處於淡出狀態（alpha < 1.0 或 targetAlpha < 1.0）
+    -- 或有 bar 目前被懸停中（需偵測滑鼠離開以觸發淡出計時器）
+    -- 以上皆無時停止 OnUpdate，FadeBarTo 或滑鼠進入會在下次需要時重新啟動
+    if not anyAnimActive then
+        local needsHoverPoll = false
+        if fadeEnabled and not isInCombat and not isBarsUnlocked then
+            for _, state in pairs(fadeState) do
+                if state.alpha < 1.0 or state.targetAlpha < 1.0 or state.hovered then
+                    needsHoverPoll = true
+                    break
+                end
+            end
+        end
+        if not needsHoverPoll then
+            fadeAnimFrame:SetScript("OnUpdate", nil)
+        end
     end
 end
 
