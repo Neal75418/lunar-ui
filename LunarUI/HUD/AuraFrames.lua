@@ -363,6 +363,10 @@ local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expira
         iconFrame.count:Hide()
     end
 
+    -- 快取持續時間（供 UpdateIconTimers 使用，避免每 0.1s 呼叫 GetCooldownTimes）
+    iconFrame._cachedDuration = duration
+    iconFrame._cachedExpiration = expirationTime
+
     -- 計時條
     if duration > 0 and expirationTime > 0 then
         local remaining = expirationTime - GetTime()
@@ -484,16 +488,15 @@ end
 
 -- 計時條即時更新（每幀更新計時條寬度和顏色）
 -- C4 效能修復：UpdateIconTimers 提升為模組層 function，now 以參數傳入，避免每 0.1s 建立 closure
+-- P3 效能修復：使用快取的 duration/expirationTime（UpdateAuraIcon 設定），省去 GetCooldownTimes C call
 local function UpdateIconTimers(icons, maxIcons, now)
     for i = 1, maxIcons do
         local iconFrame = icons[i]
         if iconFrame and iconFrame:IsShown() and iconFrame.auraData then
-            -- 從冷卻框架反推持續時間
-            local start, dur = iconFrame.cooldown:GetCooldownTimes()
-            if start and dur and start > 0 and dur > 0 then
-                start = start / 1000 -- GetCooldownTimes 回傳毫秒
-                dur = dur / 1000
-                local remaining = (start + dur) - now
+            local dur = iconFrame._cachedDuration
+            local expiration = iconFrame._cachedExpiration
+            if dur and dur > 0 and expiration and expiration > 0 then
+                local remaining = expiration - now
                 if remaining > 0 then
                     local pct = remaining / dur
                     local barWidth = (ICON_SIZE - 2) * pct

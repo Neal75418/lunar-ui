@@ -122,11 +122,6 @@ local function CreatePooledText(parent)
     fs:SetShadowOffset(1, -1)
     fs:Hide()
 
-    -- 每個 FontString 自帶動畫用框架（避免閉包 GC）
-    local animFrame = CreateFrame("Frame", nil, parent)
-    animFrame:Hide()
-    fs._animFrame = animFrame
-    animFrame._fctOwner = fs -- 反向連結，供 FCTAnimOnUpdate 使用
     fs._elapsed = 0
     fs._duration = 1.5
     fs._startY = 0
@@ -160,43 +155,44 @@ local function RecycleText(fs)
     fs:Hide()
     fs:ClearAllPoints()
     fs._elapsed = 0
-    fs._animFrame:SetScript("OnUpdate", nil)
-    fs._animFrame:Hide()
-
-    -- M3 效能修復：O(1) swap-remove，避免 table.remove 在中間位置移動後續所有元素
-    for i, active in ipairs(activeTexts) do
-        if active == fs then
-            activeTexts[i] = activeTexts[#activeTexts]
-            activeTexts[#activeTexts] = nil
-            break
-        end
-    end
-
     table_insert(textPool, fs)
 end
 
 --------------------------------------------------------------------------------
--- 動畫系統
+-- 動畫系統（單一 driver 批次更新所有 activeTexts）
 --------------------------------------------------------------------------------
 
--- 模組層級 OnUpdate handler，透過 _fctOwner 取得 FontString，避免每次 AnimateText 建立閉包
-local function FCTAnimOnUpdate(self, dt)
-    local fs = self._fctOwner
-    fs._elapsed = fs._elapsed + dt
-    local pct = fs._elapsed / fs._duration
+local animDriverFrame = nil
 
-    if pct >= 1 then
-        RecycleText(fs)
-        return
+-- 單一 OnUpdate handler：反向迭代 activeTexts，批次更新位置/透明度，到期直接回收
+local function FCTAnimDriverOnUpdate(self, dt)
+    for i = #activeTexts, 1, -1 do
+        local fs = activeTexts[i]
+        fs._elapsed = fs._elapsed + dt
+        local pct = fs._elapsed / fs._duration
+
+        if pct >= 1 then
+            -- swap-remove + 回收（內聯，避免 RecycleText 內再做 O(n) 搜尋）
+            fs:Hide()
+            fs:ClearAllPoints()
+            fs._elapsed = 0
+            activeTexts[i] = activeTexts[#activeTexts]
+            activeTexts[#activeTexts] = nil
+            table_insert(textPool, fs)
+        else
+            -- 向上飄動（OutQuad 先快後慢）
+            local y = fs._startY + OutQuad(pct, 0, FLOAT_DISTANCE, 1)
+            -- 淡出（InQuad 先慢後快）
+            local alpha = 1 - InQuad(pct, 0, 1, 1)
+            fs:SetPoint("CENTER", fctFrame, "CENTER", fs._offsetX or 0, y)
+            fs:SetAlpha(alpha)
+        end
     end
 
-    -- 向上飄動（OutQuad 先快後慢）
-    local y = fs._startY + OutQuad(pct, 0, FLOAT_DISTANCE, 1)
-    -- 淡出（InQuad 先慢後快）
-    local alpha = 1 - InQuad(pct, 0, 1, 1)
-
-    fs:SetPoint("CENTER", fctFrame, "CENTER", fs._offsetX or 0, y)
-    fs:SetAlpha(alpha)
+    -- 全部回收完畢 → 停止 driver
+    if #activeTexts == 0 then
+        self:Hide()
+    end
 end
 
 local function AnimateText(fs, startY, duration)
@@ -204,8 +200,10 @@ local function AnimateText(fs, startY, duration)
     fs._duration = duration
     fs._startY = startY
     fs:Show()
-    fs._animFrame:Show()
-    fs._animFrame:SetScript("OnUpdate", FCTAnimOnUpdate)
+    -- 啟動共用 driver（若尚未運行）
+    if animDriverFrame and not animDriverFrame:IsShown() then
+        animDriverFrame:Show()
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -388,6 +386,17 @@ end
 -- 框架建立
 --------------------------------------------------------------------------------
 
+-- 佇列 OnUpdate handler（模組層級，避免每次 re-enable 建立 closure）
+-- 每幀最多處理 POOL_SIZE 筆（池大小即上限，超出無法顯示，直接丟棄）
+local function QueueOnUpdate(self)
+    local budget = pendingCount < POOL_SIZE and pendingCount or POOL_SIZE
+    for i = 1, budget do
+        ShowText(pendingAmounts[i], pendingCriticals[i], pendingTypes[i])
+    end
+    pendingCount = 0
+    self:Hide()
+end
+
 ---@return Frame
 local function CreateFCTFrame()
     if fctFrame then
@@ -396,13 +405,11 @@ local function CreateFCTFrame()
         fctFrame:SetScript("OnEvent", OnCombatLogEvent)
         -- 重新掛載 queueFrame OnUpdate（CleanupFCT 呼叫了 SetScript("OnUpdate", nil)）
         if queueFrame then
-            queueFrame:SetScript("OnUpdate", function(self)
-                self:Hide()
-                for i = 1, pendingCount do
-                    ShowText(pendingAmounts[i], pendingCriticals[i], pendingTypes[i])
-                end
-                pendingCount = 0
-            end)
+            queueFrame:SetScript("OnUpdate", QueueOnUpdate)
+        end
+        -- 重新掛載 animDriverFrame OnUpdate
+        if animDriverFrame then
+            animDriverFrame:SetScript("OnUpdate", FCTAnimDriverOnUpdate)
         end
         return fctFrame
     end
@@ -415,17 +422,16 @@ local function CreateFCTFrame()
     -- 初始化框架池
     InitPool(fctFrame)
 
+    -- 單一動畫 driver：批次更新所有 activeTexts（取代 per-text OnUpdate）
+    animDriverFrame = CreateFrame("Frame", nil, fctFrame)
+    animDriverFrame:Hide()
+    animDriverFrame:SetScript("OnUpdate", FCTAnimDriverOnUpdate)
+
     -- 佇列處理框架：在乾淨的 OnUpdate 環境中消化 CLEU 事件
     -- Show/Hide 控制：只在有待處理事件時才啟動 OnUpdate，避免空轉
     queueFrame = CreateFrame("Frame", nil, fctFrame)
     queueFrame:Hide()
-    queueFrame:SetScript("OnUpdate", function(self)
-        self:Hide() -- 處理完立即停止，下次有事件時再 Show()
-        for i = 1, pendingCount do
-            ShowText(pendingAmounts[i], pendingCriticals[i], pendingTypes[i])
-        end
-        pendingCount = 0
-    end)
+    queueFrame:SetScript("OnUpdate", QueueOnUpdate)
 
     -- 註冊戰鬥日誌事件
     fctFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -447,6 +453,12 @@ local function CleanupFCT()
         fctFrame:UnregisterAllEvents()
         fctFrame:SetScript("OnEvent", nil)
 
+        -- 停止動畫 driver
+        if animDriverFrame then
+            animDriverFrame:SetScript("OnUpdate", nil)
+            animDriverFrame:Hide()
+        end
+
         -- 停止佇列處理
         if queueFrame then
             queueFrame:SetScript("OnUpdate", nil)
@@ -454,10 +466,11 @@ local function CleanupFCT()
         end
         pendingCount = 0
 
-        -- 回收所有活動中的文字
+        -- 回收所有活動中的文字（RecycleText 不處理 activeTexts 移除，需 wipe）
         for i = #activeTexts, 1, -1 do
             RecycleText(activeTexts[i])
         end
+        wipe(activeTexts)
 
         fctFrame:Hide()
     end
