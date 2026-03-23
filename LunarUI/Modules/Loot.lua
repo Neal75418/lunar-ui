@@ -360,6 +360,9 @@ local function HookBlizzardLoot()
     -- 改用 SetAlpha(0) 讓框架不可見
     if _G.LootFrame and _G.LootFrame.Show then
         hooksecurefunc(_G.LootFrame, "Show", function(self)
+            if not LunarUI._modulesEnabled then
+                return
+            end
             local db = LunarUI.GetModuleDB("loot")
             if db and db.enabled then
                 -- 在 Show hook 內呼叫 Hide() 會 taint（在 protected 呼叫堆疊內）

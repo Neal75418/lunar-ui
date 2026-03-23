@@ -687,7 +687,7 @@ function LunarUI:CheckInstallWizard()
     if not self.db.global.installComplete then
         -- 延遲顯示，確保所有模組已載入
         C_Timer.After(1, function()
-            if not LunarUI:IsEnabled() then
+            if not LunarUI._modulesEnabled then
                 return
             end
             if self.db and self.db.global and not self.db.global.installComplete then
