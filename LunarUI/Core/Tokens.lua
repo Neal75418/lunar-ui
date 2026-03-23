@@ -31,15 +31,7 @@ LunarUI.Colors = {
     -- 文字
     textPrimary = { 1, 1, 1, 1 },
     textSecondary = { 0.9, 0.9, 0.9, 1 },
-    textMuted = { 0.7, 0.7, 0.7, 1 },
     textDim = { 0.6, 0.6, 0.6, 1 },
-    textGold = { 1, 0.82, 0, 1 },
-
-    -- 功能色
-    success = { 0.1, 1.0, 0.1, 1 },
-    warning = { 1.0, 0.7, 0.0, 1 },
-    danger = { 1.0, 0.1, 0.1, 1 },
-    info = { 0.41, 0.8, 0.94, 1 },
 
     -- 羊皮紙風格（手繪風）
     inkDark = { 0.15, 0.12, 0.08, 1 },

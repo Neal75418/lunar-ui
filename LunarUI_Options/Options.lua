@@ -54,9 +54,7 @@ local L = {
     -- Nameplates
     nameplates = "Nameplates",
     nameplatesDesc = "Nameplate settings",
-    enemy = "Enemy",
     enemyNameplates = "Enemy Nameplates",
-    friendly = "Friendly",
     friendlyNameplates = "Friendly Nameplates",
     showHealth = "Show Health",
     showCastbar = "Show Castbar",
