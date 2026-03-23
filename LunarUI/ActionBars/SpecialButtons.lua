@@ -199,7 +199,7 @@ local function CreateMicroBar()
         return
     end
 
-    -- 建立容器
+    -- 建立定位容器
     local microBar = CreateFrame("Frame", "LunarUI_MicroBar", UIParent)
     local btnWidth = db.buttonWidth or 28
     local btnHeight = db.buttonHeight or 36
@@ -214,14 +214,24 @@ local function CreateMicroBar()
     -- 儲存按鈕參照以供清理用
     microBar._buttons = MICRO_BUTTONS
 
-    -- 重新掛載並排列微型按鈕
-    -- SetParent 切斷 MicroMenu→MainMenuBar 的 alpha 繼承鏈，
-    -- 使 HideBlizzardBars 對 MainMenuBar 的 SetAlpha(0) 不再連帶隱藏按鈕。
-    -- 非戰鬥狀態下 SetParent 不會 taint 安全框架（ElvUI 等主流 addon 亦採用此做法）。
+    local bars = LunarUI._actionBars
+
+    -- 將 MicroMenu 整體從 MainMenuBar 移到 microBar
+    -- 切斷 MainMenuBar→MicroMenu 的 alpha 繼承鏈（避免 HideBlizzardBars 連帶隱藏按鈕）
+    -- 按鈕保持為 MicroMenu 的子框架，Blizzard Layout/GetEdgeButton 正常運作
+    if _G.MicroMenu then
+        bars._microMenuOrigParent = _G.MicroMenu:GetParent()
+        _G.MicroMenu:SetParent(microBar)
+        _G.MicroMenu:ClearAllPoints()
+        _G.MicroMenu:SetAllPoints(microBar)
+        _G.MicroMenu:SetAlpha(1)
+        _G.MicroMenu:Show()
+    end
+
+    -- 在 MicroMenu 內重新排列按鈕（不 reparent 個別按鈕，避免破壞 Layout/GetEdgeButton）
     for i, btn in ipairs(MICRO_BUTTONS) do
-        btn:SetParent(microBar)
         btn:ClearAllPoints()
-        btn:SetPoint("LEFT", microBar, "LEFT", (i - 1) * (btnWidth + spacing), 0)
+        btn:SetPoint("LEFT", _G.MicroMenu or microBar, "LEFT", (i - 1) * (btnWidth + spacing), 0)
         btn:SetSize(btnWidth, btnHeight)
         btn:SetAlpha(1)
         btn:Show()
@@ -238,33 +248,31 @@ local function CreateMicroBar()
         end
     end
 
-    -- 按鈕已 SetParent 到 microBar，MicroMenu 現在是空殼
-    -- 隱藏 MicroMenu 避免在原始位置顯示空框架
-    local bars = LunarUI._actionBars
-    if _G.MicroMenu then
-        _G.MicroMenu:SetAlpha(0)
-        _G.MicroMenu:EnableMouse(false)
-        -- Hook Layout 防止暴雪代碼在動態事件中重新排列按鈕位置
-        if _G.MicroMenu.Layout and not microMenuLayoutHooked then
-            microMenuLayoutHooked = true
-            hooksecurefunc(_G.MicroMenu, "Layout", function()
-                if not LunarUI._modulesEnabled then
-                    return
+    -- Hook Layout 防止暴雪代碼在動態事件中重新排列按鈕位置
+    if _G.MicroMenu and _G.MicroMenu.Layout and not microMenuLayoutHooked then
+        microMenuLayoutHooked = true
+        hooksecurefunc(_G.MicroMenu, "Layout", function()
+            if not LunarUI._modulesEnabled then
+                return
+            end
+            if bars.microBar and bars.microBar._buttons and not InCombatLockdown() then
+                -- 確保 MicroMenu 仍在我們的容器內
+                if _G.MicroMenu:GetParent() ~= bars.microBar then
+                    _G.MicroMenu:SetParent(bars.microBar)
                 end
-                if bars.microBar and bars.microBar._buttons and not InCombatLockdown() then
-                    -- 從 DB 動態讀取（避免捕獲 stale upvalue）
-                    local microDB = LunarUI.GetModuleDB("actionbars")
-                    local mbDB = microDB and microDB.microBar
-                    local curBtnWidth = (mbDB and mbDB.buttonWidth) or 28
-                    local curSpacing = 1
-                    for idx, mbtn in ipairs(bars.microBar._buttons) do
-                        mbtn:SetParent(bars.microBar)
-                        mbtn:ClearAllPoints()
-                        mbtn:SetPoint("LEFT", bars.microBar, "LEFT", (idx - 1) * (curBtnWidth + curSpacing), 0)
-                    end
+                _G.MicroMenu:ClearAllPoints()
+                _G.MicroMenu:SetAllPoints(bars.microBar)
+                -- 從 DB 動態讀取（避免捕獲 stale upvalue）
+                local microDB = LunarUI.GetModuleDB("actionbars")
+                local mbDB = microDB and microDB.microBar
+                local curBtnWidth = (mbDB and mbDB.buttonWidth) or 28
+                local curSpacing = 1
+                for idx, mbtn in ipairs(bars.microBar._buttons) do
+                    mbtn:ClearAllPoints()
+                    mbtn:SetPoint("LEFT", _G.MicroMenu, "LEFT", (idx - 1) * (curBtnWidth + curSpacing), 0)
                 end
-            end)
-        end
+            end
+        end)
     end
 
     bars.microBar = microBar
@@ -274,16 +282,19 @@ end
 local function CleanupMicroBar()
     local bars = LunarUI._actionBars
     if bars.microBar then
-        -- 還原按鈕到 MicroMenu（Layout hook 因 bars.microBar=nil 自動停止介入）
-        if bars.microBar._buttons and _G.MicroMenu and not InCombatLockdown() then
-            for _, btn in ipairs(bars.microBar._buttons) do
-                btn:SetParent(_G.MicroMenu)
-            end
+        -- 還原 MicroMenu 到原始父框架（Layout hook 因 bars.microBar=nil 自動停止介入）
+        if _G.MicroMenu and not InCombatLockdown() then
+            local origParent = bars._microMenuOrigParent or _G.MainMenuBar or UIParent
+            _G.MicroMenu:SetParent(origParent)
             _G.MicroMenu:SetAlpha(1)
-            _G.MicroMenu:EnableMouse(true)
+            -- 讓 Blizzard Layout 重新排列按鈕
+            if _G.MicroMenu.Layout then
+                pcall(_G.MicroMenu.Layout, _G.MicroMenu)
+            end
         end
         bars.microBar:Hide()
         bars.microBar = nil
+        bars._microMenuOrigParent = nil
     end
 end
 
