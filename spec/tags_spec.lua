@@ -165,15 +165,15 @@ describe("ShortValue", function()
     end)
 
     it("formats millions with M suffix", function()
-        assert.equals("1.50M", ShortValue(1500000))
+        assert.equals("1.5M", ShortValue(1500000))
     end)
 
     it("formats exact million", function()
-        assert.equals("1.00M", ShortValue(1000000))
+        assert.equals("1.0M", ShortValue(1000000))
     end)
 
     it("formats large millions", function()
-        assert.equals("12.35M", ShortValue(12345678))
+        assert.equals("12.3M", ShortValue(12345678))
     end)
 end)
 

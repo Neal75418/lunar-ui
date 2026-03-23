@@ -75,7 +75,13 @@ local function ExecuteModuleCallback(entry)
                 ok, err = pcall(entry.onEnable)
             end
             if not ok then
-                LunarUI:Print("|cffff6666Module '" .. (entry.name or "?") .. "' failed:|r " .. tostring(err))
+                LunarUI:Error(
+                    string.format(
+                        (Engine.L or {})["ModuleInitFailed"] or "Module '%s' failed: %s",
+                        entry.name or "?",
+                        tostring(err)
+                    )
+                )
                 print(debugstack(2))
             end
             pendingDelayedModules = pendingDelayedModules - 1
@@ -92,7 +98,13 @@ local function ExecuteModuleCallback(entry)
             ok, err = pcall(entry.onEnable)
         end
         if not ok then
-            LunarUI:Print("|cffff6666Module '" .. (entry.name or "?") .. "' failed:|r " .. tostring(err))
+            LunarUI:Error(
+                string.format(
+                    (Engine.L or {})["ModuleInitFailed"] or "Module '%s' failed: %s",
+                    entry.name or "?",
+                    tostring(err)
+                )
+            )
             print(debugstack(2))
         end
     end
@@ -165,7 +177,13 @@ function LunarUI.DisableModules()
         if mod then
             local ok, err = pcall(mod.onDisable)
             if not ok then
-                LunarUI:Print("|cffff6666Module '" .. (mod.name or "?") .. "' cleanup failed:|r " .. tostring(err))
+                LunarUI:Error(
+                    string.format(
+                        (Engine.L or {})["ModuleCleanupFailed"] or "Module '%s' cleanup failed: %s",
+                        mod.name or "?",
+                        tostring(err)
+                    )
+                )
             end
         end
     end
@@ -269,7 +287,13 @@ function LunarUI:OnDisable()
         if mod then
             local ok, err = pcall(mod.onDisable)
             if not ok then
-                LunarUI:Print("|cffff6666Module '" .. (mod.name or "?") .. "' cleanup failed:|r " .. tostring(err))
+                LunarUI:Error(
+                    string.format(
+                        (Engine.L or {})["ModuleCleanupFailed"] or "Module '%s' cleanup failed: %s",
+                        mod.name or "?",
+                        tostring(err)
+                    )
+                )
             end
         end
     end

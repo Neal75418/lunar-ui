@@ -200,7 +200,10 @@ function LunarUI:EnableEventProfiling()
         .. "|r — "
         .. (L["ProfilerEventViewHint"] or "/lunar profile events to view")
     if failed > 0 then
-        msg = msg .. string.format(" |cffffcc00(%d events failed to register)|r", failed)
+        msg = msg
+            .. " |cffffcc00"
+            .. string.format(L["ProfilerEventRegFailed"] or "(%d events failed to register)", failed)
+            .. "|r"
     end
     self:Print(msg)
 end

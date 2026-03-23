@@ -36,6 +36,8 @@ local LunarUI = {
     db = nil,
     RegisterEvent = function() end,
     Print = function() end,
+    Warn = function() end,
+    Error = function() end,
     IsEnabled = function()
         return true
     end,

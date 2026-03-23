@@ -237,6 +237,7 @@ function LunarUI:ValidateDB()
         return
     end
 
+    local _L = Engine.L or {}
     local profile = self.db.profile
     local defaults = Engine._defaults and Engine._defaults.profile
     local fixCount = 0
@@ -273,12 +274,11 @@ function LunarUI:ValidateDB()
                 if defaultValue ~= nil then
                     parent[key] = defaultValue
                     fixCount = fixCount + 1
-                    self:Print(
+                    self:Warn(
                         string.format(
-                            "|cffff8800[Config]|r %s: invalid value %s, reset to %s",
+                            _L["ConfigInvalidReset"] or "Setting '%s': invalid value %s, reset to default",
                             rule.path,
-                            tostring(value),
-                            tostring(defaultValue)
+                            tostring(value)
                         )
                     )
                 end
@@ -287,7 +287,7 @@ function LunarUI:ValidateDB()
     end
 
     if fixCount > 0 then
-        self:Print(string.format("|cffff8800[Config]|r Fixed %d invalid setting(s)", fixCount))
+        self:Warn(string.format(_L["ConfigFixedCount"] or "Fixed %d invalid setting(s)", fixCount))
     end
 end
 

@@ -74,21 +74,10 @@ local function SellJunk()
         index = index + 1
         if index > #junkItems then
             -- 所有垃圾已販賣，輸出統計
-            local gold = floor(totalValue / 10000)
-            local silver = floor((totalValue % 10000) / 100)
-            local copper = totalValue % 100
-
-            local goldStr = ""
-            if gold > 0 then
-                goldStr = format("|cffffd700%d|rg ", gold)
-            end
-            if silver > 0 or gold > 0 then
-                goldStr = goldStr .. format("|cffc0c0c0%d|rs ", silver)
-            end
-            goldStr = goldStr .. format("|cffeda55f%d|rc", copper)
+            local coinStr = GetCoinTextureString(totalValue)
 
             local msg = L["SoldJunkItems"] or "Sold %d junk items for %s"
-            LunarUI:Print(format(msg, itemCount, goldStr))
+            LunarUI:Print(format(msg, itemCount, coinStr))
             return
         end
 

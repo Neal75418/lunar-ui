@@ -147,6 +147,15 @@ L["ProfilerEventHeader"] = "事件頻率"
 L["ProfilerFires"] = "次觸發"
 L["ProfilerProfiling"] = "效能分析"
 L["ProfilerEventProfiling"] = "事件監控"
+L["ProfilerEventRegFailed"] = "（%d 個事件註冊失敗）"
+
+-- 設定驗證
+L["ConfigInvalidReset"] = "設定 '%s'：無效值 %s，已重設為預設值"
+L["ConfigFixedCount"] = "已修正 %d 個無效設定"
+
+-- 模組生命週期
+L["ModuleInitFailed"] = "模組 '%s' 初始化失敗：%s"
+L["ModuleCleanupFailed"] = "模組 '%s' 清理失敗：%s"
 
 -- 光環
 L["Auras"] = "光環"

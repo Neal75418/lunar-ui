@@ -48,13 +48,14 @@ local tostring = tostring
 -- 輔助函數
 --------------------------------------------------------------------------------
 
--- 數值縮寫格式化（12345 → "12.3K"、1234567 → "1.23M"）
+-- 數值縮寫格式化（12345 → "12.3K"、1234567 → "1.5M"）
+-- 精度與 Utils.FormatValue 保持一致
 local function ShortValue(value)
     if not value then
         return ""
     end
     if value >= 1e6 then
-        return format("%.2fM", value / 1e6)
+        return format("%.1fM", value / 1e6)
     elseif value >= 1e3 then
         return format("%.1fK", value / 1e3)
     end

@@ -142,6 +142,15 @@ L["ProfilerEventHeader"] = "Event Frequency"
 L["ProfilerFires"] = "fires"
 L["ProfilerProfiling"] = "Profiling"
 L["ProfilerEventProfiling"] = "Event profiling"
+L["ProfilerEventRegFailed"] = "(%d events failed to register)"
+
+-- Config
+L["ConfigInvalidReset"] = "Setting '%s': invalid value %s, reset to default"
+L["ConfigFixedCount"] = "Fixed %d invalid setting(s)"
+
+-- Module lifecycle
+L["ModuleInitFailed"] = "Module '%s' failed: %s"
+L["ModuleCleanupFailed"] = "Module '%s' cleanup failed: %s"
 
 -- Auras
 L["Auras"] = "Auras"
