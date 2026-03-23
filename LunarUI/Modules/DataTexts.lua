@@ -494,8 +494,18 @@ local function CreateDataPanel(name, db)
     local panel = panelFrameCache[frameName]
     if panel then
         -- 重用既有 frame，更新尺寸/位置後 Show
+        panel:ClearAllPoints()
         panel:SetSize(db.width or 400, db.height or 22)
         panel:SetPoint(db.point or "BOTTOM", UIParent, db.point or "BOTTOM", db.x or 0, db.y or 0)
+        -- 更新既有 slot 的尺寸與位置
+        local numSlots = db.numSlots or 3
+        local slotWidth = (db.width or 400) / numSlots
+        for i, slot in ipairs(panel.slots) do
+            slot:ClearAllPoints()
+            slot:SetSize(slotWidth, db.height or 22)
+            slot:SetPoint("LEFT", panel, "LEFT", (i - 1) * slotWidth, 0)
+            slot.text:SetWidth(slotWidth - 8)
+        end
         panel:Show()
         return panel
     end
