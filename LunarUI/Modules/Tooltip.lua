@@ -293,6 +293,32 @@ local function StyleTooltip(tooltip)
     end
 end
 
+local function UnstyleTooltip(tooltip)
+    -- 還原 NineSlice（正式服）
+    if tooltip.NineSlice then
+        tooltip.NineSlice:SetAlpha(1)
+    end
+    -- 隱藏 LunarUI 自訂背景
+    if tooltip.LunarBackdrop then
+        tooltip.LunarBackdrop:Hide()
+    end
+    -- 還原 SetBackdrop（經典版 / 舊版）
+    if tooltip.SetBackdrop then
+        tooltip:SetBackdrop(nil)
+    end
+    -- 還原狀態列
+    local statusBar = tooltip.StatusBar or _G.GameTooltipStatusBar
+    if statusBar then
+        statusBar:SetHeight(8)
+        statusBar:ClearAllPoints()
+        statusBar:SetPoint("BOTTOMLEFT", tooltip, "BOTTOMLEFT", 2, 2)
+        statusBar:SetPoint("BOTTOMRIGHT", tooltip, "BOTTOMRIGHT", -2, 2)
+        if statusBar.LunarBG then
+            statusBar.LunarBG:Hide()
+        end
+    end
+end
+
 local function StyleAllTooltips()
     local tooltips = {
         GameTooltip,
@@ -318,6 +344,35 @@ local function StyleAllTooltips()
     for _, tooltip in ipairs(tooltips) do
         if tooltip then
             StyleTooltip(tooltip)
+        end
+    end
+end
+
+local function UnstyleAllTooltips()
+    local tooltips = {
+        GameTooltip,
+        ShoppingTooltip1,
+        ShoppingTooltip2,
+        ItemRefTooltip,
+        ItemRefShoppingTooltip1,
+        ItemRefShoppingTooltip2,
+        WorldMapTooltip,
+        WorldMapCompareTooltip1,
+        WorldMapCompareTooltip2,
+        SmallTextTooltip,
+        EmbeddedItemTooltip,
+        NamePlateTooltip,
+        QuestScrollFrame and QuestScrollFrame.StoryTooltip,
+        BattlePetTooltip,
+        FloatingBattlePetTooltip,
+        FloatingPetBattleAbilityTooltip,
+        PetBattlePrimaryUnitTooltip,
+        PetBattlePrimaryAbilityTooltip,
+    }
+
+    for _, tooltip in ipairs(tooltips) do
+        if tooltip then
+            UnstyleTooltip(tooltip)
         end
     end
 end
@@ -749,8 +804,10 @@ local function InitializeTooltip()
     SetTooltipPosition()
 end
 
--- Cleanup（解除 Inspect 事件監聽）
+-- Cleanup（解除 Inspect 事件監聽 + 還原樣式）
 local function CleanupTooltip()
+    -- 還原所有 tooltip 的 LunarUI 樣式回 Blizzard 原生
+    UnstyleAllTooltips()
     if inspectEventFrame then
         inspectEventFrame:UnregisterAllEvents()
         -- H-4: 不清除 OnEvent script — re-enable 時只需 RegisterEvent 即可恢復功能
