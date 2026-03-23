@@ -113,7 +113,9 @@ function LunarUI:EnableProfiling()
     self:Print(
         "|cff8882ff[Profiler]|r "
             .. label
-            .. " |cff00ff00ON|r — "
+            .. " |cff00ff00"
+            .. (L["On"] or "ON")
+            .. "|r — "
             .. (L["ProfilerReloadHint"] or "/reload then /lunar profile show")
     )
 end
@@ -121,7 +123,7 @@ end
 function LunarUI:DisableProfiling()
     profilingEnabled = false
     local label = L["ProfilerProfiling"] or "Profiling"
-    self:Print("|cff8882ff[Profiler]|r " .. label .. " |cffff0000OFF|r")
+    self:Print("|cff8882ff[Profiler]|r " .. label .. " |cffff0000" .. (L["Off"] or "OFF") .. "|r")
 end
 
 function LunarUI.IsProfilingEnabled()
@@ -193,7 +195,9 @@ function LunarUI:EnableEventProfiling()
     local evLabel = L["ProfilerEventProfiling"] or "Event profiling"
     local msg = "|cff8882ff[Profiler]|r "
         .. evLabel
-        .. " |cff00ff00ON|r — "
+        .. " |cff00ff00"
+        .. (L["On"] or "ON")
+        .. "|r — "
         .. (L["ProfilerEventViewHint"] or "/lunar profile events to view")
     if failed > 0 then
         msg = msg .. string.format(" |cffffcc00(%d events failed to register)|r", failed)
@@ -218,7 +222,7 @@ function LunarUI:DisableEventProfiling()
     end
 
     local evLabel = L["ProfilerEventProfiling"] or "Event profiling"
-    self:Print("|cff8882ff[Profiler]|r " .. evLabel .. " |cffff0000OFF|r")
+    self:Print("|cff8882ff[Profiler]|r " .. evLabel .. " |cffff0000" .. (L["Off"] or "OFF") .. "|r")
 end
 
 --[[
