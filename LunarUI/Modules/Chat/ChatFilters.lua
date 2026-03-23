@@ -12,6 +12,9 @@ local LunarUI = Engine.LunarUI
 --------------------------------------------------------------------------------
 
 local function GetChatDB()
+    if not LunarUI._modulesEnabled then
+        return nil
+    end
     return LunarUI.GetModuleDB("chat")
 end
 

@@ -416,6 +416,11 @@ local function CleanupLoot()
     if lootFrame then
         lootFrame:Hide()
     end
+    -- 解除戰鬥延遲還原的 pending callback，防止脫戰後仍執行 Hide
+    if lootCombatRestoreFrame then
+        lootCombatRestoreFrame:UnregisterAllEvents()
+        lootCombatRestoreFrame:SetScript("OnEvent", nil)
+    end
 end
 
 -- 匯出

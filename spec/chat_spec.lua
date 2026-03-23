@@ -104,6 +104,7 @@ local chatDB = {
 }
 
 local LunarUI = {
+    _modulesEnabled = true,
     Colors = {
         bg = { 0.05, 0.05, 0.05 },
         bgSolid = { 0.05, 0.05, 0.05, 1 },
