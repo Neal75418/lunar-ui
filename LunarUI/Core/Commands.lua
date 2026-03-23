@@ -109,13 +109,23 @@ local function HandleDebugVigor(self, sub)
         if LunarUI.SetupVigorTrace then
             LunarUI.SetupVigorTrace()
         end
-        self:Print("|cffffcc00[DebugVigor]|r " .. (_L["DebugVigorOn"] or "Continuous monitoring") .. " |cff00ff00ON|r")
+        self:Print(
+            "|cffffcc00[DebugVigor]|r "
+                .. (_L["DebugVigorOn"] or "Continuous monitoring")
+                .. " |cff00ff00"
+                .. (_L["On"] or "ON")
+                .. "|r"
+        )
     else
         if LunarUI.CleanupVigorTrace then
             LunarUI.CleanupVigorTrace()
         end
         self:Print(
-            "|cffffcc00[DebugVigor]|r " .. (_L["DebugVigorOff"] or "Continuous monitoring") .. " |cffff0000OFF|r"
+            "|cffffcc00[DebugVigor]|r "
+                .. (_L["DebugVigorOff"] or "Continuous monitoring")
+                .. " |cffff0000"
+                .. (_L["Off"] or "OFF")
+                .. "|r"
         )
     end
 end
