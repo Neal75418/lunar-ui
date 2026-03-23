@@ -76,12 +76,12 @@ LunarUI:RegisterModule("ModuleName", {
     onEnable  = function() ... end,
     onDisable = function() ... end,   -- 可選，反向順序執行
     delay     = 0.5,                  -- 可選，延遲初始化（秒）
-    lifecycle = "soft-disable",       -- 可選，生命週期類型（見下方說明）
+    lifecycle = "reversible",         -- 可選，生命週期類型（見下方說明）
 })
 -- lifecycle 類型：
---   "reversible"   — onDisable 完全還原 Blizzard 預設狀態（ActionBars、Minimap、Bags）
---   "hook-guarded" — 永久 hook + _modulesEnabled guard，無法完全撤銷（Chat、Tooltip）
---   "soft-disable" — 僅隱藏框架，不還原 Blizzard，需 /reload（預設值）
+--   "reversible"       — onDisable 完全還原 Blizzard 預設狀態（預設值；ActionBars、Minimap、Bags、Chat、Tooltip）
+--   "soft_disable"     — 僅隱藏框架，不還原 Blizzard，需 /reload（UnitFrames、Nameplates）
+--   "reload_required"  — 深度修改無法撤銷，需 /reload（目前未使用，保留語義）
 
 -- 註冊 HUD 框架 → 自動納入 ApplyHUDScale（Config.lua）
 LunarUI:RegisterHUDFrame("FrameName")

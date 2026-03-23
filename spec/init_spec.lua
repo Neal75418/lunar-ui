@@ -85,23 +85,24 @@ describe("RegisterModule lifecycle", function()
         wipe(timerCallbacks)
     end)
 
-    it("defaults lifecycle to 'soft-disable'", function()
-        -- 註冊一個 soft-disable（預設）模組，再透過 DisableModules 的訊息驗證
+    it("defaults lifecycle to 'reversible'", function()
+        -- 註冊一個 reversible（預設）模組，再透過 DisableModules 的訊息驗證
         LunarUI:RegisterModule("TestDefault", {
             onEnable = function() end,
+            onDisable = function() end,
         })
         LunarUI.EnableModules()
         wipe(aceAddonObj._printLog)
         LunarUI.DisableModules()
 
-        -- 有 soft-disable 模組 → 應印出 reload 訊息
+        -- 全部 reversible → 應印出乾淨訊息（無 reload）
         local hasReloadMsg = false
         for _, msg in ipairs(aceAddonObj._printLog) do
             if msg:find("requires UI reload") then
                 hasReloadMsg = true
             end
         end
-        assert.is_true(hasReloadMsg)
+        assert.is_false(hasReloadMsg)
     end)
 
     it("accepts explicit lifecycle = 'reversible'", function()
@@ -120,11 +121,10 @@ describe("RegisterModule lifecycle", function()
         assert.is_false(hasLifecycleError)
     end)
 
-    it("accepts explicit lifecycle = 'hook-guarded'", function()
-        LunarUI:RegisterModule("TestHookGuarded", {
+    it("accepts explicit lifecycle = 'soft_disable'", function()
+        LunarUI:RegisterModule("TestSoftDisable", {
             onEnable = function() end,
-            onDisable = function() end,
-            lifecycle = "hook-guarded",
+            lifecycle = "soft_disable",
         })
         local hasLifecycleError = false
         for _, msg in ipairs(aceAddonObj._errorLog) do
@@ -135,9 +135,24 @@ describe("RegisterModule lifecycle", function()
         assert.is_false(hasLifecycleError)
     end)
 
-    it("falls back to 'soft-disable' and calls Error on invalid lifecycle", function()
+    it("accepts explicit lifecycle = 'reload_required'", function()
+        LunarUI:RegisterModule("TestReloadRequired", {
+            onEnable = function() end,
+            lifecycle = "reload_required",
+        })
+        local hasLifecycleError = false
+        for _, msg in ipairs(aceAddonObj._errorLog) do
+            if msg:find("lifecycle") then
+                hasLifecycleError = true
+            end
+        end
+        assert.is_false(hasLifecycleError)
+    end)
+
+    it("falls back to 'reversible' and calls Error on invalid lifecycle", function()
         LunarUI:RegisterModule("TestInvalid", {
             onEnable = function() end,
+            onDisable = function() end,
             lifecycle = "bogus",
         })
         local hasInvalidError = false
@@ -222,10 +237,10 @@ describe("DisableModules", function()
         assert.are.same({ "B", "A" }, order)
     end)
 
-    it("prints reload message when soft-disable modules exist", function()
+    it("prints reload message when soft_disable modules exist", function()
         LunarUI:RegisterModule("SoftDisableMsg", {
             onEnable = function() end,
-            -- lifecycle defaults to "soft-disable"
+            lifecycle = "soft_disable",
         })
 
         LunarUI.EnableModules()

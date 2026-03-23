@@ -661,4 +661,5 @@ LunarUI:RegisterModule("UnitFrames", {
     onEnable = SpawnUnitFrames,
     onDisable = LunarUI.CleanupUnitFrames,
     delay = 0.1,
+    lifecycle = "soft_disable",
 })

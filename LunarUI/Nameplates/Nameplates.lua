@@ -1142,4 +1142,5 @@ LunarUI:RegisterModule("Nameplates", {
         LunarUI.CleanupNameplates()
     end,
     delay = 0.2,
+    lifecycle = "soft_disable",
 })

@@ -112,14 +112,14 @@ end
 
 -- SafeCall 定義在 Core/Utils.lua（統一版本）
 
--- 模組生命週期類型
--- reversible:    onDisable 完全還原 Blizzard 預設狀態（如 ActionBars、Minimap、Bags）
--- hook-guarded:  永久 hook 搭配 _modulesEnabled guard，無法完全撤銷（如 Chat、Tooltip）
--- soft-disable:  僅隱藏 LunarUI 框架，不還原 Blizzard 狀態，需 /reload（如 UnitFrames、Nameplates）
+-- 模組生命週期類型（contract：定義 /lunar off 的停用語義）
+-- reversible:       /lunar off 後同 session 可完整恢復 Blizzard 原生狀態
+-- soft_disable:     停掉 LunarUI 邏輯，但不保證回到 Blizzard 原生
+-- reload_required:  停用後需要 /reload 才能完全回到原生
 local VALID_LIFECYCLES = {
     ["reversible"] = true,
-    ["hook-guarded"] = true,
-    ["soft-disable"] = true,
+    ["soft_disable"] = true,
+    ["reload_required"] = true,
 }
 
 --[[
@@ -129,16 +129,16 @@ local VALID_LIFECYCLES = {
         onEnable   function  插件啟用時呼叫（可選）
         onDisable  function  插件停用時呼叫（可選）
         delay      number    onEnable 延遲秒數，預設 0（可選）
-        lifecycle  string    生命週期類型："reversible"/"hook-guarded"/"soft-disable"（預設）
+        lifecycle  string    "reversible"（預設）/ "soft_disable" / "reload_required"
 ]]
 function LunarUI:RegisterModule(name, callbacks)
     if not name or not callbacks then
         return
     end
-    local lifecycle = callbacks.lifecycle or "soft-disable"
+    local lifecycle = callbacks.lifecycle or "reversible"
     if not VALID_LIFECYCLES[lifecycle] then
         self:Error(string.format("Module '%s': invalid lifecycle '%s'", name, tostring(lifecycle)))
-        lifecycle = "soft-disable"
+        lifecycle = "reversible"
     end
     if lifecycle == "reversible" and not callbacks.onDisable then
         self:Error(string.format("Module '%s': lifecycle 'reversible' requires onDisable", name))
@@ -216,17 +216,16 @@ function LunarUI.DisableModules()
     end
 
     -- 根據已註冊模組的 lifecycle 類型決定提示訊息
-    -- 目前正式 build 一定有 soft-disable 模組，else 分支為未來個別停用模組預留
-    local hasSoftDisable = false
+    local needsReload = false
     for _, mod in ipairs(moduleRegistry) do
-        if mod.lifecycle == "soft-disable" then
-            hasSoftDisable = true
+        if mod.lifecycle ~= "reversible" then
+            needsReload = true
             break
         end
     end
 
     local L = Engine.L or {}
-    if hasSoftDisable then
+    if needsReload then
         LunarUI:Print(L["LunarUIDisabledReload"] or "LunarUI disabled (requires UI reload)")
     else
         LunarUI:Print(L["LunarUIDisabled"] or "LunarUI disabled")

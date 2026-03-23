@@ -868,5 +868,5 @@ LunarUI:RegisterModule("Tooltip", {
     onEnable = InitializeTooltip,
     onDisable = CleanupTooltip,
     delay = 0.3,
-    lifecycle = "hook-guarded",
+    lifecycle = "reversible",
 })
