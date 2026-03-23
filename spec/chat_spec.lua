@@ -308,4 +308,15 @@ describe("Chat lifecycle", function()
     it("exports ShowChatCopy function", function()
         assert.is_function(LunarUI.ShowChatCopy)
     end)
+
+    it("filters passthrough when _modulesEnabled is false", function()
+        LunarUI._modulesEnabled = false
+        for _, entry in ipairs(registeredFilters) do
+            local blocked, result = entry.func(nil, nil, "Hello :)")
+            -- Filter should not block and should not modify the message
+            assert.is_false(blocked)
+            assert.equals("Hello :)", result)
+        end
+        LunarUI._modulesEnabled = true
+    end)
 end)
