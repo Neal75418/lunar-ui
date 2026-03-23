@@ -107,6 +107,17 @@ local LunarUI = {
     },
     SetFont = function() end,
     ApplyBackdrop = function() end,
+    FormatGameTime = function(hour, minute, is24h)
+        if is24h then
+            return string.format("%02d:%02d", hour, minute)
+        end
+        local suffix = hour >= 12 and "PM" or "AM"
+        hour = hour % 12
+        if hour == 0 then
+            hour = 12
+        end
+        return string.format("%d:%02d %s", hour, minute, suffix)
+    end,
     db = {
         profile = {
             datatexts = {

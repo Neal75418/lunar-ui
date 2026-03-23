@@ -389,6 +389,10 @@ GameFontHighlightSmall = {}
 ChatFontNormal = {}
 ---@type string
 STANDARD_TEXT_FONT = ""
+---@type string
+TIMEMANAGER_AM = "AM"
+---@type string
+TIMEMANAGER_PM = "PM"
 
 --------------------------------------------------------------------------------
 -- Modifier keys

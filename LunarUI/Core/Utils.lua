@@ -275,7 +275,7 @@ end
 ]]
 function LunarUI.FormatGameTime(hour, minute, is24h)
     if not is24h then
-        local suffix = hour >= 12 and "PM" or "AM"
+        local suffix = hour >= 12 and (TIMEMANAGER_PM or "PM") or (TIMEMANAGER_AM or "AM")
         hour = hour % 12
         if hour == 0 then
             hour = 12

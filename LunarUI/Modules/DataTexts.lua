@@ -145,10 +145,26 @@ RegisterProvider("gold", {
     tooltip = function(slot)
         local money = GetMoney()
         local gold = floor(money / 10000)
+        local silver = floor((money % 10000) / 100)
+        local copper = money % 100
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
         GameTooltip:AddLine(L["Gold"] or "Gold", 1, 0.84, 0)
-        GameTooltip:AddDoubleLine(UnitName("player"), format("%d gold", gold), 1, 1, 1, 1, 0.84, 0)
+        GameTooltip:AddDoubleLine(
+            UnitName("player"),
+            format(
+                "|cffffd700%d|r|TInterface\\MoneyFrame\\UI-GoldIcon:0|t |cffc7c7cf%d|r|TInterface\\MoneyFrame\\UI-SilverIcon:0|t |cffeda55f%d|r|TInterface\\MoneyFrame\\UI-CopperIcon:0|t",
+                gold,
+                silver,
+                copper
+            ),
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+        )
         GameTooltip:Show()
     end,
 })
@@ -396,18 +412,33 @@ RegisterProvider("clock", {
     onUpdate = true,
     updateInterval = 1,
     update = function()
-        return date("%H:%M")
+        local db = LunarUI.GetModuleDB("minimap")
+        local is24h = not (db and db.clockFormat == "12h")
+        local t = date("*t")
+        return LunarUI.FormatGameTime(t.hour, t.min, is24h)
     end,
     tooltip = function(slot)
+        local db = LunarUI.GetModuleDB("minimap")
+        local is24h = not (db and db.clockFormat == "12h")
+        local t = date("*t")
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
         GameTooltip:AddLine(L["Clock"] or "Clock", 1, 1, 1)
-        GameTooltip:AddDoubleLine(L["LocalTime"] or "Local", date("%H:%M:%S"), 1, 1, 1, 1, 1, 1)
+        GameTooltip:AddDoubleLine(
+            L["LocalTime"] or "Local",
+            LunarUI.FormatGameTime(t.hour, t.min, is24h),
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+        )
         local serverTime = C_DateAndTime.GetCurrentCalendarTime()
         if serverTime then
             GameTooltip:AddDoubleLine(
                 L["ServerTime"] or "Server",
-                format("%02d:%02d", serverTime.hour, serverTime.minute),
+                LunarUI.FormatGameTime(serverTime.hour, serverTime.minute, is24h),
                 1,
                 1,
                 1,

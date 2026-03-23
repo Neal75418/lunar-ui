@@ -121,6 +121,13 @@ L["DebugTitle"] = "Debug"
 L["DebugVigorOn"] = "Continuous monitoring started"
 L["DebugVigorOff"] = "Continuous monitoring stopped"
 L["DebugLoadFailed"] = "LunarUI_Debug failed to load"
+L["DebugPrefix"] = "[Debug]"
+L["WarnPrefix"] = "[Warn]"
+L["ErrorPrefix"] = "[Error]"
+L["DebugFPSMemory"] = "FPS: %.0f  Memory: %.1f MB"
+L["DebugCombatLabel"] = "Combat: "
+L["DebugInCombat"] = "In Combat"
+L["DebugSafe"] = "Safe"
 
 -- Profiler
 L["ProfilerNoData"] = "No profiling data. Run /lunar profile on then /reload"

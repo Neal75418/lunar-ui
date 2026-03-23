@@ -55,7 +55,17 @@ LunarUI.GetModuleDB = function(key)
     return LunarUI.db.profile[key]
 end
 
-loader.loadAddonFile("LunarUI/Core/Debug.lua", LunarUI)
+local mockL = {
+    DebugPrefix = "[除錯]",
+    WarnPrefix = "[警告]",
+    ErrorPrefix = "[錯誤]",
+    DebugFPSMemory = "FPS: %.0f  記憶體: %.1f MB",
+    DebugCombatLabel = "戰鬥: ",
+    DebugInCombat = "戰鬥中",
+    DebugSafe = "安全",
+    DebugTitle = "除錯",
+}
+loader.loadAddonFile("LunarUI/Core/Debug.lua", LunarUI, { L = mockL })
 
 --------------------------------------------------------------------------------
 -- Debug output

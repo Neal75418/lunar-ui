@@ -18,7 +18,7 @@ local L = Engine.L or {}
 ]]
 function LunarUI:Debug(msg)
     if self.db and self.db.profile and self.db.profile.debug then
-        self:Print("|cff888888[除錯]|r " .. tostring(msg))
+        self:Print("|cff888888" .. (L["DebugPrefix"] or "[Debug]") .. "|r " .. tostring(msg))
     end
 end
 
@@ -35,7 +35,7 @@ end
     @param msg 要輸出的警告訊息
 ]]
 function LunarUI:Warn(msg)
-    self:Print("|cffff8800[警告]|r " .. tostring(msg))
+    self:Print("|cffff8800" .. (L["WarnPrefix"] or "[Warn]") .. "|r " .. tostring(msg))
 end
 
 --[[
@@ -43,7 +43,7 @@ end
     @param msg 要輸出的錯誤訊息
 ]]
 function LunarUI:Error(msg)
-    self:Print("|cffff0000[錯誤]|r " .. tostring(msg))
+    self:Print("|cffff0000" .. (L["ErrorPrefix"] or "[Error]") .. "|r " .. tostring(msg))
 end
 
 --------------------------------------------------------------------------------
@@ -133,13 +133,17 @@ local function CreateDebugFrame()
         end
         local ok2, mem = pcall(collectgarbage, "count")
         mem = ok2 and mem / 1024 or 0
-        self.perfText:SetText(string.format("FPS: %.0f  記憶體: %.1f MB", fps, mem))
+        self.perfText:SetText(string.format(L["DebugFPSMemory"] or "FPS: %.0f  Memory: %.1f MB", fps, mem))
 
         -- 更新戰鬥狀態
         if InCombatLockdown() then
-            self.combatText:SetText("戰鬥: |cffff0000戰鬥中|r")
+            self.combatText:SetText(
+                (L["DebugCombatLabel"] or "Combat: ") .. "|cffff0000" .. (L["DebugInCombat"] or "In Combat") .. "|r"
+            )
         else
-            self.combatText:SetText("戰鬥: |cff00ff00安全|r")
+            self.combatText:SetText(
+                (L["DebugCombatLabel"] or "Combat: ") .. "|cff00ff00" .. (L["DebugSafe"] or "Safe") .. "|r"
+            )
         end
     end)
 

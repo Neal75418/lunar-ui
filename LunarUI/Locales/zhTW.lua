@@ -126,6 +126,13 @@ L["DebugTitle"] = "除錯"
 L["DebugVigorOn"] = "持續監控已啟動"
 L["DebugVigorOff"] = "持續監控已停止"
 L["DebugLoadFailed"] = "LunarUI_Debug 載入失敗"
+L["DebugPrefix"] = "[除錯]"
+L["WarnPrefix"] = "[警告]"
+L["ErrorPrefix"] = "[錯誤]"
+L["DebugFPSMemory"] = "FPS: %.0f  記憶體: %.1f MB"
+L["DebugCombatLabel"] = "戰鬥: "
+L["DebugInCombat"] = "戰鬥中"
+L["DebugSafe"] = "安全"
 
 -- 效能分析
 L["ProfilerNoData"] = "無分析資料。請先 /lunar profile on 然後 /reload"
