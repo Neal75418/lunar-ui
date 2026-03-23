@@ -500,6 +500,7 @@ local function SpawnGroupFrames(uf)
 end
 
 local unitFramesSpawned = false -- oUF:Spawn 是 singleton，同一個 unit 不能 spawn 兩次
+local playerEnterWorldFrame -- 前向宣告（SpawnUnitFrames re-enable 路徑需要存取）
 
 local function SpawnUnitFrames()
     -- 已 spawn 過 → 只需重新啟用（Enable + Show + 重新註冊 StateDriver）
@@ -517,6 +518,10 @@ local function SpawnUnitFrames()
                     frame:Show()
                 end
             end
+        end
+        -- 重新註冊 PLAYER_ENTERING_WORLD 強制更新路徑（CleanupUnitFrames 會清除）
+        if playerEnterWorldFrame then
+            playerEnterWorldFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
         end
         return
     end
@@ -566,8 +571,6 @@ if _G.EditModeManagerFrame and _G.EditModeManagerFrame.ExitEditMode then
     end)
 end
 
-local playerEnterWorldFrame -- 前向宣告
-
 -- 清理函數
 local function CleanupUnitFrames()
     -- Soft disable：隱藏 LunarUI 框架 + 停止事件，但不銷毀 oUF singleton
@@ -592,10 +595,10 @@ local function CleanupUnitFrames()
         end
     end
 
-    -- 清除 PLAYER_ENTERING_WORLD 事件框架
+    -- 清除 PLAYER_ENTERING_WORLD 事件（不清 OnEvent script — re-enable 時只需 RegisterEvent 即可恢復）
+    -- generation counter 已保護 stale callback
     if playerEnterWorldFrame then
         playerEnterWorldFrame:UnregisterAllEvents()
-        playerEnterWorldFrame:SetScript("OnEvent", nil)
     end
     -- 清除戰鬥等待框架（防止 disable 後 PLAYER_REGEN_ENABLED 重新觸發 SpawnUnitFrames）
     if combatWaitFrame then

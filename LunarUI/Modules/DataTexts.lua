@@ -497,14 +497,38 @@ local function CreateDataPanel(name, db)
         panel:ClearAllPoints()
         panel:SetSize(db.width or 400, db.height or 22)
         panel:SetPoint(db.point or "BOTTOM", UIParent, db.point or "BOTTOM", db.x or 0, db.y or 0)
-        -- 更新既有 slot 的尺寸與位置
         local numSlots = db.numSlots or 3
         local slotWidth = (db.width or 400) / numSlots
-        for i, slot in ipairs(panel.slots) do
+        -- 補建不足的 slot
+        for i = #panel.slots + 1, numSlots do
+            local slot = CreateFrame("Button", nil, panel)
+            slot:SetSize(slotWidth, db.height or 22)
+            slot:SetPoint("LEFT", panel, "LEFT", (i - 1) * slotWidth, 0)
+            slot.text = slot:CreateFontString(nil, "OVERLAY")
+            LunarUI.SetFont(slot.text, 11, "OUTLINE")
+            slot.text:SetPoint("CENTER")
+            slot.text:SetWidth(slotWidth - 8)
+            slot.text:SetWordWrap(false)
+            slot.text:SetTextColor(0.9, 0.9, 0.9)
+            slot.highlight = slot:CreateTexture(nil, "HIGHLIGHT")
+            slot.highlight:SetAllPoints()
+            slot.highlight:SetColorTexture(1, 1, 1, 0.05)
+            slot.slotIndex = i
+            slot.panelName = name
+            panel.slots[i] = slot
+        end
+        -- 更新既有 slot 的尺寸與位置，並顯示
+        for i = 1, numSlots do
+            local slot = panel.slots[i]
             slot:ClearAllPoints()
             slot:SetSize(slotWidth, db.height or 22)
             slot:SetPoint("LEFT", panel, "LEFT", (i - 1) * slotWidth, 0)
             slot.text:SetWidth(slotWidth - 8)
+            slot:Show()
+        end
+        -- 隱藏多餘的 slot
+        for i = numSlots + 1, #panel.slots do
+            panel.slots[i]:Hide()
         end
         panel:Show()
         return panel
