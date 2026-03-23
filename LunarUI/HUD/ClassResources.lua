@@ -16,6 +16,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
@@ -486,7 +487,7 @@ local function Initialize()
 
     -- 註冊至框架移動器
     if resourceFrame then
-        LunarUI.RegisterMovableFrame("ClassResources", resourceFrame, "職業資源")
+        LunarUI.RegisterMovableFrame("ClassResources", resourceFrame, L["HUDClassResources"] or "Class Resources")
     end
 end
 

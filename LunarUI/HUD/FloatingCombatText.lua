@@ -14,6 +14,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -432,7 +433,7 @@ local function CreateFCTFrame()
 
     -- 納入 HUD 縮放和框架移動
     LunarUI:RegisterHUDFrame("LunarUI_FCT")
-    LunarUI.RegisterMovableFrame("fct", fctFrame, "浮動戰鬥數字")
+    LunarUI.RegisterMovableFrame("fct", fctFrame, L["HUDFCT"] or "Floating Combat Text")
 
     return fctFrame
 end

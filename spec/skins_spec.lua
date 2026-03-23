@@ -437,38 +437,17 @@ describe("SkinCloseButton", function()
         end)
     end)
 
-    it("creates close background", function()
+    it("marks button as skinned", function()
         local btn = MockFrame()
         LunarUI.SkinCloseButton(btn)
-        assert.is_not_nil(btn._lunarCloseBG)
+        assert.is_truthy(btn._lunarCloseSkinned)
     end)
 
-    it("creates close text with X", function()
-        local btn = MockFrame()
+    it("preserves original textures", function()
+        local tex = MockTexture("BACKGROUND")
+        local btn = MockFrame({ regions = { tex } })
         LunarUI.SkinCloseButton(btn)
-        assert.is_not_nil(btn._lunarCloseText)
-    end)
-
-    it("creates highlight texture", function()
-        local btn = MockFrame()
-        LunarUI.SkinCloseButton(btn)
-        assert.is_not_nil(btn._lunarHighlight)
-    end)
-
-    it("sets button size to 18x18", function()
-        local btn = MockFrame()
-        LunarUI.SkinCloseButton(btn)
-        assert.same({ 18, 18 }, btn._size)
-    end)
-
-    it("does not create duplicate elements", function()
-        local btn = MockFrame()
-        LunarUI.SkinCloseButton(btn)
-        local firstBG = btn._lunarCloseBG
-        local firstText = btn._lunarCloseText
-        LunarUI.SkinCloseButton(btn)
-        assert.equals(firstBG, btn._lunarCloseBG)
-        assert.equals(firstText, btn._lunarCloseText)
+        assert.is_not_equal(0, tex._alpha)
     end)
 end)
 
@@ -652,7 +631,7 @@ describe("SkinStandardFrame", function()
         local frame = MockFrame()
         frame.CloseButton = closeBtn
         LunarUI:SkinStandardFrame(frame)
-        assert.is_not_nil(closeBtn._lunarCloseBG)
+        assert.is_truthy(closeBtn._lunarCloseSkinned)
     end)
 
     it("skins TitleText if present", function()

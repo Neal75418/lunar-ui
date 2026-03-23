@@ -1044,9 +1044,25 @@ local function CreateDifficultyIndicator()
             text:SetTextColor(0.8, 0.8, 0.8)
         end
 
-        -- 縮寫難度名稱
-        local abbrev =
-            diffName:gsub("Heroic", "H"):gsub("Mythic", "M"):gsub("Normal", "N"):gsub("Looking For Raid", "LFR")
+        -- 縮寫難度名稱（id-based，語系無關）
+        local DIFFICULTY_ABBREV = {
+            [1] = "N", -- Normal (5)
+            [2] = "H", -- Heroic (5)
+            [3] = "N", -- Normal (10)
+            [4] = "N", -- Normal (25)
+            [5] = "H", -- Heroic (10)
+            [6] = "H", -- Heroic (25)
+            [7] = "LFR", -- Looking For Raid (legacy)
+            [8] = "M+", -- Mythic Keystone
+            [14] = "N", -- Normal (Flex)
+            [15] = "H", -- Heroic (Flex)
+            [16] = "M", -- Mythic
+            [17] = "LFR", -- Looking For Raid (Flex)
+            [23] = "M", -- Mythic (5)
+            [24] = "TW", -- Timewalking (party)
+            [33] = "TW", -- Timewalking (raid)
+        }
+        local abbrev = DIFFICULTY_ABBREV[difficulty] or diffName
         text:SetText(abbrev)
         diff:Show()
     end
@@ -1351,7 +1367,7 @@ local function InitializeMinimap()
 
     -- 註冊至框架移動器
     if minimapFrame then
-        LunarUI.RegisterMovableFrame("Minimap", minimapFrame, "小地圖")
+        LunarUI.RegisterMovableFrame("Minimap", minimapFrame, L["Minimap"] or "Minimap")
     end
 
     -- 建立指示器（必須在 ApplyIconSettings 之前，否則自訂指示器框架尚未建立）

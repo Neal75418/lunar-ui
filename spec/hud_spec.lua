@@ -177,24 +177,15 @@ describe("ShouldShowBuff", function()
         assert.is_true(ShouldShowBuff("Power Word: Fortitude", 3600))
     end)
 
-    it("returns false for Well Rested", function()
-        assert.is_false(ShouldShowBuff("Well Rested", 0))
+    it("returns false for Resurrection Sickness by spell ID", function()
+        assert.is_false(ShouldShowBuff("Resurrection Sickness", 600, 15007))
     end)
 
-    it("returns false for 充分休息", function()
-        assert.is_false(ShouldShowBuff("充分休息", 0))
+    it("returns true for unfiltered spell ID", function()
+        assert.is_true(ShouldShowBuff("Some Buff", 0, 99999))
     end)
 
-    it("returns false for Resurrection Sickness", function()
-        assert.is_false(ShouldShowBuff("Resurrection Sickness", 600))
-    end)
-
-    it("returns false for 復活虛弱", function()
-        assert.is_false(ShouldShowBuff("復活虛弱", 600))
-    end)
-
-    it("returns true for nil name (not in filter list)", function()
-        -- rawget(FILTERED_BUFF_NAMES, nil) = nil → not filtered → return true
+    it("returns true for nil spell ID (not filtered)", function()
         local result = ShouldShowBuff(nil, 10)
         assert.is_true(result)
     end)

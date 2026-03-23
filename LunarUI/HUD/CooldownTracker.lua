@@ -11,6 +11,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
@@ -507,7 +508,7 @@ local function Initialize()
 
     -- 註冊至框架移動器
     if cooldownFrame then
-        LunarUI.RegisterMovableFrame("CooldownTracker", cooldownFrame, "冷卻追蹤")
+        LunarUI.RegisterMovableFrame("CooldownTracker", cooldownFrame, L["HUDCooldownTracker"] or "Cooldown Tracker")
     end
 
     isInitialized = true

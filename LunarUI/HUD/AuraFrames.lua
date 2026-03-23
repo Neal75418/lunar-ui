@@ -14,6 +14,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local L = Engine.L or {}
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
@@ -53,14 +54,10 @@ local function LoadSettings()
     BAR_HEIGHT = LunarUI.GetHUDSetting("auraBarHeight", 4)
 end
 
--- 過濾的 Buff 名稱（瑣碎增益）
-local FILTERED_BUFF_NAMES = {
-    -- 食物 / 休息
-    ["充分休息"] = true,
-    ["Well Rested"] = true,
-    -- 死亡後虛弱
-    ["復活虛弱"] = true,
-    ["Resurrection Sickness"] = true,
+-- 過濾的 Buff spell ID（語系無關）
+-- Well Rested 是 XP modifier，不是可見 aura，不需要過濾
+local FILTERED_BUFF_IDS = {
+    [15007] = true, -- Resurrection Sickness（復活虛弱）
 }
 
 local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS
@@ -101,12 +98,9 @@ local AURA_THROTTLE = 0.1
 -- 輔助函數
 --------------------------------------------------------------------------------
 
-local function ShouldShowBuff(name, _duration)
-    -- WoW 12.0 taint：aura API 回傳值在戰鬥中可能帶有 taint 標記，
-    -- tostring() 不一定能完全斷開 taint chain。
-    -- 用 pcall + rawget 保護 table 查詢，避免 "table index is secret" 錯誤
-    local ok, filtered = pcall(rawget, FILTERED_BUFF_NAMES, name)
-    if ok and filtered then
+local function ShouldShowBuff(_name, _duration, spellId)
+    -- 使用 spell ID 過濾（語系無關，不受 taint 影響）
+    if spellId and FILTERED_BUFF_IDS[spellId] then
         return false
     end
     return true
@@ -288,11 +282,18 @@ end
 
 local function SetupFrames()
     -- 增益框架 - 螢幕右上
-    buffFrame = CreateAuraFrame("LunarUI_BuffFrame", "增益", "TOPRIGHT", -215, -10, MAX_BUFFS)
+    buffFrame = CreateAuraFrame("LunarUI_BuffFrame", L["Buffs"] or "Buffs", "TOPRIGHT", -215, -10, MAX_BUFFS)
 
     -- 減益框架 - 增益下方
     local buffHeight = buffFrame:GetHeight()
-    debuffFrame = CreateAuraFrame("LunarUI_DebuffFrame", "減益", "TOPRIGHT", -215, -10 - buffHeight - 6, MAX_DEBUFFS)
+    debuffFrame = CreateAuraFrame(
+        "LunarUI_DebuffFrame",
+        L["Debuffs"] or "Debuffs",
+        "TOPRIGHT",
+        -215,
+        -10 - buffHeight - 6,
+        MAX_DEBUFFS
+    )
 
     local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
 
@@ -440,7 +441,7 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
         if isDebuff then
             shouldShow = true -- 減益都顯示
         else
-            shouldShow = ShouldShowBuff(name, duration)
+            shouldShow = ShouldShowBuff(name, duration, auraData.spellId)
         end
 
         if shouldShow then
@@ -574,10 +575,10 @@ local function Initialize()
 
     -- 註冊至框架移動器（支援拖曳定位）
     if buffFrame then
-        LunarUI.RegisterMovableFrame("BuffFrame", buffFrame, "增益框架")
+        LunarUI.RegisterMovableFrame("BuffFrame", buffFrame, L["HUDBuffFrame"] or "Buff Frame")
     end
     if debuffFrame then
-        LunarUI.RegisterMovableFrame("DebuffFrame", debuffFrame, "減益框架")
+        LunarUI.RegisterMovableFrame("DebuffFrame", debuffFrame, L["HUDDebuffFrame"] or "Debuff Frame")
     end
 
     isInitialized = true

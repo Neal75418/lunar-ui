@@ -244,7 +244,7 @@ local function Initialize()
 
     -- 只在首次建立時向移動器登錄（避免 disable/enable 週期重複登錄）
     if isNew and perfFrame then
-        LunarUI.RegisterMovableFrame("PerformanceMonitor", perfFrame, "效能監控")
+        LunarUI.RegisterMovableFrame("PerformanceMonitor", perfFrame, L["HUDPerfMonitor"] or "Performance Monitor")
     end
 
     -- 啟動更新

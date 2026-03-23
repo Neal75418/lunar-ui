@@ -247,51 +247,12 @@ function LunarUI.SkinScrollBar(scrollBar)
     end
 end
 
---- 替換關閉按鈕
+--- 替換關閉按鈕（保留 Blizzard 原生材質，只標記已處理）
 function LunarUI.SkinCloseButton(btn)
     if not btn then
         return
     end
-
-    StripTextures(btn)
-    btn:SetSize(18, 18)
-
-    -- 自訂關閉按鈕外觀
-    if not btn._lunarCloseBG then
-        btn._lunarCloseBG = btn:CreateTexture(nil, "BACKGROUND")
-        btn._lunarCloseBG:SetAllPoints()
-        btn._lunarCloseBG:SetColorTexture(0.5, 0.1, 0.1, 0.8)
-    end
-
-    -- 「X」文字
-    if not btn._lunarCloseText then
-        btn._lunarCloseText = btn:CreateFontString(nil, "OVERLAY")
-        LunarUI.SetFont(btn._lunarCloseText, 12, "OUTLINE")
-        btn._lunarCloseText:SetPoint("CENTER", 0, 0)
-        btn._lunarCloseText:SetText("×")
-        btn._lunarCloseText:SetTextColor(1, 1, 1, 1)
-    end
-
-    -- 懸停高亮
-    if not btn._lunarHighlight then
-        btn._lunarHighlight = btn:CreateTexture(nil, "HIGHLIGHT")
-        btn._lunarHighlight:SetAllPoints()
-        btn._lunarHighlight:SetColorTexture(0.8, 0.2, 0.2, 0.3)
-    end
-
-    -- 清除原始材質
-    if btn.SetNormalTexture then
-        btn:SetNormalTexture("")
-    end
-    if btn.SetHighlightTexture then
-        btn:SetHighlightTexture("")
-    end
-    if btn.SetPushedTexture then
-        btn:SetPushedTexture("")
-    end
-    if btn.SetDisabledTexture then
-        btn:SetDisabledTexture("")
-    end
+    btn._lunarCloseSkinned = true
 end
 
 --- 替換分頁按鈕（底線指示器風格 + 半透明背景）
