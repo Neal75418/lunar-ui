@@ -249,8 +249,11 @@ end
 
 --[[ 減益更新鉤子：根據類型著色邊框 ]]
 local function PostUpdateDebuffIcon(_self, button, _unit, data, _position)
-    if data.isHarmfulAura then
-        -- WoW 12.0 中 dispelName 為隱藏值，使用通用減益顏色
+    -- WoW 12.0: data.isHarmfulAura 在戰鬥中可能為 secret boolean，pcall 保護
+    local ok, isHarmful = pcall(function()
+        return data.isHarmfulAura == true
+    end)
+    if ok and isHarmful then
         local color = UNITFRAME_DEBUFF_COLORS["none"] or UNITFRAME_DEBUFF_COLORS[""]
         if color then
             button:SetBackdropBorderColor(color.r, color.g, color.b, 1)

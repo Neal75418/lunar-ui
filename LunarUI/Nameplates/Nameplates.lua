@@ -318,8 +318,12 @@ local function CreateDebuffs(frame)
     -- WoW 12.0 將 isHarmful 設為 secret value（taint-protected），無法讀取。
     -- oUF Debuffs element 已限制 aura pool 為 harmful，FilterAura 只需檢查 isPlayerAura。
     -- 不要加 "and data.isHarmful == true"——永遠不會匹配，會隱藏所有 debuffs。
+    -- WoW 12.0: data.isPlayerAura 也可能是 secret boolean，pcall 保護
     debuffs.FilterAura = function(_element, _unit, data)
-        return data.isPlayerAura == true
+        local ok, val = pcall(function()
+            return data.isPlayerAura == true
+        end)
+        return ok and val
     end
 
     debuffs.PostCreateButton = StyleNameplateAura
@@ -365,8 +369,12 @@ local function CreateNameplateBuffs(frame)
     buffs["growth-y"] = "UP"
 
     -- 過濾：只顯示敵方可竊取/可驅散的增益
+    -- WoW 12.0: data.isStealable 在戰鬥中為 secret boolean，pcall 保護比較
     buffs.FilterAura = function(_element, _unit, data)
-        return data.isStealable == true
+        local ok, val = pcall(function()
+            return data.isStealable == true
+        end)
+        return ok and val
     end
 
     buffs.PostCreateButton = StyleNameplateAura
