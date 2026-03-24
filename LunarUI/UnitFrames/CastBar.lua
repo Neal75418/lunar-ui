@@ -221,11 +221,8 @@ local function CreateCastbar(frame, unit)
             self:SetStatusBarColor(unpack(CASTBAR_COLOR))
             if showTicks then
                 -- WoW 12.0: 觀察他人施法時 spellID 為 secret value，
-                -- tonumber() 可安全斷開數值 taint
-                local ok, sid = pcall(function()
-                    return self.spellID and tonumber(self.spellID)
-                end)
-                local numTicks = ok and sid and CHANNEL_TICKS[sid]
+                -- pcall+rawget 保護 table 查詢
+                local _ok, numTicks = pcall(rawget, CHANNEL_TICKS, self.spellID)
                 if numTicks then
                     ShowTickMarks(self, numTicks)
                 end

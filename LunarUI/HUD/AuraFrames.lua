@@ -100,10 +100,13 @@ local AURA_THROTTLE = 0.1
 --------------------------------------------------------------------------------
 
 local function ShouldShowBuff(_name, _duration, spellId)
-    -- WoW 12.0: spellId 在戰鬥中可能為 secret value，tonumber() 斷開 taint
-    local sid = spellId and tonumber(spellId)
-    if sid and FILTERED_BUFF_IDS[sid] then
-        return false
+    -- WoW 12.0: spellId 在戰鬥中為 secret value，
+    -- pcall+rawget 保護 table 查詢避免 "table index is secret"
+    if spellId then
+        local ok, filtered = pcall(rawget, FILTERED_BUFF_IDS, spellId)
+        if ok and filtered then
+            return false
+        end
     end
     return true
 end
