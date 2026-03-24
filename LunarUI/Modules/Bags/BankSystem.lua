@@ -105,7 +105,36 @@ local function GetBankSlotsPerRow(totalSlots)
     return math.max(SLOTS_PER_ROW, neededCols)
 end
 
--- 依實際格子數重算並設定框架大小
+-- 掃描銀行格子，找出最後一個有物品的 slotID
+local function GetLastOccupiedSlotID()
+    local lastOccupied = 0
+    local slotID = 0
+
+    local numMainBankSlots = C_Container.GetContainerNumSlots(BANK_CONTAINER)
+    for slot = 1, numMainBankSlots do
+        slotID = slotID + 1
+        if C_Container.GetContainerItemInfo(BANK_CONTAINER, slot) then
+            lastOccupied = slotID
+        end
+    end
+
+    for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
+        local numSlots = C_Container.GetContainerNumSlots(bag)
+        for slot = 1, numSlots do
+            slotID = slotID + 1
+            if C_Container.GetContainerItemInfo(bag, slot) then
+                lastOccupied = slotID
+            end
+        end
+    end
+
+    return lastOccupied
+end
+
+-- 額外顯示的空行緩衝（讓使用者看到還有空間可用）
+local BANK_BUFFER_ROWS = 1
+
+-- 依實際格子數重算並設定框架大小（裁掉尾部空行）
 local function ResizeBankFrame(actualSlotCount)
     if not bankFrame or not actualSlotCount or actualSlotCount == 0 then
         return
@@ -119,7 +148,18 @@ local function ResizeBankFrame(actualSlotCount)
 
     local bankCols = GetBankSlotsPerRow(actualSlotCount)
     bankFrame.bankCols = bankCols
-    local numRows = math.ceil(actualSlotCount / bankCols)
+
+    -- 找出最後有物品的行，加上緩衝行，裁掉剩餘空行
+    local lastOccupied = GetLastOccupiedSlotID()
+    local lastOccupiedRow = math.ceil(lastOccupied / bankCols)
+    local displayRows = lastOccupiedRow + BANK_BUFFER_ROWS
+    local totalRows = math.ceil(actualSlotCount / bankCols)
+    local numRows = math.min(displayRows, totalRows)
+    numRows = math.max(numRows, 1) -- 至少 1 行
+
+    -- 記錄顯示的格子數上限（供 caller 隱藏多餘格子）
+    bankFrame.displaySlots = numRows * bankCols
+
     local width = bankCols * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
     local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
     bankFrame:SetSize(width, height)
@@ -359,8 +399,16 @@ local function CreateBankFrame()
         end
     end
 
-    -- 依實際建立的格子數重算框架大小（避免預估 totalSlots 與實際不符產生空白）
+    -- 依實際建立的格子數重算框架大小（裁掉尾部空行）
     ResizeBankFrame(slotID)
+
+    -- 隱藏超出顯示範圍的格子
+    local displaySlots = bankFrame.displaySlots or slotID
+    for i = displaySlots + 1, slotID do
+        if bankSlots[i] then
+            bankSlots[i]:Hide()
+        end
+    end
 
     -- 銀行搜尋過濾（委託共用 SearchSlots）
     ApplyBankSearch = function()
@@ -489,26 +537,31 @@ local function RefreshBankLayout()
         bankCols = c.SLOTS_PER_ROW
     end
 
-    -- 重新定位所有格子
+    -- 重新定位可見範圍內的格子
+    local displaySlots = bankFrame.displaySlots or slotID
     for i = 1, slotID do
         local button = bankSlots[i]
         if button then
-            local row = math.floor((i - 1) / bankCols)
-            local col = (i - 1) % bankCols
+            if i <= displaySlots then
+                local row = math.floor((i - 1) / bankCols)
+                local col = (i - 1) % bankCols
 
-            button:ClearAllPoints()
-            button:SetPoint(
-                "TOPLEFT",
-                bankFrame.slotContainer,
-                "TOPLEFT",
-                col * (SLOT_SIZE + SLOT_SPACING),
-                -row * (SLOT_SIZE + SLOT_SPACING)
-            )
-            button:Show()
+                button:ClearAllPoints()
+                button:SetPoint(
+                    "TOPLEFT",
+                    bankFrame.slotContainer,
+                    "TOPLEFT",
+                    col * (SLOT_SIZE + SLOT_SPACING),
+                    -row * (SLOT_SIZE + SLOT_SPACING)
+                )
+                button:Show()
+            else
+                button:Hide()
+            end
         end
     end
 
-    -- 隱藏多餘格子
+    -- 隱藏多餘格子（已刪除的舊格子）
     for i = slotID + 1, #bankSlots do
         if bankSlots[i] then
             bankSlots[i]:Hide()

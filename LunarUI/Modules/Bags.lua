@@ -266,6 +266,15 @@ local function SetupSlotBase(button, bag, slot)
         icon:SetPoint("BOTTOMRIGHT", -1, 1)
     end
 
+    -- 格子底色（BACKGROUND 層，位於 icon 下方，讓空格子也可見）
+    if not button.slotBg then
+        local bg = button:CreateTexture(nil, "BACKGROUND")
+        bg:SetPoint("TOPLEFT", 1, -1)
+        bg:SetPoint("BOTTOMRIGHT", -1, 1)
+        bg:SetColorTexture(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
+        button.slotBg = bg
+    end
+
     -- 建立邊框
     if not button.LunarBorder then
         local border = CreateFrame("Frame", nil, button, "BackdropTemplate")
