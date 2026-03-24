@@ -685,6 +685,15 @@ describe("GetTotalBankSlots", function()
         end
         assert.equals(28, LunarUI.GetTotalBankSlots())
     end)
+
+    it("excludes bag 5 (reagent bag in WoW 12.0)", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            local sizes = { [-1] = 28, [5] = 100, [6] = 32 }
+            return sizes[bag] or 0
+        end
+        -- bag 5 的 100 格不應被計入（28 + 32 = 60）
+        assert.equals(60, LunarUI.GetTotalBankSlots())
+    end)
 end)
 
 --------------------------------------------------------------------------------
@@ -708,5 +717,100 @@ describe("GetTotalBankFreeSlots", function()
             return free[bag] or 0, 0
         end
         assert.equals(23, LunarUI.GetTotalBankFreeSlots())
+    end)
+
+    it("excludes bag 5 free slots (reagent bag in WoW 12.0)", function()
+        _G.C_Container.GetContainerNumFreeSlots = function(bag)
+            local free = { [-1] = 10, [5] = 50, [6] = 5 }
+            return free[bag] or 0, 0
+        end
+        -- bag 5 的 50 空格不應被計入（10 + 5 = 15）
+        assert.equals(15, LunarUI.GetTotalBankFreeSlots())
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- GetLastOccupiedSlotID
+--------------------------------------------------------------------------------
+
+describe("GetLastOccupiedSlotID", function()
+    before_each(function()
+        _G.C_Container.GetContainerNumSlots = function()
+            return 0
+        end
+        _G.C_Container.GetContainerItemInfo = function()
+            return nil
+        end
+    end)
+
+    it("returns 0 when bank is completely empty", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            local sizes = { [-1] = 28, [6] = 98 }
+            return sizes[bag] or 0
+        end
+        assert.equals(0, LunarUI.GetLastOccupiedSlotID())
+    end)
+
+    it("returns correct slotID for items only in main bank", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            local sizes = { [-1] = 28 }
+            return sizes[bag] or 0
+        end
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == -1 and slot == 10 then
+                return { iconFileID = 123 }
+            end
+            return nil
+        end
+        assert.equals(10, LunarUI.GetLastOccupiedSlotID())
+    end)
+
+    it("returns correct cumulative slotID for items in bank bags", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            local sizes = { [-1] = 28, [6] = 98 }
+            return sizes[bag] or 0
+        end
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            -- 物品在 bag 6 的第 5 格 → 累計 slotID = 28 + 5 = 33
+            if bag == 6 and slot == 5 then
+                return { iconFileID = 456 }
+            end
+            return nil
+        end
+        assert.equals(33, LunarUI.GetLastOccupiedSlotID())
+    end)
+
+    it("returns last item across multiple containers", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            local sizes = { [-1] = 28, [6] = 98, [7] = 98 }
+            return sizes[bag] or 0
+        end
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            -- 主銀行第 1 格有物品
+            if bag == -1 and slot == 1 then
+                return { iconFileID = 100 }
+            end
+            -- bag 7 第 3 格有物品 → 累計 slotID = 28 + 98 + 3 = 129
+            if bag == 7 and slot == 3 then
+                return { iconFileID = 200 }
+            end
+            return nil
+        end
+        assert.equals(129, LunarUI.GetLastOccupiedSlotID())
+    end)
+
+    it("handles item in last slot of last bag", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            local sizes = { [-1] = 28, [6] = 98, [7] = 98, [8] = 98, [9] = 98, [10] = 98, [11] = 98 }
+            return sizes[bag] or 0
+        end
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            -- 最後一格 bag 11 slot 98 → 累計 slotID = 28 + 6*98 = 616
+            if bag == 11 and slot == 98 then
+                return { iconFileID = 999 }
+            end
+            return nil
+        end
+        assert.equals(616, LunarUI.GetLastOccupiedSlotID())
     end)
 end)

@@ -642,6 +642,7 @@ LunarUI.CloseBank = CloseBank
 LunarUI.GetBankSlotsPerRow = GetBankSlotsPerRow
 LunarUI.GetTotalBankSlots = GetTotalBankSlots
 LunarUI.GetTotalBankFreeSlots = GetTotalBankFreeSlots
+LunarUI.GetLastOccupiedSlotID = GetLastOccupiedSlotID
 
 -- 供 RebuildBags 使用的清理函數
 LunarUI.BankSystemCleanup = function()
