@@ -195,8 +195,11 @@ local function SetupAuraIconInteraction(icon)
         GameTooltip:Hide()
     end)
 
-    -- 右鍵取消 Buff
-    -- WoW 12.0: CancelSpellByName 可能已移除，優先使用 auraInstanceID
+    -- 右鍵取消 Buff（使用普通 frame 的 OnMouseUp，非 SecureActionButtonTemplate）
+    -- 限制：僅在非戰鬥、非 protected execution context 下有效。
+    -- 若需戰鬥中取消，需改用 SecureActionButtonTemplate + type="cancelaura"，
+    -- 但會大幅增加複雜度（每個 icon 需 secure button + 動態 attribute 更新）。
+    -- 目前方案：戰鬥中靜默跳過（符合 WoW UI 慣例）。
     icon:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" and self.auraData and self.auraData.filter == "HELPFUL" then
             if InCombatLockdown() then

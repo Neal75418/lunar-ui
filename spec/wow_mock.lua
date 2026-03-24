@@ -108,5 +108,103 @@ _G.C_UnitAuras = {
     end,
 }
 
+-- Common WoW API stubs (centralized to avoid per-spec duplication)
+-- Each spec can override these in before_each for custom behavior
+
+_G.GetTime = function()
+    return 1000
+end
+
+_G.InCombatLockdown = function()
+    return _G._TEST_IN_COMBAT or false
+end
+
+_G.UnitClass = function()
+    return "Warrior", "WARRIOR", 1
+end
+
+_G.UnitExists = function()
+    return true
+end
+
+_G.UnitIsPlayer = function()
+    return true
+end
+
+_G.UnitIsEnemy = function()
+    return false
+end
+
+_G.UnitIsDeadOrGhost = function()
+    return false
+end
+
+_G.UnitReaction = function()
+    return 5 -- friendly
+end
+
+_G.IsPlayerSpell = function()
+    return false
+end
+
+_G.IsShiftKeyDown = function()
+    return false
+end
+
+_G.C_Timer = _G.C_Timer or { After = function() end }
+
+_G.C_Spell = _G.C_Spell
+    or {
+        GetSpellCooldown = function()
+            return { startTime = 0, duration = 0 }
+        end,
+        GetSpellInfo = function(spellID)
+            return { iconID = 100000 + (spellID or 0) }
+        end,
+        IsSpellUsable = function()
+            return false
+        end,
+    }
+
+_G.C_Item = _G.C_Item
+    or {
+        GetItemInfo = function()
+            return nil
+        end,
+        GetItemQualityByID = function()
+            return nil
+        end,
+        GetItemQualityColor = function()
+            return 1, 1, 1, 1
+        end,
+    }
+
+_G.C_DateAndTime = _G.C_DateAndTime
+    or {
+        GetCurrentCalendarTime = function()
+            return { hour = 12, minute = 0 }
+        end,
+    }
+
+_G.RAID_CLASS_COLORS = _G.RAID_CLASS_COLORS
+    or {
+        WARRIOR = { r = 0.78, g = 0.61, b = 0.43 },
+        PALADIN = { r = 0.96, g = 0.55, b = 0.73 },
+        HUNTER = { r = 0.67, g = 0.83, b = 0.45 },
+        ROGUE = { r = 1.00, g = 0.96, b = 0.41 },
+        PRIEST = { r = 1.00, g = 1.00, b = 1.00 },
+        MAGE = { r = 0.41, g = 0.80, b = 0.94 },
+        WARLOCK = { r = 0.58, g = 0.51, b = 0.79 },
+    }
+
+_G.CreateColor = _G.CreateColor
+    or function(r, g, b, a)
+        return { r = r or 0, g = g or 0, b = b or 0, a = a or 1 }
+    end
+
+_G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+_G.StaticPopup_Show = _G.StaticPopup_Show or function() end
+_G.ReloadUI = _G.ReloadUI or function() end
+
 -- print override to suppress output during tests (optional)
 -- _G.print = function() end

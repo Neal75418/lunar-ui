@@ -814,8 +814,9 @@ function LunarUI.CleanupDataTexts()
     wipe(slotsByProvider)
     -- eventToProviders / onUpdateProviders 由模組載入時的 RegisterProvider 靜態建立，
     -- 不隨 profile 改變，不可 wipe（wipe 後重新 enable 時無法重建，providers 停止更新）
-    eventFrame = nil
-    onUpdateFrame = nil
+    -- 保留 frame 參考（避免 re-enable 時建新 frame 造成 leak），
+    -- SetupEvents / SetupOnUpdate 的 early-return guard 會在下次 enable 時重用
+    -- 不設 nil，因為 UnregisterAllEvents + SetScript(nil) 已足夠停用
 end
 
 -- 匯出

@@ -123,6 +123,7 @@ function MockFrame:SetTexCoord() end
 function MockFrame:SetBlendMode() end
 function MockFrame:SetVertexColor() end
 function MockFrame:SetColorTexture() end
+function MockFrame:SetGradient() end
 function MockFrame:SetDrawLayer() end
 function MockFrame:SetSnapToPixelGrid() end
 function MockFrame:SetTexelSnappingBias() end
@@ -175,6 +176,10 @@ function MockFrame:SetMinMaxValues() end
 function MockFrame:SetValue() end
 function MockFrame:SetStatusBarTexture() end
 function MockFrame:SetStatusBarColor() end
+function MockFrame:GetStatusBarTexture()
+    return self
+end
+function MockFrame:SetOrientation() end
 
 --------------------------------------------------------------------------------
 -- Cooldown

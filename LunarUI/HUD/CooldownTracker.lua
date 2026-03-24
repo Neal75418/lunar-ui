@@ -253,11 +253,13 @@ local function GetSpellTexture(spellID)
     -- 插入快取並增加計數（只在實際插入時計數）
     if texture then
         spellTextureCache[spellID] = texture
-    else
-        -- 負面快取：避免重複查詢無效法術
+        cacheSize = cacheSize + 1
+    elseif ok then
+        -- 負面快取：API 成功回傳但法術無圖示（確定無效）
         spellTextureCache[spellID] = INVALID_TEXTURE
+        cacheSize = cacheSize + 1
     end
-    cacheSize = cacheSize + 1
+    -- pcall 失敗時不快取，下次查詢會重試（可能是暫時性 API 錯誤）
 
     return texture
 end

@@ -168,8 +168,14 @@ end
 ]]
 function LunarUI.SafeCall(func, context)
     local ok, err = pcall(func)
-    if not ok and LunarUI.Debug then
-        LunarUI:Debug((context or "Error") .. ": " .. tostring(err))
+    if not ok then
+        -- 生產環境也輸出錯誤，避免靜默吞掉問題
+        local msg = (context or "Error") .. ": " .. tostring(err)
+        if LunarUI.Debug then
+            LunarUI:Debug(msg)
+        else
+            print("|cffff6060LunarUI:|r " .. msg)
+        end
     end
     return ok
 end

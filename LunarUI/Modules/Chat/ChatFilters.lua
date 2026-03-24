@@ -402,7 +402,8 @@ local function ShortenChannelNames()
             -- 從格式字串中提取方括號內的頻道名稱
             for longName, shortName in pairs(SHORT_CHANNEL_TYPES) do
                 if original:find(longName, 1, true) then
-                    _G[chatType] = original:gsub("%[" .. longName .. "%]", "[" .. shortName .. "]")
+                    _G[chatType] =
+                        original:gsub("%[" .. LunarUI.EscapePattern(longName) .. "%]", "[" .. shortName .. "]")
                     break
                 end
             end

@@ -62,6 +62,12 @@ local function ShowTickMarks(castbar, numTicks)
         return
     end
 
+    local cbWidth = castbar:GetWidth()
+    if cbWidth <= 0 then
+        HideAllTicks(castbar)
+        return
+    end
+
     for i = 1, numTicks - 1 do
         local tick = castbar._ticks[i]
         if not tick then
@@ -72,13 +78,20 @@ local function ShowTickMarks(castbar, numTicks)
         end
         tick:SetHeight(castbar:GetHeight())
         local pct = i / numTicks
-        local cbWidth = castbar:GetWidth()
-        if cbWidth <= 0 then
-            return
-        end
         tick:ClearAllPoints()
         tick:SetPoint("LEFT", castbar, "LEFT", cbWidth * pct, 0)
         tick:Show()
+    end
+end
+
+-- #5: 提升至模組層級，避免 CreateCastbar 每次呼叫產生新 closure（~15 unit frames）
+local function HideAllStages(cb)
+    if cb._stages then
+        for i = 1, MAX_TICKS do
+            if cb._stages[i] then
+                cb._stages[i]:Hide()
+            end
+        end
     end
 end
 
@@ -100,6 +113,13 @@ local function ShowEmpoweredStages(castbar, numStages)
     end
 
     numStages = math.min(numStages, MAX_TICKS) -- 防止超出 _stages 上限導致無法隱藏的洩漏
+
+    local cbWidth = castbar:GetWidth()
+    if cbWidth <= 0 then
+        HideAllStages(castbar)
+        return
+    end
+
     for i = 1, numStages do
         local stage = castbar._stages[i]
         if not stage then
@@ -110,24 +130,9 @@ local function ShowEmpoweredStages(castbar, numStages)
         end
         stage:SetHeight(castbar:GetHeight())
         local pct = i / (numStages + 1)
-        local cbWidth = castbar:GetWidth()
-        if cbWidth <= 0 then
-            return
-        end
         stage:ClearAllPoints()
         stage:SetPoint("LEFT", castbar, "LEFT", cbWidth * pct, 0)
         stage:Show()
-    end
-end
-
--- #5: 提升至模組層級，避免 CreateCastbar 每次呼叫產生新 closure（~15 unit frames）
-local function HideAllStages(cb)
-    if cb._stages then
-        for i = 1, MAX_TICKS do
-            if cb._stages[i] then
-                cb._stages[i]:Hide()
-            end
-        end
     end
 end
 

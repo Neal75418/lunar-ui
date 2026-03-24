@@ -233,8 +233,9 @@ local function SetupSlotBase(button, bag, slot)
     button:SetAttribute("item2", bag .. " " .. slot)
 
     -- PreClick 在每次右鍵前同步 item2 屬性（按鈕重用時 bag/slot 可能變更）
+    -- 戰鬥中不可呼叫 SetAttribute（protected operation），沿用上次設定的屬性即可
     button:SetScript("PreClick", function(self, clickButton)
-        if clickButton == "RightButton" then
+        if clickButton == "RightButton" and not InCombatLockdown() then
             self:SetAttribute("item2", self.bag .. " " .. self.slot)
         end
     end)

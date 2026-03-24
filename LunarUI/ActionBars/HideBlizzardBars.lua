@@ -29,13 +29,21 @@ local hideGeneration = 0 -- 世代計數器：防止 disable 後延遲 timer 仍
 -- Hide 操作（一次性 mutation，不 hook，不持續修改安全框架）
 --------------------------------------------------------------------------------
 
+-- Debug-gated pcall 包裝：生產環境靜默（避免 taint 噪音），debug 模式可追蹤
+local function SafeFrameOp(fn)
+    local ok, err = pcall(fn)
+    if not ok and LunarUI.Debug then
+        LunarUI:Debug("FrameOp: " .. tostring(err))
+    end
+end
+
 -- 安全隱藏框架：透明度為 0 + 禁用互動
 local function HideFrameSafely(frame)
     if not frame then
         return
     end
     hiddenFrames[frame] = true
-    pcall(function()
+    SafeFrameOp(function()
         frame:SetAlpha(0)
         frame:EnableMouse(false)
         frame:EnableKeyboard(false)
@@ -51,7 +59,7 @@ local function HideFrameRegions(frame)
     for _, region in ipairs(regions) do
         if region and region.SetAlpha then
             hiddenRegions[region] = true
-            pcall(function()
+            SafeFrameOp(function()
                 region:SetAlpha(0)
             end)
         end
@@ -68,7 +76,7 @@ local function HideTextureForcefully(texture)
         local path = texture:GetTexture()
         hiddenTextures[texture] = path or false -- false = 原本就沒有材質
     end
-    pcall(function()
+    SafeFrameOp(function()
         texture:SetAlpha(0)
         texture:Hide()
         texture:SetTexture(nil)
@@ -157,16 +165,16 @@ local function HideFrameRecursive(frame)
 
     if isEditModeProtected then
         -- MultiBar 框架：移到隱藏父框架，不觸碰自身屬性
-        pcall(function()
+        SafeFrameOp(function()
             frame:SetParent(HiddenBarParent)
         end)
     elseif hasProtectedDescendant then
         -- 有保護後代：只隱藏自身材質，保持 alpha=1 讓後代可見
         HideFrameRegions(frame)
-        pcall(function()
+        SafeFrameOp(function()
             frame:EnableMouse(false)
         end)
-        pcall(function()
+        SafeFrameOp(function()
             frame:EnableKeyboard(false)
         end)
     else
@@ -394,7 +402,7 @@ local function HideMultiActionBars()
                 }
             end
             -- 1. 移到隱藏父框架：視覺上隱藏（由父框架 Hide() 使其不可見）
-            pcall(function()
+            SafeFrameOp(function()
                 bar:SetParent(HiddenBarParent)
             end)
             -- 2. 中和 Edit Mode：覆蓋為 no-op，防止 scale 計算
@@ -567,7 +575,7 @@ local function RestoreBlizzardBars()
 
     -- 1. 還原 MultiBar 框架：parent + OnEditModeEnter/Exit + SetScale
     for bar, state in pairs(savedBarStates) do
-        pcall(function()
+        SafeFrameOp(function()
             bar:SetParent(state.parent)
             bar:Show()
         end)
@@ -578,7 +586,7 @@ local function RestoreBlizzardBars()
 
     -- 2. 還原被 SetAlpha(0) 的框架（HideFrameSafely 設了 alpha + mouse + keyboard）
     for frame in pairs(hiddenFrames) do
-        pcall(function()
+        SafeFrameOp(function()
             frame:SetAlpha(1)
             frame:EnableMouse(true)
             frame:EnableKeyboard(true)
@@ -588,7 +596,7 @@ local function RestoreBlizzardBars()
 
     -- 3. 還原被 HideFrameRegions 設為 alpha=0 的 regions
     for region in pairs(hiddenRegions) do
-        pcall(function()
+        SafeFrameOp(function()
             region:SetAlpha(1)
         end)
     end
@@ -596,7 +604,7 @@ local function RestoreBlizzardBars()
 
     -- 4. 還原被 Hide() 呼叫的 regions 和子物件
     for obj in pairs(explicitlyHidden) do
-        pcall(function()
+        SafeFrameOp(function()
             obj:Show()
         end)
     end
@@ -604,7 +612,7 @@ local function RestoreBlizzardBars()
 
     -- 5. 還原被 HideTextureForcefully 處理的材質（精確恢復原始材質路徑）
     for texture, originalPath in pairs(hiddenTextures) do
-        pcall(function()
+        SafeFrameOp(function()
             if originalPath and originalPath ~= false then
                 texture:SetTexture(originalPath)
             end
