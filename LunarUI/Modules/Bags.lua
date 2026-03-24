@@ -1385,7 +1385,7 @@ local function OnBagEvent(_self, event, ...)
                     end
                 end
             end
-            -- 更新銀行包（6-11）
+            -- 更新銀行包
             if pendingBag >= FIRST_BANK_BAG and pendingBag <= LAST_BANK_BAG then
                 if bankFrame and bankFrame:IsShown() then
                     for _, button in pairs(bankSlots) do

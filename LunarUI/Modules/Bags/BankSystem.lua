@@ -53,6 +53,7 @@ end
 local BANK_CONTAINER = -1
 local FIRST_BANK_BAG = 6 -- CharacterBankTab_1（WoW 12.0: bag 5 = 材料袋，非銀行包）
 local LAST_BANK_BAG = 11 -- CharacterBankTab_6
+local BANK_BUFFER_ROWS = 1 -- 尾部裁剪時額外保留的空行數
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -130,9 +131,6 @@ local function GetLastOccupiedSlotID()
 
     return lastOccupied
 end
-
--- 額外顯示的空行緩衝（讓使用者看到還有空間可用）
-local BANK_BUFFER_ROWS = 1
 
 -- 依實際格子數重算並設定框架大小（裁掉尾部空行）
 local function ResizeBankFrame(actualSlotCount)
