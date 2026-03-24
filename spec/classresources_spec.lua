@@ -99,18 +99,6 @@ loader.loadAddonFile("LunarUI/HUD/ClassResources.lua", LunarUI)
 --------------------------------------------------------------------------------
 
 describe("ClassResources lifecycle", function()
-    it("exports Init function", function()
-        assert.is_function(LunarUI.InitClassResources)
-    end)
-
-    it("exports Cleanup function", function()
-        assert.is_function(LunarUI.CleanupClassResources)
-    end)
-
-    it("exports Rebuild function", function()
-        assert.is_function(LunarUI.RebuildClassResources)
-    end)
-
     it("Init does not error", function()
         assert.has_no_errors(function()
             LunarUI.InitClassResources()
@@ -151,7 +139,8 @@ describe("ClassResources class configs", function()
         mockClassID = classID
         mockSpecIndex = specIndex
 
-        local testLunarUI = {
+        local testLunarUI
+        testLunarUI = {
             Colors = LunarUI.Colors,
             ICON_TEXCOORD = LunarUI.ICON_TEXCOORD,
             textures = LunarUI.textures,
@@ -161,7 +150,9 @@ describe("ClassResources class configs", function()
                 return default
             end,
             RegisterHUDFrame = function() end,
-            RegisterMovableFrame = function() end,
+            RegisterMovableFrame = function(name, _frame, _label)
+                testLunarUI._lastMovableRegistered = name
+            end,
             iconBackdropTemplate = {},
             GetSelectedStatusBarTexture = function()
                 return "Interface\\StatusBar"
@@ -179,6 +170,7 @@ describe("ClassResources class configs", function()
         assert.has_no_errors(function()
             lui.InitClassResources()
         end)
+        assert.equals("ClassResources", lui._lastMovableRegistered)
         lui.CleanupClassResources()
     end)
 
@@ -187,6 +179,7 @@ describe("ClassResources class configs", function()
         assert.has_no_errors(function()
             lui.InitClassResources()
         end)
+        assert.equals("ClassResources", lui._lastMovableRegistered)
         lui.CleanupClassResources()
     end)
 
@@ -195,6 +188,7 @@ describe("ClassResources class configs", function()
         assert.has_no_errors(function()
             lui.InitClassResources()
         end)
+        assert.equals("ClassResources", lui._lastMovableRegistered)
         lui.CleanupClassResources()
     end)
 
@@ -203,6 +197,7 @@ describe("ClassResources class configs", function()
         assert.has_no_errors(function()
             lui.InitClassResources()
         end)
+        assert.equals("ClassResources", lui._lastMovableRegistered)
         lui.CleanupClassResources()
     end)
 
@@ -219,6 +214,7 @@ describe("ClassResources class configs", function()
         assert.has_no_errors(function()
             lui.InitClassResources()
         end)
+        assert.equals("ClassResources", lui._lastMovableRegistered)
         lui.CleanupClassResources()
     end)
 
@@ -235,6 +231,7 @@ describe("ClassResources class configs", function()
         assert.has_no_errors(function()
             lui.InitClassResources()
         end)
+        assert.equals("ClassResources", lui._lastMovableRegistered)
         lui.CleanupClassResources()
     end)
 
@@ -243,6 +240,7 @@ describe("ClassResources class configs", function()
         assert.has_no_errors(function()
             lui.InitClassResources()
         end)
+        assert.equals("ClassResources", lui._lastMovableRegistered)
         lui.CleanupClassResources()
     end)
 
@@ -251,6 +249,7 @@ describe("ClassResources class configs", function()
         assert.has_no_errors(function()
             lui.InitClassResources()
         end)
+        assert.equals("ClassResources", lui._lastMovableRegistered)
         lui.CleanupClassResources()
     end)
 
@@ -259,6 +258,7 @@ describe("ClassResources class configs", function()
         assert.has_no_errors(function()
             lui.InitClassResources()
         end)
+        assert.equals("ClassResources", lui._lastMovableRegistered)
         lui.CleanupClassResources()
     end)
 

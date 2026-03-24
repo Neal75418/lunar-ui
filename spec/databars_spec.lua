@@ -208,7 +208,7 @@ end)
 describe("GetStatusBarTexture", function()
     it("returns texture from GetSelectedStatusBarTexture", function()
         local result = LunarUI.GetStatusBarTexture()
-        assert.is_not_nil(result)
+        assert.equals("Interface\\TargetingFrame\\UI-StatusBar", result)
     end)
 
     it("returns same cached value on second call", function()

@@ -128,20 +128,7 @@ loader.loadAddonFile("LunarUI/ActionBars/SpecialButtons.lua", LunarUI)
 loader.loadAddonFile("LunarUI/ActionBars/ActionBars.lua", LunarUI)
 
 -- ActionBars exports（assert.is_function）已移除，行為由各 describe 隱含驗證
-
---------------------------------------------------------------------------------
--- BUTTON_COLORS
---------------------------------------------------------------------------------
-
-describe("BUTTON_COLORS (via actionbars internals)", function()
-    -- BUTTON_COLORS is module-local, but we verify the module loaded
-    -- correctly by checking that exported functions exist and don't crash
-    it("CleanupActionBars does not error when not initialized", function()
-        assert.has_no_errors(function()
-            LunarUI.CleanupActionBars()
-        end)
-    end)
-end)
+-- BUTTON_COLORS 為 module-local，由 lifecycle 測試間接驗證
 
 --------------------------------------------------------------------------------
 -- Lifecycle

@@ -61,13 +61,6 @@ describe("RebuildAuraFilterCache", function()
         LunarUI.RebuildAuraFilterCache()
     end)
 
-    it("parses whitelist and blacklist from comma-separated strings", function()
-        -- After rebuild, the cache should be populated (tested via GetAuraSortFunction behavior)
-        assert.has_no_errors(function()
-            LunarUI.RebuildAuraFilterCache()
-        end)
-    end)
-
     it("handles empty whitelist/blacklist", function()
         LunarUI.db.profile.auraWhitelist = ""
         LunarUI.db.profile.auraBlacklist = ""

@@ -99,15 +99,7 @@ loader.loadAddonFile("LunarUI/Modules/Loot.lua", LunarUI)
 -- Exports
 --------------------------------------------------------------------------------
 
-describe("Loot exports", function()
-    it("exports InitializeLoot", function()
-        assert.is_function(LunarUI.InitializeLoot)
-    end)
-
-    it("exports CleanupLoot", function()
-        assert.is_function(LunarUI.CleanupLoot)
-    end)
-
+describe("Loot module registration", function()
     it("registers Loot module", function()
         assert.truthy(registeredModules["Loot"])
         assert.is_function(registeredModules["Loot"].onEnable)

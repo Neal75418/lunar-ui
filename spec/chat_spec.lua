@@ -145,81 +145,35 @@ assert(#registeredFilters > 0, "Chat filters were not registered — InitializeC
 --------------------------------------------------------------------------------
 
 describe("Chat emoji replacement", function()
-    -- 透過副作用探測發現 emoji filter（ChatFilters 不匯出 filter 函數）
-    -- 若 emoji 表或圖示名稱變更，此探測可能失敗
-    local emojiFilter
-    for _, entry in ipairs(registeredFilters) do
-        -- Call each filter with a smiley face and check if it returns the icon
-        local _blocked, result = entry.func(nil, nil, ":)")
-        if result and result:find("INV_Misc_Food_11") then
-            emojiFilter = entry.func
-            break
-        end
-    end
-
-    if not emojiFilter then
-        -- Filters were registered, let's find any emoji-related one
-        -- Try all filters to find the one that handles emojis
-        for _, entry in ipairs(registeredFilters) do
-            local ok, _blocked, result = pcall(entry.func, nil, nil, ":)")
-            if ok and result and type(result) == "string" and result ~= ":)" then
-                emojiFilter = entry.func
-                break
-            end
-        end
-    end
+    local emojiFilter = LunarUI.ChatEmojiFilter
 
     it("replaces :) with food icon", function()
-        if not emojiFilter then
-            error("emoji filter not captured — filter discovery failed")
-            return
-        end
         local _, result = emojiFilter(nil, nil, "Hello :)")
         assert.truthy(result:find("INV_Misc_Food_11"))
     end)
 
     it("replaces :D with guidance icon", function()
-        if not emojiFilter then
-            error("emoji filter not captured — filter discovery failed")
-            return
-        end
         local _, result = emojiFilter(nil, nil, "LOL :D")
         assert.truthy(result:find("Spell_Holy_HolyGuidance"))
     end)
 
     it("replaces <3 with candy icon", function()
-        if not emojiFilter then
-            error("emoji filter not captured — filter discovery failed")
-            return
-        end
         local _, result = emojiFilter(nil, nil, "I love you <3")
         assert.truthy(result:find("INV_ValentinesCandy"))
     end)
 
     it("does not modify messages without emojis", function()
-        if not emojiFilter then
-            error("emoji filter not captured — filter discovery failed")
-            return
-        end
         local _, result = emojiFilter(nil, nil, "Hello world")
         assert.equals("Hello world", result)
     end)
 
     it("handles nil message gracefully", function()
-        if not emojiFilter then
-            error("emoji filter not captured — filter discovery failed")
-            return
-        end
         local blocked, result = emojiFilter(nil, nil, nil)
         assert.is_false(blocked)
         assert.is_nil(result)
     end)
 
     it("preserves unmatched 2-char sequences (M7 fix)", function()
-        if not emojiFilter then
-            error("emoji filter not captured — filter discovery failed")
-            return
-        end
         -- :X is not in EMOJI_MAP, should be preserved
         local _, result = emojiFilter(nil, nil, "test :X end")
         assert.equals("test :X end", result)
@@ -231,57 +185,29 @@ end)
 --------------------------------------------------------------------------------
 
 describe("Chat spam filter", function()
-    local spamFilter
-    for _, entry in ipairs(registeredFilters) do
-        -- Find the filter that blocks spam
-        local ok, blocked = pcall(entry.func, nil, nil, "buy gold cheap www.gold.com", "Spammer")
-        if ok and blocked == true then
-            spamFilter = entry.func
-            break
-        end
-    end
+    local spamFilter = LunarUI.ChatSpamFilter
 
     it("blocks messages with gold selling", function()
-        if not spamFilter then
-            error("spam filter not captured — filter discovery failed")
-            return
-        end
         local blocked = spamFilter(nil, nil, "buy gold cheap only $5", "Spammer")
         assert.is_true(blocked)
     end)
 
     it("blocks messages with www URLs", function()
-        if not spamFilter then
-            error("spam filter not captured — filter discovery failed")
-            return
-        end
         local blocked = spamFilter(nil, nil, "visit www.gold-shop.com for deals", "Spammer")
         assert.is_true(blocked)
     end)
 
     it("blocks power leveling ads", function()
-        if not spamFilter then
-            error("spam filter not captured — filter discovery failed")
-            return
-        end
         local blocked = spamFilter(nil, nil, "power level your character fast!", "Spammer")
         assert.is_true(blocked)
     end)
 
     it("does not block normal messages", function()
-        if not spamFilter then
-            error("spam filter not captured — filter discovery failed")
-            return
-        end
         local blocked = spamFilter(nil, nil, "LF healer for mythic+", "Player")
         assert.is_false(blocked)
     end)
 
     it("handles nil message", function()
-        if not spamFilter then
-            error("spam filter not captured — filter discovery failed")
-            return
-        end
         local blocked, _msg = spamFilter(nil, nil, nil, "Player")
         assert.is_false(blocked)
     end)
@@ -292,20 +218,9 @@ end)
 --------------------------------------------------------------------------------
 
 describe("Chat emoji toggle off", function()
-    local emojiFilter
-    for _, entry in ipairs(registeredFilters) do
-        local _blocked, result = entry.func(nil, nil, ":)")
-        if result and result:find("INV_Misc_Food_11") then
-            emojiFilter = entry.func
-            break
-        end
-    end
+    local emojiFilter = LunarUI.ChatEmojiFilter
 
     it("passes through emoji text when enableEmojis is false", function()
-        if not emojiFilter then
-            error("emoji filter not captured — filter discovery failed")
-            return
-        end
         chatDB.enableEmojis = false
         local blocked, result = emojiFilter(nil, nil, "Hello :)")
         assert.is_false(blocked)
@@ -314,10 +229,6 @@ describe("Chat emoji toggle off", function()
     end)
 
     it("resumes replacement when enableEmojis is toggled back on", function()
-        if not emojiFilter then
-            error("emoji filter not captured — filter discovery failed")
-            return
-        end
         chatDB.enableEmojis = false
         local _, result1 = emojiFilter(nil, nil, "Hello :)")
         assert.equals("Hello :)", result1)
@@ -333,20 +244,9 @@ end)
 --------------------------------------------------------------------------------
 
 describe("Chat spam toggle off", function()
-    local spamFilter
-    for _, entry in ipairs(registeredFilters) do
-        local ok, blocked = pcall(entry.func, nil, nil, "buy gold cheap www.gold.com", "Spammer")
-        if ok and blocked == true then
-            spamFilter = entry.func
-            break
-        end
-    end
+    local spamFilter = LunarUI.ChatSpamFilter
 
     it("passes through spam when spamFilter is false", function()
-        if not spamFilter then
-            error("spam filter not captured — filter discovery failed")
-            return
-        end
         chatDB.spamFilter = false
         local blocked = spamFilter(nil, nil, "buy gold cheap only $5", "Spammer")
         assert.is_false(blocked)
@@ -354,10 +254,6 @@ describe("Chat spam toggle off", function()
     end)
 
     it("resumes filtering when spamFilter is toggled back on", function()
-        if not spamFilter then
-            error("spam filter not captured — filter discovery failed")
-            return
-        end
         chatDB.spamFilter = false
         local blocked1 = spamFilter(nil, nil, "buy gold cheap only $5", "Spammer")
         assert.is_false(blocked1)
