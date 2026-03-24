@@ -284,19 +284,14 @@ function LunarUI:OnEnable()
     self:Print(msg)
 end
 
--- ESC 主選單按鈕旗標（前移至此，OnDisable 需要存取）
+-- ESC 主選單按鈕旗標
 local gameMenuHooked = false
-local gameMenuButtonAdded = false
 
 --[[
     OnDisable - 插件停用時呼叫
     清理所有事件與計時器以防止記憶體洩漏
 ]]
 function LunarUI:OnDisable()
-    -- hooksecurefunc 本身無法撤銷，但 gameMenuButtonAdded 必須重設，
-    -- 讓下次 InitButtons 觸發時能重新加入按鈕（disable 後按鈕已消失）
-    gameMenuButtonAdded = false
-
     -- 取消所有計時器
     self:CancelAllTimers()
 
@@ -329,13 +324,14 @@ function LunarUI.SetupGameMenuButton()
     -- WoW 11.0+ 使用 GameMenuFrame:AddButton() API
     -- Hook InitButtons 在按鈕初始化後新增 LunarUI 按鈕
     -- 注意：不交換 buttonPool 中的按鈕位置，避免 taint 風險
+    -- WoW 11.0+ InitButtons 每次開啟選單都會重建按鈕，
+    -- 須每次 hook 觸發時重新加入；reentrancy guard 防止 AddButton 觸發遞迴
+    local addingButton = false
     hooksecurefunc(_G.GameMenuFrame, "InitButtons", function(self)
-        -- 防止重複添加按鈕（InitButtons 可能被多次調用）
-        if gameMenuButtonAdded then
+        if addingButton then
             return
         end
-        gameMenuButtonAdded = true
-
+        addingButton = true
         self:AddButton("LunarUI", function()
             PlaySound(SOUNDKIT.IG_MAINMENU_OPTION)
             _G.HideUIPanel(_G.GameMenuFrame)
@@ -344,5 +340,6 @@ function LunarUI.SetupGameMenuButton()
                 AceConfigDialog:Open("LunarUI")
             end
         end)
+        addingButton = false
     end)
 end

@@ -220,7 +220,12 @@ local function CreateCastbar(frame, unit)
             -- 引導法術：顯示 tick 標記、隱藏延遲
             self:SetStatusBarColor(unpack(CASTBAR_COLOR))
             if showTicks then
-                local numTicks = self.spellID and CHANNEL_TICKS[self.spellID]
+                -- WoW 12.0: 觀察他人施法時 spellID 為 secret value，
+                -- tonumber() 可安全斷開數值 taint
+                local ok, sid = pcall(function()
+                    return self.spellID and tonumber(self.spellID)
+                end)
+                local numTicks = ok and sid and CHANNEL_TICKS[sid]
                 if numTicks then
                     ShowTickMarks(self, numTicks)
                 end
