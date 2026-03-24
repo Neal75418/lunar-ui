@@ -111,7 +111,7 @@ local function GetLastOccupiedSlotID()
     local lastOccupied = 0
     local slotID = 0
 
-    local numMainBankSlots = C_Container.GetContainerNumSlots(BANK_CONTAINER)
+    local numMainBankSlots = (C_Container.GetContainerNumSlots(BANK_CONTAINER) or 0)
     for slot = 1, numMainBankSlots do
         slotID = slotID + 1
         if C_Container.GetContainerItemInfo(BANK_CONTAINER, slot) then
@@ -120,7 +120,7 @@ local function GetLastOccupiedSlotID()
     end
 
     for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
-        local numSlots = C_Container.GetContainerNumSlots(bag)
+        local numSlots = (C_Container.GetContainerNumSlots(bag) or 0)
         for slot = 1, numSlots do
             slotID = slotID + 1
             if C_Container.GetContainerItemInfo(bag, slot) then
@@ -446,7 +446,7 @@ local function ProcessBankUpdateBatch()
 
     -- 處理批次
     for _ = 1, BANK_BATCH_SIZE do
-        local button = table.remove(bankUpdateQueue, 1)
+        local button = table.remove(bankUpdateQueue)
         if button then
             UpdateBankSlot(button)
         end
