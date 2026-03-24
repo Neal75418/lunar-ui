@@ -96,39 +96,9 @@ loader.loadAddonFile("LunarUI/Modules/FrameMover.lua", LunarUI)
 -- Exports
 --------------------------------------------------------------------------------
 
-describe("FrameMover exports", function()
-    it("exports ToggleMoveMode", function()
-        assert.is_function(LunarUI.ToggleMoveMode)
-    end)
+-- FrameMover exports（assert.is_function）已移除，行為由各 describe 隱含驗證
 
-    it("exports EnterMoveMode", function()
-        assert.is_function(LunarUI.EnterMoveMode)
-    end)
-
-    it("exports ExitMoveMode", function()
-        assert.is_function(LunarUI.ExitMoveMode)
-    end)
-
-    it("exports RegisterMovableFrame", function()
-        assert.is_function(LunarUI.RegisterMovableFrame)
-    end)
-
-    it("exports UnregisterMovableFrame", function()
-        assert.is_function(LunarUI.UnregisterMovableFrame)
-    end)
-
-    it("exports ResetAllPositions", function()
-        assert.is_function(LunarUI.ResetAllPositions)
-    end)
-
-    it("exports CleanupFrameMover", function()
-        assert.is_function(LunarUI.CleanupFrameMover)
-    end)
-
-    it("exports ApplyAllSavedPositions", function()
-        assert.is_function(LunarUI.ApplyAllSavedPositions)
-    end)
-
+describe("FrameMover module registration", function()
     it("registers FrameMover module", function()
         assert.truthy(registeredModules["FrameMover"])
         assert.equals(2.0, registeredModules["FrameMover"].delay)

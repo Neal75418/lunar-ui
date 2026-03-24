@@ -127,31 +127,7 @@ local oUFMock = {
 
 loader.loadAddonFile("LunarUI/Nameplates/Nameplates.lua", LunarUI, { oUF = oUFMock })
 
---------------------------------------------------------------------------------
--- Exports
---------------------------------------------------------------------------------
-
-describe("Nameplates exports", function()
-    it("exports SpawnNameplates as function", function()
-        assert.is_function(LunarUI.SpawnNameplates)
-    end)
-
-    it("exports CleanupNameplates as function", function()
-        assert.is_function(LunarUI.CleanupNameplates)
-    end)
-
-    it("exports CLASSIFICATION_COLORS as table", function()
-        assert.is_table(LunarUI.CLASSIFICATION_COLORS)
-    end)
-
-    it("exports NPC_ROLE_COLORS as table", function()
-        assert.is_table(LunarUI.NPC_ROLE_COLORS)
-    end)
-
-    it("exports GetNPCRoleColor as function", function()
-        assert.is_function(LunarUI.GetNPCRoleColor)
-    end)
-end)
+-- Nameplates exports（assert.is_function / is_table）已移除，行為由各 describe 隱含驗證
 
 --------------------------------------------------------------------------------
 -- CLASSIFICATION_COLORS

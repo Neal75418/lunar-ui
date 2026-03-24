@@ -288,6 +288,87 @@ describe("Chat spam filter", function()
 end)
 
 --------------------------------------------------------------------------------
+-- DB Toggle: enableEmojis = false
+--------------------------------------------------------------------------------
+
+describe("Chat emoji toggle off", function()
+    local emojiFilter
+    for _, entry in ipairs(registeredFilters) do
+        local _blocked, result = entry.func(nil, nil, ":)")
+        if result and result:find("INV_Misc_Food_11") then
+            emojiFilter = entry.func
+            break
+        end
+    end
+
+    it("passes through emoji text when enableEmojis is false", function()
+        if not emojiFilter then
+            error("emoji filter not captured — filter discovery failed")
+            return
+        end
+        chatDB.enableEmojis = false
+        local blocked, result = emojiFilter(nil, nil, "Hello :)")
+        assert.is_false(blocked)
+        assert.equals("Hello :)", result)
+        chatDB.enableEmojis = true
+    end)
+
+    it("resumes replacement when enableEmojis is toggled back on", function()
+        if not emojiFilter then
+            error("emoji filter not captured — filter discovery failed")
+            return
+        end
+        chatDB.enableEmojis = false
+        local _, result1 = emojiFilter(nil, nil, "Hello :)")
+        assert.equals("Hello :)", result1)
+
+        chatDB.enableEmojis = true
+        local _, result2 = emojiFilter(nil, nil, "Hello :)")
+        assert.truthy(result2:find("INV_Misc_Food_11"))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- DB Toggle: spamFilter = false
+--------------------------------------------------------------------------------
+
+describe("Chat spam toggle off", function()
+    local spamFilter
+    for _, entry in ipairs(registeredFilters) do
+        local ok, blocked = pcall(entry.func, nil, nil, "buy gold cheap www.gold.com", "Spammer")
+        if ok and blocked == true then
+            spamFilter = entry.func
+            break
+        end
+    end
+
+    it("passes through spam when spamFilter is false", function()
+        if not spamFilter then
+            error("spam filter not captured — filter discovery failed")
+            return
+        end
+        chatDB.spamFilter = false
+        local blocked = spamFilter(nil, nil, "buy gold cheap only $5", "Spammer")
+        assert.is_false(blocked)
+        chatDB.spamFilter = true
+    end)
+
+    it("resumes filtering when spamFilter is toggled back on", function()
+        if not spamFilter then
+            error("spam filter not captured — filter discovery failed")
+            return
+        end
+        chatDB.spamFilter = false
+        local blocked1 = spamFilter(nil, nil, "buy gold cheap only $5", "Spammer")
+        assert.is_false(blocked1)
+
+        chatDB.spamFilter = true
+        local blocked2 = spamFilter(nil, nil, "buy gold cheap only $5", "Spammer")
+        assert.is_true(blocked2)
+    end)
+end)
+
+--------------------------------------------------------------------------------
 -- Lifecycle
 --------------------------------------------------------------------------------
 

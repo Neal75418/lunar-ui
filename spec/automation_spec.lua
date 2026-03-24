@@ -305,6 +305,95 @@ describe("Automation auto release", function()
 end)
 
 --------------------------------------------------------------------------------
+-- DB Toggle: autoRepair = false
+--------------------------------------------------------------------------------
+
+describe("Automation autoRepair toggle off", function()
+    local automationFrame
+
+    before_each(function()
+        LunarUI.CleanupAutomation()
+        automationFrame = createdFrames[1]
+        automationDB.autoRepair = false
+        LunarUI:InitAutomation()
+    end)
+
+    after_each(function()
+        LunarUI.CleanupAutomation()
+        automationDB.autoRepair = true
+        _G.GetRepairAllCost = function()
+            return 0, false
+        end
+        _G.RepairAllItems = function() end
+        _G.GetMoney = function()
+            return 1000000
+        end
+    end)
+
+    it("does NOT call RepairAllItems when autoRepair is false", function()
+        local repaired = false
+        _G.GetRepairAllCost = function()
+            return 5000, true
+        end
+        _G.GetMoney = function()
+            return 100000
+        end
+        _G.RepairAllItems = function()
+            repaired = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "MERCHANT_SHOW")
+        assert.is_false(repaired)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- DB Toggle: autoRelease = false
+--------------------------------------------------------------------------------
+
+describe("Automation autoRelease toggle off", function()
+    local automationFrame
+
+    before_each(function()
+        LunarUI.CleanupAutomation()
+        automationFrame = createdFrames[1]
+        automationDB.autoRelease = false
+        LunarUI:InitAutomation()
+    end)
+
+    after_each(function()
+        LunarUI.CleanupAutomation()
+        automationDB.autoRelease = true
+        _G.IsInInstance = function()
+            return false, "none"
+        end
+        _G.UnitIsDeadOrGhost = function()
+            return false
+        end
+        _G.RepopMe = function() end
+    end)
+
+    it("does NOT call RepopMe when autoRelease is false in PvP", function()
+        local released = false
+        _G.IsInInstance = function()
+            return true, "pvp"
+        end
+        _G.UnitIsDeadOrGhost = function()
+            return true
+        end
+        _G.UnitIsFeignDeath = function()
+            return false
+        end
+        _G.RepopMe = function()
+            released = true
+        end
+
+        automationFrame._script_OnEvent(automationFrame, "PLAYER_DEAD")
+        assert.is_false(released)
+    end)
+end)
+
+--------------------------------------------------------------------------------
 -- Quest Auto Accept
 --------------------------------------------------------------------------------
 

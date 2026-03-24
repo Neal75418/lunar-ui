@@ -154,15 +154,9 @@ loader.loadAddonFile("LunarUI/Modules/DataTexts.lua", LunarUI)
 -- Exports
 --------------------------------------------------------------------------------
 
-describe("DataTexts exports", function()
-    it("exports InitializeDataTexts", function()
-        assert.is_function(LunarUI.InitializeDataTexts)
-    end)
+-- DataTexts exports（assert.is_function）已移除，行為由各 describe 隱含驗證
 
-    it("exports CleanupDataTexts", function()
-        assert.is_function(LunarUI.CleanupDataTexts)
-    end)
-
+describe("DataTexts module registration", function()
     it("registers DataTexts module", function()
         assert.truthy(registeredModules["DataTexts"])
         assert.is_function(registeredModules["DataTexts"].onEnable)

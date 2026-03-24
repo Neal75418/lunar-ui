@@ -63,11 +63,7 @@ loader.loadAddonFile("LunarUI/UnitFrames/CastBar.lua", LunarUI)
 --------------------------------------------------------------------------------
 
 describe("CastBar", function()
-    describe("UFCreateCastbar export", function()
-        it("exists as a function", function()
-            assert.is_function(LunarUI.UFCreateCastbar)
-        end)
-    end)
+    -- UFCreateCastbar export（assert.is_function）已移除，行為由 CreateCastbar 測試隱含驗證
 
     describe("CHANNEL_TICKS data integrity", function()
         it("contains only positive integer tick counts", function()

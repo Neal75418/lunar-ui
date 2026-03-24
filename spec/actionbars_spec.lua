@@ -127,23 +127,7 @@ loader.loadAddonFile("LunarUI/ActionBars/FadeAndHover.lua", LunarUI)
 loader.loadAddonFile("LunarUI/ActionBars/SpecialButtons.lua", LunarUI)
 loader.loadAddonFile("LunarUI/ActionBars/ActionBars.lua", LunarUI)
 
---------------------------------------------------------------------------------
--- Exports
---------------------------------------------------------------------------------
-
-describe("ActionBars exports", function()
-    it("exports SpawnActionBars as function", function()
-        assert.is_function(LunarUI.SpawnActionBars)
-    end)
-
-    it("exports CleanupActionBars as function", function()
-        assert.is_function(LunarUI.CleanupActionBars)
-    end)
-
-    it("exports ToggleKeybindMode as function", function()
-        assert.is_function(LunarUI.ToggleKeybindMode)
-    end)
-end)
+-- ActionBars exports（assert.is_function）已移除，行為由各 describe 隱含驗證
 
 --------------------------------------------------------------------------------
 -- BUTTON_COLORS

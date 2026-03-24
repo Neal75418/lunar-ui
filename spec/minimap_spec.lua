@@ -144,17 +144,7 @@ describe("Minimap lifecycle", function()
         LunarUI.CleanupMinimap()
     end)
 
-    it("exports InitializeMinimap function", function()
-        assert.is_function(LunarUI.InitializeMinimap)
-    end)
-
-    it("exports CleanupMinimap function", function()
-        assert.is_function(LunarUI.CleanupMinimap)
-    end)
-
-    it("exports RefreshMinimap function", function()
-        assert.is_function(LunarUI.RefreshMinimap)
-    end)
+    -- Minimap exports（assert.is_function）已移除，行為由下方測試隱含驗證
 
     it("InitializeMinimap does not error", function()
         assert.has_no_errors(function()

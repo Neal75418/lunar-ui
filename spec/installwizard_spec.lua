@@ -83,19 +83,7 @@ describe("InstallWizard", function()
         LunarUI.db.profile.unitframes.player.width = 200
     end)
 
-    describe("exported API", function()
-        it("exports ShowInstallWizard", function()
-            assert.is_function(LunarUI.ShowInstallWizard)
-        end)
-
-        it("exports CleanupInstallWizard", function()
-            assert.is_function(LunarUI.CleanupInstallWizard)
-        end)
-
-        it("exports CheckInstallWizard", function()
-            assert.is_function(LunarUI.CheckInstallWizard)
-        end)
-    end)
+    -- exported API（assert.is_function）已移除，行為由 CheckInstallWizard 測試隱含驗證
 
     describe("CheckInstallWizard", function()
         it("does nothing when install is already complete", function()
