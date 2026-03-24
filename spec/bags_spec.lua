@@ -813,4 +813,23 @@ describe("GetLastOccupiedSlotID", function()
         end
         assert.equals(616, LunarUI.GetLastOccupiedSlotID())
     end)
+
+    it("excludes bag 5 items (reagent bag in WoW 12.0)", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            local sizes = { [-1] = 28, [5] = 98, [6] = 32 }
+            return sizes[bag] or 0
+        end
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            -- bag 5 的物品不應被計入
+            if bag == 5 and slot == 1 then
+                return { iconFileID = 999 }
+            end
+            if bag == 6 and slot == 5 then
+                return { iconFileID = 456 }
+            end
+            return nil
+        end
+        -- 應為 28 + 5 = 33（排除 bag 5），非 28 + 98 + 5 = 131
+        assert.equals(33, LunarUI.GetLastOccupiedSlotID())
+    end)
 end)
