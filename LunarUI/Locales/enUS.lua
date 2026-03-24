@@ -53,7 +53,6 @@ L["KeybindDisabled"] = "Keybind mode: Disabled"
 -- Bags
 L["BagTitle"] = "Bags"
 L["BankTitle"] = "Bank"
-L["ReagentBank"] = "Reagent"
 L["Sort"] = "Sort"
 L["SoldJunkItems"] = "Sold %d junk items for %s"
 L["BagSearchError"] = "Bag search error"

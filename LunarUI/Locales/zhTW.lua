@@ -58,7 +58,6 @@ L["KeybindDisabled"] = "快捷鍵模式：已關閉"
 -- 背包
 L["BagTitle"] = "背包"
 L["BankTitle"] = "銀行"
-L["ReagentBank"] = "材料"
 L["Sort"] = "整理"
 L["SoldJunkItems"] = "已販賣 %d 件垃圾物品，獲得 %s"
 L["BagSearchError"] = "背包搜尋錯誤"

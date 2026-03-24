@@ -51,9 +51,8 @@ end
 --------------------------------------------------------------------------------
 
 local BANK_CONTAINER = -1
-local REAGENT_BANK_CONTAINER = -3
-local FIRST_BANK_BAG = 5
-local LAST_BANK_BAG = 11
+local FIRST_BANK_BAG = 6 -- CharacterBankTab_1（WoW 12.0: bag 5 = 材料袋，非銀行包）
+local LAST_BANK_BAG = 11 -- CharacterBankTab_6
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -104,6 +103,27 @@ local function GetBankSlotsPerRow(totalSlots)
     maxRows = math.max(maxRows, 1)
     local neededCols = math.ceil(totalSlots / maxRows)
     return math.max(SLOTS_PER_ROW, neededCols)
+end
+
+-- 依實際格子數重算並設定框架大小
+local function ResizeBankFrame(actualSlotCount)
+    if not bankFrame or not actualSlotCount or actualSlotCount == 0 then
+        return
+    end
+    local c = GetConstants()
+    local SLOT_SIZE = c.SLOT_SIZE
+    local SLOT_SPACING = c.SLOT_SPACING
+    local PADDING = c.PADDING
+    local HEADER_HEIGHT = c.HEADER_HEIGHT
+    local FOOTER_HEIGHT = c.FOOTER_HEIGHT
+
+    local bankCols = GetBankSlotsPerRow(actualSlotCount)
+    bankFrame.bankCols = bankCols
+    local numRows = math.ceil(actualSlotCount / bankCols)
+    local width = bankCols * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
+    local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
+    bankFrame:SetSize(width, height)
+    return bankCols
 end
 
 --------------------------------------------------------------------------------
@@ -176,17 +196,14 @@ local function CreateBankFrame()
     local FRAME_ALPHA = c.FRAME_ALPHA
     local BORDER_COLOR_BANK = c.BORDER_COLOR_BANK
 
-    -- 計算框架大小（動態調整欄數避免超出螢幕）
+    -- 預估欄數（實際框架大小會在格子建立後依 slotID 重算）
     local totalSlots = GetTotalBankSlots()
     local bankCols = GetBankSlotsPerRow(totalSlots)
-    local numRows = math.ceil(totalSlots / bankCols)
-    local width = bankCols * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
-    local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
 
-    -- 建立主框架
+    -- 建立主框架（大小稍後由 ResizeBankFrame 設定）
     bankFrame = CreateFrame("Frame", "LunarUI_Bank", UIParent, "BackdropTemplate")
-    bankFrame:SetSize(width, height)
-    bankFrame.bankCols = bankCols -- 記錄銀行欄數供後續使用
+    bankFrame:SetSize(1, 1) -- 暫時大小
+    bankFrame.bankCols = bankCols
 
     -- 位置記憶：優先讀取已儲存位置
     if db.bankPosition then
@@ -248,7 +265,7 @@ local function CreateBankFrame()
     bankSearchBox:SetSize(120, 20)
     bankSearchBox:SetPoint("TOPRIGHT", bankCloseButton, "TOPLEFT", -8, -2)
 
-    -- 搜尋過濾函數（forward declare，實際定義在 reagentSlots 建立後）
+    -- 搜尋過濾函數（forward declare，實際定義在格子建立後）
     local ApplyBankSearch
 
     -- 搜尋防抖動：使用 HookScript 保留 SearchBoxTemplate 內建的佔位文字隱藏行為
@@ -290,57 +307,12 @@ local function CreateBankFrame()
         self:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     end)
 
-    -- 頁籤按鈕（銀行 / 材料銀行）
-    local tabHeight = 22
-    local tabContainer = CreateFrame("Frame", nil, bankFrame)
-    tabContainer:SetPoint("BOTTOMLEFT", PADDING, 4)
-    tabContainer:SetSize(200, tabHeight)
-
-    local function CreateBankTab(text, order)
-        local tab = CreateFrame("Button", nil, tabContainer, "BackdropTemplate")
-        tab:SetSize(80, tabHeight)
-        tab:SetBackdrop(backdropTemplate)
-        tab:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
-        tab:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 0.6)
-        if order == 1 then
-            tab:SetPoint("LEFT", tabContainer, "LEFT", 0, 0)
-        else
-            tab:SetPoint("LEFT", tabContainer, "LEFT", (order - 1) * 84, 0)
-        end
-        local tabText = tab:CreateFontString(nil, "OVERLAY")
-        LunarUI.SetFont(tabText, 9, "OUTLINE")
-        tabText:SetPoint("CENTER")
-        tabText:SetText(text)
-        tabText:SetTextColor(0.7, 0.7, 0.7)
-        tab.text = tabText
-        return tab
-    end
-
-    local bankTab = CreateBankTab(L["BankTitle"] or "Bank", 1)
-    local reagentTab = CreateBankTab(L["ReagentBank"] or "Reagent", 2)
-    bankFrame.bankTab = bankTab
-    bankFrame.reagentTab = reagentTab
-
-    -- 11.2+ 已移除材料銀行，若無格子則隱藏頁籤
-    local numReagentCheck = C_Container.GetContainerNumSlots(REAGENT_BANK_CONTAINER)
-    if numReagentCheck == 0 then
-        reagentTab:Hide()
-    end
-
-    -- 格子容器（主銀行）
+    -- 格子容器
     local slotContainer = CreateFrame("Frame", nil, bankFrame)
     slotContainer:SetPoint("TOPLEFT", PADDING, -HEADER_HEIGHT)
     slotContainer:SetPoint("BOTTOMRIGHT", -PADDING, FOOTER_HEIGHT)
     slotContainer:EnableMouse(false) -- 讓滑鼠事件穿透到子按鈕
     bankFrame.slotContainer = slotContainer
-
-    -- 格子容器（材料銀行）
-    local reagentContainer = CreateFrame("Frame", nil, bankFrame)
-    reagentContainer:SetPoint("TOPLEFT", PADDING, -HEADER_HEIGHT)
-    reagentContainer:SetPoint("BOTTOMRIGHT", -PADDING, FOOTER_HEIGHT)
-    reagentContainer:EnableMouse(false) -- 讓滑鼠事件穿透到子按鈕
-    reagentContainer:Hide()
-    bankFrame.reagentContainer = reagentContainer
 
     -- 建立主銀行格子（-1）
     local slotID = 0
@@ -364,7 +336,7 @@ local function CreateBankFrame()
         bankSlots[slotID] = button
     end
 
-    -- 建立銀行包格子（5-11）
+    -- 建立銀行包格子（6-11）
     for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
         local numSlots = C_Container.GetContainerNumSlots(bag)
         for slot = 1, numSlots do
@@ -387,74 +359,13 @@ local function CreateBankFrame()
         end
     end
 
-    -- 建立材料銀行格子（-3）
-    local reagentSlots = {}
-    bankFrame.reagentSlots = reagentSlots
-    local numReagentSlots = C_Container.GetContainerNumSlots(REAGENT_BANK_CONTAINER)
-    for slot = 1, numReagentSlots do
-        local button = CreateBankSlot(reagentContainer, 1000 + slot, REAGENT_BANK_CONTAINER, slot)
+    -- 依實際建立的格子數重算框架大小（避免預估 totalSlots 與實際不符產生空白）
+    ResizeBankFrame(slotID)
 
-        local row = math.floor((slot - 1) / bankCols)
-        local col = (slot - 1) % bankCols
-
-        button:SetPoint(
-            "TOPLEFT",
-            reagentContainer,
-            "TOPLEFT",
-            col * (SLOT_SIZE + SLOT_SPACING),
-            -row * (SLOT_SIZE + SLOT_SPACING)
-        )
-
-        button:SetID(slot)
-        reagentSlots[slot] = button
-    end
-
-    -- 銀行搜尋過濾（委託共用 SearchSlots，供 OnTextChanged 與 SetActiveTab 共用）
+    -- 銀行搜尋過濾（委託共用 SearchSlots）
     ApplyBankSearch = function()
-        local activeSlots = bankFrame.activeTab == "reagent" and bankFrame.reagentSlots or bankSlots
-        SearchSlots(bankSearchBox, activeSlots, "BankSearchError")
+        SearchSlots(bankSearchBox, bankSlots, "BankSearchError")
     end
-
-    -- 頁籤切換邏輯
-    local activeTab = "bank"
-    bankFrame.activeTab = activeTab
-
-    local function SetActiveTab(tabName)
-        bankFrame.activeTab = tabName
-        if tabName == "bank" then
-            slotContainer:Show()
-            reagentContainer:Hide()
-            bankTab.text:SetTextColor(1, 0.82, 0)
-            bankTab:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1)
-            reagentTab.text:SetTextColor(0.7, 0.7, 0.7)
-            reagentTab:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 0.4)
-        elseif tabName == "reagent" then
-            slotContainer:Hide()
-            reagentContainer:Show()
-            reagentTab.text:SetTextColor(1, 0.82, 0)
-            reagentTab:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1)
-            bankTab.text:SetTextColor(0.7, 0.7, 0.7)
-            bankTab:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 0.4)
-            -- 更新材料銀行格子
-            for _, button in pairs(reagentSlots) do
-                if button then
-                    UpdateBankSlot(button)
-                end
-            end
-        end
-        -- 切換頁籤後重新套用搜尋過濾
-        ApplyBankSearch()
-    end
-
-    -- 預設啟用銀行頁籤
-    SetActiveTab("bank")
-
-    bankTab:SetScript("OnClick", function()
-        SetActiveTab("bank")
-    end)
-    reagentTab:SetScript("OnClick", function()
-        SetActiveTab("reagent")
-    end)
 
     -- 空格指示器
     local freeSlots = bankFrame:CreateFontString(nil, "OVERLAY")
@@ -538,21 +449,8 @@ local function RefreshBankLayout()
     local c = GetConstants()
     local SLOT_SIZE = c.SLOT_SIZE
     local SLOT_SPACING = c.SLOT_SPACING
-    local PADDING = c.PADDING
-    local HEADER_HEIGHT = c.HEADER_HEIGHT
-    local FOOTER_HEIGHT = c.FOOTER_HEIGHT
 
-    -- 重新計算框架大小（動態調整欄數避免超出螢幕）
-    local totalSlots = GetTotalBankSlots()
-    local bankCols = GetBankSlotsPerRow(totalSlots)
-    bankFrame.bankCols = bankCols
-    local numRows = math.ceil(totalSlots / bankCols)
-    local width = bankCols * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
-    local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
-
-    bankFrame:SetSize(width, height)
-
-    -- 必要時重建格子
+    -- 先建立/更新所有格子，再依實際數量調整框架大小
     local slotID = 0
 
     -- 主銀行格子
@@ -567,19 +465,6 @@ local function RefreshBankLayout()
         end
         button.bag = BANK_CONTAINER
         button.slot = slot
-
-        local row = math.floor((slotID - 1) / bankCols)
-        local col = (slotID - 1) % bankCols
-
-        button:ClearAllPoints()
-        button:SetPoint(
-            "TOPLEFT",
-            bankFrame.slotContainer,
-            "TOPLEFT",
-            col * (SLOT_SIZE + SLOT_SPACING),
-            -row * (SLOT_SIZE + SLOT_SPACING)
-        )
-        button:Show()
     end
 
     -- 銀行包格子
@@ -595,9 +480,21 @@ local function RefreshBankLayout()
             end
             button.bag = bag
             button.slot = slot
+        end
+    end
 
-            local row = math.floor((slotID - 1) / bankCols)
-            local col = (slotID - 1) % bankCols
+    -- 依實際格子數調整框架大小
+    local bankCols = ResizeBankFrame(slotID)
+    if not bankCols then
+        bankCols = c.SLOTS_PER_ROW
+    end
+
+    -- 重新定位所有格子
+    for i = 1, slotID do
+        local button = bankSlots[i]
+        if button then
+            local row = math.floor((i - 1) / bankCols)
+            local col = (i - 1) % bankCols
 
             button:ClearAllPoints()
             button:SetPoint(
@@ -706,18 +603,6 @@ LunarUI.BankSystemCleanup = function()
             button:ClearAllPoints()
         end
     end
-    if bankFrame and bankFrame.reagentSlots then
-        for _, button in pairs(bankFrame.reagentSlots) do
-            if button then
-                if button.newGlowAnim then
-                    button.newGlowAnim:Stop()
-                end
-                button:Hide()
-                button:ClearAllPoints()
-            end
-        end
-    end
-
     -- 清除銀行批次更新佇列
     wipe(bankUpdateQueue)
     bankUpdateInProgress = false

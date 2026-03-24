@@ -57,8 +57,8 @@ local backdropTemplate = LunarUI.backdropTemplate
 local ITEM_QUALITY_COLORS = LunarUI.QUALITY_COLORS
 
 -- 銀行容器 ID（供事件處理使用）
-local FIRST_BANK_BAG = 5
-local LAST_BANK_BAG = 11
+local FIRST_BANK_BAG = 6 -- CharacterBankTab_1（WoW 12.0: bag 5 = 材料袋，非銀行包）
+local LAST_BANK_BAG = 11 -- CharacterBankTab_6
 
 --------------------------------------------------------------------------------
 -- 從子模組匯入的函數（BagUtils.lua 已先載入）
@@ -1268,7 +1268,10 @@ local function HookBagFunctions()
     if BankFrame then
         KillAndHookShow(BankFrame)
     end
-    -- 戰團銀行：保留原生 UI（C_Bank API 尚未完整整合）
+    -- 戰團銀行面板（AccountBankPanel）
+    if AccountBankPanel then
+        KillAndHookShow(AccountBankPanel)
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -1373,7 +1376,7 @@ local function OnBagEvent(_self, event, ...)
                     end
                 end
             end
-            -- 更新銀行包（5-11）
+            -- 更新銀行包（6-11）
             if pendingBag >= FIRST_BANK_BAG and pendingBag <= LAST_BANK_BAG then
                 if bankFrame and bankFrame:IsShown() then
                     for _, button in pairs(bankSlots) do
@@ -1501,6 +1504,7 @@ function LunarUI.CleanupBags()
     end
     RestoreBlizzardFrame(_G.ContainerFrameCombinedBags)
     RestoreBlizzardFrame(_G.BankFrame)
+    RestoreBlizzardFrame(_G.AccountBankPanel)
     -- 注意：hooksRegistered 不重設，因為 hooksecurefunc hook 無法取消，
     -- re-enable 時重新呼叫 HookBagFunctions() 會因 hooksRegistered=true 跳過（正確行為）
 end

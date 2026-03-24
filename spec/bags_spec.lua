@@ -669,8 +669,8 @@ describe("GetTotalBankSlots", function()
 
     it("sums main bank and bank bags", function()
         _G.C_Container.GetContainerNumSlots = function(bag)
-            -- bag -1 = main bank, bags 5-11 = bank bags
-            local sizes = { [-1] = 28, [5] = 32, [6] = 32, [7] = 0, [8] = 0, [9] = 0, [10] = 0, [11] = 0 }
+            -- bag -1 = main bank, bags 6-11 = bank bags (WoW 12.0: bag 5 = reagent bag)
+            local sizes = { [-1] = 28, [6] = 32, [7] = 32, [8] = 0, [9] = 0, [10] = 0, [11] = 0 }
             return sizes[bag] or 0
         end
         assert.equals(92, LunarUI.GetTotalBankSlots())
@@ -704,7 +704,7 @@ describe("GetTotalBankFreeSlots", function()
 
     it("sums free slots across bank containers", function()
         _G.C_Container.GetContainerNumFreeSlots = function(bag)
-            local free = { [-1] = 10, [5] = 5, [6] = 8 }
+            local free = { [-1] = 10, [6] = 5, [7] = 8 }
             return free[bag] or 0, 0
         end
         assert.equals(23, LunarUI.GetTotalBankFreeSlots())
