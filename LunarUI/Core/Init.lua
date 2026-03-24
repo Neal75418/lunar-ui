@@ -5,6 +5,7 @@
 ]]
 
 local ADDON_NAME, Engine = ...
+local format = string.format
 
 --------------------------------------------------------------------------------
 -- 建立 Ace3 插件
@@ -76,7 +77,7 @@ local function ExecuteModuleCallback(entry)
             end
             if not ok then
                 LunarUI:Error(
-                    string.format(
+                    format(
                         (Engine.L or {})["ModuleInitFailed"] or "Module '%s' failed: %s",
                         entry.name or "?",
                         tostring(err)
@@ -99,7 +100,7 @@ local function ExecuteModuleCallback(entry)
         end
         if not ok then
             LunarUI:Error(
-                string.format(
+                format(
                     (Engine.L or {})["ModuleInitFailed"] or "Module '%s' failed: %s",
                     entry.name or "?",
                     tostring(err)
@@ -137,11 +138,11 @@ function LunarUI:RegisterModule(name, callbacks)
     end
     local lifecycle = callbacks.lifecycle or "reversible"
     if not VALID_LIFECYCLES[lifecycle] then
-        self:Error(string.format("Module '%s': invalid lifecycle '%s'", name, tostring(lifecycle)))
+        self:Error(format("Module '%s': invalid lifecycle '%s'", name, tostring(lifecycle)))
         lifecycle = "reversible"
     end
     if lifecycle == "reversible" and not callbacks.onDisable then
-        self:Error(string.format("Module '%s': lifecycle 'reversible' requires onDisable", name))
+        self:Error(format("Module '%s': lifecycle 'reversible' requires onDisable", name))
     end
     local entry = {
         name = name,
@@ -205,7 +206,7 @@ function LunarUI.DisableModules()
             local ok, err = pcall(mod.onDisable)
             if not ok then
                 LunarUI:Error(
-                    string.format(
+                    format(
                         (Engine.L or {})["ModuleCleanupFailed"] or "Module '%s' cleanup failed: %s",
                         mod.name or "?",
                         tostring(err)

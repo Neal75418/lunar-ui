@@ -464,6 +464,7 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
 
     -- 戰鬥中若 API 回傳空資料（taint 限制導致），保留現有圖示不清除
     -- 避免 "介面功能因插件而失效" 後所有 buff 圖示消失
+    -- 取捨：若所有 aura 在戰鬥中真的同時過期，圖示會短暫保留直到下次成功查詢
     if visibleIndex == 0 and InCombatLockdown() then
         return
     end

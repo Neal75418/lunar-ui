@@ -155,7 +155,8 @@ assert(#registeredFilters > 0, "Chat filters were not registered — InitializeC
 --------------------------------------------------------------------------------
 
 describe("Chat emoji replacement", function()
-    -- Find the emoji filter in registered filters
+    -- 透過副作用探測發現 emoji filter（ChatFilters 不匯出 filter 函數）
+    -- 若 emoji 表或圖示名稱變更，此探測可能失敗
     local emojiFilter
     for _, entry in ipairs(registeredFilters) do
         -- Call each filter with a smiley face and check if it returns the icon

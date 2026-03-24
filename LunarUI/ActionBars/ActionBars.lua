@@ -359,7 +359,11 @@ local function CreateStanceBar()
     end
 
     -- 更新所有姿態按鈕
+    -- StanceButtonTemplate 是受保護模板，戰鬥中 Show/Hide 可能 taint
     local function UpdateAllStanceButtons()
+        if InCombatLockdown() then
+            return
+        end
         local newNum = GetNumShapeshiftForms() or 0
         for i, btn in ipairs(bar.buttons) do
             if i <= newNum then

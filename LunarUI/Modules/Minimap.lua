@@ -183,22 +183,22 @@ local function ClearStaleButtonReferences()
     end
 end
 
--- 跳過系統按鈕和由 LunarUI 管理的按鈕（提升為常數避免每次呼叫重建 table）
+-- 跳過系統按鈕和由 LunarUI 管理的按鈕（O(1) hash set）
 local SKIP_BUTTONS = {
-    "MiniMapTracking",
-    "MiniMapMailFrame",
-    "MinimapZoomIn",
-    "MinimapZoomOut",
-    "Minimap",
-    "MinimapBackdrop",
-    "GameTimeFrame",
-    "TimeManagerClockButton",
-    "LunarUI_MinimapButton",
-    "LunarUI_MinimapMail",
-    "LunarUI_MinimapDifficulty",
-    "AddonCompartmentFrame",
-    "QueueStatusMinimapButton",
-    "ExpansionLandingPageMinimapButton",
+    ["MiniMapTracking"] = true,
+    ["MiniMapMailFrame"] = true,
+    ["MinimapZoomIn"] = true,
+    ["MinimapZoomOut"] = true,
+    ["Minimap"] = true,
+    ["MinimapBackdrop"] = true,
+    ["GameTimeFrame"] = true,
+    ["TimeManagerClockButton"] = true,
+    ["LunarUI_MinimapButton"] = true,
+    ["LunarUI_MinimapMail"] = true,
+    ["LunarUI_MinimapDifficulty"] = true,
+    ["AddonCompartmentFrame"] = true,
+    ["QueueStatusMinimapButton"] = true,
+    ["ExpansionLandingPageMinimapButton"] = true,
 }
 
 local function CollectMinimapButton(button)
@@ -219,10 +219,8 @@ local function CollectMinimapButton(button)
         return
     end
 
-    for _, skip in ipairs(SKIP_BUTTONS) do
-        if name:find(skip) then
-            return
-        end
+    if SKIP_BUTTONS[name] then
+        return
     end
 
     -- 標記為已掃描並加入集合
@@ -923,9 +921,9 @@ local function CreateMinimapFrame()
                             end, "TrackingButton Click")
                         end
                     end
-                elseif MiniMapTracking then
-                    ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, "cursor")
                 end
+                -- WoW 12.0: ToggleDropDownMenu / MiniMapTrackingDropDown 已移除，
+                -- 現代客戶端使用 MinimapCluster.Tracking.Button:OpenMenu() 處理
             elseif button == "MiddleButton" then
                 -- 切換行事曆
                 if C_Calendar and C_Calendar.OpenCalendar then

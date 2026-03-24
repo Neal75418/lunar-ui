@@ -290,3 +290,4 @@ end
 --------------------------------------------------------------------------------
 
 LunarUI.UFCreateCastbar = CreateCastbar
+LunarUI.CHANNEL_TICKS = CHANNEL_TICKS

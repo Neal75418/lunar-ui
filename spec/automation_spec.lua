@@ -48,8 +48,11 @@ _G.GetQuestReward = function() end
 _G.AcceptProposal = function() end
 _G.RepopMe = function() end
 _G.Screenshot = function() end
+-- C_Timer mock：立即執行 callback 並記錄 delay 供斷言使用
+_G._timerLog = {}
 _G.C_Timer = {
-    After = function(_, fn)
+    After = function(delay, fn)
+        _G._timerLog[#_G._timerLog + 1] = { delay = delay }
         if fn then
             fn()
         end

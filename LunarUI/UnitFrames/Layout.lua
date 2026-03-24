@@ -61,7 +61,8 @@ end
 
 --[[ 玩家佈局 ]]
 local function PlayerLayout(frame, unit)
-    local db = LunarUI.db.profile.unitframes.player
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local db = ufAll and ufAll.player
     local size = db and { width = db.width, height = db.height } or SIZES.player
     frame:SetSize(size.width, size.height)
 
@@ -84,7 +85,8 @@ end
 
 --[[ 目標佈局 ]]
 local function TargetLayout(frame, unit)
-    local db = LunarUI.db.profile.unitframes.target
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local db = ufAll and ufAll.target
     local size = db and { width = db.width, height = db.height } or SIZES.target
     frame:SetSize(size.width, size.height)
 
@@ -116,7 +118,8 @@ end
 
 --[[ 焦點佈局 ]]
 local function FocusLayout(frame, unit)
-    local db = LunarUI.db.profile.unitframes.focus
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local db = ufAll and ufAll.focus
     local size = db and { width = db.width, height = db.height } or SIZES.focus
     frame:SetSize(size.width, size.height)
 
@@ -133,7 +136,8 @@ end
 
 --[[ 寵物佈局 ]]
 local function PetLayout(frame, unit)
-    local db = LunarUI.db.profile.unitframes.pet
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local db = ufAll and ufAll.pet
     local size = db and { width = db.width, height = db.height } or SIZES.pet
     frame:SetSize(size.width, size.height)
 
@@ -146,7 +150,8 @@ end
 
 --[[ 目標的目標佈局 ]]
 local function TargetTargetLayout(frame, unit)
-    local db = LunarUI.db.profile.unitframes.targettarget
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local db = ufAll and ufAll.targettarget
     local size = db and { width = db.width, height = db.height } or SIZES.targettarget
     frame:SetSize(size.width, size.height)
 
@@ -157,7 +162,8 @@ end
 
 --[[ 首領佈局 ]]
 local function BossLayout(frame, unit)
-    local db = LunarUI.db.profile.unitframes.boss
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local db = ufAll and ufAll.boss
     local size = db and { width = db.width, height = db.height } or SIZES.boss
     frame:SetSize(size.width, size.height)
 
@@ -173,7 +179,8 @@ end
 
 --[[ 隊伍佈局 ]]
 local function PartyLayout(frame, unit)
-    local db = LunarUI.db.profile.unitframes.party
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local db = ufAll and ufAll.party
     local size = db and { width = db.width, height = db.height } or SIZES.party
     frame:SetSize(size.width, size.height)
 
@@ -197,7 +204,8 @@ end
 --[[ 團隊佈局工廠（支援多重 raid 尺寸） ]]
 local function CreateRaidLayout(dbKey)
     return function(frame, unit)
-        local db = LunarUI.db.profile.unitframes[dbKey]
+        local ufAll = LunarUI.GetModuleDB("unitframes")
+        local db = ufAll and ufAll[dbKey]
         local size = db and { width = db.width, height = db.height } or SIZES.raid
         frame:SetSize(size.width, size.height)
 

@@ -69,6 +69,26 @@ describe("CastBar", function()
         end)
     end)
 
+    describe("CHANNEL_TICKS data integrity", function()
+        it("contains only positive integer tick counts", function()
+            assert.is_table(LunarUI.CHANNEL_TICKS)
+            for spellID, ticks in pairs(LunarUI.CHANNEL_TICKS) do
+                assert.is_number(spellID, "spellID should be a number")
+                assert.is_number(ticks, "ticks should be a number for spellID " .. tostring(spellID))
+                assert.is_true(ticks > 0, "ticks should be positive for spellID " .. tostring(spellID))
+                assert.equals(math.floor(ticks), ticks, "ticks should be integer for spellID " .. tostring(spellID))
+            end
+        end)
+
+        it("has at least one entry", function()
+            local count = 0
+            for _ in pairs(LunarUI.CHANNEL_TICKS) do
+                count = count + 1
+            end
+            assert.is_true(count > 0)
+        end)
+    end)
+
     describe("CreateCastbar", function()
         it("creates a castbar on a mock unit frame", function()
             local unitFrame = CreateFrame()

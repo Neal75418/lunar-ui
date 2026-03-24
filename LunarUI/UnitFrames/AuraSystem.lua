@@ -97,6 +97,8 @@ local function AuraFilter(_element, unit, data)
     local filters = GetAuraFilterSettings()
 
     -- data 的欄位可能是 WoW secret value，用單一 pcall 保護所有存取
+    -- 內部 closure 回傳 true = 過濾掉（隱藏），false = 保留（顯示）
+    -- 外部再轉換為 oUF AuraFilter 慣例（true = 顯示，false = 隱藏）
     local ok, shouldFilter = pcall(function()
         local spellId = data.spellId
 

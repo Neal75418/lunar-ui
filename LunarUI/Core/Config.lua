@@ -7,6 +7,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 
 --------------------------------------------------------------------------------
 -- 資料庫初始化
@@ -232,7 +233,7 @@ function LunarUI:ValidateDB()
                     parent[key] = defaultValue
                     fixCount = fixCount + 1
                     self:Warn(
-                        string.format(
+                        format(
                             _L["ConfigInvalidReset"] or "Setting '%s': invalid value %s, reset to default",
                             rule.path,
                             tostring(value)
@@ -244,7 +245,7 @@ function LunarUI:ValidateDB()
     end
 
     if fixCount > 0 then
-        self:Warn(string.format(_L["ConfigFixedCount"] or "Fixed %d invalid setting(s)", fixCount))
+        self:Warn(format(_L["ConfigFixedCount"] or "Fixed %d invalid setting(s)", fixCount))
     end
 end
 

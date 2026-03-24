@@ -7,7 +7,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
-local format = format
+local format = string.format
 
 --------------------------------------------------------------------------------
 -- Number Formatting

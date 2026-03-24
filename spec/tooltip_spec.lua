@@ -319,6 +319,9 @@ end)
 
 describe("GetInspectSpec", function()
     before_each(function()
+        _G.UnitIsPlayer = function()
+            return true
+        end
         _G.GetInspectSpecialization = function()
             return 0
         end
@@ -503,6 +506,9 @@ describe("RequestInspect", function()
         LunarUI.ResetInspectThrottle()
         LunarUI.ClearInspectCache()
         notifyCalled = false
+        _G.UnitIsPlayer = function()
+            return true
+        end
         _G.CanInspect = function()
             return true
         end

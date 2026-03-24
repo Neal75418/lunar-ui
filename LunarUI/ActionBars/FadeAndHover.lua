@@ -267,7 +267,7 @@ local function SetupBarHoverDetection(bar)
     bar._lunarHoverFrame = hoverFrame
 end
 
--- 戰鬥事件
+-- 戰鬥事件（檔案載入時建立，RefreshFadeSettingsCache 內有 or {} 防護）
 local combatFrame = LunarUI.CreateEventHandler(
     { "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED" },
     function(_self, event)

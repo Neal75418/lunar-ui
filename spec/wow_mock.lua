@@ -53,21 +53,24 @@ _G.tremove = table.remove
 
 -- strsplit: WoW-specific string splitting function
 -- WoW signature: strsplit(delimiter, str) -> ...
+-- WoW treats delimiter as a **set of separator characters**, not a literal sequence
+-- e.g. strsplit("-+", "a-b+c") returns "a", "b", "c"
 _G.strsplit = function(delimiter, str)
     if not str then
         return nil
     end
     local result = {}
+    -- Escape Lua pattern magic characters inside [], keeping set-of-chars semantics
+    local pattern = "[" .. delimiter:gsub("([%]%^%-%%])", "%%%1") .. "]"
     local from = 1
-    local delimLen = #delimiter
     while true do
-        local pos = str:find(delimiter, from, true) -- plain find
+        local pos = str:find(pattern, from)
         if not pos then
             result[#result + 1] = str:sub(from)
             break
         end
         result[#result + 1] = str:sub(from, pos - 1)
-        from = pos + delimLen
+        from = pos + 1
     end
     return unpack(result)
 end

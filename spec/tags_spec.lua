@@ -486,11 +486,13 @@ describe("Tag lunar:name:medium", function()
     end)
 
     it("returns empty for nil name", function()
+        local savedUnitName = _G.UnitName
         _G._mockUnit.name = nil
         _G.UnitName = function()
             return nil
         end
         assert.equals("", tag("player"))
+        _G.UnitName = savedUnitName
     end)
 end)
 

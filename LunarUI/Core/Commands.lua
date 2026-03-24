@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -24,7 +25,7 @@ local function SafeCallModule(funcName, ...)
         return true
     end
     local L = Engine.L or {}
-    LunarUI:Print(L["FeatureUnavailable"] or string.format("Feature unavailable: %s", funcName))
+    LunarUI:Print(L["FeatureUnavailable"] or format("Feature unavailable: %s", funcName))
     return false
 end
 
@@ -205,7 +206,7 @@ function LunarUI:SlashCommand(input)
             self:Print(_L["DebugLoadFailed"] or "LunarUI_Debug failed to load")
         end
     else
-        self:Print(string.format(_L["UnknownCommand"] or "Unknown command: %s", cmd))
+        self:Print(format(_L["UnknownCommand"] or "Unknown command: %s", cmd))
         self:PrintHelp()
     end
 end
@@ -244,10 +245,10 @@ function LunarUI:PrintStatus()
     end
     local L = Engine.L or {}
     self:Print(L["StatusTitle"] or "|cff8882ffLunarUI Status:|r")
-    self:Print("  " .. string.format(L["StatusVersion"] or "Version: %s", self.version))
+    self:Print("  " .. format(L["StatusVersion"] or "Version: %s", self.version))
     self:Print(
         "  "
-            .. string.format(
+            .. format(
                 L["StatusEnabled"] or "Enabled: %s",
                 self.db.profile.enabled and ("|cff00ff00" .. (L["Yes"] or "Yes") .. "|r")
                     or ("|cffff0000" .. (L["No"] or "No") .. "|r")
@@ -255,7 +256,7 @@ function LunarUI:PrintStatus()
     )
     self:Print(
         "  "
-            .. string.format(
+            .. format(
                 L["StatusDebug"] or "Debug: %s",
                 self.db.profile.debug and ("|cff00ff00" .. (L["On"] or "ON") .. "|r")
                     or ("|cffff0000" .. (L["Off"] or "OFF") .. "|r")

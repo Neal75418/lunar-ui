@@ -62,13 +62,17 @@ local pendingInspect = nil -- 目前等待中的 inspect GUID
 --------------------------------------------------------------------------------
 
 local function GetItemLevel(itemLink)
-    -- if not itemLink then return nil end (Caller ensures exists)
+    if not itemLink then
+        return nil
+    end
     local itemLevel = select(1, C_Item.GetDetailedItemLevelInfo(itemLink))
     return itemLevel
 end
 
 local function GetUnitColor(unit)
-    -- if not unit or not UnitExists(unit) then return 1, 1, 1 end (Caller ensures)
+    if not unit or not UnitExists(unit) then
+        return 1, 1, 1
+    end
 
     if UnitIsPlayer(unit) then
         local _, class = UnitClass(unit)
@@ -162,7 +166,9 @@ end
 
 -- 取得專精名稱
 local function GetInspectSpec(unit)
-    -- if not unit or not UnitIsPlayer(unit) then return nil end (Caller ensures)
+    if not unit or not UnitIsPlayer(unit) then
+        return nil
+    end
 
     local specID = GetInspectSpecialization(unit)
 
@@ -178,7 +184,9 @@ local lastInspectTime = 0
 local INSPECT_THROTTLE = 1.0 -- 最小請求間隔（秒）
 
 local function RequestInspect(unit)
-    -- if not unit or not UnitIsPlayer(unit) then return end (Caller ensures)
+    if not unit or not UnitIsPlayer(unit) then
+        return
+    end
     if not CanInspect(unit) then
         return
     end

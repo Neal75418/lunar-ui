@@ -30,6 +30,9 @@ local hideGeneration = 0 -- 世代計數器：防止 disable 後延遲 timer 仍
 --------------------------------------------------------------------------------
 
 -- Debug-gated pcall 包裝：生產環境靜默（避免 taint 噪音），debug 模式可追蹤
+-- 與 LunarUI.SafeCall 不同：SafeCall 在生產環境也會 print 錯誤，
+-- 但此處的 HideBlizzardBars 操作預期會遇到大量 Blizzard 框架 API 差異，
+-- 若全部 print 會造成聊天視窗噪音，故刻意只在 debug 模式下輸出
 local function SafeFrameOp(fn)
     local ok, err = pcall(fn)
     if not ok and LunarUI.Debug then
@@ -172,6 +175,9 @@ local function HideFrameRecursive(frame)
         end)
     elseif hasProtectedDescendant then
         -- 有保護後代：只隱藏自身材質，保持 alpha=1 讓後代可見
+        -- 追蹤到 hiddenFrames 以便 RestoreBlizzardBars 還原 mouse/keyboard
+        -- （SetAlpha(1) 在 restore 時是無害的，因為此處未改 alpha）
+        hiddenFrames[frame] = true
         HideFrameRegions(frame)
         SafeFrameOp(function()
             frame:EnableMouse(false)
@@ -588,7 +594,7 @@ local function RestoreBlizzardBars()
     end
     wipe(savedBarStates)
 
-    -- 2. 還原被 SetAlpha(0) 的框架（HideFrameSafely 設了 alpha + mouse + keyboard）
+    -- 2. 還原被隱藏的框架（alpha + mouse，有 EnableKeyboard 時也還原 keyboard）
     for frame in pairs(hiddenFrames) do
         SafeFrameOp(function()
             frame:SetAlpha(1)
@@ -628,7 +634,7 @@ local function RestoreBlizzardBars()
     end
     wipe(hiddenTextures)
 
-    -- 5. 還原全域副作用（error handler + UIParent 事件）
+    -- 6. 還原全域副作用（error handler + UIParent 事件）
     UninstallTaintEventFilter()
 end
 

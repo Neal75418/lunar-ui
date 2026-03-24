@@ -102,14 +102,35 @@ end
 -- Scripting & Events
 --------------------------------------------------------------------------------
 
-function MockFrame:SetScript() end
-function MockFrame:HookScript() end
+function MockFrame:SetScript(name, fn)
+    if not rawget(self, "_scripts") then
+        rawset(self, "_scripts", {})
+    end
+    self._scripts[name] = fn
+end
 
-function MockFrame:GetScript()
-    return nil
+function MockFrame:HookScript(name, fn)
+    if not rawget(self, "_scripts") then
+        rawset(self, "_scripts", {})
+    end
+    local old = self._scripts[name]
+    if old then
+        self._scripts[name] = function(...)
+            old(...)
+            fn(...)
+        end
+    else
+        self._scripts[name] = fn
+    end
+end
+
+function MockFrame:GetScript(name)
+    local s = rawget(self, "_scripts")
+    return s and s[name]
 end
 
 function MockFrame:RegisterEvent() end
+function MockFrame:UnregisterEvent() end
 function MockFrame:UnregisterAllEvents() end
 function MockFrame:SetAttribute() end
 function MockFrame:GetAttribute() end

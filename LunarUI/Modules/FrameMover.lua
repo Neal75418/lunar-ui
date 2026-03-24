@@ -1,4 +1,5 @@
 ---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if, unused-local, deprecated
+-- deprecated: 使用 GetLeft/GetBottom 等舊式定位 API（替代方案不適用於跨框架對齊計算）
 --[[
     LunarUI - 框架移動器
     統一的 UI 框架位置管理系統
