@@ -46,7 +46,9 @@ local function HideFrameSafely(frame)
     SafeFrameOp(function()
         frame:SetAlpha(0)
         frame:EnableMouse(false)
-        frame:EnableKeyboard(false)
+        if frame.EnableKeyboard then
+            frame:EnableKeyboard(false)
+        end
     end)
 end
 
@@ -174,9 +176,11 @@ local function HideFrameRecursive(frame)
         SafeFrameOp(function()
             frame:EnableMouse(false)
         end)
-        SafeFrameOp(function()
-            frame:EnableKeyboard(false)
-        end)
+        if frame.EnableKeyboard then
+            SafeFrameOp(function()
+                frame:EnableKeyboard(false)
+            end)
+        end
     else
         -- 無保護後代：完全隱藏
         HideFrameSafely(frame)
@@ -589,7 +593,9 @@ local function RestoreBlizzardBars()
         SafeFrameOp(function()
             frame:SetAlpha(1)
             frame:EnableMouse(true)
-            frame:EnableKeyboard(true)
+            if frame.EnableKeyboard then
+                frame:EnableKeyboard(true)
+            end
         end)
     end
     wipe(hiddenFrames)
