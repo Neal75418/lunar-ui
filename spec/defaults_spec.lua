@@ -377,7 +377,11 @@ describe("Defaults skins", function()
             actualCount = actualCount + 1
         end
         -- 動態計算：skinNames 列舉的數量應與實際註冊的 skin 數量一致
-        assert.equals(#skinNames, actualCount, "skinNames list out of sync: expected " .. #skinNames .. ", got " .. actualCount)
+        assert.equals(
+            #skinNames,
+            actualCount,
+            "skinNames list out of sync: expected " .. #skinNames .. ", got " .. actualCount
+        )
         -- 確保每個實際 skin 都在 skinNames 中被驗證
         local nameSet = {}
         for _, name in ipairs(skinNames) do
