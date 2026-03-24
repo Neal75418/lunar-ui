@@ -87,11 +87,6 @@ describe("GetAuraSortFunction", function()
         }
     end)
 
-    it("returns a sort function for time method", function()
-        local sortFn = LunarUI.GetAuraSortFunction()
-        assert.is_function(sortFn)
-    end)
-
     it("sorts by expiration time (ascending)", function()
         LunarUI.db.profile.auraFilters.sortMethod = "time"
         local sortFn = LunarUI.GetAuraSortFunction()

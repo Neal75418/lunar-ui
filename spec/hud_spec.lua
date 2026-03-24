@@ -299,10 +299,6 @@ describe("InitAuraFrames lifecycle", function()
         end
     end)
 
-    it("exports InitAuraFrames as a function", function()
-        assert.is_function(LunarUI_AF.InitAuraFrames)
-    end)
-
     it("does not error on first call", function()
         assert.has_no_errors(function()
             LunarUI_AF.InitAuraFrames()
@@ -335,10 +331,6 @@ describe("InitAuraFrames lifecycle", function()
 end)
 
 describe("CleanupAuraFrames lifecycle", function()
-    it("exports CleanupAuraFrames as a function", function()
-        assert.is_function(LunarUI_AF.CleanupAuraFrames)
-    end)
-
     it("does not error when not initialized", function()
         LunarUI_AF.CleanupAuraFrames()
         assert.has_no_errors(function()

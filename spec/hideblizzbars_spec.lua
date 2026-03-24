@@ -201,14 +201,6 @@ describe("HideBlizzardBars", function()
             artFrame.RightEndCap._texturePath = "Interface\\MainMenuBar\\UI-MainMenuBar-EndCap-Human"
         end)
 
-        it("HideBlizzardBarsDelayed 匯出存在", function()
-            assert.is_function(LunarUI.HideBlizzardBarsDelayed)
-        end)
-
-        it("RestoreBlizzardBars 匯出存在", function()
-            assert.is_function(LunarUI.RestoreBlizzardBars)
-        end)
-
         it("MultiBar parent 在 hide 後被改變，restore 後還原", function()
             -- Hide
             LunarUI.HideBlizzardBarsDelayed()

@@ -595,10 +595,6 @@ describe("InitializeTooltip lifecycle", function()
         LunarUI.ClearInspectCache()
     end)
 
-    it("exports InitializeTooltip as a function", function()
-        assert.is_function(LunarUI.InitializeTooltip)
-    end)
-
     it("does not error when called with enabled db", function()
         assert.has_no_errors(function()
             LunarUI.InitializeTooltip()
@@ -635,10 +631,6 @@ describe("CleanupTooltip lifecycle", function()
     before_each(function()
         LunarUI.db = { profile = { tooltip = { enabled = true } } }
         LunarUI.ClearInspectCache()
-    end)
-
-    it("exports CleanupTooltip as a function", function()
-        assert.is_function(LunarUI.CleanupTooltip)
     end)
 
     it("does not error when called without prior Init", function()

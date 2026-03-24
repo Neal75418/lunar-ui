@@ -194,12 +194,6 @@ describe("Debug overlay", function()
         assert.truthy(LunarUI.DebugFrame)
         assert.is_false(LunarUI.DebugFrame:IsShown())
     end)
-
-    it("exports all overlay functions", function()
-        assert.is_function(LunarUI.UpdateDebugOverlay)
-        assert.is_function(LunarUI.ShowDebugOverlay)
-        assert.is_function(LunarUI.HideDebugOverlay)
-    end)
 end)
 
 -- Restore the original CreateFrame after all tests in this file complete

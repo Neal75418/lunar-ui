@@ -109,14 +109,6 @@ loader.loadAddonFile("LunarUI/Modules/Automation.lua", LunarUI)
 --------------------------------------------------------------------------------
 
 describe("Automation lifecycle", function()
-    it("exports InitAutomation function", function()
-        assert.is_function(LunarUI.InitAutomation)
-    end)
-
-    it("exports CleanupAutomation function", function()
-        assert.is_function(LunarUI.CleanupAutomation)
-    end)
-
     it("InitAutomation does not error", function()
         assert.has_no_errors(function()
             LunarUI:InitAutomation()

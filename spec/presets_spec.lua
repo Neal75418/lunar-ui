@@ -49,20 +49,6 @@ local function makeTestDB()
 end
 
 --------------------------------------------------------------------------------
--- Exports
---------------------------------------------------------------------------------
-
-describe("Presets exports", function()
-    it("exports GetCurrentRole as function", function()
-        assert.is_function(LunarUI.GetCurrentRole)
-    end)
-
-    it("exports ApplyRolePreset as function", function()
-        assert.is_function(LunarUI.ApplyRolePreset)
-    end)
-end)
-
---------------------------------------------------------------------------------
 -- GetCurrentRole
 --------------------------------------------------------------------------------
 
