@@ -100,8 +100,9 @@ local AURA_THROTTLE = 0.1
 --------------------------------------------------------------------------------
 
 local function ShouldShowBuff(_name, _duration, spellId)
-    -- 使用 spell ID 過濾（語系無關，不受 taint 影響）
-    if spellId and FILTERED_BUFF_IDS[spellId] then
+    -- WoW 12.0: spellId 在戰鬥中可能為 secret value，tonumber() 斷開 taint
+    local sid = spellId and tonumber(spellId)
+    if sid and FILTERED_BUFF_IDS[sid] then
         return false
     end
     return true
