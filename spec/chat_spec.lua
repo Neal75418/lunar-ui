@@ -7,10 +7,7 @@
 require("spec.wow_mock")
 local loader = require("spec.loader")
 
--- Mock WoW APIs
-_G.GetTime = function()
-    return 1000
-end
+-- Mock WoW APIs（wow_mock.lua 已提供 GetTime/InCombatLockdown/IsShiftKeyDown/C_Timer 預設值）
 _G.UnitName = function()
     return "TestPlayer"
 end
@@ -20,16 +17,9 @@ end
 _G.GetNumGroupMembers = function()
     return 0
 end
-_G.InCombatLockdown = function()
-    return false
-end
-_G.IsShiftKeyDown = function()
-    return false
-end
 _G.IsControlKeyDown = function()
     return false
 end
-_G.C_Timer = { After = function() end }
 _G.hooksecurefunc = function() end
 _G.NUM_CHAT_WINDOWS = 7
 _G.SOUNDKIT = { TELL_MESSAGE = 3081 }

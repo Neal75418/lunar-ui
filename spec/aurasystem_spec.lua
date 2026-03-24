@@ -63,7 +63,7 @@ describe("RebuildAuraFilterCache", function()
 
     it("parses whitelist and blacklist from comma-separated strings", function()
         -- After rebuild, the cache should be populated (tested via GetAuraSortFunction behavior)
-        assert.has_no.errors(function()
+        assert.has_no_errors(function()
             LunarUI.RebuildAuraFilterCache()
         end)
     end)
@@ -71,7 +71,7 @@ describe("RebuildAuraFilterCache", function()
     it("handles empty whitelist/blacklist", function()
         LunarUI.db.profile.auraWhitelist = ""
         LunarUI.db.profile.auraBlacklist = ""
-        assert.has_no.errors(function()
+        assert.has_no_errors(function()
             LunarUI.RebuildAuraFilterCache()
         end)
     end)
@@ -79,7 +79,7 @@ describe("RebuildAuraFilterCache", function()
     it("handles nil db gracefully", function()
         local savedDB = LunarUI.db
         LunarUI.db = nil
-        assert.has_no.errors(function()
+        assert.has_no_errors(function()
             LunarUI.RebuildAuraFilterCache()
         end)
         LunarUI.db = savedDB

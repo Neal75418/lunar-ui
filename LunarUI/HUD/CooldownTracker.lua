@@ -20,7 +20,7 @@ local C = LunarUI.Colors
 
 local math_ceil = math.ceil
 local math_floor = math.floor
-local string_format = string.format
+local format = string.format
 local table_insert = table.insert
 local ipairs = ipairs
 local type = type
@@ -272,11 +272,11 @@ end
 
 local function FormatCooldown(seconds)
     if seconds >= 60 then
-        return string_format("%dm", math_ceil(seconds / 60))
+        return format("%dm", math_ceil(seconds / 60))
     elseif seconds >= 10 then
-        return string_format("%d", math_floor(seconds))
+        return format("%d", math_floor(seconds))
     else
-        return string_format("%.1f", seconds)
+        return format("%.1f", seconds)
     end
 end
 

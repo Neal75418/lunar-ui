@@ -16,6 +16,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
@@ -606,9 +607,9 @@ local function OnTooltipSetItem(tooltip)
                 if totalCount and totalCount > 0 then
                     local bankCount = totalCount - bagCount
                     local L = Engine.L or _EMPTY
-                    local countText = string.format("%s: %d", L["ItemCount"] or "Count", bagCount)
+                    local countText = format("%s: %d", L["ItemCount"] or "Count", bagCount)
                     if bankCount > 0 then
-                        countText = countText .. string.format("  (%s: %d)", L["BankTitle"] or "Bank", bankCount)
+                        countText = countText .. format("  (%s: %d)", L["BankTitle"] or "Bank", bankCount)
                     end
                     tooltip:AddLine("|cff888888" .. countText .. "|r")
                 end

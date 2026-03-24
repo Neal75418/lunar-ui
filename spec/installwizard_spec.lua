@@ -101,7 +101,7 @@ describe("InstallWizard", function()
         it("does nothing when install is already complete", function()
             LunarUI.db.global.installComplete = true
             -- Should not error or show wizard
-            assert.has_no.errors(function()
+            assert.has_no_errors(function()
                 LunarUI:CheckInstallWizard()
             end)
         end)
@@ -109,7 +109,7 @@ describe("InstallWizard", function()
         it("does nothing when db is nil", function()
             local savedDB = LunarUI.db
             LunarUI.db = nil
-            assert.has_no.errors(function()
+            assert.has_no_errors(function()
                 LunarUI:CheckInstallWizard()
             end)
             LunarUI.db = savedDB

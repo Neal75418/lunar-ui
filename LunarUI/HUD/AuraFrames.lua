@@ -14,6 +14,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -900,7 +901,7 @@ function LunarUI.DebugAuraFrames()
             pcall(function()
                 local p, rel, _rp, px, py = f:GetPoint(1)
                 local relName = rel and (rel.GetName and rel:GetName() or "unnamed") or "nil"
-                pos = string.format("%s@%s(%+.0f,%+.0f)", tostring(p), relName, safeNum(px), safeNum(py))
+                pos = format("%s@%s(%+.0f,%+.0f)", tostring(p), relName, safeNum(px), safeNum(py))
             end)
             local parent = "?"
             pcall(function()
@@ -908,7 +909,7 @@ function LunarUI.DebugAuraFrames()
                 parent = pp and (pp.GetName and pp:GetName() or "unnamed") or "nil"
             end)
             add(
-                string.format(
+                format(
                     "%s: %s/%s a=%.2f effA=%.2f sc=%.3f effSc=%.4f pos=%s parent=%s",
                     info.name,
                     shown,
@@ -938,24 +939,24 @@ function LunarUI.DebugAuraFrames()
             debuffCount = debuffCount + 1
         end
     end
-    add(string.format("Visible icons: buff=%d/%d debuff=%d/%d", buffCount, MAX_BUFFS, debuffCount, MAX_DEBUFFS))
+    add(format("Visible icons: buff=%d/%d debuff=%d/%d", buffCount, MAX_BUFFS, debuffCount, MAX_DEBUFFS))
 
     -- 光環資料測試
     add("--- C_UnitAuras Test ---")
     for i = 1, 5 do
         local ok, data = pcall(C_UnitAuras.GetBuffDataByIndex, "player", i)
         if not ok then
-            add(string.format("  Buff[%d]: ERROR: %s", i, tostring(data)))
+            add(format("  Buff[%d]: ERROR: %s", i, tostring(data)))
             break
         elseif not data then
-            add(string.format("  Buff[%d]: nil (no more buffs)", i))
+            add(format("  Buff[%d]: nil (no more buffs)", i))
             break
         else
             local name = "?"
             pcall(function()
                 name = tostring(data.name or "?")
             end)
-            add(string.format("  Buff[%d]: %s", i, name))
+            add(format("  Buff[%d]: %s", i, name))
         end
     end
 
@@ -974,14 +975,14 @@ function LunarUI.DebugAuraFrames()
             pcall(function()
                 scale = safeNum(f:GetScale())
             end)
-            add(string.format("  %s: %s a=%.2f sc=%.4f", name, shown, alpha, scale))
+            add(format("  %s: %s a=%.2f sc=%.4f", name, shown, alpha, scale))
         end
     end
 
     -- 輸出
     add("=== End AuraFrames Debug ===")
     for _, line in ipairs(lines) do
-        print("|cff88bbff[AuraDebug]|r " .. tostring(line))
+        LunarUI:Print("|cff88bbff[AuraDebug]|r " .. tostring(line))
     end
 end
 

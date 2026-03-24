@@ -18,6 +18,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 
 -- 等待 LibActionButton
 local LAB = LibStub("LibActionButton-1.0", true)
@@ -615,10 +616,10 @@ function LunarUI:DebugMicroButtons()
 
     -- 檢查 microBar 狀態
     local mb = bars.microBar
-    self:Print(string.format("  LunarUI_MicroBar: %s", mb and "exists" or "|cffff0000nil|r"))
+    self:Print(format("  LunarUI_MicroBar: %s", mb and "exists" or "|cffff0000nil|r"))
     if mb then
         self:Print(
-            string.format(
+            format(
                 "    shown=%s alpha=%.2f buttons=%d",
                 tostring(mb:IsShown()),
                 mb:GetAlpha(),
@@ -635,7 +636,7 @@ function LunarUI:DebugMicroButtons()
     end
 
     self:Print(
-        string.format(
+        format(
             "  CharacterMicroButton: shown=%s visible=%s alpha=%.2f",
             tostring(testBtn:IsShown()),
             tostring(testBtn:IsVisible()),
@@ -655,7 +656,7 @@ function LunarUI:DebugMicroButtons()
         local x, y = frame:GetCenter()
         local color = (not shown or not visible or alpha < 0.01) and "|cffff4444" or "|cff00ff00"
         self:Print(
-            string.format(
+            format(
                 "    %s%s%s|r shown=%s visible=%s alpha=%.2f pos=(%.0f,%.0f)",
                 string.rep("  ", depth),
                 color,
@@ -678,7 +679,7 @@ function LunarUI:DebugMicroButtons()
     if _G.MicroMenu then
         local mm = _G.MicroMenu
         self:Print(
-            string.format(
+            format(
                 "  MicroMenu: name=%s shown=%s visible=%s alpha=%.2f",
                 mm:GetName() or "nil",
                 tostring(mm:IsShown()),

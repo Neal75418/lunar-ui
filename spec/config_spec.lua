@@ -24,9 +24,7 @@ _G.LibStub = function()
         end,
     }
 end
-_G.InCombatLockdown = function()
-    return false
-end
+-- wow_mock.lua 已提供 InCombatLockdown 預設值
 _G.GetSpecialization = function()
     return 1
 end
@@ -222,33 +220,37 @@ end)
 --------------------------------------------------------------------------------
 
 describe("OnProfileChanged", function()
-    it("calls ApplyHUDScale if available", function()
-        local called = false
-        local origApply = LunarUI.ApplyHUDScale
-        LunarUI.ApplyHUDScale = function()
-            called = true
-        end
-        local origPrint = LunarUI.Print
-        LunarUI.Print = function() end
+    local origApply, origPrint
 
-        LunarUI:OnProfileChanged()
-        assert.is_true(called)
+    before_each(function()
+        origApply = LunarUI.ApplyHUDScale
+        origPrint = LunarUI.Print
+    end)
 
+    after_each(function()
         LunarUI.ApplyHUDScale = origApply
         LunarUI.Print = origPrint
     end)
 
+    it("calls ApplyHUDScale if available", function()
+        local called = false
+        LunarUI.ApplyHUDScale = function()
+            called = true
+        end
+        LunarUI.Print = function() end
+
+        LunarUI:OnProfileChanged()
+        assert.is_true(called)
+    end)
+
     it("prints profile changed message", function()
         local printed = nil
-        local origPrint = LunarUI.Print
         LunarUI.Print = function(_self, msg)
             printed = msg
         end
 
         LunarUI:OnProfileChanged()
         assert.is_not_nil(printed)
-
-        LunarUI.Print = origPrint
     end)
 end)
 

@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
@@ -133,7 +134,7 @@ local function CreateDebugFrame()
         end
         local ok2, mem = pcall(collectgarbage, "count")
         mem = ok2 and mem / 1024 or 0
-        self.perfText:SetText(string.format(L["DebugFPSMemory"] or "FPS: %.0f  Memory: %.1f MB", fps, mem))
+        self.perfText:SetText(format(L["DebugFPSMemory"] or "FPS: %.0f  Memory: %.1f MB", fps, mem))
 
         -- 更新戰鬥狀態
         if InCombatLockdown() then

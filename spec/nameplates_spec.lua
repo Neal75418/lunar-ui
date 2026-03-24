@@ -24,21 +24,7 @@ end
 _G.UnitPowerType = function()
     return mockPowerType
 end
-_G.UnitClass = function()
-    return "Warrior", "WARRIOR", 1
-end
-_G.UnitIsEnemy = function()
-    return false
-end
-_G.InCombatLockdown = function()
-    return false
-end
-_G.IsShiftKeyDown = function()
-    return false
-end
-_G.GetTime = function()
-    return 1000
-end
+-- wow_mock.lua 已提供 UnitClass/UnitIsEnemy/InCombatLockdown/IsShiftKeyDown/GetTime 預設值
 _G.RAID_CLASS_COLORS = {
     WARRIOR = { r = 0.78, g = 0.61, b = 0.43 },
 }

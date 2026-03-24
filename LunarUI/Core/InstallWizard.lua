@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -213,12 +214,12 @@ local function BuildStep1(parent)
     wizardChoices.uiScale = math.floor(currentScale * 20 + 0.5) / 20 -- 四捨五入到 0.05
 
     slider:SetValue(wizardChoices.uiScale)
-    scaleValue:SetText(string.format("%.2f", wizardChoices.uiScale))
+    scaleValue:SetText(format("%.2f", wizardChoices.uiScale))
 
     slider:SetScript("OnValueChanged", function(_, val)
         val = math.floor(val * 20 + 0.5) / 20
         wizardChoices.uiScale = val
-        scaleValue:SetText(string.format("%.2f", val))
+        scaleValue:SetText(format("%.2f", val))
     end)
 
     -- Min / Max 標籤
@@ -454,14 +455,11 @@ local function UpdateStepDisplay()
         stepFrames[4].summary:SetText(
             (L["InstallSummary"] or "Your settings summary:")
                 .. "\n\n"
-                .. string.format(
-                    L["InstallSummaryScale"] or "|cff8882ffUI Scale:|r %s",
-                    string.format("%.2f", wizardChoices.uiScale)
-                )
+                .. format(L["InstallSummaryScale"] or "|cff8882ffUI Scale:|r %s", format("%.2f", wizardChoices.uiScale))
                 .. "\n"
-                .. string.format(L["InstallSummaryLayout"] or "|cff8882ffLayout:|r %s", layoutLabel)
+                .. format(L["InstallSummaryLayout"] or "|cff8882ffLayout:|r %s", layoutLabel)
                 .. "\n"
-                .. string.format(
+                .. format(
                     L["InstallSummaryFade"] or "|cff8882ffAction Bar Fade:|r %s",
                     wizardChoices.actionBarFade and enabledText or disabledText
                 )
@@ -500,7 +498,7 @@ local function UpdateStepDisplay()
 
     -- 更新步驟文字
     if wizardFrame.stepText then
-        wizardFrame.stepText:SetText(string.format(L["InstallStep"] or "Step %d / %d", currentStep, TOTAL_STEPS))
+        wizardFrame.stepText:SetText(format(L["InstallStep"] or "Step %d / %d", currentStep, TOTAL_STEPS))
     end
 end
 

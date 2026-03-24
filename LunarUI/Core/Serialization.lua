@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
@@ -37,7 +38,7 @@ local function SerializeValue(val, depth, visited)
         return tostring(val)
     elseif valType == "string" then
         -- 跳脫特殊字元
-        return string.format("%q", val)
+        return format("%q", val)
     elseif valType == "table" then
         -- 循環引用偵測
         if visited[val] then
@@ -52,9 +53,9 @@ local function SerializeValue(val, depth, visited)
         for k, v in pairs(val) do
             local keyStr
             if type(k) == "string" then
-                keyStr = string.format("[%q]=", k)
+                keyStr = format("[%q]=", k)
             else
-                keyStr = string.format("[%s]=", tostring(k))
+                keyStr = format("[%s]=", tostring(k))
             end
             table.insert(parts, keyStr .. SerializeValue(v, depth + 1, visited))
         end
@@ -472,7 +473,7 @@ function LunarUI:ImportSettings(importString)
     self:OnProfileChanged()
 
     return true,
-        string.format(
+        format(
             L["SettingsImportedVersion"] or "設定匯入成功（版本：%s）",
             data.version or (L["VersionUnknown"] or "未知")
         )

@@ -7,13 +7,7 @@
 require("spec.wow_mock")
 local loader = require("spec.loader")
 
--- Mock WoW APIs
-_G.GetTime = function()
-    return 1000
-end
-_G.InCombatLockdown = function()
-    return false
-end
+-- Mock WoW APIs（wow_mock.lua 已提供 GetTime/InCombatLockdown 預設值）
 _G.C_AddOns = { LoadAddOn = function() end }
 
 -- Track print output

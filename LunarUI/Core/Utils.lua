@@ -1,7 +1,7 @@
 ---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
-    LunarUI - Utility Functions
-    Shared helper functions for formatting, color calculations, etc.
+    LunarUI - 工具函式
+    共用輔助函式：數值格式化、顏色計算等
 ]]
 
 local _ADDON_NAME, Engine = ...
@@ -10,15 +10,15 @@ local LunarUI = Engine.LunarUI
 local format = string.format
 
 --------------------------------------------------------------------------------
--- Number Formatting
+-- 數值格式化
 --------------------------------------------------------------------------------
 
 --[[
-    Format large numbers with K/M suffixes
-    @param value number - The value to format
-    @return string - Formatted string (e.g., "1.5M", "25.3K", "999")
+    大數字格式化（K/M 後綴）
+    @param value number - 要格式化的數值
+    @return string - 格式化字串（如 "1.5M"、"25.3K"、"999"）
 
-    Usage:
+    用法：
         local text = LunarUI.FormatValue(1500000)  -- "1.5M"
 ]]
 function LunarUI.FormatValue(value)
@@ -34,13 +34,13 @@ function LunarUI.FormatValue(value)
 end
 
 --[[
-    Get threshold color from a tiered threshold array (4-tier: green/yellow/orange/red)
-    @param value number - Current value
-    @param thresholds table - Array of 3 threshold values {good, medium, bad}
-    @param ascending boolean - If true, higher values are better (e.g. FPS)
-    @return number, number, number - R, G, B color components
+    四階門檻顏色（綠/黃/橙/紅）
+    @param value number - 當前數值
+    @param thresholds table - 三個門檻值陣列 {好, 中, 差}
+    @param ascending boolean - true 表示數值越高越好（如 FPS）
+    @return number, number, number - R, G, B 顏色分量
 
-    Usage:
+    用法：
         local r, g, b = LunarUI.ThresholdColor(fps, {60, 30, 15}, true)
         local r, g, b = LunarUI.ThresholdColor(latency, {100, 200, 400}, false)
 ]]
@@ -171,8 +171,10 @@ function LunarUI.SafeCall(func, context)
     if not ok then
         -- 生產環境也輸出錯誤，避免靜默吞掉問題
         local msg = (context or "Error") .. ": " .. tostring(err)
-        if LunarUI.Debug then
+        if LunarUI.IsDebugMode and LunarUI:IsDebugMode() then
             LunarUI:Debug(msg)
+        elseif LunarUI.Print then
+            LunarUI:Print("|cffff6060" .. msg .. "|r")
         else
             print("|cffff6060LunarUI:|r " .. msg)
         end

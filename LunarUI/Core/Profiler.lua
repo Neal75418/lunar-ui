@@ -7,6 +7,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
@@ -91,10 +92,10 @@ function LunarUI:PrintProfilingResults()
         local color = m.initTime > INIT_CRIT_MS and "|cffff4444"
             or m.initTime > INIT_WARN_MS and "|cffffcc00"
             or "|cff00ff00"
-        self:Print(string.format("  %s%-25s %.2f ms|r", color, m.name, m.initTime))
+        self:Print(format("  %s%-25s %.2f ms|r", color, m.name, m.initTime))
     end
     self:Print(
-        string.format(
+        format(
             "  |cffffffff--- " .. (L["ProfilerTotal"] or "Total") .. ": %.2f ms (%d modules)|r",
             totalInit,
             #moduleTimings
@@ -198,7 +199,7 @@ function LunarUI:EnableEventProfiling()
     if failed > 0 then
         msg = msg
             .. " |cffffcc00"
-            .. string.format(L["ProfilerEventRegFailed"] or "(%d events failed to register)", failed)
+            .. format(L["ProfilerEventRegFailed"] or "(%d events failed to register)", failed)
             .. "|r"
     end
     self:Print(msg)
@@ -249,16 +250,13 @@ function LunarUI:PrintEventTimings()
     -- 使用記錄的結束時間（若已停用），否則使用當前時間（仍在監控中）
     local elapsed = ((eventProfilingEnd or GetTimestamp()) - eventProfilingStart) / 1000000 -- 微秒轉秒
     self:Print(
-        string.format(
-            "|cff8882ff=== " .. (L["ProfilerEventHeader"] or "Event Frequency") .. " (%.1f sec) ===|r",
-            elapsed
-        )
+        format("|cff8882ff=== " .. (L["ProfilerEventHeader"] or "Event Frequency") .. " (%.1f sec) ===|r", elapsed)
     )
 
     for _, e in ipairs(sorted) do
         local rate = elapsed > 0 and (e.count / elapsed) or 0
         local color = rate > EVENT_RATE_CRIT and "|cffff4444" or rate > EVENT_RATE_WARN and "|cffffcc00" or "|cff00ff00"
         local firesLabel = L["ProfilerFires"] or "fires"
-        self:Print(string.format("  %s%-35s %6d " .. firesLabel .. "  (%.1f/sec)|r", color, e.event, e.count, rate))
+        self:Print(format("  %s%-35s %6d " .. firesLabel .. "  (%.1f/sec)|r", color, e.event, e.count, rate))
     end
 end

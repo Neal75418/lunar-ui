@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 
 --------------------------------------------------------------------------------
 -- 設定快取
@@ -48,7 +49,7 @@ local function OnMerchantShow()
             if guildBankWithdraw == -1 or guildBankWithdraw >= repairAllCost then
                 RepairAllItems(true) -- true = 使用公會資金
                 local costStr = GetCoinTextureString(repairAllCost)
-                LunarUI:Print(string.format(L["RepairCostGuild"] or "Repaired for %s (Guild Bank)", costStr))
+                LunarUI:Print(format(L["RepairCostGuild"] or "Repaired for %s (Guild Bank)", costStr))
                 return
             end
         end
@@ -57,7 +58,7 @@ local function OnMerchantShow()
         if GetMoney() >= repairAllCost then
             RepairAllItems(false)
             local costStr = GetCoinTextureString(repairAllCost)
-            LunarUI:Print(string.format(L["RepairCost"] or "Repaired for %s", costStr))
+            LunarUI:Print(format(L["RepairCost"] or "Repaired for %s", costStr))
         else
             LunarUI:Print(L["RepairNoFunds"] or "Not enough gold to repair")
         end

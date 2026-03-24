@@ -83,7 +83,7 @@ local function ExecuteModuleCallback(entry)
                         tostring(err)
                     )
                 )
-                print(debugstack(2))
+                LunarUI:Print(debugstack(2))
             end
             pendingDelayedModules = pendingDelayedModules - 1
             if pendingDelayedModules == 0 and not modulesReadyFired then
@@ -106,7 +106,7 @@ local function ExecuteModuleCallback(entry)
                     tostring(err)
                 )
             )
-            print(debugstack(2))
+            LunarUI:Print(debugstack(2))
         end
     end
 end

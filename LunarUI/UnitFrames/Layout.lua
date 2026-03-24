@@ -13,7 +13,7 @@ local LunarUI = Engine.LunarUI
 local oUF = Engine.oUF or _G.LunarUF or _G.oUF
 if not oUF then
     local L = Engine.L or {}
-    print("|cffff0000LunarUI:|r " .. (L["ErrorOUFNotFound"] or "找不到 oUF 框架"))
+    LunarUI:Print("|cffff0000" .. (L["ErrorOUFNotFound"] or "找不到 oUF 框架") .. "|r")
     return
 end
 

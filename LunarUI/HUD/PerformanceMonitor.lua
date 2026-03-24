@@ -11,6 +11,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -130,10 +131,10 @@ local function CreatePerfFrame()
             homeMs, worldMs = 0, 0
         end
 
-        GameTooltip:AddDoubleLine("FPS", string.format("%.0f", fps), 0.7, 0.7, 0.7, 1, 1, 1)
+        GameTooltip:AddDoubleLine("FPS", format("%.0f", fps), 0.7, 0.7, 0.7, 1, 1, 1)
         GameTooltip:AddDoubleLine(
             L["HomeLatency"] or "Home Latency",
-            string.format("%d ms", homeMs),
+            format("%d ms", homeMs),
             0.7,
             0.7,
             0.7,
@@ -141,7 +142,7 @@ local function CreatePerfFrame()
         )
         GameTooltip:AddDoubleLine(
             L["WorldLatency"] or "World Latency",
-            string.format("%d ms", worldMs),
+            format("%d ms", worldMs),
             0.7,
             0.7,
             0.7,

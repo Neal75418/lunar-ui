@@ -325,8 +325,11 @@ describe("SafeCall", function()
         assert.is_false(result)
     end)
 
-    it("calls Debug when available and function errors", function()
+    it("calls Debug when debug mode is active and function errors", function()
         local debugMsg = nil
+        LunarUI.IsDebugMode = function()
+            return true
+        end
         LunarUI.Debug = function(_self, msg)
             debugMsg = msg
         end
@@ -335,6 +338,7 @@ describe("SafeCall", function()
         end, "TestContext")
         assert.is_not_nil(debugMsg)
         assert.truthy(debugMsg:match("TestContext"))
+        LunarUI.IsDebugMode = nil
     end)
 
     it("does not call Debug on success", function()

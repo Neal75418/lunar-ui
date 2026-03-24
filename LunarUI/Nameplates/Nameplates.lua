@@ -21,7 +21,7 @@ local UnitReaction = UnitReaction
 local UnitClassification = UnitClassification
 local UnitPowerType = UnitPowerType
 local math_floor = math.floor
-local string_format = string.format
+local format = string.format
 
 -- 等待 oUF
 -- oUF 透過 TOC 的 X-oUF 標頭以 LunarUF 命名空間暴露
@@ -36,7 +36,7 @@ end
 
 local statusBarTexture -- lazy: resolved after DB is ready
 local npCombatWaitFrame -- 戰鬥等待框架（singleton，避免重複呼叫建立多個 frame）
-local nameplatDriverSpawned = false -- oUF:SpawnNamePlates 是 singleton，只能呼叫一次
+local nameplateDriverSpawned = false -- oUF:SpawnNamePlates 是 singleton，只能呼叫一次
 local nameplateModuleEnabled = false -- runtime 啟用旗標（OnShow hook 用此判斷是否處理名牌）
 local function GetStatusBarTexture()
     if not statusBarTexture then
@@ -197,11 +197,11 @@ local function CreateHealthBar(frame)
             end
             local pct = math_floor(cur / max * 100)
             if fmt == "percent" then
-                healthText:SetText(string_format("%d%%", pct))
+                healthText:SetText(format("%d%%", pct))
             elseif fmt == "current" then
                 healthText:SetText(LunarUI.FormatValue(cur))
             elseif fmt == "both" then
-                healthText:SetText(string_format("%s - %d%%", LunarUI.FormatValue(cur), pct))
+                healthText:SetText(format("%s - %d%%", LunarUI.FormatValue(cur), pct))
             end
         end
     end
@@ -1003,8 +1003,8 @@ local function SpawnNameplates()
     oUF:SetActiveStyle("LunarUI_Nameplate")
 
     -- oUF:SpawnNamePlates 是 singleton，只能呼叫一次（re-enable 時重新啟用輔助系統）
-    if not nameplatDriverSpawned then
-        nameplatDriverSpawned = true
+    if not nameplateDriverSpawned then
+        nameplateDriverSpawned = true
         local nameplateDriver = oUF:SpawnNamePlates("LunarUI_Nameplate")
         nameplateDriver:SetAddedCallback(function(frame)
             -- SetAddedCallback 只在框架首次建立時觸發，非每次 OnShow。

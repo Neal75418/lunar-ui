@@ -99,7 +99,7 @@ describe("CastBar", function()
                     player = { castbar = { height = 18, showLatency = true, showTicks = true, showEmpowered = true } },
                 }
             end
-            assert.has_no.errors(function()
+            assert.has_no_errors(function()
                 LunarUI.UFCreateCastbar(unitFrame, "player")
             end)
         end)
@@ -110,7 +110,7 @@ describe("CastBar", function()
             LunarUI.GetModuleDB = function()
                 return nil -- no unitframes config
             end
-            assert.has_no.errors(function()
+            assert.has_no_errors(function()
                 LunarUI.UFCreateCastbar(unitFrame, "player")
             end)
         end)

@@ -15,6 +15,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
@@ -241,7 +242,7 @@ local function CreateMover(name, targetFrame, label)
             -- 同步 mover 位置
             self:ClearAllPoints()
             self:SetPoint("CENTER", targetFrame, "CENTER", 0, 0)
-            LunarUI:Print(string.format(L["MoverResetToDefault"] or "%s reset to default position", label or name))
+            LunarUI:Print(format(L["MoverResetToDefault"] or "%s reset to default position", label or name))
         end
     end)
 

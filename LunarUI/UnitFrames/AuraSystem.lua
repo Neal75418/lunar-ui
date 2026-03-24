@@ -81,10 +81,8 @@ local function AuraFilter(_element, unit, data)
     -- 使用快取避免高頻 DB 查詢
     local cachedSettings = auraFilterDBCache[unitKey]
     if not cachedSettings then
-        local ufDB = LunarUI.db
-            and LunarUI.db.profile
-            and LunarUI.db.profile.unitframes
-            and LunarUI.db.profile.unitframes[unitKey]
+        local ufAll = LunarUI.GetModuleDB("unitframes")
+        local ufDB = ufAll and ufAll[unitKey]
         if not ufDB then
             return true
         end
@@ -272,7 +270,8 @@ end
 --[[ 光環框架共用建構 ]]
 local function CreateAuraFrame(frame, unit, isDebuff)
     local unitKey = unit and unit:gsub("%d+$", "") or (isDebuff and "unknown" or "player")
-    local ufDB = LunarUI.db.profile.unitframes[unitKey]
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local ufDB = ufAll and ufAll[unitKey]
 
     -- 檢查是否啟用
     if isDebuff then
@@ -362,7 +361,8 @@ end
 
 --[[ 團隊減益（特殊佈局：較小、居中） ]]
 local function CreateRaidDebuffs(frame)
-    local raidDB = LunarUI.db.profile.unitframes.raid
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local raidDB = ufAll and ufAll.raid
     if not raidDB or raidDB.showDebuffs == false then
         return
     end
