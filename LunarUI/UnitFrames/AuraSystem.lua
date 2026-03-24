@@ -8,7 +8,7 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local C = LunarUI.Colors
-local UNITFRAME_DEBUFF_COLORS = LunarUI.DEBUFF_TYPE_COLORS
+local UNITFRAME_DEBUFF_COLORS = LunarUI.DEBUFF_TYPE_COLORS or _G.DebuffTypeColor or {}
 
 --------------------------------------------------------------------------------
 -- 光環白名單/黑名單快取
@@ -251,8 +251,12 @@ end
 local function PostUpdateDebuffIcon(_self, button, _unit, data, _position)
     if data.isHarmfulAura then
         -- WoW 12.0 中 dispelName 為隱藏值，使用通用減益顏色
-        local color = UNITFRAME_DEBUFF_COLORS["none"]
-        button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+        local color = UNITFRAME_DEBUFF_COLORS["none"] or UNITFRAME_DEBUFF_COLORS[""]
+        if color then
+            button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+        else
+            button:SetBackdropBorderColor(0.8, 0, 0, 1) -- fallback: 紅色減益邊框
+        end
     else
         button:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
     end

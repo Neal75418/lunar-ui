@@ -101,7 +101,7 @@ local function GetNPCRoleColor(unit, db, classification)
     return nil -- 近戰：保持預設反應色
 end
 
-local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS
+local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS or _G.DebuffTypeColor or {}
 
 -- 私有事件框架（不暴露到 LunarUI 物件）
 local nameplateTargetFrame
@@ -328,8 +328,12 @@ local function CreateDebuffs(frame)
     -- 統一使用通用 debuff 顏色
     debuffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
         if button.SetBackdropBorderColor then
-            local color = DEBUFF_TYPE_COLORS["none"]
-            button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+            local color = DEBUFF_TYPE_COLORS["none"] or DEBUFF_TYPE_COLORS[""]
+            if color then
+                button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
+            else
+                button:SetBackdropBorderColor(0.8, 0, 0, 1)
+            end
         end
     end
 
