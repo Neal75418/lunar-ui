@@ -356,7 +356,7 @@ local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expira
         local debuffType = "" .. tostring(auraData.dispelName or "")
         local ok, color = pcall(rawget, DEBUFF_TYPE_COLORS, debuffType)
         if not ok or not color then
-            color = DEBUFF_TYPE_COLORS[""] -- fallback to default debuff color
+            color = DEBUFF_TYPE_COLORS[""] -- 退回預設 debuff 顏色
         end
         iconFrame:SetBackdropBorderColor(color.r, color.g, color.b, 1)
     else

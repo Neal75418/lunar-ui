@@ -487,7 +487,7 @@ local function SetupTrackedSpells()
     end
 end
 
--- Forward declaration（實際定義在下方事件處理區段）
+-- 前向宣告（實際定義在下方事件處理區段）
 local eventFrame
 
 local function CooldownOnUpdate(_self, elapsed)

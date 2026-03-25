@@ -52,7 +52,7 @@ end
 --------------------------------------------------------------------------------
 
 local function CreateBarDefaults(buttons, x, y, orientation)
-    return { enabled = true, buttons = buttons, x = x, y = y, orientation = orientation, fadeEnabled = nil } -- fadeEnabled = nil inherits from global actionbars.fadeEnabled
+    return { enabled = true, buttons = buttons, x = x, y = y, orientation = orientation, fadeEnabled = nil } -- fadeEnabled = nil 繼承自全域 actionbars.fadeEnabled
 end
 
 --------------------------------------------------------------------------------

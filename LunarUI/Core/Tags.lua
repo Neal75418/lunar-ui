@@ -39,7 +39,7 @@ local UnitIsUnit = UnitIsUnit
 local GetMaxLevelForLatestExpansion = GetMaxLevelForLatestExpansion
 local RAID_CLASS_COLORS = RAID_CLASS_COLORS
 local strlenutf8 = strlenutf8
-local string_utf8sub = string.utf8sub
+local stringUtf8sub = string.utf8sub
 
 local format = string.format
 local tostring = tostring
@@ -193,8 +193,8 @@ Tags.Methods["lunar:name:medium"] = SafeTag(function(unit, realUnit)
     end
     local len = strlenutf8 and strlenutf8(name) or #name
     if len > 15 then
-        if string_utf8sub then
-            return string_utf8sub(name, 1, 12) .. "..."
+        if stringUtf8sub then
+            return stringUtf8sub(name, 1, 12) .. "..."
         end
         return name:sub(1, 12) .. "..."
     end

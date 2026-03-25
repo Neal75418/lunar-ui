@@ -147,7 +147,7 @@ local function HideGrid()
 end
 
 --------------------------------------------------------------------------------
--- Snap to Grid
+-- 對齊格線
 --------------------------------------------------------------------------------
 
 local function SnapToGrid(value)
@@ -321,7 +321,7 @@ end
 --------------------------------------------------------------------------------
 
 ---@type function
-local UpdateEscHandler -- forward declaration（定義於 ESC 退出支援區段）
+local UpdateEscHandler -- 前向宣告（定義於 ESC 退出支援區段）
 
 local function EnterMoveMode()
     if InCombatLockdown() then
