@@ -246,6 +246,10 @@ local function BuildStep1(parent)
             or "|cff888888Tip: Higher values = bigger UI elements. The recommended value is 0.75 for 1920x1080.|r"
     )
 
+    -- 暴露 slider 供 ShowInstallWizard 重開時同步值
+    parent._scaleSlider = slider
+    parent._scaleValue = scaleValue
+
     return f
 end
 
@@ -648,13 +652,25 @@ end
     從 Init.lua 在首次安裝時呼叫
 ]]
 function LunarUI.ShowInstallWizard()
-    -- 每次重新開啟精靈時都重建框架，確保 uiScale 反映當前 UI 縮放
+    -- 每次重新開啟精靈時重設狀態，uiScale 讀取當前 UI 縮放
     LunarUI.CleanupInstallWizard()
     currentStep = 1
-    wizardChoices.uiScale = 0.75
+    local currentScale = UIParent:GetEffectiveScale()
+    if type(currentScale) ~= "number" or currentScale ~= currentScale or math.abs(currentScale) == math.huge then
+        currentScale = 0.75
+    end
+    currentScale = math.max(0.5, math.min(2.0, currentScale))
+    wizardChoices.uiScale = math.floor(currentScale * 20 + 0.5) / 20
     wizardChoices.layout = "dps"
     wizardChoices.actionBarFade = true
     local f = CreateWizardFrame()
+    -- 重開時同步 slider 到最新 uiScale（CreateWizardFrame 重用舊框架不重跑 BuildStep1）
+    if f._scaleSlider then
+        f._scaleSlider:SetValue(wizardChoices.uiScale)
+    end
+    if f._scaleValue then
+        f._scaleValue:SetText(format("%.2f", wizardChoices.uiScale))
+    end
     f:Show()
     UpdateStepDisplay()
 end

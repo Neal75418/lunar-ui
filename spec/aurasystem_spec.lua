@@ -43,10 +43,16 @@ local LunarUI = {
         },
     },
     RegisterModule = function() end,
-    GetModuleDB = function()
-        return nil
-    end,
+    GetModuleDB = function() end, -- 佔位，下方覆寫
 }
+
+-- GetModuleDB 需要引用 LunarUI.db，必須在 table 建構完成後定義
+LunarUI.GetModuleDB = function(key)
+    if not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
+    return LunarUI.db.profile[key]
+end
 
 loader.loadAddonFile("LunarUI/UnitFrames/AuraSystem.lua", LunarUI)
 
@@ -155,5 +161,61 @@ describe("GetAuraSortFunction", function()
         local hasTime = { expirationTime = 100 }
         -- nil sanitized to 0, which becomes math.huge
         assert.is_false(sortFn(noTime, hasTime)) -- huge < 100 is false
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- AuraFilter（onlyPlayerDebuffs 邏輯）
+--------------------------------------------------------------------------------
+
+describe("AuraFilter", function()
+    before_each(function()
+        -- 重建快取，清除 auraFilterDBCache
+        LunarUI.db.profile.unitframes = {
+            player = { onlyPlayerDebuffs = false },
+            target = { onlyPlayerDebuffs = true },
+        }
+        LunarUI.db.profile.auraFilters = {
+            hidePassive = false,
+            showStealable = false,
+            showDispellable = false,
+            sortMethod = "time",
+            sortReverse = false,
+        }
+        LunarUI.db.profile.auraWhitelist = ""
+        LunarUI.db.profile.auraBlacklist = ""
+        LunarUI.RebuildAuraFilterCache()
+    end)
+
+    it("shows all debuffs when onlyPlayerDebuffs is false (player unit)", function()
+        local data = { isHarmfulAura = true, isPlayerAura = false, duration = 10 }
+        local result = LunarUI.AuraFilter(nil, "player", data)
+        assert.is_true(result) -- onlyPlayerDebuffs=false → 顯示非玩家 debuff
+    end)
+
+    it("hides non-player debuffs when onlyPlayerDebuffs is true (target unit)", function()
+        local data = { isHarmfulAura = true, isPlayerAura = false, duration = 10 }
+        local result = LunarUI.AuraFilter(nil, "target", data)
+        assert.is_false(result) -- onlyPlayerDebuffs=true + 非玩家 debuff → 隱藏
+    end)
+
+    it("shows player debuffs even when onlyPlayerDebuffs is true", function()
+        local data = { isHarmfulAura = true, isPlayerAura = true, duration = 10 }
+        local result = LunarUI.AuraFilter(nil, "target", data)
+        assert.is_true(result) -- 玩家施放的 debuff 永遠顯示
+    end)
+
+    it("shows buffs regardless of onlyPlayerDebuffs", function()
+        local data = { isHarmfulAura = false, isPlayerAura = false, duration = 10 }
+        local result = LunarUI.AuraFilter(nil, "target", data)
+        assert.is_true(result) -- onlyPlayerDebuffs 只過濾 debuff，不影響 buff
+    end)
+
+    it("returns true when unitframes config is nil (graceful fallback)", function()
+        LunarUI.db.profile.unitframes = {}
+        LunarUI.RebuildAuraFilterCache()
+        local data = { isHarmfulAura = true, isPlayerAura = false, duration = 10 }
+        local result = LunarUI.AuraFilter(nil, "boss1", data)
+        assert.is_true(result) -- 無設定 → 預設顯示
     end)
 end)

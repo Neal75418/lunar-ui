@@ -171,7 +171,7 @@ Tags.Methods["lunar:power:percent"] = SafeTag(function(unit)
         return ""
     end
     local cur = UnitPower(unit) or 0
-    return format("%d%%", cur / max * 100)
+    return format("%d%%", math.floor(cur / max * 100 + 0.5))
 end)
 Tags.Events["lunar:power:percent"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER UNIT_DISPLAYPOWER"
 
