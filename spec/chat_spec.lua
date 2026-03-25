@@ -220,12 +220,15 @@ end)
 describe("Chat emoji toggle off", function()
     local emojiFilter = LunarUI.ChatEmojiFilter
 
+    after_each(function()
+        chatDB.enableEmojis = true
+    end)
+
     it("passes through emoji text when enableEmojis is false", function()
         chatDB.enableEmojis = false
         local blocked, result = emojiFilter(nil, nil, "Hello :)")
         assert.is_false(blocked)
         assert.equals("Hello :)", result)
-        chatDB.enableEmojis = true
     end)
 
     it("resumes replacement when enableEmojis is toggled back on", function()
@@ -246,11 +249,14 @@ end)
 describe("Chat spam toggle off", function()
     local spamFilter = LunarUI.ChatSpamFilter
 
+    after_each(function()
+        chatDB.spamFilter = true
+    end)
+
     it("passes through spam when spamFilter is false", function()
         chatDB.spamFilter = false
         local blocked = spamFilter(nil, nil, "buy gold cheap only $5", "Spammer")
         assert.is_false(blocked)
-        chatDB.spamFilter = true
     end)
 
     it("resumes filtering when spamFilter is toggled back on", function()

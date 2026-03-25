@@ -440,8 +440,7 @@ describe("IsItemUpgrade", function()
         assert.is_false(LunarUI.IsItemUpgrade("item:non_equip"))
     end)
 
-    -- equippedIlvlDirty 是內部單次消耗狀態，首次 RefreshEquippedItemLevels 後
-    -- 就不會再刷新。此測試放最後：觸發唯一的 dirty refresh，所有槽位為空→升級。
+    -- equippedIlvlDirty 是內部單次消耗狀態（before_each 已重設 dirty flag，測試順序無關）
     it("returns true when slot is empty (first dirty refresh)", function()
         _G.C_Item.GetItemInfo = function()
             return "Helm", nil, nil, nil, nil, nil, nil, nil, "INVTYPE_HEAD"

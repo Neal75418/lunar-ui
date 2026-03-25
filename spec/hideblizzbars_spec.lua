@@ -289,6 +289,7 @@ describe("HideBlizzardBars", function()
             LunarUI.HideBlizzardBarsDelayed()
 
             -- 模擬戰鬥中
+            local savedInCombat = _G.InCombatLockdown
             _G.InCombatLockdown = function()
                 return true
             end
@@ -298,10 +299,8 @@ describe("HideBlizzardBars", function()
             -- 應該沒還原（仍在隱藏狀態）
             assert.is_not.equal(multiBarOriginalParent, multiBar1._parent)
 
-            -- 清理：結束戰鬥
-            _G.InCombatLockdown = function()
-                return false
-            end
+            -- 結束戰鬥
+            _G.InCombatLockdown = savedInCombat
 
             -- 現在可以還原
             LunarUI.RestoreBlizzardBars()

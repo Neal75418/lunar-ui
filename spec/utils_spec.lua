@@ -305,12 +305,14 @@ end)
 --------------------------------------------------------------------------------
 
 describe("SafeCall", function()
-    local savedDebug
+    local savedDebug, savedIsDebugMode
     before_each(function()
         savedDebug = LunarUI.Debug
+        savedIsDebugMode = LunarUI.IsDebugMode
     end)
     after_each(function()
         LunarUI.Debug = savedDebug
+        LunarUI.IsDebugMode = savedIsDebugMode
     end)
 
     it("returns true for successful call", function()
@@ -338,7 +340,6 @@ describe("SafeCall", function()
         end, "TestContext")
         assert.is_not_nil(debugMsg)
         assert.truthy(debugMsg:match("TestContext"))
-        LunarUI.IsDebugMode = nil
     end)
 
     it("does not call Debug on success", function()

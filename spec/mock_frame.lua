@@ -247,10 +247,10 @@ function MockFrame:SetQuestBlobInsideTexture() end
 function MockFrame:SetQuestBlobOutsideTexture() end
 
 function MockFrame:GetChildren()
-    return nil
+    return -- 零 varargs，與 WoW API 一致（非 return nil）
 end
 function MockFrame:GetRegions()
-    return nil
+    return
 end
 
 --------------------------------------------------------------------------------

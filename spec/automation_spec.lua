@@ -75,6 +75,16 @@ _G.CreateFrame = function()
     createdFrames[#createdFrames + 1] = frame
     return frame
 end
+
+-- 找到設有 OnEvent handler 的 automation 事件框架（不依賴 createdFrames 順序）
+local function findAutomationFrame()
+    for _, f in ipairs(createdFrames) do
+        if f._script_OnEvent then
+            return f
+        end
+    end
+    return createdFrames[1] -- fallback
+end
 _G.UIParent = setmetatable({}, { __index = AutoMock })
 
 local automationDB = {
@@ -177,7 +187,7 @@ describe("Automation auto repair", function()
 
     before_each(function()
         LunarUI.CleanupAutomation()
-        automationFrame = createdFrames[1]
+        automationFrame = findAutomationFrame()
         LunarUI:InitAutomation()
     end)
 
@@ -247,7 +257,7 @@ describe("Automation auto release", function()
 
     before_each(function()
         LunarUI.CleanupAutomation()
-        automationFrame = createdFrames[1]
+        automationFrame = findAutomationFrame()
         LunarUI:InitAutomation()
     end)
 
@@ -305,7 +315,7 @@ describe("Automation autoRepair toggle off", function()
 
     before_each(function()
         LunarUI.CleanupAutomation()
-        automationFrame = createdFrames[1]
+        automationFrame = findAutomationFrame()
         automationDB.autoRepair = false
         LunarUI:InitAutomation()
     end)
@@ -348,7 +358,7 @@ describe("Automation autoRelease toggle off", function()
 
     before_each(function()
         LunarUI.CleanupAutomation()
-        automationFrame = createdFrames[1]
+        automationFrame = findAutomationFrame()
         automationDB.autoRelease = false
         LunarUI:InitAutomation()
     end)
@@ -394,7 +404,7 @@ describe("Automation quest handling", function()
 
     before_each(function()
         LunarUI.CleanupAutomation()
-        automationFrame = createdFrames[1]
+        automationFrame = findAutomationFrame()
         LunarUI:InitAutomation()
     end)
 
@@ -466,7 +476,7 @@ describe("Automation LFG queue", function()
 
     before_each(function()
         LunarUI.CleanupAutomation()
-        automationFrame = createdFrames[1]
+        automationFrame = findAutomationFrame()
         LunarUI:InitAutomation()
     end)
 

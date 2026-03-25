@@ -697,6 +697,14 @@ end)
 --------------------------------------------------------------------------------
 
 describe("SerializeValue additional coverage", function()
+    local savedDebug
+    before_each(function()
+        savedDebug = LunarUI.Debug
+    end)
+    after_each(function()
+        LunarUI.Debug = savedDebug
+    end)
+
     it("serializes numeric keys with bracket syntax", function()
         local result = LunarUI.SerializeValue({ [1] = "a", [2] = "b" })
         assert.is_string(result)
@@ -722,7 +730,6 @@ describe("SerializeValue additional coverage", function()
         LunarUI.SerializeValue(t)
         assert.is_not_nil(debugMsg)
         assert.truthy(debugMsg:find("depth"))
-        LunarUI.Debug = nil
     end)
 
     it("calls Debug on circular reference when Debug is available", function()
@@ -735,7 +742,6 @@ describe("SerializeValue additional coverage", function()
         LunarUI.SerializeValue(t)
         assert.is_not_nil(debugMsg)
         assert.truthy(debugMsg:find("circular"))
-        LunarUI.Debug = nil
     end)
 
     it("serializes mixed key types (string and number)", function()
