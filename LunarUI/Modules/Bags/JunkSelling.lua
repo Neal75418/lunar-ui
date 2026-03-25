@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local format = string.format
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------

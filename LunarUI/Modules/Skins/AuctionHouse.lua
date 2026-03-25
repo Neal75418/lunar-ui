@@ -15,7 +15,7 @@ local function SkinAuctionHouse()
         return
     end
 
-    -- Legacy tab naming fallback
+    -- 舊版分頁命名備援
     if not frame.Tabs then
         for i = 1, 4 do
             local tab = _G["AuctionHouseFrameTab" .. i]
@@ -25,7 +25,7 @@ local function SkinAuctionHouse()
         end
     end
 
-    -- Search bar
+    -- 搜尋列
     if frame.SearchBar then
         local searchBar = frame.SearchBar
         if searchBar.SearchBox then
@@ -46,7 +46,7 @@ local function SkinAuctionHouse()
         end
     end
 
-    -- Commodities buy frame
+    -- 商品購買框架
     if frame.CommoditiesBuyFrame then
         LunarUI.StripTextures(frame.CommoditiesBuyFrame)
         if frame.CommoditiesBuyFrame.BuyDisplay then
@@ -54,12 +54,12 @@ local function SkinAuctionHouse()
         end
     end
 
-    -- Item buy frame
+    -- 物品購買框架
     if frame.ItemBuyFrame then
         LunarUI.StripTextures(frame.ItemBuyFrame)
     end
 
-    -- Sell frame
+    -- 賣出框架
     if frame.ItemSellFrame then
         LunarUI.StripTextures(frame.ItemSellFrame)
     end
@@ -67,7 +67,7 @@ local function SkinAuctionHouse()
         LunarUI.StripTextures(frame.CommoditiesSellFrame)
     end
 
-    -- Sell list
+    -- 賣出列表
     if frame.ItemSellList then
         LunarUI.StripTextures(frame.ItemSellList)
     end
@@ -75,28 +75,28 @@ local function SkinAuctionHouse()
         LunarUI.StripTextures(frame.CommoditiesSellList)
     end
 
-    -- Auctions frame (My Auctions tab)
+    -- 拍賣框架（我的拍賣分頁）
     if frame.AuctionsFrame then
         LunarUI.StripTextures(frame.AuctionsFrame)
-        -- Summary list
+        -- 摘要列表
         if frame.AuctionsFrame.SummaryList then
             LunarUI.StripTextures(frame.AuctionsFrame.SummaryList)
         end
-        -- All auctions list
+        -- 所有拍賣列表
         if frame.AuctionsFrame.AllAuctionsList then
             LunarUI.StripTextures(frame.AuctionsFrame.AllAuctionsList)
         end
-        -- Bids list
+        -- 競標列表
         if frame.AuctionsFrame.BidsList then
             LunarUI.StripTextures(frame.AuctionsFrame.BidsList)
         end
-        -- Cancel auction button
+        -- 取消拍賣按鈕
         if frame.AuctionsFrame.CancelAuctionButton then
             LunarUI.SkinButton(frame.AuctionsFrame.CancelAuctionButton)
         end
     end
 
-    -- Money displays
+    -- 金幣顯示
     if frame.MoneyFrameBorder then
         frame.MoneyFrameBorder:SetAlpha(0)
     end
@@ -106,5 +106,5 @@ local function SkinAuctionHouse()
     return true
 end
 
--- AuctionHouse is loaded on demand
+-- 拍賣場為延遲載入
 LunarUI.RegisterSkin("auctionhouse", "Blizzard_AuctionHouseUI", SkinAuctionHouse)

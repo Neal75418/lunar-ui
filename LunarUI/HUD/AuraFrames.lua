@@ -22,7 +22,7 @@ local C = LunarUI.Colors
 -- 效能：快取全域變數
 --------------------------------------------------------------------------------
 
-local math_floor = math.floor
+local mathFloor = math.floor
 local GetTime = GetTime
 local C_UnitAuras = C_UnitAuras
 local ipairs = ipairs
@@ -311,7 +311,7 @@ local function SetupFrames()
         if not buffIcons[i] then
             buffIcons[i] = CreateAuraIcon(buffFrame)
         end
-        local row = math_floor((i - 1) / ICONS_PER_ROW)
+        local row = mathFloor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
         buffIcons[i]:SetPoint(
             "TOPRIGHT",
@@ -327,7 +327,7 @@ local function SetupFrames()
         if not debuffIcons[i] then
             debuffIcons[i] = CreateAuraIcon(debuffFrame)
         end
-        local row = math_floor((i - 1) / ICONS_PER_ROW)
+        local row = mathFloor((i - 1) / ICONS_PER_ROW)
         local col = (i - 1) % ICONS_PER_ROW
         debuffIcons[i]:SetPoint(
             "TOPRIGHT",
@@ -706,7 +706,7 @@ local function RelayoutIcons(icons, parentFrame, maxCount)
     for i = 1, maxCount do
         if icons[i] then
             icons[i]:ClearAllPoints()
-            local row = math_floor((i - 1) / ICONS_PER_ROW)
+            local row = mathFloor((i - 1) / ICONS_PER_ROW)
             local col = (i - 1) % ICONS_PER_ROW
             icons[i]:SetPoint(
                 "TOPRIGHT",

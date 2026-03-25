@@ -8,7 +8,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
-local bit_band = bit.band -- LuaJIT built-in（LLS 環境限制，快取為 local）
+local bitBand = bit.band -- LuaJIT built-in（LLS 環境限制，快取為 local）
 
 --------------------------------------------------------------------------------
 -- 快取機制：避免重複呼叫昂貴的物品資訊 API
@@ -31,7 +31,7 @@ local itemLevelCacheMeta = { n = 0 }
 local equipmentTypeCacheMeta = { n = 0 }
 
 --------------------------------------------------------------------------------
--- GetItemLevel
+-- 物品等級查詢
 --------------------------------------------------------------------------------
 
 local function GetItemLevel(itemLink)
@@ -54,7 +54,7 @@ local function GetItemLevel(itemLink)
 end
 
 --------------------------------------------------------------------------------
--- IsEquipment
+-- 裝備判定
 --------------------------------------------------------------------------------
 
 local function IsEquipment(itemLink)
@@ -219,7 +219,7 @@ local function GetBagTypeColor(bag)
     if bagType and bagType > 0 then
         -- 檢查每個專業 flag
         for flag, color in pairs(PROFESSION_BAG_COLORS) do
-            if bit_band(bagType, flag) > 0 then
+            if bitBand(bagType, flag) > 0 then
                 bagTypeCache[bag] = color
                 return color
             end

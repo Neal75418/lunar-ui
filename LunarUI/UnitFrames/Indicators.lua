@@ -9,7 +9,7 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 -- 效能：快取全域變數
-local math_floor = math.floor
+local mathFloor = math.floor
 local format = string.format
 
 local C = LunarUI.Colors
@@ -123,7 +123,7 @@ local function CreateAlternativePower(frame)
     altPower.PostUpdate = function(element, _unit, cur, _min, max)
         if element.text then
             if max and max > 0 then
-                element.text:SetText(format("%d%%", math_floor(cur / max * 100 + 0.5)))
+                element.text:SetText(format("%d%%", mathFloor(cur / max * 100 + 0.5)))
             else
                 element.text:SetText("")
             end

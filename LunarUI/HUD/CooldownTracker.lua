@@ -18,10 +18,10 @@ local C = LunarUI.Colors
 -- 效能：快取全域變數
 --------------------------------------------------------------------------------
 
-local math_ceil = math.ceil
-local math_floor = math.floor
+local mathCeil = math.ceil
+local mathFloor = math.floor
 local format = string.format
-local table_insert = table.insert
+local tableInsert = table.insert
 local ipairs = ipairs
 local type = type
 local wipe = wipe
@@ -272,9 +272,9 @@ end
 
 local function FormatCooldown(seconds)
     if seconds >= 60 then
-        return format("%dm", math_ceil(seconds / 60))
+        return format("%dm", mathCeil(seconds / 60))
     elseif seconds >= 10 then
-        return format("%d", math_floor(seconds))
+        return format("%d", mathFloor(seconds))
     else
         return format("%.1f", seconds)
     end
@@ -475,7 +475,7 @@ local function SetupTrackedSpells()
     wipe(trackedSpells)
     for _, spellID in ipairs(defaultSpells) do
         if IsSpellKnownByPlayer(spellID) then
-            table_insert(trackedSpells, spellID)
+            tableInsert(trackedSpells, spellID)
         end
     end
 

@@ -1,15 +1,15 @@
 ---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if, missing-parameter
 --[[
-    LunarUI - Loot Module
-    Custom loot frame with Lunar theme styling
+    LunarUI - 拾取模組
+    自訂拾取框架（Lunar 主題風格）
 
-    Features:
-    - Replaces Blizzard default loot frame
-    - Item quality colored borders
-    - Compact layout with icon + name + quantity
-    - Loot All button
-    - Auto-close on empty
-    - Phase-aware opacity
+    功能：
+    - 取代 Blizzard 預設拾取框架
+    - 物品品質著色邊框
+    - 緊湊佈局：圖示 + 名稱 + 數量
+    - 全部拾取按鈕
+    - 空時自動關閉
+    - 月相感知透明度
 ]]
 
 local _ADDON_NAME, Engine = ...

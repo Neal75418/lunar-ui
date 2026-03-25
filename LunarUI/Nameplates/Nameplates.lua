@@ -20,7 +20,7 @@ local UnitIsPlayer = UnitIsPlayer
 local UnitReaction = UnitReaction
 local UnitClassification = UnitClassification
 local UnitPowerType = UnitPowerType
-local math_floor = math.floor
+local mathFloor = math.floor
 local format = string.format
 
 -- 等待 oUF
@@ -195,7 +195,7 @@ local function CreateHealthBar(frame)
                 healthText:SetText("")
                 return
             end
-            local pct = math_floor(cur / max * 100)
+            local pct = mathFloor(cur / max * 100)
             if fmt == "percent" then
                 healthText:SetText(format("%d%%", pct))
             elseif fmt == "current" then
@@ -253,20 +253,20 @@ local function CreateCastbar(frame)
     bg:SetVertexColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
     castbar.bg = bg
 
-    -- Border
+    -- 邊框
     local border = CreateFrame("Frame", nil, castbar, "BackdropTemplate")
     border:SetPoint("TOPLEFT", -1, 1)
     border:SetPoint("BOTTOMRIGHT", 1, -1)
     LunarUI.ApplyBackdrop(border, nil, C.transparent, C.borderSubtle)
 
-    -- Icon
+    -- 圖示
     local icon = castbar:CreateTexture(nil, "OVERLAY")
     icon:SetSize(6, 6)
     icon:SetPoint("RIGHT", castbar, "LEFT", -2, 0)
     icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
     castbar.Icon = icon
 
-    -- Text
+    -- 文字
     local text = castbar:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(text, 7, "OUTLINE")
     text:SetPoint("CENTER")
@@ -278,7 +278,7 @@ local function CreateCastbar(frame)
     castbar.PostCastStart = function(self, _unit)
         self:SetStatusBarColor(unpack(CASTBAR_COLOR))
     end
-    -- Spark
+    -- 火花效果
     local spark = castbar:CreateTexture(nil, "OVERLAY")
     spark:SetSize(10, 10)
     spark:SetBlendMode("ADD")
@@ -563,7 +563,7 @@ local function Nameplate_OnShow(frame)
         return
     end
 
-    -- Re-register frame for tracking (removed on hide)
+    -- 重新註冊框架追蹤（隱藏時已移除）
     nameplateFrames[frame] = true
 
     -- 重新強制固定尺寸（Blizzard 名牌系統可能在回收時重設錨點/尺寸）
@@ -724,7 +724,7 @@ end
 
 --[[ Nameplate callback: OnHide ]]
 local function Nameplate_OnHide(frame)
-    -- Clean up
+    -- 清理
     if frame.TargetIndicator then
         frame.TargetIndicator:Hide()
     end

@@ -3,13 +3,13 @@
     LunarUI - DataBars 模組
     經驗值、聲望、榮譽進度條
 
-    Features:
-    - Experience bar with rested XP display
-    - Reputation bar (watched faction)
-    - Honor bar (PvP level progress)
-    - Phase-aware alpha
-    - Tooltip on mouseover
-    - Configurable size, position, text format
+    功能：
+    - 經驗值條（含休息經驗顯示）
+    - 聲望條（追蹤陣營）
+    - 榮譽條（PvP 等級進度）
+    - 月相感知透明度
+    - 滑鼠懸停顯示提示
+    - 可設定大小、位置、文字格式
 ]]
 
 local _ADDON_NAME, Engine = ...

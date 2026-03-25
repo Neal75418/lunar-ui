@@ -27,12 +27,12 @@ local function SkinCommunities()
         return
     end
 
-    -- Portrait and top-level decorations
+    -- 頭像與頂層裝飾
     if frame.PortraitOverlay then
         frame.PortraitOverlay:SetAlpha(0)
     end
 
-    -- Member list
+    -- 成員列表
     if frame.MemberList then
         LunarUI.StripTextures(frame.MemberList)
         AddPanelBackdrop(frame.MemberList)
@@ -56,7 +56,7 @@ local function SkinCommunities()
         end
     end
 
-    -- Chat area
+    -- 聊天區域
     if frame.Chat then
         LunarUI.StripTextures(frame.Chat)
         AddPanelBackdrop(frame.Chat)
@@ -72,7 +72,7 @@ local function SkinCommunities()
         end
     end
 
-    -- Chat edit box
+    -- 聊天輸入框
     if frame.ChatEditBox then
         LunarUI.SkinEditBox(frame.ChatEditBox)
         -- StripTextures 移除了撐高度的材質，明確設定高度
@@ -99,7 +99,7 @@ local function SkinCommunities()
         end
     end
 
-    -- Community list (left sidebar)
+    -- 社群列表（左側欄）
     if frame.CommunitiesList then
         LunarUI.StripTextures(frame.CommunitiesList)
         AddPanelBackdrop(frame.CommunitiesList)
@@ -131,7 +131,7 @@ local function SkinCommunities()
         LunarUI.StripTextures(frame.StreamDropDownMenu)
     end
 
-    -- Guild member detail frame
+    -- 公會成員詳情框架
     if frame.GuildMemberDetailFrame then
         LunarUI:SkinFrame(frame.GuildMemberDetailFrame)
         if frame.GuildMemberDetailFrame.CloseButton then
@@ -139,7 +139,7 @@ local function SkinCommunities()
         end
     end
 
-    -- Notification settings dialog
+    -- 通知設定對話框
     if frame.NotificationSettingsDialog then
         LunarUI:SkinFrame(frame.NotificationSettingsDialog)
         if frame.NotificationSettingsDialog.CloseButton then
@@ -147,19 +147,19 @@ local function SkinCommunities()
         end
     end
 
-    -- Guild benefits frame
+    -- 公會福利框架
     if frame.GuildBenefitsFrame then
         LunarUI.StripTextures(frame.GuildBenefitsFrame)
         AddPanelBackdrop(frame.GuildBenefitsFrame)
     end
 
-    -- Guild info frame
+    -- 公會資訊框架
     if frame.GuildDetailsFrame then
         LunarUI.StripTextures(frame.GuildDetailsFrame)
         AddPanelBackdrop(frame.GuildDetailsFrame)
     end
 
-    -- Guild rewards
+    -- 公會獎勵
     if frame.GuildBenefitsFrame and frame.GuildBenefitsFrame.Rewards then
         LunarUI.StripTextures(frame.GuildBenefitsFrame.Rewards)
     end
@@ -167,5 +167,5 @@ local function SkinCommunities()
     return true
 end
 
--- Communities is loaded on demand
+-- 社群為延遲載入
 LunarUI.RegisterSkin("communities", "Blizzard_Communities", SkinCommunities)

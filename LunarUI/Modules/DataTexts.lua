@@ -3,12 +3,12 @@
     LunarUI - DataTexts 模組
     可配置的文字資訊面板（FPS、延遲、金幣、耐久度、背包空位等）
 
-    Features:
-    - Provider-based architecture (register custom data sources)
-    - Multiple panel positions (bottom, minimap bottom)
-    - Configurable slot assignments
-    - Click handlers and tooltips per provider
-    - Phase-aware alpha
+    功能：
+    - Provider 架構（可註冊自訂資料來源）
+    - 多面板位置（底部、小地圖下方）
+    - 可設定的欄位分配
+    - 每個 Provider 支援點擊處理與滑鼠提示
+    - 月相感知透明度
 ]]
 
 local _ADDON_NAME, Engine = ...
