@@ -22,6 +22,7 @@ timeline
     2026-03-10 : EmmyLua + CI 改善
     2026-03-12 : v1.1.0 品質強化
     2026-03-21 : 深度審查 + 風格統一
+    2026-03-25 : v1.2.0 品質穩定版
 ```
 
 ---
@@ -31,6 +32,10 @@ timeline
 ### Planned
 
 - 自訂月相材質（手繪）
+
+---
+
+## [1.2.0] &mdash; 2026-03-25
 
 ### Fixed
 
@@ -408,7 +413,8 @@ LunarUI v1.0.0 — 現代化 WoW UI 替換系統，涵蓋 Unit Frames、Nameplat
 ---
 
 <!-- Link references -->
-[Unreleased]: https://github.com/Neal75418/lunar-ui/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/Neal75418/lunar-ui/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/Neal75418/lunar-ui/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Neal75418/lunar-ui/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Neal75418/lunar-ui/compare/v0.9.2...v1.0.0
 [0.9.2]: https://github.com/Neal75418/lunar-ui/compare/v0.9.1...v0.9.2
