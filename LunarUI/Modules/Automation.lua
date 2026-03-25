@@ -196,7 +196,7 @@ local EVENT_HANDLERS = {
 --------------------------------------------------------------------------------
 
 function LunarUI.InitAutomation()
-    if not LunarUI.db or not LunarUI.db.profile or not LunarUI.db.profile.automation then
+    if not LunarUI.GetModuleDB("automation") then
         return
     end
 

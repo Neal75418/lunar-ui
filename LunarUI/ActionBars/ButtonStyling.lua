@@ -232,7 +232,7 @@ local function StyleButton(button)
     end
 
     -- 巨集名稱
-    local macroName = button.Name or _G[name .. "Name"]
+    local macroName = button.Name or (name and _G[name .. "Name"])
     if macroName then
         local showMacroNames = abStyleDB and abStyleDB.showMacroNames
         if showMacroNames then

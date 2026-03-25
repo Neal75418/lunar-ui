@@ -29,7 +29,9 @@ local function GetStatusBarTexture()
     return statusBarTexture
 end
 local format = string.format
-local floor = math.floor
+local mathFloor = math.floor
+local mathMax = math.max
+local mathMin = math.min
 
 -- 陣營聲望顏色（對應暴雪 FACTION_BAR_COLORS）
 local STANDING_COLORS = {
@@ -114,7 +116,7 @@ local function FormatBarText(textFormat, cur, max, extra)
     if not cur or not max or max == 0 then
         return ""
     end
-    local pct = floor(cur / max * 100)
+    local pct = mathFloor(cur / max * 100)
 
     if textFormat == "percent" then
         return pct .. "%"
@@ -169,8 +171,8 @@ local function UpdateExperience()
     -- 休息經驗
     local rested = _G.GetXPExhaustion() or 0
     if rested > 0 then
-        -- H-6: math.max(0, ...) 防止 cur > max 時 (max - cur) 為負數導致 SetWidth 報錯
-        local restedWidth = bar:GetWidth() * (math.max(0, math.min(rested, max - cur)) / max)
+        -- H-6: mathMax(0, ...) 防止 cur > max 時 (max - cur) 為負數導致 SetWidth 報錯
+        local restedWidth = bar:GetWidth() * (mathMax(0, mathMin(rested, max - cur)) / max)
         if restedWidth < 2 then
             bar.rested:Hide()
         else
@@ -202,7 +204,7 @@ local function ExperienceTooltip(bar)
     local cur = _G.UnitXP("player")
     local max = _G.UnitXPMax("player")
     local rested = _G.GetXPExhaustion() or 0
-    local pct = max > 0 and floor(cur / max * 100) or 0
+    local pct = max > 0 and mathFloor(cur / max * 100) or 0
 
     _G.GameTooltip:SetOwner(bar, "ANCHOR_TOP", 0, 4)
     _G.GameTooltip:ClearLines()
@@ -221,7 +223,7 @@ local function ExperienceTooltip(bar)
     if rested > 0 then
         _G.GameTooltip:AddDoubleLine(
             L["Rested"] or "Rested",
-            format("%s (%d%%)", FormatValue(rested), floor(rested / max * 100)),
+            format("%s (%d%%)", FormatValue(rested), mathFloor(rested / max * 100)),
             0.0,
             0.4,
             0.8,
@@ -286,7 +288,7 @@ local function UpdateReputation()
         end
     end
 
-    local cur = math.max(0, barValue - barMin)
+    local cur = mathMax(0, barValue - barMin)
     local max = barMax - barMin
     if max <= 0 then
         max = 1
@@ -326,7 +328,7 @@ local function ReputationTooltip(bar)
         return
     end
 
-    local pct = bar._repMax > 0 and floor(bar._repCur / bar._repMax * 100) or 0
+    local pct = bar._repMax > 0 and mathFloor(bar._repCur / bar._repMax * 100) or 0
     local color = STANDING_COLORS[bar._repStanding] or STANDING_COLORS[4]
 
     _G.GameTooltip:SetOwner(bar, "ANCHOR_TOP", 0, 4)
@@ -422,7 +424,7 @@ local function HonorTooltip(bar)
     end
 
     local cur, max, level = bar._honorCur, bar._honorMax, bar._honorLevel
-    local pct = max > 0 and floor(cur / max * 100) or 0
+    local pct = max > 0 and mathFloor(cur / max * 100) or 0
 
     _G.GameTooltip:SetOwner(bar, "ANCHOR_TOP", 0, 4)
     _G.GameTooltip:ClearLines()

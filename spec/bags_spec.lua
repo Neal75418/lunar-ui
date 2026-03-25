@@ -266,6 +266,7 @@ end)
 
 describe("IsEquipment", function()
     before_each(function()
+        LunarUI.BagsClearAllCaches()
         _G.C_Item.GetItemInfo = function()
             return nil
         end
@@ -459,6 +460,7 @@ end)
 
 describe("GetBagTypeColor", function()
     before_each(function()
+        LunarUI.BagsClearBagTypeCache()
         _G.C_Container.GetContainerNumFreeSlots = function()
             return 0, 0
         end

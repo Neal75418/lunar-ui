@@ -63,7 +63,7 @@ local function StyleChatTab(chatFrame)
         tab.glow:SetAlpha(0)
     end
 
-    -- Active tab 底線指示器
+    -- 作用中分頁底線指示器
     if not tab._lunarActiveIndicator then
         tab._lunarActiveIndicator = tab:CreateTexture(nil, "OVERLAY")
         tab._lunarActiveIndicator:SetHeight(2)

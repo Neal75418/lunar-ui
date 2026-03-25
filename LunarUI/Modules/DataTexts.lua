@@ -23,7 +23,7 @@ local L = Engine.L or {}
 local backdropTemplate = LunarUI.backdropTemplate
 
 local format = string.format
-local floor = math.floor
+local mathFloor = math.floor
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -94,15 +94,15 @@ RegisterProvider("fps", {
     onUpdate = true,
     updateInterval = 1,
     update = function()
-        local fps = floor(GetFramerate())
+        local fps = mathFloor(GetFramerate())
         local r, g = StatusColor(fps, 60, 30, false)
-        return format("|cff%02x%02x00%d|r FPS", math.floor(r * 255), math.floor(g * 255), fps)
+        return format("|cff%02x%02x00%d|r FPS", mathFloor(r * 255), mathFloor(g * 255), fps)
     end,
     tooltip = function(slot)
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
         GameTooltip:AddLine("FPS", 1, 1, 1)
-        GameTooltip:AddDoubleLine(L["Current"] or "Current", floor(GetFramerate()) .. " FPS", 1, 1, 1, 0.3, 1, 0.3)
+        GameTooltip:AddDoubleLine(L["Current"] or "Current", mathFloor(GetFramerate()) .. " FPS", 1, 1, 1, 0.3, 1, 0.3)
         GameTooltip:Show()
     end,
 })
@@ -117,7 +117,7 @@ RegisterProvider("latency", {
         local _, _, latencyHome, latencyWorld = GetNetStats()
         local ms = latencyWorld > 0 and latencyWorld or latencyHome
         local r, g = StatusColor(ms, 100, 200, true)
-        return format("|cff%02x%02x00%d|r ms", math.floor(r * 255), math.floor(g * 255), ms)
+        return format("|cff%02x%02x00%d|r ms", mathFloor(r * 255), mathFloor(g * 255), ms)
     end,
     tooltip = function(slot)
         local _, _, latencyHome, latencyWorld = GetNetStats()
@@ -136,8 +136,8 @@ RegisterProvider("gold", {
     events = { "PLAYER_MONEY", "PLAYER_ENTERING_WORLD" },
     update = function()
         local money = GetMoney()
-        local gold = floor(money / 10000)
-        local silver = floor((money % 10000) / 100)
+        local gold = mathFloor(money / 10000)
+        local silver = mathFloor((money % 10000) / 100)
         local copper = money % 100
         return format(
             "|cffffd700%d|r|TInterface\\MoneyFrame\\UI-GoldIcon:0|t |cffc7c7cf%d|r|TInterface\\MoneyFrame\\UI-SilverIcon:0|t |cffeda55f%d|r|TInterface\\MoneyFrame\\UI-CopperIcon:0|t",
@@ -148,8 +148,8 @@ RegisterProvider("gold", {
     end,
     tooltip = function(slot)
         local money = GetMoney()
-        local gold = floor(money / 10000)
-        local silver = floor((money % 10000) / 100)
+        local gold = mathFloor(money / 10000)
+        local silver = mathFloor((money % 10000) / 100)
         local copper = money % 100
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
@@ -182,7 +182,7 @@ RegisterProvider("durability", {
         for slot = 1, 18 do
             local cur, max = GetInventoryItemDurability(slot)
             if cur and max and max > 0 then
-                local pct = floor(cur / max * 100)
+                local pct = mathFloor(cur / max * 100)
                 if pct < lowestDur then
                     lowestDur = pct
                 end
@@ -199,8 +199,8 @@ RegisterProvider("durability", {
         return format(
             "%s: |cff%02x%02x00%d%%|r",
             L["Durability"] or "Dur",
-            math.floor(r * 255),
-            math.floor(g * 255),
+            mathFloor(r * 255),
+            mathFloor(g * 255),
             lowestDur
         )
     end,
@@ -223,7 +223,7 @@ RegisterProvider("durability", {
         for slotID, name in pairs(slots) do
             local cur, max = GetInventoryItemDurability(slotID)
             if cur and max and max > 0 then
-                local pct = floor(cur / max * 100)
+                local pct = mathFloor(cur / max * 100)
                 local r, g
                 if pct < 25 then
                     r, g = 1, 0.3
@@ -262,8 +262,8 @@ RegisterProvider("bagSlots", {
         return format(
             "%s: |cff%02x%02x00%d/%d|r",
             L["BagSlots"] or "Bags",
-            math.floor(r * 255),
-            math.floor(g * 255),
+            mathFloor(r * 255),
+            mathFloor(g * 255),
             totalFree,
             totalSlots
         )
@@ -692,12 +692,11 @@ local onUpdateFrame
 local onUpdateElapsed = {}
 
 local function SetupOnUpdate()
-    if onUpdateFrame then
-        return
+    if not onUpdateFrame then
+        onUpdateFrame = CreateFrame("Frame")
     end
-
-    onUpdateFrame = CreateFrame("Frame")
     -- Fix 1: 只遍歷 onUpdateProviders，不遍歷全部 providers
+    -- 每次 enable 時重新安裝 script（cleanup 會清除）
     onUpdateFrame:SetScript("OnUpdate", function(_, elapsed)
         for name, provider in pairs(onUpdateProviders) do
             onUpdateElapsed[name] = (onUpdateElapsed[name] or 0) + elapsed
@@ -714,13 +713,11 @@ end
 --------------------------------------------------------------------------------
 
 local function SetupEvents()
-    if eventFrame then
-        return
+    if not eventFrame then
+        eventFrame = CreateFrame("Frame")
     end
 
-    eventFrame = CreateFrame("Frame")
-
-    -- Fix 2: 直接使用 RegisterProvider 已建好的 eventToProviders 查找表
+    -- 每次 enable 時重新註冊事件與 script（cleanup 會清除）
     for event, _ in pairs(eventToProviders) do
         eventFrame:RegisterEvent(event)
     end
@@ -815,8 +812,7 @@ function LunarUI.CleanupDataTexts()
     -- eventToProviders / onUpdateProviders 由模組載入時的 RegisterProvider 靜態建立，
     -- 不隨 profile 改變，不可 wipe（wipe 後重新 enable 時無法重建，providers 停止更新）
     -- 保留 frame 參考（避免 re-enable 時建新 frame 造成 leak），
-    -- SetupEvents / SetupOnUpdate 的 early-return guard 會在下次 enable 時重用
-    -- 不設 nil，因為 UnregisterAllEvents + SetScript(nil) 已足夠停用
+    -- SetupEvents / SetupOnUpdate 會在下次 enable 時重新安裝 scripts 與事件
 end
 
 -- 匯出

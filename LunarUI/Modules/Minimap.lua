@@ -1336,6 +1336,8 @@ local function InitializeMinimap()
     if not db or not db.enabled then
         return
     end
+    -- 提前設定為 true：HookScript 回調需要此旗標避免在建構期間重入
+    -- 若後續初始化失敗會 rollback（見下方 pcall guard）
     isInitialized = true
 
     -- 首次啟用時安裝 flag-controlled wrapper，之後只切換 flag
@@ -1416,6 +1418,10 @@ end
 
 -- OnUpdate 清理函數
 function LunarUI.CleanupMinimap()
+    -- 戰鬥中不操作 protected frames（pcall 會吞掉錯誤但 savedState 會被清除）
+    if InCombatLockdown() then
+        return
+    end
     -- 取消縮放重置計時器
     if zoomResetHandle then
         zoomResetHandle:Cancel()

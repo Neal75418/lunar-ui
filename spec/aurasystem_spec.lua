@@ -146,6 +146,7 @@ describe("GetAuraSortFunction", function()
         local b = { expirationTime = 200 }
         assert.is_false(sortFn(a, b)) -- reversed: 100 > 200 is false
         assert.is_true(sortFn(b, a)) -- 200 > 100 is true
+        assert.is_false(sortFn(a, a)) -- strict ordering: 相等不回傳 true
     end)
 
     it("returns nil for unknown sort method", function()

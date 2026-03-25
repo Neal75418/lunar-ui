@@ -39,7 +39,8 @@ _G.GetQuestReward = function() end
 _G.AcceptProposal = function() end
 _G.RepopMe = function() end
 _G.Screenshot = function() end
--- C_Timer mock：立即執行 callback 並記錄 delay 供斷言使用
+-- C_Timer mock：刻意同步執行 callback 並記錄 delay 供斷言使用
+-- 同步執行是必要的：automation 測試需要在觸發事件後立即驗證 timer callback 的效果
 _G._timerLog = {}
 _G.C_Timer = {
     After = function(delay, fn)
