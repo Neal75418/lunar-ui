@@ -90,7 +90,7 @@ timeline
 - **Makefile** &mdash; 標準化開發指令（`make test` / `lint` / `format` / `coverage` / `check`）
 - **LunarUI_Debug** &mdash; VigorDebug 診斷工具抽取為 LoadOnDemand 獨立插件，`/lunar debugvigor` 時自動載入
 - **EmmyLua 型別定義** &mdash; `wow_api.def.lua`（WoW API 完整 stub）、`spec/busted.def.lua`（busted/luassert stub），以 `---@meta` 標記
-- **EmmyLua 診斷抑制** &mdash; 全部 92 個 `.lua` 檔案第一行統一加入 `---@diagnostic disable:` header，消除 IDE 已知誤報
+- **EmmyLua 診斷抑制** &mdash; 全部 69 個 `.lua` 檔案第一行統一加入 `---@diagnostic disable:` header，消除 IDE 已知誤報
 - **`.emmyrc.json`** &mdash; EmmyLua Analyzer 專案設定（`wow_api.def.lua` 納入 workspace library）
 
 ### Fixed

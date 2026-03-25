@@ -71,7 +71,7 @@ graph LR
 ## 模組系統 API
 
 ```lua
--- 註冊模組（Core/Init.lua:111）
+-- 註冊模組（Core/Init.lua:135）
 LunarUI:RegisterModule("ModuleName", {
     onEnable  = function() ... end,
     onDisable = function() ... end,   -- 可選，反向順序執行
@@ -79,7 +79,7 @@ LunarUI:RegisterModule("ModuleName", {
     lifecycle = "reversible",         -- 可選，生命週期類型（見下方說明）
 })
 -- lifecycle 類型：
---   "reversible"       — onDisable 完全還原 Blizzard 預設狀態（預設值；ActionBars、Minimap、Bags、Chat、Tooltip）
+--   "reversible"       — onDisable 完全還原 Blizzard 預設狀態（預設值；ActionBars、Minimap、Bags、Tooltip）
 --   "soft_disable"     — 僅隱藏框架，不還原 Blizzard，需 /reload（UnitFrames、Nameplates）
 --   "reload_required"  — 深度修改無法撤銷，需 /reload（Chat、Skins）
 

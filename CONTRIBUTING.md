@@ -100,6 +100,7 @@ LunarUI:RegisterModule("ModuleName", {
     onEnable  = function() ... end,
     onDisable = function() ... end,   -- 可選，反向順序執行
     delay     = 0.5,                  -- 可選，延遲初始化（秒）
+    lifecycle = "reversible",         -- reversible / soft_disable / reload_required
 })
 ```
 

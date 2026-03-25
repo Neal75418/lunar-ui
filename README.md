@@ -157,7 +157,7 @@ graph TB
 
     style Core fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
     style Combat fill:#2d1b36,stroke:#6c7a89,color:#e0e0e0
-    style HUD fill:#1b2d36,stroke:#6c7a89,color:#e0e0e0
+    style HUD fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
     style Modules fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
     style Addons fill:#36331b,stroke:#6c7a89,color:#e0e0e0
 ```
