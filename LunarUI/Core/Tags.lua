@@ -41,6 +41,7 @@ local RAID_CLASS_COLORS = RAID_CLASS_COLORS
 local strlenutf8 = strlenutf8
 local stringUtf8sub = string.utf8sub
 
+local mathFloor = math.floor
 local format = string.format
 local tostring = tostring
 
@@ -122,7 +123,7 @@ Tags.Methods["lunar:health:percent"] = SafeTag(function(unit)
         return status
     end
     local hp, maxHp = UnitHealth(unit), UnitHealthMax(unit)
-    local pct = maxHp > 0 and math.floor(hp / maxHp * 100 + 0.5) or 0
+    local pct = maxHp > 0 and mathFloor(hp / maxHp * 100 + 0.5) or 0
     return format("%d%%", pct)
 end)
 Tags.Events["lunar:health:percent"] = "UNIT_HEALTH UNIT_MAXHEALTH UNIT_CONNECTION"
@@ -171,7 +172,7 @@ Tags.Methods["lunar:power:percent"] = SafeTag(function(unit)
         return ""
     end
     local cur = UnitPower(unit) or 0
-    return format("%d%%", math.floor(cur / max * 100 + 0.5))
+    return format("%d%%", mathFloor(cur / max * 100 + 0.5))
 end)
 Tags.Events["lunar:power:percent"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER UNIT_DISPLAYPOWER"
 

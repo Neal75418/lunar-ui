@@ -7,6 +7,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
+local mathMin = math.min
 local C = LunarUI.Colors
 local CASTBAR_COLOR = LunarUI.CASTBAR_COLOR
 
@@ -112,7 +113,7 @@ local function ShowEmpoweredStages(castbar, numStages)
         return
     end
 
-    numStages = math.min(numStages, MAX_TICKS) -- 防止超出 _stages 上限導致無法隱藏的洩漏
+    numStages = mathMin(numStages, MAX_TICKS) -- 防止超出 _stages 上限導致無法隱藏的洩漏
 
     local cbWidth = castbar:GetWidth()
     if cbWidth <= 0 then
@@ -245,7 +246,7 @@ local function CreateCastbar(frame, unit)
                     local castTime = self.max or 0
                     if castTime > 0 then
                         local latencyPct = (latencyWorld / 1000) / castTime
-                        latencyPct = math.min(latencyPct, 0.5) -- 上限 50%
+                        latencyPct = mathMin(latencyPct, 0.5) -- 上限 50%
                         self._latency:SetWidth(self:GetWidth() * latencyPct)
                         self._latency:Show()
                     else

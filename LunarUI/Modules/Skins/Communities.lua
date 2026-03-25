@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathMax = math.max
 local C = LunarUI.Colors
 
 -- 為子面板建立內嵌 backdrop（區分層次）
@@ -15,7 +16,7 @@ local function AddPanelBackdrop(panel)
     end
     panel._lunarPanelBG = CreateFrame("Frame", nil, panel, "BackdropTemplate")
     panel._lunarPanelBG:SetAllPoints()
-    panel._lunarPanelBG:SetFrameLevel(math.max(panel:GetFrameLevel() - 1, 0))
+    panel._lunarPanelBG:SetFrameLevel(mathMax(panel:GetFrameLevel() - 1, 0))
     LunarUI.ApplyBackdrop(panel._lunarPanelBG, nil, C.bgIcon, C.borderSubtle)
 end
 

@@ -6,6 +6,9 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathAbs = math.abs
+local mathMax = math.max
+local mathMin = math.min
 local format = string.format
 local C = LunarUI.Colors
 
@@ -144,7 +147,7 @@ local function DeserializeStringInner(str)
         local num = tonumber(numStr)
         if num then
             -- 拒絕 NaN 與 Infinity（如 1e400 被 tonumber 解析為 Infinity）
-            if num ~= num or math.abs(num) == math.huge then
+            if num ~= num or mathAbs(num) == math.huge then
                 return nil, "無效數字：" .. numStr
             end
             return num
@@ -355,7 +358,7 @@ local function ClampImportedValues(profile)
         if rule.type == "number" and rule.min and rule.max then
             local parent, key, value = LunarUI.resolveDBPath(profile, rule.path)
             if parent and type(value) == "number" then
-                parent[key] = math.max(rule.min, math.min(rule.max, value))
+                parent[key] = mathMax(rule.min, mathMin(rule.max, value))
             end
         end
     end
@@ -365,8 +368,7 @@ local function ClampImportedValues(profile)
         for i = 1, 6 do
             local barKey = "bar" .. i
             if profile.actionbars[barKey] and type(profile.actionbars[barKey].buttonSize) == "number" then
-                profile.actionbars[barKey].buttonSize =
-                    math.max(16, math.min(64, profile.actionbars[barKey].buttonSize))
+                profile.actionbars[barKey].buttonSize = mathMax(16, mathMin(64, profile.actionbars[barKey].buttonSize))
             end
         end
     end

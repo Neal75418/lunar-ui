@@ -6,6 +6,10 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathAbs = math.abs
+local mathFloor = math.floor
+local mathMax = math.max
+local mathMin = math.min
 local format = string.format
 local L = Engine.L or {}
 local C = LunarUI.Colors
@@ -207,17 +211,17 @@ local function BuildStep1(parent)
 
     -- 讀取當前 UI 縮放，並過濾非法值（NaN、Infinity、非數字型別）
     local currentScale = UIParent:GetEffectiveScale()
-    if type(currentScale) ~= "number" or currentScale ~= currentScale or math.abs(currentScale) == math.huge then
+    if type(currentScale) ~= "number" or currentScale ~= currentScale or mathAbs(currentScale) == math.huge then
         currentScale = 0.75
     end
-    currentScale = math.max(0.5, math.min(2.0, currentScale))
-    wizardChoices.uiScale = math.floor(currentScale * 20 + 0.5) / 20 -- 四捨五入到 0.05
+    currentScale = mathMax(0.5, mathMin(2.0, currentScale))
+    wizardChoices.uiScale = mathFloor(currentScale * 20 + 0.5) / 20 -- 四捨五入到 0.05
 
     slider:SetValue(wizardChoices.uiScale)
     scaleValue:SetText(format("%.2f", wizardChoices.uiScale))
 
     slider:SetScript("OnValueChanged", function(_, val)
-        val = math.floor(val * 20 + 0.5) / 20
+        val = mathFloor(val * 20 + 0.5) / 20
         wizardChoices.uiScale = val
         scaleValue:SetText(format("%.2f", val))
     end)
@@ -656,11 +660,11 @@ function LunarUI.ShowInstallWizard()
     LunarUI.CleanupInstallWizard()
     currentStep = 1
     local currentScale = UIParent:GetEffectiveScale()
-    if type(currentScale) ~= "number" or currentScale ~= currentScale or math.abs(currentScale) == math.huge then
+    if type(currentScale) ~= "number" or currentScale ~= currentScale or mathAbs(currentScale) == math.huge then
         currentScale = 0.75
     end
-    currentScale = math.max(0.5, math.min(2.0, currentScale))
-    wizardChoices.uiScale = math.floor(currentScale * 20 + 0.5) / 20
+    currentScale = mathMax(0.5, mathMin(2.0, currentScale))
+    wizardChoices.uiScale = mathFloor(currentScale * 20 + 0.5) / 20
     wizardChoices.layout = "dps"
     wizardChoices.actionBarFade = true
     local f = CreateWizardFrame()

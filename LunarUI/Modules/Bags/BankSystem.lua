@@ -6,6 +6,10 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathCeil = math.ceil
+local mathFloor = math.floor
+local mathMax = math.max
+local mathMin = math.min
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -100,10 +104,10 @@ local function GetBankSlotsPerRow(totalSlots)
     local screenHeight = GetScreenHeight()
     local maxHeight = screenHeight * 0.80 -- 留 20% 邊距
     local overhead = PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
-    local maxRows = math.floor((maxHeight - overhead + SLOT_SPACING) / (SLOT_SIZE + SLOT_SPACING))
-    maxRows = math.max(maxRows, 1)
-    local neededCols = math.ceil(totalSlots / maxRows)
-    return math.max(SLOTS_PER_ROW, neededCols)
+    local maxRows = mathFloor((maxHeight - overhead + SLOT_SPACING) / (SLOT_SIZE + SLOT_SPACING))
+    maxRows = mathMax(maxRows, 1)
+    local neededCols = mathCeil(totalSlots / maxRows)
+    return mathMax(SLOTS_PER_ROW, neededCols)
 end
 
 -- 掃描銀行格子，找出最後一個有物品的 slotID
@@ -149,11 +153,11 @@ local function ResizeBankFrame(actualSlotCount)
 
     -- 找出最後有物品的行，加上緩衝行，裁掉剩餘空行
     local lastOccupied = GetLastOccupiedSlotID()
-    local lastOccupiedRow = math.ceil(lastOccupied / bankCols)
+    local lastOccupiedRow = mathCeil(lastOccupied / bankCols)
     local displayRows = lastOccupiedRow + BANK_BUFFER_ROWS
-    local totalRows = math.ceil(actualSlotCount / bankCols)
-    local numRows = math.min(displayRows, totalRows)
-    numRows = math.max(numRows, 1) -- 至少 1 行
+    local totalRows = mathCeil(actualSlotCount / bankCols)
+    local numRows = mathMin(displayRows, totalRows)
+    numRows = mathMax(numRows, 1) -- 至少 1 行
 
     -- 記錄顯示的格子數上限（供 caller 隱藏多餘格子）
     bankFrame.displaySlots = numRows * bankCols
@@ -359,7 +363,7 @@ local function CreateBankFrame()
         slotID = slotID + 1
         local button = CreateBankSlot(slotContainer, slotID, BANK_CONTAINER, slot)
 
-        local row = math.floor((slotID - 1) / bankCols)
+        local row = mathFloor((slotID - 1) / bankCols)
         local col = (slotID - 1) % bankCols
 
         button:SetPoint(
@@ -381,7 +385,7 @@ local function CreateBankFrame()
             slotID = slotID + 1
             local button = CreateBankSlot(slotContainer, slotID, bag, slot)
 
-            local row = math.floor((slotID - 1) / bankCols)
+            local row = mathFloor((slotID - 1) / bankCols)
             local col = (slotID - 1) % bankCols
 
             button:SetPoint(
@@ -541,7 +545,7 @@ local function RefreshBankLayout()
         local button = bankSlots[i]
         if button then
             if i <= displaySlots then
-                local row = math.floor((i - 1) / bankCols)
+                local row = mathFloor((i - 1) / bankCols)
                 local col = (i - 1) % bankCols
 
                 button:ClearAllPoints()

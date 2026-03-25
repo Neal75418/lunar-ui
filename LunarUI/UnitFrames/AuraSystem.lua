@@ -256,7 +256,8 @@ local function PostUpdateDebuffIcon(_self, button, _unit, data, _position)
         return data.isHarmfulAura == true
     end)
     if ok and isHarmful then
-        local color = UNITFRAME_DEBUFF_COLORS["none"] or UNITFRAME_DEBUFF_COLORS[""]
+        -- WoW DebuffTypeColor 預設 key 為 ""（非 "none"）
+        local color = UNITFRAME_DEBUFF_COLORS[""] or UNITFRAME_DEBUFF_COLORS["none"]
         if color then
             button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
         else

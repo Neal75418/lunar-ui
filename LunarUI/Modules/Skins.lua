@@ -12,6 +12,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathMax = math.max
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
@@ -117,7 +118,7 @@ function LunarUI:SkinFrame(frame, options)
     if not frame._lunarSkinBG then
         frame._lunarSkinBG = CreateFrame("Frame", nil, frame, "BackdropTemplate")
         frame._lunarSkinBG:SetAllPoints()
-        frame._lunarSkinBG:SetFrameLevel(math.max(frame:GetFrameLevel() - 1, 0))
+        frame._lunarSkinBG:SetFrameLevel(mathMax(frame:GetFrameLevel() - 1, 0))
     end
 
     LunarUI.ApplyBackdrop(frame._lunarSkinBG)

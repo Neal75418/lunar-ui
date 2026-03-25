@@ -6,6 +6,8 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathMax = math.max
+local mathMin = math.min
 local C = LunarUI.Colors
 local L = Engine.L or {}
 
@@ -197,9 +199,9 @@ local function StyleChatFrame(chatFrame)
             local current = self:GetAlpha()
             local speed = 4 * dt -- ~0.25s fade
             if current < target then
-                self:SetAlpha(math.min(current + speed, target))
+                self:SetAlpha(mathMin(current + speed, target))
             elseif current > target then
-                self:SetAlpha(math.max(current - speed, target))
+                self:SetAlpha(mathMax(current - speed, target))
                 if self:GetAlpha() <= 0.01 then
                     self:SetAlpha(0)
                     self:Hide()

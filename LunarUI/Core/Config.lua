@@ -7,6 +7,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathAbs = math.abs
 local format = string.format
 
 --------------------------------------------------------------------------------
@@ -206,7 +207,7 @@ function LunarUI:ValidateDB()
             local invalid = false
 
             if rule.type == "number" then
-                if type(value) ~= "number" or value ~= value or math.abs(value) == math.huge then
+                if type(value) ~= "number" or value ~= value or mathAbs(value) == math.huge then
                     -- value ~= value 偵測 NaN；math.abs == huge 偵測 Infinity
                     invalid = true
                 elseif rule.min and value < rule.min then

@@ -6,6 +6,8 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathMax = math.max
+local mathMin = math.min
 
 -- M6: Blizzard-managed bars 不可由 LunarUI 淡出控制（會造成 secure frame taint）
 local BLIZZARD_BAR_KEYS = { extraActionButton = true, zoneAbilityButton = true }
@@ -89,11 +91,11 @@ local function UpdateFadeAnimation(fadeEnabled, elapsed)
             anyActive = true
             local bar = bars[barKey]
             if bar then
-                local speed = (1.0 / math.max(fadeDuration, 0.05)) * elapsed
+                local speed = (1.0 / mathMax(fadeDuration, 0.05)) * elapsed
                 if state.alpha < state.targetAlpha then
-                    state.alpha = math.min(state.alpha + speed, state.targetAlpha)
+                    state.alpha = mathMin(state.alpha + speed, state.targetAlpha)
                 else
-                    state.alpha = math.max(state.alpha - speed, state.targetAlpha)
+                    state.alpha = mathMax(state.alpha - speed, state.targetAlpha)
                 end
                 SetBarAlpha(bar, state.alpha)
             end

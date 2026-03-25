@@ -26,6 +26,7 @@ LunarUI.iconBackdropTemplate = {
     edgeSize = 1,
 }
 
+local mathMax = math.max
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
@@ -101,7 +102,7 @@ function LunarUI.CreateBackdrop(frame, options)
     else
         backdrop:SetAllPoints()
     end
-    backdrop:SetFrameLevel(math.max(frame:GetFrameLevel() - 1, 0))
+    backdrop:SetFrameLevel(mathMax(frame:GetFrameLevel() - 1, 0))
     backdrop:SetBackdrop(LunarUI.backdropTemplate)
     backdrop:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], C.bg[4])
     local border = options.borderColor or C.border

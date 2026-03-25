@@ -20,6 +20,7 @@ local C = LunarUI.Colors
 
 local mathCeil = math.ceil
 local mathFloor = math.floor
+local mathMin = math.min
 local format = string.format
 local tableInsert = table.insert
 local ipairs = ipairs
@@ -579,7 +580,7 @@ function LunarUI.RebuildCooldownTracker()
     local oldMaxIcons = #cooldownIcons
     LoadSettings()
     -- 調整現有圖示大小與內部材質
-    for i = 1, math.min(oldMaxIcons, MAX_ICONS) do
+    for i = 1, mathMin(oldMaxIcons, MAX_ICONS) do
         local icon = cooldownIcons[i]
         if icon then
             icon:SetSize(ICON_SIZE, ICON_SIZE)

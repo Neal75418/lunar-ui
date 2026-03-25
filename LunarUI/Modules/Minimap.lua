@@ -12,6 +12,9 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathFloor = math.floor
+local mathCeil = math.ceil
+local mathMin = math.min
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -290,6 +293,11 @@ local function OrganizeMinimapButtons()
     local buttonSize = 24
     local spacing = 2
 
+    -- 戰鬥中不操作 SetParent（minimap 按鈕可能為 protected frame）
+    if InCombatLockdown() then
+        return
+    end
+
     local visibleIdx = 0
     for _, button in ipairs(collectedButtons) do
         if button and button:IsShown() then
@@ -297,7 +305,7 @@ local function OrganizeMinimapButtons()
             button:SetParent(buttonFrame)
             button:ClearAllPoints()
 
-            local row = math.floor((visibleIdx - 1) / buttonsPerRow)
+            local row = mathFloor((visibleIdx - 1) / buttonsPerRow)
             local col = (visibleIdx - 1) % buttonsPerRow
 
             button:SetPoint(
@@ -337,8 +345,8 @@ local function OrganizeMinimapButtons()
 
     -- 調整按鈕框架大小（只計算可見按鈕）
     local numButtons = visibleIdx
-    local numRows = math.ceil(numButtons / buttonsPerRow)
-    local width = math.min(numButtons, buttonsPerRow) * (buttonSize + spacing) - spacing
+    local numRows = mathCeil(numButtons / buttonsPerRow)
+    local width = mathMin(numButtons, buttonsPerRow) * (buttonSize + spacing) - spacing
     local height = numRows * (buttonSize + spacing) - spacing
 
     if width > 0 and height > 0 then

@@ -22,6 +22,8 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathCeil = math.ceil
+local mathFloor = math.floor
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -749,9 +751,9 @@ local function CreateBagFrame()
                 layoutIdx = layoutIdx + numBagSlots
             end
         end
-        numRows = math.ceil(layoutIdx / SLOTS_PER_ROW)
+        numRows = mathCeil(layoutIdx / SLOTS_PER_ROW)
     else
-        numRows = math.ceil(totalSlots / SLOTS_PER_ROW)
+        numRows = mathCeil(totalSlots / SLOTS_PER_ROW)
     end
     local width = SLOTS_PER_ROW * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
     local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
@@ -865,7 +867,7 @@ local function CreateBagFrame()
     if db.reverseBagSlots then
         -- 反轉整個清單
         local n = #slotList
-        for i = 1, math.floor(n / 2) do
+        for i = 1, mathFloor(n / 2) do
             slotList[i], slotList[n - i + 1] = slotList[n - i + 1], slotList[i]
         end
     end
@@ -887,7 +889,7 @@ local function CreateBagFrame()
         end
         prevBag = slotInfo.bag
 
-        local row = math.floor(layoutIdx / SLOTS_PER_ROW)
+        local row = mathFloor(layoutIdx / SLOTS_PER_ROW)
         local col = layoutIdx % SLOTS_PER_ROW
 
         button:SetPoint(
@@ -995,7 +997,7 @@ local function RefreshBagLayout()
     end
     if db and db.reverseBagSlots then
         local n = #slotList
-        for i = 1, math.floor(n / 2) do
+        for i = 1, mathFloor(n / 2) do
             slotList[i], slotList[n - i + 1] = slotList[n - i + 1], slotList[i]
         end
     end
@@ -1018,9 +1020,9 @@ local function RefreshBagLayout()
                 layoutIdx = layoutIdx + numBagSlots
             end
         end
-        numRows = math.ceil(layoutIdx / SLOTS_PER_ROW)
+        numRows = mathCeil(layoutIdx / SLOTS_PER_ROW)
     else
-        numRows = math.ceil(#slotList / SLOTS_PER_ROW)
+        numRows = mathCeil(#slotList / SLOTS_PER_ROW)
     end
     local width = SLOTS_PER_ROW * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
     local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
@@ -1052,7 +1054,7 @@ local function RefreshBagLayout()
         end
         prevBag = slotInfo.bag
 
-        local row = math.floor(layoutIdx / SLOTS_PER_ROW)
+        local row = mathFloor(layoutIdx / SLOTS_PER_ROW)
         local col = layoutIdx % SLOTS_PER_ROW
 
         button:ClearAllPoints()

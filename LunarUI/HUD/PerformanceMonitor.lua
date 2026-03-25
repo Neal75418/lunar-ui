@@ -12,6 +12,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local format = string.format
+local mathMax = math.max
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -186,7 +187,7 @@ local function UpdatePerformance()
     perfFrame.fpsText:SetTextColor(r, g, b)
 
     -- 更新延遲（顯示較高的那個）
-    local latency = math.max(homeMs, worldMs)
+    local latency = mathMax(homeMs, worldMs)
     r, g, b = GetLatencyColor(latency)
     perfFrame.latencyText:SetFormattedText("%d", latency)
     perfFrame.latencyText:SetTextColor(r, g, b)

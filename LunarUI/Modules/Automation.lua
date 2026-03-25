@@ -199,6 +199,10 @@ function LunarUI.InitAutomation()
     if not LunarUI.GetModuleDB("automation") then
         return
     end
+    -- 防止重複初始化（profile 切換可能重複觸發 EnableModules）
+    if automationFrame:GetScript("OnEvent") then
+        return
+    end
 
     for event in pairs(EVENT_HANDLERS) do
         automationFrame:RegisterEvent(event)

@@ -16,6 +16,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathFloor = math.floor
 local format = string.format
 local C = LunarUI.Colors
 
@@ -160,7 +161,7 @@ local function GetInspectItemLevel(unit)
         end
     end
     if count > 0 then
-        return math.floor(totalIlvl / count + 0.5)
+        return mathFloor(totalIlvl / count + 0.5)
     end
     return nil
 end
@@ -258,7 +259,7 @@ end)
 --------------------------------------------------------------------------------
 
 local function StyleTooltip(tooltip)
-    -- if not tooltip then return end (Caller ensures)
+    -- 呼叫端已確保 tooltip 非 nil，此處不重複檢查
 
     -- 套用背景
     if tooltip.SetBackdrop then

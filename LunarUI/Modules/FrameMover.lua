@@ -15,6 +15,9 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathFloor = math.floor
+local mathMax = math.max
+local mathMin = math.min
 local format = string.format
 local L = Engine.L or {}
 
@@ -151,7 +154,7 @@ end
 --------------------------------------------------------------------------------
 
 local function SnapToGrid(value)
-    return math.floor(value / GRID_SIZE + 0.5) * GRID_SIZE
+    return mathFloor(value / GRID_SIZE + 0.5) * GRID_SIZE
 end
 
 --------------------------------------------------------------------------------
@@ -299,8 +302,8 @@ local function ApplySavedPosition(name)
 
         -- 限制座標在螢幕範圍內（0 到螢幕尺寸，處理解析度變更後舊資料超出邊界的情況）
         local screenW, screenH = UIParent:GetWidth(), UIParent:GetHeight()
-        x = math.max(-screenW, math.min(screenW, x))
-        y = math.max(-screenH, math.min(screenH, y))
+        x = mathMax(-screenW, mathMin(screenW, x))
+        y = mathMax(-screenH, mathMin(screenH, y))
 
         data.frame:ClearAllPoints()
         data.frame:SetPoint(saved.point, UIParent, saved.relativePoint, x, y)
@@ -343,7 +346,7 @@ local function EnterMoveMode()
 
         if frame and frame:IsShown() then
             -- 同步 mover 大小和位置到目標框架
-            mover:SetSize(math.max(frame:GetWidth(), 40), math.max(frame:GetHeight(), 20))
+            mover:SetSize(mathMax(frame:GetWidth(), 40), mathMax(frame:GetHeight(), 20))
             mover:ClearAllPoints()
             mover:SetPoint("CENTER", frame, "CENTER", 0, 0)
             mover:Show()

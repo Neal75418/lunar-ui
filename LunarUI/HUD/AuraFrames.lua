@@ -23,6 +23,9 @@ local C = LunarUI.Colors
 --------------------------------------------------------------------------------
 
 local mathFloor = math.floor
+local mathCeil = math.ceil
+local mathMax = math.max
+local mathMin = math.min
 local GetTime = GetTime
 local C_UnitAuras = C_UnitAuras
 local ipairs = ipairs
@@ -258,10 +261,10 @@ local function CreateAuraFrame(name, label, anchorPoint, offsetX, offsetY, maxIc
     LunarUI:RegisterHUDFrame(name)
 
     local totalIconHeight = ICON_SIZE + BAR_OFFSET + BAR_HEIGHT
-    local rows = math.ceil((maxIcons or MAX_BUFFS) / ICONS_PER_ROW)
+    local rows = mathCeil((maxIcons or MAX_BUFFS) / ICONS_PER_ROW)
     frame:SetSize(
         ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-        totalIconHeight * rows + math.max(0, rows - 1) * ICON_SPACING + LABEL_HEIGHT
+        totalIconHeight * rows + mathMax(0, rows - 1) * ICON_SPACING + LABEL_HEIGHT
     )
     -- 重用舊框架時保留其位置（/reload 時舊框架已在正確位置）
     if not isReused then
@@ -735,22 +738,22 @@ function LunarUI.RebuildAuraFrames()
 
     -- 重設框架大小（依實際列數計算，避免 ICONS_PER_ROW 調小時圖示超出框架邊界）
     if buffFrame then
-        local buffRows = math.ceil(MAX_BUFFS / ICONS_PER_ROW)
+        local buffRows = mathCeil(MAX_BUFFS / ICONS_PER_ROW)
         buffFrame:SetSize(
             ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-            totalIconHeight * buffRows + math.max(0, buffRows - 1) * ICON_SPACING + LABEL_HEIGHT
+            totalIconHeight * buffRows + mathMax(0, buffRows - 1) * ICON_SPACING + LABEL_HEIGHT
         )
     end
     if debuffFrame then
-        local debuffRows = math.ceil(MAX_DEBUFFS / ICONS_PER_ROW)
+        local debuffRows = mathCeil(MAX_DEBUFFS / ICONS_PER_ROW)
         debuffFrame:SetSize(
             ICONS_PER_ROW * (ICON_SIZE + ICON_SPACING) - ICON_SPACING,
-            totalIconHeight * debuffRows + math.max(0, debuffRows - 1) * ICON_SPACING + LABEL_HEIGHT
+            totalIconHeight * debuffRows + mathMax(0, debuffRows - 1) * ICON_SPACING + LABEL_HEIGHT
         )
     end
 
     -- 調整 Buff 圖示：重用現有、新增不足、隱藏多餘
-    for i = 1, math.min(oldMaxBuffs, MAX_BUFFS) do
+    for i = 1, mathMin(oldMaxBuffs, MAX_BUFFS) do
         ResizeAuraIcon(buffIcons[i])
     end
     for i = MAX_BUFFS + 1, oldMaxBuffs do
@@ -764,7 +767,7 @@ function LunarUI.RebuildAuraFrames()
     RelayoutIcons(buffIcons, buffFrame, MAX_BUFFS)
 
     -- 調整 Debuff 圖示
-    for i = 1, math.min(oldMaxDebuffs, MAX_DEBUFFS) do
+    for i = 1, mathMin(oldMaxDebuffs, MAX_DEBUFFS) do
         ResizeAuraIcon(debuffIcons[i])
     end
     for i = MAX_DEBUFFS + 1, oldMaxDebuffs do

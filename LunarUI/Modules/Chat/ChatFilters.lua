@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathFloor = math.floor
 local format = string.format
 
 --------------------------------------------------------------------------------
@@ -344,7 +345,7 @@ local function SetupTimestamps()
             frame.AddMessage = function(self, msg, ...)
                 if msg and type(msg) == "string" then
                     -- H6 效能修復：同一分鐘內快取 date() 結果，避免每則訊息重複呼叫
-                    local minute = math.floor(GetTime() / 60)
+                    local minute = mathFloor(GetTime() / 60)
                     if minute ~= _cachedTimestampMinute then
                         _cachedTimestamp = date(fmt)
                         _cachedTimestampMinute = minute
