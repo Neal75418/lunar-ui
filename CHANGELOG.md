@@ -34,6 +34,11 @@ timeline
 
 ### Fixed
 
+- **WoW 12.0 Secret Value Taint** — AuraFrames/AuraSystem/Nameplates/CastBar 的 spellId、isStealable、isPlayerAura、isHarmfulAura 在戰鬥中為 secret value，加入 pcall 保護
+- **DEBUFF_TYPE_COLORS 載入時機** — 全域變數可能尚未初始化，加入 fallback chain + nil guard
+- **InstallWizard uiScale** — ShowInstallWizard 改為讀取 UIParent:GetEffectiveScale()（原硬編碼 0.75），重開時同步 slider widget
+- **SafeCall fallback** — 改用 IsDebugMode() 檢查 debug 模式（原 LunarUI.Debug method 永遠 truthy）
+- **Tags 取整不一致** — lunar:power:percent 改用 math.floor(x+0.5) 四捨五入，與 lunar:health:percent 一致
 - **深度代碼審查（8 輪 / 35 個 bug 修復）**
   - pairs() 迴圈中刪除元素 — Lua 5.1 UB（5 處，改用 snapshot/wipe）
   - C_Timer.After 無法取消的回呼加入 generation counter（Init、CooldownTracker、AuraFrames、SellJunk、bank batch）
@@ -47,6 +52,22 @@ timeline
 
 ### Changed
 
+- **代碼風格全面統一（6 輪審查）**
+  - 所有 69 個 Lua 檔案統一 `local format = string.format` upvalue
+  - stdlib upvalue 統一 camelCase（mathFloor、tableInsert、stringUtf8sub 等）
+  - 所有 bare print() 改為 LunarUI:Print()（SafeCall 三層 fallback）
+  - 所有英文註解翻譯為繁體中文（包含 Skins、Bags、HUD 子模組）
+  - DB 存取統一使用 GetModuleDB()（含 AuraFilter hot path）
+  - DEBUFF_TYPE_COLORS mock 修正為 {r=,g=,b=} 命名鍵格式
+- **測試品質改善（4 輪審查）**
+  - 移除 70+ 低價值測試（exports exist、重複、tautological）
+  - 新增 DB toggle 測試（chat emoji/spam、automation repair/release）
+  - 新增 AuraFilter onlyPlayerDebuffs 邏輯測試
+  - 修復測試狀態洩漏（serialization_spec、utils_spec、chat_spec、hideblizzbars_spec、automation_spec）
+  - Chat filter 測試改為直接匯出存取（消除脆弱探索機制）
+  - ClassResources 測試加入 RegisterMovableFrame 追蹤驗證
+  - mock_frame GetChildren/GetRegions 修正為空 varargs
+- 測試數量 994 → 909（移除低價值 -85，新增高價值 +12 = 淨 -85）
 - **代碼風格統一（4 輪）**
   - 所有 22 個主要 Lua 檔案的註解統一為繁體中文
   - Nameplates Fix #N 歷史標記清理（10 處）
@@ -54,7 +75,7 @@ timeline
   - colon→dot 語法統一（Automation、Config、Minimap）
   - 共用常數 CASTBAR_COLOR / BG_DARKEN 集中到 Core/Media.lua
   - 本地化補齊（Minimap mail text、FCT label、DataTexts latency）
-  - FCT 熱路徑全域快取（math_floor、math_random、table_insert、table_remove）
+  - FCT 熱路徑全域快取（mathFloor、mathRandom、tableInsert、tableRemove）
   - ClassResources / CooldownTracker 移除冗餘 inline 拖曳系統
   - Dead code 清除（Bags 月相感知 section、ActionBars tombstone section、ClassResources _playerClass）
   - AuraFrames CreateAuraIcon 死參數移除

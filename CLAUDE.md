@@ -5,7 +5,7 @@
 - **平台**：WoW 12.0.1（Interface: 120001），Lua 5.1（LuaJIT）
 - **架構**：Ace3 + oUF + LibActionButton + LibSharedMedia
 - **組成**：
-  - `LunarUI/` &mdash; 主插件（57 個 Lua 檔案，~27,300 行）
+  - `LunarUI/` &mdash; 主插件（69 個 Lua 檔案，~25,100 行）
   - `LunarUI_Options/` &mdash; LoadOnDemand 設定介面
   - `LunarUI_Debug/` &mdash; LoadOnDemand 診斷工具（`/lunar debugvigor` 時自動載入）
 - **進入點**：`Core/Init.lua` 最先執行，建立 `Engine.LunarUI`
@@ -123,6 +123,7 @@ LunarUI.CreateIconBorder(parent, options)
 - LibActionButton：`local LAB = LibStub("LibActionButton-1.0", true)`
 - 字體統一使用 `LunarUI.SetFont(fs, size, flags)`，禁止硬編碼 `STANDARD_TEXT_FONT`
 - DB 存取統一使用 `LunarUI.GetModuleDB(key)`，避免多層 nil 檢查
+- stdlib upvalue 統一 camelCase 命名：`mathFloor`、`tableInsert`、`stringUtf8sub`（非 snake_case）
 - FloatingCombatText 預設 opt-in 關閉（`fctEnabled = false`），`LunarUI.Sanitize(val)` 依型別打斷 CLEU taint 鏈（number → `tonumber(tostring())`、string → `tostring()`、boolean → `val == true`）
 - 事件頻率監控：`/lunar profile events on|off`，純計數 + 每秒速率
 - Skin 個別標籤 locale key（如 `skinCharacter`）放 `Options.lua` 的 `local L` 表；通用分類 key（`Skins`、`SkinsDesc`）放 `enUS.lua`/`zhTW.lua`
@@ -141,6 +142,7 @@ LunarUI.CreateIconBorder(parent, options)
 | 操作安全框架方法       | 直接替換 `bar.SetScale`                    | `hooksecurefunc` + 再入防護旗標                  |
 | 操作 Blizzard 框架 | 直接操作                                   | `if InCombatLockdown() then return end`    |
 | 讀取光環資料         | 直接存取 name / duration                   | `pcall` 安全讀取                               |
+| 讀取光環 boolean 欄位 | `data.isStealable == true`                 | `pcall(function() return data.isStealable == true end)` |
 | Tooltip 掃描     | `_G[tooltip:GetName().."TextLeft"..i]` | `tooltip:GetTooltipData()` + `_G` fallback |
 | Tooltip 方法呼叫   | 直接呼叫                                   | `pcall(GameTooltip.SetHyperlink, ...)`     |
 
@@ -151,6 +153,7 @@ LunarUI.CreateIconBorder(parent, options)
 | 技巧          | 做法                             | 範例                                                                    |
 |:------------|:-------------------------------|:----------------------------------------------------------------------|
 | 減少全域查找      | 模組層級 upvalue                   | `local format = string.format`                                        |
+| stdlib upvalue 命名 | camelCase 取代 snake_case         | `local mathFloor = math.floor`（非 `math_floor`）                        |
 | 降低 GC 壓力    | 平行陣列取代 table-of-tables         | `icons[i]`, `durations[i]`                                            |
 | 批次處理        | 髒旗標 + 批次計時器                    | 取代逐事件 closure                                                         |
 | 卸載閒置腳本      | 動畫結束即移除 OnUpdate               | `SetScript("OnUpdate", nil)`                                          |
@@ -168,7 +171,7 @@ LunarUI.CreateIconBorder(parent, options)
 graph LR
     TypeDef["wow_api.def.lua / busted.def.lua<br/>EmmyLua 型別定義"] -.-> Mock
     Mock["wow_mock.lua<br/>WoW API Stub"] --> Loader["loader.lua<br/>Engine 建立"]
-    Loader --> Spec["*_spec.lua<br/>測試案例（29 檔 / 994 tests）"]
+    Loader --> Spec["*_spec.lua<br/>測試案例（34 檔 / 909 tests）"]
     Spec --> Busted["busted<br/>執行測試"]
     Busted --> Cov["luacov<br/>覆蓋率報告（門檻 43%）"]
 

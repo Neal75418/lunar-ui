@@ -41,10 +41,12 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
   - 全域函數：`LunarUI.FunctionName` 或 `LunarUI:MethodName`
   - 區域函數：`camelCase`
   - 常數表：`UPPER_SNAKE_CASE`
+  - stdlib upvalue：`camelCase`（如 `mathFloor`、`tableInsert`，非 `math_floor`）
   - 未使用變數：加 `_` 前綴（如 `_self`、`_event`）
 - **註解語言**：繁體中文
 - **字體**：統一使用 `LunarUI.SetFont(fs, size, flags)`，禁止硬編碼 `STANDARD_TEXT_FONT`
 - **DB 存取**：使用 `LunarUI.GetModuleDB(key)` 取代 `LunarUI.db and LunarUI.db.profile.xxx`
+- **效能 upvalue**：`local format = string.format`、`local mathFloor = math.floor`
 - **匯出慣例**：`LunarUI.FnName = localFn`，讓 local 純函數可被測試存取
 - **EmmyLua 診斷**：所有 `.lua` 檔案第一行加 `---@diagnostic disable:` 抑制已知誤報
 - **型別定義**：`wow_api.def.lua`、`spec/busted.def.lua` 以 `---@meta` 標記，提供 IDE 補全
