@@ -19,7 +19,8 @@ local C = LunarUI.Colors
 --------------------------------------------------------------------------------
 
 local function CreateClassPower(frame)
-    local db = LunarUI.db.profile.unitframes.player
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local db = ufAll and ufAll.player
     if db and db.showClassPower == false then
         return
     end

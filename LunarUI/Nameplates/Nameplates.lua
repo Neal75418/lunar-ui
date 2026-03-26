@@ -34,7 +34,7 @@ end
 -- 常數
 --------------------------------------------------------------------------------
 
-local statusBarTexture -- lazy: resolved after DB is ready
+local statusBarTexture -- 延遲載入：DB 就緒後解析
 local npCombatWaitFrame -- 戰鬥等待框架（singleton，避免重複呼叫建立多個 frame）
 local nameplateDriverSpawned = false -- oUF:SpawnNamePlates 是 singleton，只能呼叫一次
 local nameplateModuleEnabled = false -- runtime 啟用旗標（OnShow hook 用此判斷是否處理名牌）

@@ -553,11 +553,11 @@ local defaults = {
 
         -- 視覺風格
         style = {
-            theme = "lunar", -- lunar, parchment, minimal
-            font = "Friz Quadrata TT", -- LSM font name
+            theme = "lunar", -- lunar、parchment、minimal
+            font = "Friz Quadrata TT", -- LSM 字體名稱
             fontSize = 12,
-            statusBarTexture = "Blizzard", -- LSM statusbar name
-            borderStyle = "ink", -- ink, clean, none
+            statusBarTexture = "Blizzard", -- LSM 材質條名稱
+            borderStyle = "ink", -- ink、clean、none
         },
     },
 
