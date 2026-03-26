@@ -451,7 +451,7 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
         -- tostring() 在 WoW 12.0 下不一定能完全斷開 taint（"table index is secret"）
         -- #8: 集中淨化所有欄位，UpdateAuraIcon 直接使用已淨化值
         local name = "" .. tostring(auraData.name or "")
-        local duration = tonumber(auraData.duration or 0) or 0
+        local duration = tonumber(tostring(auraData.duration or 0)) or 0
 
         local shouldShow
         if isDebuff then
