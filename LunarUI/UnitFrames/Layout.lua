@@ -582,7 +582,7 @@ local function SpawnUnitFrames()
         end
         return
     end
-    local uf = LunarUI.db.profile.unitframes
+    local uf = LunarUI.GetModuleDB("unitframes")
 
     LunarUI.RebuildAuraFilterCache()
     SpawnPlayerFrames(uf)

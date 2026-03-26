@@ -15,6 +15,8 @@ local LunarUI = Engine.LunarUI
 local mathFloor = math.floor
 local mathCeil = math.ceil
 local mathMin = math.min
+local tableInsert = table.insert
+local tableSort = table.sort
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -228,7 +230,7 @@ local function CollectMinimapButton(button)
 
     -- 標記為已掃描並加入集合
     scannedButtonIDs[name] = true
-    table.insert(collectedButtons, button)
+    tableInsert(collectedButtons, button)
 end
 
 -- 常見插件的按鈕優先順序
@@ -266,7 +268,7 @@ local function GetButtonPriority(button)
 end
 
 local function SortButtons()
-    table.sort(collectedButtons, function(a, b)
+    tableSort(collectedButtons, function(a, b)
         local priorityA = GetButtonPriority(a)
         local priorityB = GetButtonPriority(b)
 
@@ -441,7 +443,7 @@ local function SaveMinimapState()
         pcall(function()
             for _, child in ipairs({ MinimapCluster:GetChildren() }) do
                 if child and child ~= Minimap then
-                    table.insert(clusterChildren, {
+                    tableInsert(clusterChildren, {
                         frame = child,
                         alpha = child:GetAlpha(),
                         mouseEnabled = safeGetBool(child, "IsMouseEnabled", true),
@@ -452,7 +454,7 @@ local function SaveMinimapState()
         local clusterRegions = {}
         pcall(function()
             for _, region in ipairs({ MinimapCluster:GetRegions() }) do
-                table.insert(clusterRegions, {
+                tableInsert(clusterRegions, {
                     region = region,
                     alpha = region:GetAlpha(),
                     visible = region:IsShown(),
@@ -488,7 +490,7 @@ local function SaveMinimapState()
             for _, child in ipairs({ Minimap:GetChildren() }) do
                 local name = child:GetName()
                 if name and (name:find("Backdrop") or name:find("Border") or name:find("Background")) then
-                    table.insert(state.minimapChildren, {
+                    tableInsert(state.minimapChildren, {
                         frame = child,
                         alpha = child:GetAlpha(),
                         visible = child:IsShown(),
@@ -545,19 +547,19 @@ local function SaveMinimapState()
     -- MinimapCluster 子元素（可能不存在）
     if MinimapCluster then
         if MinimapCluster.Tracking then
-            table.insert(buttons, MinimapCluster.Tracking)
+            tableInsert(buttons, MinimapCluster.Tracking)
         end
         if MinimapCluster.InstanceDifficulty then
-            table.insert(buttons, MinimapCluster.InstanceDifficulty)
+            tableInsert(buttons, MinimapCluster.InstanceDifficulty)
         end
         if MinimapCluster.IndicatorFrame then
-            table.insert(buttons, MinimapCluster.IndicatorFrame)
+            tableInsert(buttons, MinimapCluster.IndicatorFrame)
         end
     end
     for _, btn in ipairs(buttons) do
         local saved = SaveButtonState(btn)
         if saved then
-            table.insert(state.reparentedButtons, saved)
+            tableInsert(state.reparentedButtons, saved)
         end
     end
 

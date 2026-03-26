@@ -10,6 +10,8 @@ local mathAbs = math.abs
 local mathMax = math.max
 local mathMin = math.min
 local format = string.format
+local tableInsert = table.insert
+local tableConcat = table.concat
 local C = LunarUI.Colors
 
 --------------------------------------------------------------------------------
@@ -60,11 +62,11 @@ local function SerializeValue(val, depth, visited)
             else
                 keyStr = format("[%s]=", tostring(k))
             end
-            table.insert(parts, keyStr .. SerializeValue(v, depth + 1, visited))
+            tableInsert(parts, keyStr .. SerializeValue(v, depth + 1, visited))
         end
 
         visited[val] = nil -- 允許同一 table 出現在不同路徑
-        return "{" .. table.concat(parts, ",") .. "}"
+        return "{" .. tableConcat(parts, ",") .. "}"
     else
         return "nil"
     end

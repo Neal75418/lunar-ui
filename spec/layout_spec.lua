@@ -67,9 +67,7 @@ local LunarUI = {
     GetSelectedStatusBarTexture = function()
         return "Interface\\TargetingFrame\\UI-StatusBar"
     end,
-    GetModuleDB = function(_key)
-        return nil
-    end,
+    GetModuleDB = nil, -- set after table creation
     RegisterModule = function() end,
     CreateEventHandler = function()
         return setmetatable({
@@ -93,6 +91,13 @@ local LunarUI = {
         },
     },
 }
+
+LunarUI.GetModuleDB = function(key)
+    if not LunarUI.db or not LunarUI.db.profile then
+        return nil
+    end
+    return LunarUI.db.profile[key]
+end
 
 -- oUF mock：提供 Layout.lua 模組範圍呼叫所需的方法
 local oUFMock = {

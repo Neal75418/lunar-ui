@@ -10,6 +10,8 @@ local mathCeil = math.ceil
 local mathFloor = math.floor
 local mathMax = math.max
 local mathMin = math.min
+local tableInsert = table.insert
+local tableRemove = table.remove
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -450,7 +452,7 @@ local function ProcessBankUpdateBatch()
 
     -- 處理批次
     for _ = 1, BANK_BATCH_SIZE do
-        local button = table.remove(bankUpdateQueue)
+        local button = tableRemove(bankUpdateQueue)
         if button then
             UpdateBankSlot(button)
         end
@@ -481,7 +483,7 @@ local function UpdateAllBankSlots()
     wipe(bankUpdateQueue)
     for _, button in pairs(bankSlots) do
         if button then
-            table.insert(bankUpdateQueue, button)
+            tableInsert(bankUpdateQueue, button)
         end
     end
 

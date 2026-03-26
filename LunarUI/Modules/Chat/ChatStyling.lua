@@ -8,6 +8,8 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local mathMax = math.max
 local mathMin = math.min
+local tableInsert = table.insert
+local tableConcat = table.concat
 local C = LunarUI.Colors
 local L = Engine.L or {}
 
@@ -516,12 +518,12 @@ local function ShowCopyFrame(chatFrame)
     for i = 1, numMessages do
         local message = chatFrame:GetMessageInfo(i)
         if message then
-            table.insert(lines, message)
+            tableInsert(lines, message)
         end
     end
 
     -- 設定文字
-    copyEditBox:SetText(table.concat(lines, "\n"))
+    copyEditBox:SetText(tableConcat(lines, "\n"))
     copyEditBox:HighlightText()
     copyEditBox:SetFocus()
 

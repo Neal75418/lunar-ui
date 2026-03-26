@@ -7,6 +7,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local format = string.format
+local tableInsert = table.insert
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -147,7 +148,7 @@ function LunarUI:SlashCommand(input)
     end
     local args = {}
     for word in input:gmatch("%S+") do
-        table.insert(args, word:lower())
+        tableInsert(args, word:lower())
     end
 
     local cmd = args[1]

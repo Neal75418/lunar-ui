@@ -8,6 +8,7 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local mathFloor = math.floor
 local format = string.format
+local tableInsert = table.insert
 
 --------------------------------------------------------------------------------
 -- DB 存取
@@ -560,9 +561,9 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
     -- 使用 count 短路曾導致同數量但不同內容的 keyword 變更無法反映
     local keywords = db.keywords or {}
     wipe(keywordCheckList)
-    table.insert(keywordCheckList, playerName)
+    tableInsert(keywordCheckList, playerName)
     for _, kw in ipairs(keywords) do
-        table.insert(keywordCheckList, kw)
+        tableInsert(keywordCheckList, kw)
     end
 
     local msgLower = msg:lower()

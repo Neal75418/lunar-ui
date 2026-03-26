@@ -19,6 +19,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local format = string.format
+local tableConcat = table.concat
 
 -- 等待 LibActionButton
 local LAB = LibStub("LibActionButton-1.0", true)
@@ -227,7 +228,7 @@ local function SetupBar1StateDrivers(bar)
     ]]
     )
 
-    local pageCondition = table.concat({
+    local pageCondition = tableConcat({
         "[bar:2] 2",
         "[bar:3] 3",
         "[bar:4] 4",

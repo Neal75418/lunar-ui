@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local tableInsert = table.insert
 local L = Engine.L or {}
 local C = LunarUI.Colors
 
@@ -224,7 +225,7 @@ local function CreateMicroBar()
     for _, btnName in ipairs(microButtonNames) do
         local btn = _G[btnName]
         if btn then
-            table.insert(MICRO_BUTTONS, btn)
+            tableInsert(MICRO_BUTTONS, btn)
         end
     end
 

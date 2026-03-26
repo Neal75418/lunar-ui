@@ -8,6 +8,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local format = string.format
+local tableSort = table.sort
 local L = Engine.L or {}
 
 --------------------------------------------------------------------------------
@@ -82,7 +83,7 @@ function LunarUI:PrintProfilingResults()
     self:Print("|cff8882ff=== " .. (L["ProfilerInitHeader"] or "Module Init Timings") .. " ===|r")
 
     -- 按耗時降序排列
-    table.sort(moduleTimings, function(a, b)
+    tableSort(moduleTimings, function(a, b)
         return a.initTime > b.initTime
     end)
 
@@ -243,7 +244,7 @@ function LunarUI:PrintEventTimings()
         return
     end
 
-    table.sort(sorted, function(a, b)
+    tableSort(sorted, function(a, b)
         return a.count > b.count
     end)
 
