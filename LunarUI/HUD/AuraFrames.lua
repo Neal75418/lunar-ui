@@ -347,7 +347,9 @@ end
 --------------------------------------------------------------------------------
 
 -- #8: 接受預先淨化的參數，避免與 UpdateAuraGroup 重複做 tostring/tonumber（每個 aura 多 4 次轉換）
-local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expirationTime, filter, isDebuff)
+-- WoW 12.0: 即使經過 tonumber(tostring()) / "" .. tostring() 淨化，
+-- aura 數據在戰鬥中仍可能攜帶 taint，整個函式用 pcall 保護
+local function UpdateAuraIconInner(iconFrame, auraData, name, count, duration, expirationTime, filter, isDebuff)
     -- H-3: 斷開 taint 鏈（aura API 回傳的 icon fileID 可能攜帶 taint）
     local iconTexture = tonumber(auraData.icon) or tostring(auraData.icon or "")
 
@@ -423,7 +425,12 @@ local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expira
     iconFrame.auraData.isHarmful = (filter == "HARMFUL")
 
     -- 淡入動畫：aura 替換時也需重播（不限於首次顯示）
-    if iconFrame.currentAuraName ~= name then
+    -- WoW 12.0: name 可能仍帶 taint（"" .. tostring() 不一定斷鏈），pcall 保護比較
+    local nameChanged = true
+    pcall(function()
+        nameChanged = (iconFrame.currentAuraName ~= name)
+    end)
+    if nameChanged then
         iconFrame.currentAuraName = name
         if iconFrame.fadeIn then
             iconFrame.fadeIn:Stop()
@@ -432,6 +439,15 @@ local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expira
     end
 
     iconFrame:Show()
+end
+
+local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expirationTime, filter, isDebuff)
+    local ok, _err =
+        pcall(UpdateAuraIconInner, iconFrame, auraData, name, count, duration, expirationTime, filter, isDebuff)
+    if not ok and iconFrame then
+        -- taint 錯誤時靜默忽略，保留圖示現有狀態（戰鬥結束後下次更新會修正）
+        iconFrame:Show()
+    end
 end
 
 local function UpdateAuraGroup(icons, maxIcons, isDebuff)
