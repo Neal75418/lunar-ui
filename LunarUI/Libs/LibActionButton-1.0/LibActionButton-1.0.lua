@@ -2093,24 +2093,25 @@ function UpdateCooldown(self)
 	self.cooldown:SetDrawBling(self.cooldown:GetEffectiveAlpha() > 0.5)
 
 	-- WoW 12.0: GetCooldownInfo()/GetChargeInfo() 在戰鬥中回傳 secret values，
-	-- ActionButton_ApplyCooldown → SetCooldown 不接受 secret 參數，需用 tonumber() 斷開 taint
+	-- ActionButton_ApplyCooldown → SetCooldown 不接受 secret 參數
+	-- tonumber() 單獨無法斷開 taint，需 tonumber(tostring()) 雙層轉換
 	if cooldownInfo ~= defaultCooldownInfo then
-		cooldownInfo.startTime = tonumber(cooldownInfo.startTime) or 0
-		cooldownInfo.duration = tonumber(cooldownInfo.duration) or 0
-		cooldownInfo.modRate = tonumber(cooldownInfo.modRate) or 0
+		cooldownInfo.startTime = tonumber(tostring(cooldownInfo.startTime)) or 0
+		cooldownInfo.duration = tonumber(tostring(cooldownInfo.duration)) or 0
+		cooldownInfo.modRate = tonumber(tostring(cooldownInfo.modRate)) or 0
 		if cooldownInfo.isEnabled ~= nil then cooldownInfo.isEnabled = cooldownInfo.isEnabled and 1 or 0 end
 	end
 	if chargeInfo ~= defaultChargeInfo then
-		chargeInfo.currentCharges = tonumber(chargeInfo.currentCharges) or 0
-		chargeInfo.maxCharges = tonumber(chargeInfo.maxCharges) or 0
-		chargeInfo.cooldownStartTime = tonumber(chargeInfo.cooldownStartTime) or 0
-		chargeInfo.cooldownDuration = tonumber(chargeInfo.cooldownDuration) or 0
-		chargeInfo.chargeModRate = tonumber(chargeInfo.chargeModRate) or 0
+		chargeInfo.currentCharges = tonumber(tostring(chargeInfo.currentCharges)) or 0
+		chargeInfo.maxCharges = tonumber(tostring(chargeInfo.maxCharges)) or 0
+		chargeInfo.cooldownStartTime = tonumber(tostring(chargeInfo.cooldownStartTime)) or 0
+		chargeInfo.cooldownDuration = tonumber(tostring(chargeInfo.cooldownDuration)) or 0
+		chargeInfo.chargeModRate = tonumber(tostring(chargeInfo.chargeModRate)) or 0
 	end
 	if lossOfControlInfo ~= defaultLossOfControlInfo then
-		lossOfControlInfo.startTime = tonumber(lossOfControlInfo.startTime) or 0
-		lossOfControlInfo.duration = tonumber(lossOfControlInfo.duration) or 0
-		lossOfControlInfo.modRate = tonumber(lossOfControlInfo.modRate) or 0
+		lossOfControlInfo.startTime = tonumber(tostring(lossOfControlInfo.startTime)) or 0
+		lossOfControlInfo.duration = tonumber(tostring(lossOfControlInfo.duration)) or 0
+		lossOfControlInfo.modRate = tonumber(tostring(lossOfControlInfo.modRate)) or 0
 	end
 
 	-- 12.0 helper function
