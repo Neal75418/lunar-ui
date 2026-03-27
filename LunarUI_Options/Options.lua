@@ -2980,26 +2980,8 @@ local options = {
             name = L.style,
             desc = L.styleDesc,
             args = {
-                theme = {
-                    order = 1,
-                    type = "select",
-                    name = L.theme,
-                    values = {
-                        lunar = "Lunar (Default)",
-                        parchment = "Parchment",
-                        minimal = "Minimal",
-                    },
-                    get = function()
-                        return GetDB().style.theme
-                    end,
-                    set = function(_, v)
-                        GetDB().style.theme = v
-                        RefreshUI()
-                    end,
-                    width = "full",
-                },
                 font = {
-                    order = 2,
+                    order = 1,
                     type = "select",
                     name = L.font,
                     desc = L.fontDesc,
@@ -3024,25 +3006,8 @@ local options = {
                     end,
                     width = "full",
                 },
-                fontSize = {
-                    order = 3,
-                    type = "range",
-                    name = L.fontSize,
-                    desc = L.fontSizeDesc,
-                    min = 8,
-                    max = 24,
-                    step = 1,
-                    get = function()
-                        return GetDB().style.fontSize
-                    end,
-                    set = function(_, v)
-                        GetDB().style.fontSize = v
-                        RefreshUI()
-                    end,
-                    width = "full",
-                },
                 statusBarTexture = {
-                    order = 4,
+                    order = 2,
                     type = "select",
                     name = L.statusBarTexture,
                     desc = L.statusBarTextureDesc,
@@ -3067,25 +3032,7 @@ local options = {
                     end,
                     width = "full",
                 },
-                borderStyle = {
-                    order = 4.5,
-                    type = "select",
-                    name = L.borderStyle,
-                    desc = L.borderStyleDesc,
-                    values = {
-                        ink = "Ink",
-                        clean = "Clean",
-                        none = "None",
-                    },
-                    get = function()
-                        return GetDB().style.borderStyle
-                    end,
-                    set = function(_, v)
-                        GetDB().style.borderStyle = v
-                        RefreshUI()
-                    end,
-                    width = "full",
-                },
+                -- theme/fontSize/borderStyle 已移除（無生產代碼消費）
             },
         },
         -- Loot
