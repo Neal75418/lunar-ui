@@ -314,6 +314,7 @@ end
 -- Lua table 無法儲存 nil value，因此 defaults 中 `key = nil` 的 key 在 template 裡不存在。
 -- 這裡補充這些合法的 nil-default key，確保匯入時不會被靜默丟棄。
 local nilDefaultKeys = {
+    uiScale = true, -- 由安裝精靈設定，Defaults.lua 中為 nil
     bags = { bagPosition = true, bankPosition = true },
     actionbars = {
         bar1 = { fadeEnabled = true },

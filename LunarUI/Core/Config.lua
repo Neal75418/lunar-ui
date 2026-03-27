@@ -147,9 +147,7 @@ local VALIDATION_RULES = {
     { path = "bags.slotSpacing", type = "number", min = 0, max = 10 },
     { path = "bags.frameAlpha", type = "number", min = 0, max = 1 },
     { path = "bags.ilvlThreshold", type = "number", min = 0, max = 1000 },
-    -- 聊天
-    { path = "chat.width", type = "number", min = 100, max = 1000 },
-    { path = "chat.height", type = "number", min = 50, max = 600 },
+    -- 聊天（chat.width/height 已移除，不再驗證）
     { path = "chat.fadeTime", type = "number", min = 0, max = 600 },
     { path = "chat.backdropAlpha", type = "number", min = 0, max = 1 },
     { path = "chat.inactiveTabAlpha", type = "number", min = 0.1, max = 1 },
@@ -163,6 +161,17 @@ local VALIDATION_RULES = {
         type = "string",
         enum = { time = true, duration = true, name = true, player = true },
     },
+    -- 名牌數值
+    { path = "nameplates.width", type = "number", min = 80, max = 200 },
+    { path = "nameplates.height", type = "number", min = 6, max = 30 },
+    -- 小地圖
+    { path = "minimap.fadeDuration", type = "number", min = 0.1, max = 2.0 },
+    -- DataBars
+    { path = "databars.experience.height", type = "number", min = 4, max = 20 },
+    { path = "databars.reputation.height", type = "number", min = 4, max = 20 },
+    { path = "databars.honor.height", type = "number", min = 4, max = 20 },
+    -- DataTexts
+    { path = "datatexts.panels.bottom.height", type = "number", min = 16, max = 40 },
     -- 框架移動器
     { path = "frameMover.gridSize", type = "number", min = 1, max = 50 },
     { path = "frameMover.moverAlpha", type = "number", min = 0, max = 1 },

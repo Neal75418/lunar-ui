@@ -200,10 +200,31 @@ L["MoverAllReset"] = "All frame positions reset"
 L["Timestamps"] = "Timestamps"
 L["TimestampsDesc"] = "Show timestamps before chat messages (requires reload)"
 L["TimestampFormat"] = "Timestamp Format"
+L["TimestampFormatDesc"] = "Format string for chat timestamps"
+L["DetectURLs"] = "Clickable URLs"
+L["DetectURLsDesc"] = "Detect and make URLs clickable in chat"
+L["EnableEmojis"] = "Emoji Replacement"
+L["EnableEmojisDesc"] = "Replace text emoticons with emoji icons"
+L["ShowRoleIcons"] = "Role Icons"
+L["ShowRoleIconsDesc"] = "Show tank/healer/DPS icons in chat"
+L["KeywordAlerts"] = "Keyword Alerts"
+L["KeywordAlertsDesc"] = "Play sound when keywords are mentioned"
+L["SpamFilter"] = "Spam Filter"
+L["SpamFilterDesc"] = "Filter common gold selling and spam messages"
+L["LinkTooltipPreview"] = "Link Tooltip Preview"
+L["LinkTooltipPreviewDesc"] = "Show tooltip preview when hovering item/spell links"
+L["ShowTimestamps"] = "Show Timestamps"
+L["ShowTimestampsDesc"] = "Display timestamps in chat messages"
+L["ShortChannelNames"] = "Short Channel Names"
+L["ShortChannelNamesDesc"] = "Abbreviate channel names (e.g., Guild → [G])"
+L["ShowItemCount"] = "Show Item Count"
+L["ShowItemCountDesc"] = "Show bag and bank item counts in tooltips"
 L["ItemCount"] = "Item Count"
 L["ItemCountDesc"] = "Show item count (bags/bank) in tooltips"
 
 -- UnitFrame enhancements
+L["Pet"] = "Pet"
+L["TargetOfTarget"] = "Target of Target"
 L["ClassPower"] = "Class Power"
 L["ClassPowerDesc"] =
     "Show class resource bar above player frame (combo points, holy power, runes, etc.) (requires reload)"
@@ -310,6 +331,9 @@ L["PerfMonitorTitle"] = "|cff8882ffLunarUI|r Performance Monitor"
 -- Bind Type
 L["BoE"] = "BoE"
 L["BoU"] = "BoU"
+
+-- Minimap enhancements
+L["CoordFontOutline"] = "Coordinate Font Outline"
 
 -- Errors
 L["ErrorOUFNotFound"] = "Error: oUF framework not found"

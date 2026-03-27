@@ -689,6 +689,13 @@ local options = {
                         },
                     },
                     { "boss", 6, L.boss, { wMin = 100, wMax = 300, hMin = 20, hMax = 80, hasAuras = true } },
+                    { "pet", 7, L["Pet"] or "Pet", { wMin = 80, wMax = 250, hMin = 15, hMax = 60 } },
+                    {
+                        "targettarget",
+                        8,
+                        L["TargetOfTarget"] or "Target of Target",
+                        { wMin = 80, wMax = 250, hMin = 15, hMax = 60 },
+                    },
                 }
 
                 local result = {
@@ -2046,6 +2053,20 @@ local options = {
                     end,
                 },
 
+                coordFontOutline = {
+                    order = 34,
+                    type = "select",
+                    name = L["CoordFontOutline"] or "Coordinate Font Outline",
+                    values = { NONE = "None", OUTLINE = "Outline", THICKOUTLINE = "Thick Outline" },
+                    get = function()
+                        return GetDB().minimap.coordFontOutline
+                    end,
+                    set = function(_, v)
+                        GetDB().minimap.coordFontOutline = v
+                        RefreshUI()
+                    end,
+                },
+
                 -- Behavior
                 behaviorHeader = {
                     order = 40,
@@ -2689,6 +2710,19 @@ local options = {
                     set = function(_, v)
                         GetDB().chat.showTimestamps = v
                     end,
+                },
+                shortChannelNames = {
+                    order = 5.75,
+                    type = "toggle",
+                    name = L["ShortChannelNames"] or "Short Channel Names",
+                    desc = L["ShortChannelNamesDesc"] or "Abbreviate channel names (e.g., Guild → [G])",
+                    get = function()
+                        return GetDB().chat.shortChannelNames
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.shortChannelNames = v
+                    end,
+                    width = "full",
                 },
                 timestampFormat = {
                     order = 5.8,
