@@ -2057,7 +2057,12 @@ local options = {
                     order = 34,
                     type = "select",
                     name = L["CoordFontOutline"] or "Coordinate Font Outline",
-                    values = { NONE = "None", OUTLINE = "Outline", THICKOUTLINE = "Thick Outline" },
+                    values = {
+                        NONE = "None",
+                        OUTLINE = "Outline",
+                        THICKOUTLINE = "Thick Outline",
+                        MONOCHROMEOUTLINE = "Monochrome",
+                    },
                     get = function()
                         return GetDB().minimap.coordFontOutline
                     end,
