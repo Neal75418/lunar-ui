@@ -595,6 +595,9 @@ end
 -- 編輯模式退出時清除 focus（暴雪編輯模式會將玩家設為 focus 用於預覽，退出時不清除）
 if _G.EditModeManagerFrame and _G.EditModeManagerFrame.ExitEditMode then
     hooksecurefunc(_G.EditModeManagerFrame, "ExitEditMode", function()
+        if not LunarUI._modulesEnabled then
+            return
+        end
         if _G.UnitIsUnit("focus", "player") then
             _G.ClearFocus()
         end

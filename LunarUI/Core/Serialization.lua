@@ -410,6 +410,14 @@ function LunarUI:ExportSettings()
         end
     end
 
+    -- 包含 per-character spec→profile mapping（char scope，不隨 profile 儲存）
+    if self.db.char and self.db.char.specProfiles then
+        exportData.charSpecProfiles = {}
+        for specIdx, profileName in pairs(self.db.char.specProfiles) do
+            exportData.charSpecProfiles[specIdx] = profileName
+        end
+    end
+
     -- 序列化為字串
     local serialized = SerializeValue(exportData)
 
@@ -474,6 +482,16 @@ function LunarUI:ImportSettings(importString)
         ClampImportedValues(data.profile)
     end
     MergeTable(self.db.profile, data.profile, defaultProfile, nilDefaultKeys)
+
+    -- 還原 per-character spec→profile mapping（若匯出時有包含）
+    if data.charSpecProfiles and self.db.char then
+        if not self.db.char.specProfiles then
+            self.db.char.specProfiles = {}
+        end
+        for specIdx, profileName in pairs(data.charSpecProfiles) do
+            self.db.char.specProfiles[specIdx] = profileName
+        end
+    end
 
     -- 觸發設定檔變更以重新整理 UI
     self:OnProfileChanged()

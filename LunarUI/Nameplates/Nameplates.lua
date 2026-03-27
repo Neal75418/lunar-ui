@@ -163,46 +163,42 @@ local function CreateHealthBar(frame)
         frame.HealthText = healthText
     end
 
-    local showNpcColors = db and db.npcColors and db.npcColors.enabled
-    local fmt = db and db.healthTextFormat or "percent"
+    -- 動態讀取 DB 設定（Options 變更後下次 PostUpdate 即生效，不需 /reload）
+    health.PostUpdate = function(bar, unit, cur, max)
+        local liveDb = LunarUI.GetModuleDB("nameplates")
+        local liveNpcColors = liveDb and liveDb.npcColors and liveDb.npcColors.enabled
+        local liveFmt = liveDb and liveDb.healthTextFormat or "percent"
 
-    if healthText or showNpcColors then
-        health.PostUpdate = function(bar, unit, cur, max)
-            -- NPC 角色分類上色（覆蓋 oUF 的 reaction 顏色）
-            -- H2 效能修復：使用 Nameplate_OnShow 預計算的快取，避免 frequentUpdates 下每幀呼叫 UnitClassification+UnitPowerType
-            if showNpcColors and unit then
-                local npcColor = frame._npcColorCache
-                if npcColor then
-                    local reaction = UnitReaction(unit, "player")
-                    if (not reaction or reaction <= 4) and not UnitIsTapDenied(unit) then
-                        bar:SetStatusBarColor(npcColor.r, npcColor.g, npcColor.b)
-                        if bar.bg then
-                            bar.bg:SetVertexColor(
-                                npcColor.r * BG_DARKEN,
-                                npcColor.g * BG_DARKEN,
-                                npcColor.b * BG_DARKEN
-                            )
-                        end
+        -- NPC 角色分類上色（覆蓋 oUF 的 reaction 顏色）
+        if liveNpcColors and unit then
+            local npcColor = frame._npcColorCache
+            if npcColor then
+                local reaction = UnitReaction(unit, "player")
+                if (not reaction or reaction <= 4) and not UnitIsTapDenied(unit) then
+                    bar:SetStatusBarColor(npcColor.r, npcColor.g, npcColor.b)
+                    if bar.bg then
+                        bar.bg:SetVertexColor(npcColor.r * BG_DARKEN, npcColor.g * BG_DARKEN, npcColor.b * BG_DARKEN)
                     end
                 end
             end
+        end
 
-            -- 生命值文字
-            if not healthText then
-                return
-            end
-            if type(cur) ~= "number" or type(max) ~= "number" or max == 0 then
-                healthText:SetText("")
-                return
-            end
-            local pct = mathFloor(cur / max * 100)
-            if fmt == "percent" then
-                healthText:SetText(format("%d%%", pct))
-            elseif fmt == "current" then
-                healthText:SetText(LunarUI.FormatValue(cur))
-            elseif fmt == "both" then
-                healthText:SetText(format("%s - %d%%", LunarUI.FormatValue(cur), pct))
-            end
+        -- 生命值文字（動態查找，showHealthText 在 layout 時建立）
+        local ht = frame.HealthText
+        if not ht then
+            return
+        end
+        if type(cur) ~= "number" or type(max) ~= "number" or max == 0 then
+            ht:SetText("")
+            return
+        end
+        local pct = mathFloor(cur / max * 100)
+        if liveFmt == "percent" then
+            ht:SetText(format("%d%%", pct))
+        elseif liveFmt == "current" then
+            ht:SetText(LunarUI.FormatValue(cur))
+        elseif liveFmt == "both" then
+            ht:SetText(format("%s - %d%%", LunarUI.FormatValue(cur), pct))
         end
     end
 
