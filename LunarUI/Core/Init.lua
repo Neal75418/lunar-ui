@@ -305,7 +305,7 @@ function LunarUI:OnDisable()
     end
 
     -- 停止事件效能分析（Profiler 不是 RegisterModule 模組，需手動清理）
-    if self.DisableEventProfiling then
+    if self._eventProfilingEnabled and self.DisableEventProfiling then
         pcall(self.DisableEventProfiling, self)
     end
 

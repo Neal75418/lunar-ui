@@ -150,6 +150,7 @@ function LunarUI:EnableEventProfiling()
 
     wipe(eventCounts)
     eventProfilingEnabled = true
+    LunarUI._eventProfilingEnabled = true
     eventProfilingStart = GetTimestamp()
     eventProfilingEnd = nil -- 重置結束時間戳
 
@@ -215,6 +216,7 @@ function LunarUI:DisableEventProfiling()
         return
     end
     eventProfilingEnabled = false
+    LunarUI._eventProfilingEnabled = false
     eventProfilingEnd = GetTimestamp() -- 記錄結束時間，確保 PrintEventTimings 使用正確的 elapsed
 
     if eventProfilingFrame then

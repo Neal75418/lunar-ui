@@ -226,6 +226,7 @@ local L = {
     skinPVP = "PVP",
     skinSettings = "Settings",
     skinTrade = "Trade",
+    skinQuestMap = "Quest Map",
 
     -- Frame Mover
     FrameMover = "Frame Mover",
@@ -2011,7 +2012,10 @@ local options = {
                     multiline = false,
                     width = "full",
                     get = function()
-                        local kw = GetDB().chat.keywords or {}
+                        local kw = GetDB().chat.keywords
+                        if type(kw) ~= "table" then
+                            return ""
+                        end
                         return table.concat(kw, ", ")
                     end,
                     set = function(_, v)
@@ -2675,6 +2679,17 @@ local options = {
                     end,
                     set = function(_, v)
                         GetDB().skins.blizzard.trade = v
+                    end,
+                },
+                questmap = {
+                    order = 24,
+                    type = "toggle",
+                    name = L.skinQuestMap,
+                    get = function()
+                        return GetDB().skins.blizzard.questmap
+                    end,
+                    set = function(_, v)
+                        GetDB().skins.blizzard.questmap = v
                     end,
                 },
             },
