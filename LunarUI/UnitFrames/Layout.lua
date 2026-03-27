@@ -220,7 +220,7 @@ local function CreateRaidLayout(dbKey)
         LunarUI.UFCreateReadyCheckIndicator(frame)
         LunarUI.UFCreateSummonIndicator(frame)
         LunarUI.UFCreateResurrectIndicator(frame)
-        LunarUI.UFCreateRaidDebuffs(frame)
+        LunarUI.UFCreateRaidDebuffs(frame, dbKey)
         LunarUI.UFCreateDeathIndicator(frame, unit)
 
         return frame
@@ -456,6 +456,7 @@ local function SpawnGroupFrames(uf)
             end
         else
             -- 單一 Raid header（傳統模式）
+            local raidSp = uf.raid.spacing or 4
             oUF:SetActiveStyle("LunarUI_Raid")
             local raidHeader = oUF:SpawnHeader(
                 "LunarUI_Raid",
@@ -469,9 +470,9 @@ local function SpawnGroupFrames(uf)
                 "showSolo",
                 false,
                 "xOffset",
-                4,
+                raidSp,
                 "yOffset",
-                -4,
+                -raidSp,
                 "groupFilter",
                 "1,2,3,4,5,6,7,8",
                 "groupBy",
@@ -483,7 +484,7 @@ local function SpawnGroupFrames(uf)
                 "unitsPerColumn",
                 5,
                 "columnSpacing",
-                4,
+                raidSp,
                 "columnAnchorPoint",
                 "TOP",
                 "oUF-initialConfigFunction",

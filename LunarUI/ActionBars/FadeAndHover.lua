@@ -9,8 +9,8 @@ local LunarUI = Engine.LunarUI
 local mathMax = math.max
 local mathMin = math.min
 
--- M6: Blizzard-managed bars 不可由 LunarUI 淡出控制（會造成 secure frame taint）
-local BLIZZARD_BAR_KEYS = { extraActionButton = true, zoneAbilityButton = true }
+-- M6: 不參與淡出的 bar key（Blizzard secure bars + 永遠可見的 microBar）
+local FADE_EXCLUDED_KEYS = { extraActionButton = true, zoneAbilityButton = true, microBar = true }
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -229,7 +229,7 @@ local function FadeAllBarsOut()
 
     local bars = LunarUI._actionBars
     for barKey in pairs(bars) do
-        if not BLIZZARD_BAR_KEYS[barKey] and IsBarFadeEnabled(barKey) then -- M6: 跳過 Blizzard 安全框架
+        if not FADE_EXCLUDED_KEYS[barKey] and IsBarFadeEnabled(barKey) then -- M6: 跳過 Blizzard 安全框架
             if not fadeState[barKey] or not fadeState[barKey].hovered then
                 FadeBarTo(barKey, cachedFadeAlpha)
             end
@@ -240,7 +240,7 @@ end
 local function FadeAllBarsIn()
     local bars = LunarUI._actionBars
     for barKey in pairs(bars) do
-        if not BLIZZARD_BAR_KEYS[barKey] then -- M6: 跳過 Blizzard 安全框架
+        if not FADE_EXCLUDED_KEYS[barKey] then -- M6: 跳過 Blizzard 安全框架
             FadeBarTo(barKey, 1.0)
         end
     end

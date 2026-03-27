@@ -169,7 +169,7 @@ describe("ValidateDB", function()
         LunarUI.db = makeDB()
         LunarUI:ValidateDB()
         assert.equals(1.0, LunarUI.db.profile.hud.scale)
-        assert.equals("lunar", LunarUI.db.profile.style.theme)
+        assert.equals("24h", LunarUI.db.profile.minimap.clockFormat)
     end)
 
     it("fixes number below minimum", function()
@@ -191,15 +191,15 @@ describe("ValidateDB", function()
     end)
 
     it("fixes invalid enum value", function()
-        LunarUI.db = makeDB({ ["style.theme"] = "invalid_theme" })
+        LunarUI.db = makeDB({ ["minimap.clockFormat"] = "invalid" })
         LunarUI:ValidateDB()
-        assert.equals("lunar", LunarUI.db.profile.style.theme)
+        assert.equals("24h", LunarUI.db.profile.minimap.clockFormat)
     end)
 
     it("accepts valid enum value", function()
-        LunarUI.db = makeDB({ ["style.theme"] = "parchment" })
+        LunarUI.db = makeDB({ ["minimap.clockFormat"] = "12h" })
         LunarUI:ValidateDB()
-        assert.equals("parchment", LunarUI.db.profile.style.theme)
+        assert.equals("12h", LunarUI.db.profile.minimap.clockFormat)
     end)
 
     it("fixes invalid clock format", function()
@@ -360,11 +360,10 @@ describe("ValidateDB edge cases", function()
     it("fixes wrong type for string field (number where string expected)", function()
         LunarUI.db = {
             profile = {
-                style = { theme = 123, fontSize = 12, borderStyle = "ink" },
-                -- Need other modules to exist for the loop
+                style = defaults.profile.style,
                 hud = defaults.profile.hud,
                 actionbars = defaults.profile.actionbars,
-                minimap = defaults.profile.minimap,
+                minimap = { clockFormat = 123 }, -- number where string expected
                 bags = defaults.profile.bags,
                 chat = defaults.profile.chat,
                 nameplates = defaults.profile.nameplates,
@@ -375,7 +374,7 @@ describe("ValidateDB edge cases", function()
             char = {},
         }
         LunarUI:ValidateDB()
-        assert.equals("lunar", LunarUI.db.profile.style.theme)
+        assert.equals("24h", LunarUI.db.profile.minimap.clockFormat)
     end)
 
     it("fixes boolean type violation", function()

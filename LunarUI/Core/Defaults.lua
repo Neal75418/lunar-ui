@@ -242,20 +242,16 @@ local defaults = {
                 showAuras = false,
                 showLevel = false, -- ★ 顯示等級文字（友方預設關閉）
             },
-            -- 仇恨顏色
-            threat = {
-                enabled = true,
-            },
+            -- 仇恨顏色（永遠啟用，由 oUF ThreatIndicator element 控制）
+            threat = {},
             -- 重要目標高亮
             highlight = {
                 rare = true,
                 elite = true,
                 boss = true,
             },
-            -- 分類圖示
-            classification = {
-                enabled = true,
-            },
+            -- 分類圖示（永遠啟用，由 oUF ClassificationIndicator element 控制）
+            classification = {},
             -- NPC 角色分類色（敵方名牌依角色類型上色）
             npcColors = {
                 enabled = false, -- 預設關閉
@@ -303,7 +299,7 @@ local defaults = {
         auraFilters = {
             hidePassive = true, -- 隱藏被動效果（持續 > 5 分鐘或永久 buff）
             showStealable = true, -- 在敵方目標上顯示可竊取 buff
-            showDispellable = true, -- 高亮可驅散的 debuff
+            -- showDispellable 已移除：WoW 12.0 dispelName 為 secret value，無法區分驅散類型
             sortMethod = "time", -- "time" / "duration" / "name" / "player"
             sortReverse = false, -- 排序方向反轉
         },
@@ -382,8 +378,7 @@ local defaults = {
         -- 聊天設定
         chat = {
             enabled = true,
-            width = 380,
-            height = 150,
+            -- width/height 已移除：ChatStyling 不控制 ChatFrame 尺寸，由 WoW 內建調整
             improvedColors = true,
             classColors = true,
             fadeTime = 120,
@@ -554,11 +549,8 @@ local defaults = {
 
         -- 視覺風格
         style = {
-            theme = "lunar", -- lunar、parchment、minimal
             font = "Friz Quadrata TT", -- LSM 字體名稱
-            fontSize = 12,
             statusBarTexture = "Blizzard", -- LSM 材質條名稱
-            borderStyle = "ink", -- ink、clean、none
         },
     },
 

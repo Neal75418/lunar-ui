@@ -180,7 +180,6 @@ describe("Defaults nameplates", function()
 
     it("has threat config", function()
         assert.is_table(np.threat)
-        assert.is_boolean(np.threat.enabled)
     end)
 
     it("has npcColors config with RGB tables", function()
@@ -254,27 +253,18 @@ end)
 -- Style & Enums
 --------------------------------------------------------------------------------
 
-describe("Defaults style enums", function()
+describe("Defaults style keys", function()
     local s = defaults.profile.style
-
-    it("theme is valid enum", function()
-        local valid = { lunar = true, parchment = true, minimal = true }
-        assert.is_true(valid[s.theme] or false)
-    end)
-
-    it("borderStyle is valid enum", function()
-        local valid = { ink = true, clean = true, none = true }
-        assert.is_true(valid[s.borderStyle] or false)
-    end)
 
     it("font is a string", function()
         assert.is_string(s.font)
     end)
 
-    it("fontSize is a positive number", function()
-        assert.is_number(s.fontSize)
-        assert.is_true(s.fontSize > 0)
+    it("statusBarTexture is a string", function()
+        assert.is_string(s.statusBarTexture)
     end)
+
+    -- theme/borderStyle/fontSize 已移除（未被任何生產代碼消費）
 end)
 
 describe("Defaults minimap enums", function()

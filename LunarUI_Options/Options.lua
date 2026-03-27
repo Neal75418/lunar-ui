@@ -416,16 +416,279 @@ local options = {
                             end,
                         }
                     end
+
+                    -- Aura settings (for units that have showBuffs/showDebuffs in Defaults)
+                    if opts.hasAuras then
+                        args.auraHeader = { order = 10, type = "header", name = L["AuraSettings"] or "Aura Settings" }
+                        args.showBuffs = {
+                            order = 11,
+                            type = "toggle",
+                            name = L["ShowBuffs"] or "Show Buffs",
+                            desc = L["ShowBuffsDesc"] or "Display buff icons on this unit frame",
+                            get = function()
+                                return GetDB().unitframes[unit].showBuffs
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].showBuffs = v
+                                RefreshUI()
+                            end,
+                        }
+                        args.buffSize = {
+                            order = 12,
+                            type = "range",
+                            name = L["BuffSize"] or "Buff Size",
+                            min = 12,
+                            max = 40,
+                            step = 1,
+                            get = function()
+                                return GetDB().unitframes[unit].buffSize
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].buffSize = v
+                                RefreshUI()
+                            end,
+                        }
+                        args.maxBuffs = {
+                            order = 13,
+                            type = "range",
+                            name = L["MaxBuffs"] or "Max Buffs",
+                            min = 0,
+                            max = 40,
+                            step = 1,
+                            get = function()
+                                return GetDB().unitframes[unit].maxBuffs
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].maxBuffs = v
+                                RefreshUI()
+                            end,
+                        }
+                        args.showDebuffs = {
+                            order = 14,
+                            type = "toggle",
+                            name = L["ShowDebuffs"] or "Show Debuffs",
+                            desc = L["ShowDebuffsDesc"] or "Display debuff icons on this unit frame",
+                            get = function()
+                                return GetDB().unitframes[unit].showDebuffs
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].showDebuffs = v
+                                RefreshUI()
+                            end,
+                        }
+                        args.debuffSize = {
+                            order = 15,
+                            type = "range",
+                            name = L["DebuffSize"] or "Debuff Size",
+                            min = 12,
+                            max = 40,
+                            step = 1,
+                            get = function()
+                                return GetDB().unitframes[unit].debuffSize
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].debuffSize = v
+                                RefreshUI()
+                            end,
+                        }
+                        args.maxDebuffs = {
+                            order = 16,
+                            type = "range",
+                            name = L["MaxDebuffs"] or "Max Debuffs",
+                            min = 0,
+                            max = 40,
+                            step = 1,
+                            get = function()
+                                return GetDB().unitframes[unit].maxDebuffs
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].maxDebuffs = v
+                                RefreshUI()
+                            end,
+                        }
+                        args.onlyPlayerDebuffs = {
+                            order = 17,
+                            type = "toggle",
+                            name = L["OnlyPlayerDebuffs"] or "Only Player Debuffs",
+                            desc = L["OnlyPlayerDebuffsDesc"] or "Only show debuffs cast by you",
+                            get = function()
+                                return GetDB().unitframes[unit].onlyPlayerDebuffs
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].onlyPlayerDebuffs = v
+                                RefreshUI()
+                            end,
+                        }
+                    end
+
+                    -- Player-only: portrait, heal prediction, castbar
+                    if opts.hasPortrait then
+                        args.portraitHeader =
+                            { order = 20, type = "header", name = L["PortraitSettings"] or "Portrait" }
+                        args.showPortrait = {
+                            order = 21,
+                            type = "toggle",
+                            name = L["ShowPortrait"] or "Show Portrait",
+                            desc = L["ShowPortraitDesc"] or "Display character portrait on the unit frame",
+                            get = function()
+                                return GetDB().unitframes[unit].showPortrait
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].showPortrait = v
+                                RefreshUI()
+                            end,
+                        }
+                        args.showHealPrediction = {
+                            order = 22,
+                            type = "toggle",
+                            name = L["ShowHealPrediction"] or "Show Heal Prediction",
+                            desc = L["ShowHealPredictionDesc"] or "Show incoming heal prediction bar",
+                            get = function()
+                                return GetDB().unitframes[unit].showHealPrediction
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].showHealPrediction = v
+                                RefreshUI()
+                            end,
+                        }
+                    end
+
+                    -- Player-only: castbar sub-group
+                    if opts.hasCastbar then
+                        args.castbar = {
+                            order = 30,
+                            type = "group",
+                            name = L["Castbar"] or "Castbar",
+                            inline = true,
+                            args = {
+                                height = {
+                                    order = 1,
+                                    type = "range",
+                                    name = L.height,
+                                    min = 6,
+                                    max = 30,
+                                    step = 1,
+                                    get = function()
+                                        return GetDB().unitframes[unit].castbar.height
+                                    end,
+                                    set = function(_, v)
+                                        GetDB().unitframes[unit].castbar.height = v
+                                        RefreshUI()
+                                    end,
+                                },
+                                showLatency = {
+                                    order = 2,
+                                    type = "toggle",
+                                    name = L["CastbarLatency"] or "Show Latency",
+                                    desc = L["CastbarLatencyDesc"] or "Show latency indicator on the castbar",
+                                    get = function()
+                                        return GetDB().unitframes[unit].castbar.showLatency
+                                    end,
+                                    set = function(_, v)
+                                        GetDB().unitframes[unit].castbar.showLatency = v
+                                        RefreshUI()
+                                    end,
+                                },
+                                showTicks = {
+                                    order = 3,
+                                    type = "toggle",
+                                    name = L["CastbarTicks"] or "Show Ticks",
+                                    desc = L["CastbarTicksDesc"] or "Show tick marks on channeled spells",
+                                    get = function()
+                                        return GetDB().unitframes[unit].castbar.showTicks
+                                    end,
+                                    set = function(_, v)
+                                        GetDB().unitframes[unit].castbar.showTicks = v
+                                        RefreshUI()
+                                    end,
+                                },
+                                showEmpowered = {
+                                    order = 4,
+                                    type = "toggle",
+                                    name = L["CastbarEmpowered"] or "Show Empowered",
+                                    desc = L["CastbarEmpoweredDesc"] or "Show Evoker empowered cast stages",
+                                    get = function()
+                                        return GetDB().unitframes[unit].castbar.showEmpowered
+                                    end,
+                                    set = function(_, v)
+                                        GetDB().unitframes[unit].castbar.showEmpowered = v
+                                        RefreshUI()
+                                    end,
+                                },
+                            },
+                        }
+                    end
+
+                    -- Raid-only: autoSwitchSize
+                    if opts.hasAutoSwitchSize then
+                        args.autoSwitchSize = {
+                            order = 40,
+                            type = "toggle",
+                            name = L["AutoSwitchSize"] or "Auto Switch Size",
+                            desc = L["AutoSwitchSizeDesc"]
+                                or "Automatically adjust raid frame size based on group size",
+                            get = function()
+                                return GetDB().unitframes[unit].autoSwitchSize
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].autoSwitchSize = v
+                                RefreshUI()
+                            end,
+                            width = "full",
+                        }
+                    end
+
                     return { order = ord, type = "group", name = displayName, args = args }
                 end
 
                 local UNIT_FRAME_DEFS = {
-                    { "player", 1, L.player, { wMin = 100, wMax = 400, hMin = 20, hMax = 100 } },
-                    { "target", 2, L.target, { wMin = 100, wMax = 400, hMin = 20, hMax = 100 } },
-                    { "focus", 3, L.focus, { wMin = 80, wMax = 300, hMin = 15, hMax = 80 } },
-                    { "party", 4, L.party, { wMin = 80, wMax = 250, hMin = 15, hMax = 60, spacingMax = 20 } },
-                    { "raid", 5, L.raid, { wMin = 50, wMax = 150, hMin = 15, hMax = 50, spacingMax = 10 } },
-                    { "boss", 6, L.boss, { wMin = 100, wMax = 300, hMin = 20, hMax = 80 } },
+                    {
+                        "player",
+                        1,
+                        L.player,
+                        {
+                            wMin = 100,
+                            wMax = 400,
+                            hMin = 20,
+                            hMax = 100,
+                            hasAuras = true,
+                            hasPortrait = true,
+                            hasCastbar = true,
+                        },
+                    },
+                    {
+                        "target",
+                        2,
+                        L.target,
+                        { wMin = 100, wMax = 400, hMin = 20, hMax = 100, hasAuras = true, hasPortrait = true },
+                    },
+                    {
+                        "focus",
+                        3,
+                        L.focus,
+                        { wMin = 80, wMax = 300, hMin = 15, hMax = 80, hasAuras = true, hasPortrait = true },
+                    },
+                    {
+                        "party",
+                        4,
+                        L.party,
+                        { wMin = 80, wMax = 250, hMin = 15, hMax = 60, spacingMax = 20, hasAuras = true },
+                    },
+                    {
+                        "raid",
+                        5,
+                        L.raid,
+                        {
+                            wMin = 50,
+                            wMax = 150,
+                            hMin = 15,
+                            hMax = 50,
+                            spacingMax = 10,
+                            hasAuras = true,
+                            hasAutoSwitchSize = true,
+                        },
+                    },
+                    { "boss", 6, L.boss, { wMin = 100, wMax = 300, hMin = 20, hMax = 80, hasAuras = true } },
                 }
 
                 local result = {
@@ -493,7 +756,190 @@ local options = {
             name = L.actionbars,
             desc = L.actionbarsDesc,
             childGroups = "tab",
-            args = {},
+            args = {
+                global = {
+                    order = 0,
+                    type = "group",
+                    name = L["GlobalSettings"] or "Global Settings",
+                    args = {
+                        enabled = {
+                            order = 1,
+                            type = "toggle",
+                            name = L.enable,
+                            desc = L["ActionBarsEnableDesc"]
+                                or "Enable LunarUI action bars (disable to use Blizzard default)",
+                            get = function()
+                                return GetDB().actionbars.enabled
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.enabled = v
+                                RefreshUI()
+                            end,
+                            width = "full",
+                        },
+                        buttonSize = {
+                            order = 2,
+                            type = "range",
+                            name = L.buttonSize,
+                            desc = L["ButtonSizeDesc"] or "Size of action bar buttons in pixels",
+                            min = 24,
+                            max = 48,
+                            step = 1,
+                            get = function()
+                                return GetDB().actionbars.buttonSize
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.buttonSize = v
+                                RefreshUI()
+                            end,
+                        },
+                        buttonSpacing = {
+                            order = 3,
+                            type = "range",
+                            name = L["ButtonSpacing"] or "Button Spacing",
+                            desc = L["ButtonSpacingDesc"] or "Space between action bar buttons in pixels",
+                            min = 0,
+                            max = 12,
+                            step = 1,
+                            get = function()
+                                return GetDB().actionbars.buttonSpacing
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.buttonSpacing = v
+                                RefreshUI()
+                            end,
+                        },
+                        showHotkeys = {
+                            order = 4,
+                            type = "toggle",
+                            name = L["ShowHotkeys"] or "Show Hotkeys",
+                            desc = L["ShowHotkeysDesc"] or "Display keybind text on action buttons",
+                            get = function()
+                                return GetDB().actionbars.showHotkeys
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.showHotkeys = v
+                                RefreshUI()
+                            end,
+                        },
+                        showMacroNames = {
+                            order = 5,
+                            type = "toggle",
+                            name = L["ShowMacroNames"] or "Show Macro Names",
+                            desc = L["ShowMacroNamesDesc"] or "Display macro name text on action buttons",
+                            get = function()
+                                return GetDB().actionbars.showMacroNames
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.showMacroNames = v
+                                RefreshUI()
+                            end,
+                        },
+                        outOfRangeColoring = {
+                            order = 6,
+                            type = "toggle",
+                            name = L["OutOfRangeColoring"] or "Out of Range Coloring",
+                            desc = L["OutOfRangeColoringDesc"]
+                                or "Color action buttons red when the target is out of range",
+                            get = function()
+                                return GetDB().actionbars.outOfRangeColoring
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.outOfRangeColoring = v
+                                RefreshUI()
+                            end,
+                        },
+                        fadeHeader = { order = 10, type = "header", name = L["FadeSettings"] or "Fade Settings" },
+                        fadeEnabled = {
+                            order = 11,
+                            type = "toggle",
+                            name = L["FadeEnabled"] or "Fade Out of Combat",
+                            desc = L["FadeEnabledDesc"] or "Fade action bars when out of combat",
+                            get = function()
+                                return GetDB().actionbars.fadeEnabled
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.fadeEnabled = v
+                                RefreshUI()
+                            end,
+                            width = "full",
+                        },
+                        fadeAlpha = {
+                            order = 12,
+                            type = "range",
+                            name = L.fadeAlpha,
+                            desc = L["FadeAlphaDesc"] or "Opacity when faded out",
+                            min = 0,
+                            max = 1,
+                            step = 0.05,
+                            isPercent = true,
+                            disabled = function()
+                                return not GetDB().actionbars.fadeEnabled
+                            end,
+                            get = function()
+                                return GetDB().actionbars.fadeAlpha
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.fadeAlpha = v
+                                RefreshUI()
+                            end,
+                        },
+                        fadeDelay = {
+                            order = 13,
+                            type = "range",
+                            name = L["FadeDelay"] or "Fade Delay",
+                            desc = L["FadeDelayDesc"] or "Seconds to wait after leaving combat before fading",
+                            min = 0,
+                            max = 10,
+                            step = 0.5,
+                            disabled = function()
+                                return not GetDB().actionbars.fadeEnabled
+                            end,
+                            get = function()
+                                return GetDB().actionbars.fadeDelay
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.fadeDelay = v
+                                RefreshUI()
+                            end,
+                        },
+                        fadeDuration = {
+                            order = 14,
+                            type = "range",
+                            name = L["FadeDuration"] or "Fade Duration",
+                            desc = L["FadeDurationDesc"] or "Duration of the fade animation in seconds",
+                            min = 0.1,
+                            max = 2.0,
+                            step = 0.1,
+                            disabled = function()
+                                return not GetDB().actionbars.fadeEnabled
+                            end,
+                            get = function()
+                                return GetDB().actionbars.fadeDuration
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.fadeDuration = v
+                                RefreshUI()
+                            end,
+                        },
+                        microBarHeader = { order = 20, type = "header", name = L["MicroBar"] or "Micro Bar" },
+                        microBarEnabled = {
+                            order = 21,
+                            type = "toggle",
+                            name = L.enable,
+                            desc = L["MicroBarDesc"] or "Show the micro menu bar",
+                            get = function()
+                                return GetDB().actionbars.microBar.enabled
+                            end,
+                            set = function(_, v)
+                                GetDB().actionbars.microBar.enabled = v
+                                RefreshUI()
+                            end,
+                            width = "full",
+                        },
+                    },
+                },
+            },
         },
 
         -- Nameplates
@@ -557,6 +1003,40 @@ local options = {
                     end,
                     set = function(_, v)
                         GetDB().nameplates.stackingDetection = v
+                        RefreshUI()
+                    end,
+                },
+                showHealthText = {
+                    order = 5,
+                    type = "toggle",
+                    name = L["ShowHealthText"] or "Show Health Text",
+                    desc = L["ShowHealthTextDesc"] or "Display health value text on nameplates",
+                    get = function()
+                        return GetDB().nameplates.showHealthText
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.showHealthText = v
+                        RefreshUI()
+                    end,
+                },
+                healthTextFormat = {
+                    order = 6,
+                    type = "select",
+                    name = L["HealthTextFormat"] or "Health Text Format",
+                    desc = L["HealthTextFormatDesc"] or "Format for health text display",
+                    values = {
+                        percent = "Percent",
+                        current = "Current",
+                        both = "Both",
+                    },
+                    disabled = function()
+                        return not GetDB().nameplates.showHealthText
+                    end,
+                    get = function()
+                        return GetDB().nameplates.healthTextFormat
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.healthTextFormat = v
                         RefreshUI()
                     end,
                 },
@@ -628,6 +1108,55 @@ local options = {
                         RefreshUI()
                     end,
                 },
+                enemyShowBuffs = {
+                    order = 17,
+                    type = "toggle",
+                    name = L["ShowBuffs"] or "Show Buffs",
+                    desc = L["EnemyShowBuffsDesc"] or "Show stealable buffs on enemy nameplates",
+                    get = function()
+                        return GetDB().nameplates.enemy.showBuffs
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.enemy.showBuffs = v
+                        RefreshUI()
+                    end,
+                },
+                enemyBuffSize = {
+                    order = 18,
+                    type = "range",
+                    name = L["BuffSize"] or "Buff Size",
+                    min = 8,
+                    max = 30,
+                    step = 1,
+                    disabled = function()
+                        return not GetDB().nameplates.enemy.showBuffs
+                    end,
+                    get = function()
+                        return GetDB().nameplates.enemy.buffSize
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.enemy.buffSize = v
+                        RefreshUI()
+                    end,
+                },
+                enemyMaxBuffs = {
+                    order = 19,
+                    type = "range",
+                    name = L["MaxBuffs"] or "Max Buffs",
+                    min = 0,
+                    max = 8,
+                    step = 1,
+                    disabled = function()
+                        return not GetDB().nameplates.enemy.showBuffs
+                    end,
+                    get = function()
+                        return GetDB().nameplates.enemy.maxBuffs
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.enemy.maxBuffs = v
+                        RefreshUI()
+                    end,
+                },
                 spacer2 = { order = 20, type = "description", name = "\n" },
                 friendlyHeader = {
                     order = 21,
@@ -669,6 +1198,71 @@ local options = {
                     end,
                     set = function(_, v)
                         GetDB().nameplates.friendly.showLevel = v
+                        RefreshUI()
+                    end,
+                },
+                spacer3 = { order = 30, type = "description", name = "\n" },
+                npcColorsHeader = {
+                    order = 31,
+                    type = "header",
+                    name = L["NpcColors"] or "NPC Colors",
+                },
+                npcColorsEnabled = {
+                    order = 32,
+                    type = "toggle",
+                    name = L.enable,
+                    desc = L["NpcColorsDesc"] or "Color enemy nameplates by NPC role (caster, miniboss, etc.)",
+                    get = function()
+                        return GetDB().nameplates.npcColors.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.npcColors.enabled = v
+                        RefreshUI()
+                    end,
+                    width = "full",
+                },
+                spacer4 = { order = 40, type = "description", name = "\n" },
+                highlightHeader = {
+                    order = 41,
+                    type = "header",
+                    name = L["Highlight"] or "Highlight",
+                },
+                highlightRare = {
+                    order = 42,
+                    type = "toggle",
+                    name = L["HighlightRare"] or "Rare",
+                    desc = L["HighlightRareDesc"] or "Highlight rare mobs on nameplates",
+                    get = function()
+                        return GetDB().nameplates.highlight.rare
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.highlight.rare = v
+                        RefreshUI()
+                    end,
+                },
+                highlightElite = {
+                    order = 43,
+                    type = "toggle",
+                    name = L["HighlightElite"] or "Elite",
+                    desc = L["HighlightEliteDesc"] or "Highlight elite mobs on nameplates",
+                    get = function()
+                        return GetDB().nameplates.highlight.elite
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.highlight.elite = v
+                        RefreshUI()
+                    end,
+                },
+                highlightBoss = {
+                    order = 44,
+                    type = "toggle",
+                    name = L["HighlightBoss"] or "Boss",
+                    desc = L["HighlightBossDesc"] or "Highlight boss mobs on nameplates",
+                    get = function()
+                        return GetDB().nameplates.highlight.boss
+                    end,
+                    set = function(_, v)
+                        GetDB().nameplates.highlight.boss = v
                         RefreshUI()
                     end,
                 },
@@ -1008,6 +1602,74 @@ local options = {
                             end,
                             set = function(_, v)
                                 GetDB().auraBlacklist = v
+                                if LunarUI.RebuildAuraFilterCache then
+                                    LunarUI:RebuildAuraFilterCache()
+                                end
+                            end,
+                        },
+                        filterHeader = { order = 10, type = "header", name = L["FilterOptions"] or "Filter Options" },
+                        hidePassive = {
+                            order = 11,
+                            type = "toggle",
+                            name = L["HidePassive"] or "Hide Passive",
+                            desc = L["HidePassiveDesc"]
+                                or "Hide passive effects (buffs lasting more than 5 minutes or permanent)",
+                            get = function()
+                                return GetDB().auraFilters.hidePassive
+                            end,
+                            set = function(_, v)
+                                GetDB().auraFilters.hidePassive = v
+                                if LunarUI.RebuildAuraFilterCache then
+                                    LunarUI:RebuildAuraFilterCache()
+                                end
+                            end,
+                        },
+                        showStealable = {
+                            order = 12,
+                            type = "toggle",
+                            name = L["ShowStealable"] or "Show Stealable",
+                            desc = L["ShowStealableDesc"] or "Show stealable buffs on enemy targets",
+                            get = function()
+                                return GetDB().auraFilters.showStealable
+                            end,
+                            set = function(_, v)
+                                GetDB().auraFilters.showStealable = v
+                                if LunarUI.RebuildAuraFilterCache then
+                                    LunarUI:RebuildAuraFilterCache()
+                                end
+                            end,
+                        },
+                        sortMethod = {
+                            order = 13,
+                            type = "select",
+                            name = L["SortMethod"] or "Sort Method",
+                            desc = L["SortMethodDesc"] or "How to sort auras on unit frames",
+                            values = {
+                                time = L["SortByTime"] or "Time Remaining",
+                                duration = L["SortByDuration"] or "Duration",
+                                name = L["SortByName"] or "Name",
+                                player = L["SortByPlayer"] or "Player First",
+                            },
+                            get = function()
+                                return GetDB().auraFilters.sortMethod
+                            end,
+                            set = function(_, v)
+                                GetDB().auraFilters.sortMethod = v
+                                if LunarUI.RebuildAuraFilterCache then
+                                    LunarUI:RebuildAuraFilterCache()
+                                end
+                            end,
+                        },
+                        sortReverse = {
+                            order = 14,
+                            type = "toggle",
+                            name = L["SortReverse"] or "Reverse Sort",
+                            desc = L["SortReverseDesc"] or "Reverse the aura sort order",
+                            get = function()
+                                return GetDB().auraFilters.sortReverse
+                            end,
+                            set = function(_, v)
+                                GetDB().auraFilters.sortReverse = v
                                 if LunarUI.RebuildAuraFilterCache then
                                     LunarUI:RebuildAuraFilterCache()
                                 end
@@ -1436,6 +2098,27 @@ local options = {
                     end,
                     set = function(_, v)
                         GetDB().minimap.fadeAlpha = v
+                        if LunarUI.RefreshMinimap then
+                            LunarUI:RefreshMinimap()
+                        end
+                    end,
+                },
+                fadeDuration = {
+                    order = 44,
+                    type = "range",
+                    name = L["FadeDuration"] or "Fade Duration",
+                    desc = L["MinimapFadeDurationDesc"] or "Duration of the fade animation in seconds",
+                    min = 0.1,
+                    max = 2.0,
+                    step = 0.1,
+                    disabled = function()
+                        return not GetDB().minimap.fadeOnMouseLeave
+                    end,
+                    get = function()
+                        return GetDB().minimap.fadeDuration
+                    end,
+                    set = function(_, v)
+                        GetDB().minimap.fadeDuration = v
                         if LunarUI.RefreshMinimap then
                             LunarUI:RefreshMinimap()
                         end
@@ -1922,6 +2605,106 @@ local options = {
                         GetDB().chat.classColors = v
                     end,
                 },
+                detectURLs = {
+                    order = 5.1,
+                    type = "toggle",
+                    name = L["DetectURLs"] or "Clickable URLs",
+                    desc = L["DetectURLsDesc"] or "Make URLs in chat clickable",
+                    get = function()
+                        return GetDB().chat.detectURLs
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.detectURLs = v
+                    end,
+                },
+                enableEmojis = {
+                    order = 5.2,
+                    type = "toggle",
+                    name = L["EnableEmojis"] or "Emoji Replacement",
+                    desc = L["EnableEmojisDesc"] or "Replace text emoticons with emoji icons",
+                    get = function()
+                        return GetDB().chat.enableEmojis
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.enableEmojis = v
+                    end,
+                },
+                showRoleIcons = {
+                    order = 5.3,
+                    type = "toggle",
+                    name = L["ShowRoleIcons"] or "Role Icons",
+                    desc = L["ShowRoleIconsDesc"] or "Show tank/healer/DPS role icons in chat",
+                    get = function()
+                        return GetDB().chat.showRoleIcons
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.showRoleIcons = v
+                    end,
+                },
+                keywordAlerts = {
+                    order = 5.4,
+                    type = "toggle",
+                    name = L["KeywordAlerts"] or "Keyword Alerts",
+                    desc = L["KeywordAlertsDesc"] or "Flash chat frame when keywords are mentioned",
+                    get = function()
+                        return GetDB().chat.keywordAlerts
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.keywordAlerts = v
+                    end,
+                },
+                spamFilter = {
+                    order = 5.5,
+                    type = "toggle",
+                    name = L["SpamFilter"] or "Spam Filter",
+                    desc = L["SpamFilterDesc"] or "Filter duplicate and spam messages",
+                    get = function()
+                        return GetDB().chat.spamFilter
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.spamFilter = v
+                    end,
+                },
+                linkTooltipPreview = {
+                    order = 5.6,
+                    type = "toggle",
+                    name = L["LinkTooltipPreview"] or "Link Tooltip Preview",
+                    desc = L["LinkTooltipPreviewDesc"]
+                        or "Show tooltip preview when hovering over item/spell links in chat",
+                    get = function()
+                        return GetDB().chat.linkTooltipPreview
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.linkTooltipPreview = v
+                    end,
+                },
+                showTimestamps = {
+                    order = 5.7,
+                    type = "toggle",
+                    name = L["ShowTimestamps"] or "Show Timestamps",
+                    desc = L["ShowTimestampsDesc"] or "Show timestamps on chat messages",
+                    get = function()
+                        return GetDB().chat.showTimestamps
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.showTimestamps = v
+                    end,
+                },
+                timestampFormat = {
+                    order = 5.8,
+                    type = "input",
+                    name = L["TimestampFormat"] or "Timestamp Format",
+                    desc = L["TimestampFormatDesc"] or "strftime format string for timestamps (e.g. %H:%M, %I:%M %p)",
+                    disabled = function()
+                        return not GetDB().chat.showTimestamps
+                    end,
+                    get = function()
+                        return GetDB().chat.timestampFormat
+                    end,
+                    set = function(_, v)
+                        GetDB().chat.timestampFormat = v
+                    end,
+                },
                 fadeTime = {
                     order = 9,
                     type = "range",
@@ -2104,6 +2887,18 @@ local options = {
                     end,
                     set = function(_, v)
                         GetDB().tooltip.showTargetTarget = v
+                    end,
+                },
+                showItemCount = {
+                    order = 7,
+                    type = "toggle",
+                    name = L["ShowItemCount"] or "Show Item Count",
+                    desc = L["ShowItemCountDesc"] or "Show how many of an item you own across your characters",
+                    get = function()
+                        return GetDB().tooltip.showItemCount
+                    end,
+                    set = function(_, v)
+                        GetDB().tooltip.showItemCount = v
                     end,
                 },
             },
@@ -2320,6 +3115,357 @@ local options = {
                 },
             },
         },
+        -- Data Bars
+        databars = {
+            order = 10.35,
+            type = "group",
+            name = L["DataBars"] or "Data Bars",
+            desc = L["DataBarsDesc"] or "Experience, reputation, and honor bar settings",
+            childGroups = "tab",
+            args = {
+                enabled = {
+                    order = 1,
+                    type = "toggle",
+                    name = L.enable,
+                    desc = L["DataBarsEnableDesc"] or "Enable LunarUI data bars",
+                    get = function()
+                        return GetDB().databars.enabled
+                    end,
+                    set = function(_, v)
+                        GetDB().databars.enabled = v
+                        RefreshUI()
+                    end,
+                    width = "full",
+                },
+                experience = {
+                    order = 2,
+                    type = "group",
+                    name = L["Experience"] or "Experience",
+                    args = {
+                        enabled = {
+                            order = 1,
+                            type = "toggle",
+                            name = L.enable,
+                            get = function()
+                                return GetDB().databars.experience.enabled
+                            end,
+                            set = function(_, v)
+                                GetDB().databars.experience.enabled = v
+                                RefreshUI()
+                            end,
+                            width = "full",
+                        },
+                        textFormat = {
+                            order = 2,
+                            type = "select",
+                            name = L["TextFormat"] or "Text Format",
+                            values = {
+                                percent = "Percent",
+                                curmax = "Current / Max",
+                                cur = "Current",
+                                remaining = "Remaining",
+                            },
+                            get = function()
+                                return GetDB().databars.experience.textFormat
+                            end,
+                            set = function(_, v)
+                                GetDB().databars.experience.textFormat = v
+                                RefreshUI()
+                            end,
+                        },
+                        height = {
+                            order = 3,
+                            type = "range",
+                            name = L.height,
+                            min = 4,
+                            max = 20,
+                            step = 1,
+                            get = function()
+                                return GetDB().databars.experience.height
+                            end,
+                            set = function(_, v)
+                                GetDB().databars.experience.height = v
+                                RefreshUI()
+                            end,
+                        },
+                    },
+                },
+                reputation = {
+                    order = 3,
+                    type = "group",
+                    name = L["Reputation"] or "Reputation",
+                    args = {
+                        enabled = {
+                            order = 1,
+                            type = "toggle",
+                            name = L.enable,
+                            get = function()
+                                return GetDB().databars.reputation.enabled
+                            end,
+                            set = function(_, v)
+                                GetDB().databars.reputation.enabled = v
+                                RefreshUI()
+                            end,
+                            width = "full",
+                        },
+                        textFormat = {
+                            order = 2,
+                            type = "select",
+                            name = L["TextFormat"] or "Text Format",
+                            values = {
+                                percent = "Percent",
+                                curmax = "Current / Max",
+                                cur = "Current",
+                                remaining = "Remaining",
+                            },
+                            get = function()
+                                return GetDB().databars.reputation.textFormat
+                            end,
+                            set = function(_, v)
+                                GetDB().databars.reputation.textFormat = v
+                                RefreshUI()
+                            end,
+                        },
+                        height = {
+                            order = 3,
+                            type = "range",
+                            name = L.height,
+                            min = 4,
+                            max = 20,
+                            step = 1,
+                            get = function()
+                                return GetDB().databars.reputation.height
+                            end,
+                            set = function(_, v)
+                                GetDB().databars.reputation.height = v
+                                RefreshUI()
+                            end,
+                        },
+                    },
+                },
+                honor = {
+                    order = 4,
+                    type = "group",
+                    name = L["Honor"] or "Honor",
+                    args = {
+                        enabled = {
+                            order = 1,
+                            type = "toggle",
+                            name = L.enable,
+                            get = function()
+                                return GetDB().databars.honor.enabled
+                            end,
+                            set = function(_, v)
+                                GetDB().databars.honor.enabled = v
+                                RefreshUI()
+                            end,
+                            width = "full",
+                        },
+                        textFormat = {
+                            order = 2,
+                            type = "select",
+                            name = L["TextFormat"] or "Text Format",
+                            values = {
+                                percent = "Percent",
+                                curmax = "Current / Max",
+                                cur = "Current",
+                                remaining = "Remaining",
+                            },
+                            get = function()
+                                return GetDB().databars.honor.textFormat
+                            end,
+                            set = function(_, v)
+                                GetDB().databars.honor.textFormat = v
+                                RefreshUI()
+                            end,
+                        },
+                        height = {
+                            order = 3,
+                            type = "range",
+                            name = L.height,
+                            min = 4,
+                            max = 20,
+                            step = 1,
+                            get = function()
+                                return GetDB().databars.honor.height
+                            end,
+                            set = function(_, v)
+                                GetDB().databars.honor.height = v
+                                RefreshUI()
+                            end,
+                        },
+                    },
+                },
+            },
+        },
+
+        -- Data Texts
+        datatexts = {
+            order = 10.4,
+            type = "group",
+            name = L["DataTexts"] or "Data Texts",
+            desc = L["DataTextsDesc"] or "Information panels displayed at the bottom of the screen",
+            args = (function()
+                local DATATEXT_VALUES = {
+                    fps = "FPS",
+                    latency = "Latency",
+                    gold = "Gold",
+                    durability = "Durability",
+                    bagSlots = "Bag Slots",
+                    friends = "Friends",
+                    guild = "Guild",
+                    spec = "Specialization",
+                    clock = "Clock",
+                    coords = "Coordinates",
+                    none = "None",
+                }
+
+                local dtArgs = {
+                    enabled = {
+                        order = 1,
+                        type = "toggle",
+                        name = L.enable,
+                        desc = L["DataTextsEnableDesc"] or "Enable LunarUI data text panels",
+                        get = function()
+                            return GetDB().datatexts.enabled
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.enabled = v
+                            RefreshUI()
+                        end,
+                        width = "full",
+                    },
+                    bottomHeader = { order = 10, type = "header", name = L["BottomPanel"] or "Bottom Panel" },
+                    bottomEnabled = {
+                        order = 11,
+                        type = "toggle",
+                        name = L.enable,
+                        get = function()
+                            return GetDB().datatexts.panels.bottom.enabled
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.panels.bottom.enabled = v
+                            RefreshUI()
+                        end,
+                    },
+                    bottomHeight = {
+                        order = 12,
+                        type = "range",
+                        name = L.height,
+                        min = 16,
+                        max = 40,
+                        step = 1,
+                        get = function()
+                            return GetDB().datatexts.panels.bottom.height
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.panels.bottom.height = v
+                            RefreshUI()
+                        end,
+                    },
+                    bottomLeft = {
+                        order = 13,
+                        type = "select",
+                        name = L["SlotLeft"] or "Left Slot",
+                        values = DATATEXT_VALUES,
+                        get = function()
+                            return GetDB().datatexts.panels.bottom.slots[1] or "none"
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.panels.bottom.slots[1] = v
+                            RefreshUI()
+                        end,
+                    },
+                    bottomCenter = {
+                        order = 14,
+                        type = "select",
+                        name = L["SlotCenter"] or "Center Slot",
+                        values = DATATEXT_VALUES,
+                        get = function()
+                            return GetDB().datatexts.panels.bottom.slots[2] or "none"
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.panels.bottom.slots[2] = v
+                            RefreshUI()
+                        end,
+                    },
+                    bottomRight = {
+                        order = 15,
+                        type = "select",
+                        name = L["SlotRight"] or "Right Slot",
+                        values = DATATEXT_VALUES,
+                        get = function()
+                            return GetDB().datatexts.panels.bottom.slots[3] or "none"
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.panels.bottom.slots[3] = v
+                            RefreshUI()
+                        end,
+                    },
+                    minimapHeader = {
+                        order = 20,
+                        type = "header",
+                        name = L["MinimapBottomPanel"] or "Minimap Bottom Panel",
+                    },
+                    minimapEnabled = {
+                        order = 21,
+                        type = "toggle",
+                        name = L.enable,
+                        get = function()
+                            return GetDB().datatexts.panels.minimapBottom.enabled
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.panels.minimapBottom.enabled = v
+                            RefreshUI()
+                        end,
+                    },
+                    minimapHeight = {
+                        order = 22,
+                        type = "range",
+                        name = L.height,
+                        min = 14,
+                        max = 32,
+                        step = 1,
+                        get = function()
+                            return GetDB().datatexts.panels.minimapBottom.height
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.panels.minimapBottom.height = v
+                            RefreshUI()
+                        end,
+                    },
+                    minimapLeft = {
+                        order = 23,
+                        type = "select",
+                        name = L["SlotLeft"] or "Left Slot",
+                        values = DATATEXT_VALUES,
+                        get = function()
+                            return GetDB().datatexts.panels.minimapBottom.slots[1] or "none"
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.panels.minimapBottom.slots[1] = v
+                            RefreshUI()
+                        end,
+                    },
+                    minimapRight = {
+                        order = 24,
+                        type = "select",
+                        name = L["SlotRight"] or "Right Slot",
+                        values = DATATEXT_VALUES,
+                        get = function()
+                            return GetDB().datatexts.panels.minimapBottom.slots[2] or "none"
+                        end,
+                        set = function(_, v)
+                            GetDB().datatexts.panels.minimapBottom.slots[2] = v
+                            RefreshUI()
+                        end,
+                    },
+                }
+
+                return dtArgs
+            end)(),
+        },
+
         -- Automation
         automation = {
             order = 10.5,

@@ -59,7 +59,6 @@ local function GetAuraFilterSettings()
         auraFilterGlobalCache = {
             hidePassive = af.hidePassive ~= false,
             showStealable = af.showStealable ~= false,
-            showDispellable = af.showDispellable ~= false,
         }
     end
     return auraFilterGlobalCache
@@ -366,9 +365,10 @@ local function CreateDebuffs(frame, unit)
 end
 
 --[[ 團隊減益（特殊佈局：較小、居中） ]]
-local function CreateRaidDebuffs(frame)
+local function CreateRaidDebuffs(frame, unitKey)
     local ufAll = LunarUI.GetModuleDB("unitframes")
-    local raidDB = ufAll and ufAll.raid
+    -- 優先使用 per-tier config（raid1/raid2/raid3），退回到 raid 基礎設定
+    local raidDB = ufAll and (ufAll[unitKey] or ufAll.raid)
     if not raidDB or raidDB.showDebuffs == false then
         return
     end

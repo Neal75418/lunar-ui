@@ -154,10 +154,7 @@ local VALIDATION_RULES = {
     { path = "chat.backdropAlpha", type = "number", min = 0, max = 1 },
     { path = "chat.inactiveTabAlpha", type = "number", min = 0.1, max = 1 },
     { path = "chat.editBoxOffset", type = "number", min = 0, max = 20 },
-    -- 視覺風格
-    { path = "style.theme", type = "string", enum = { lunar = true, parchment = true, minimal = true } },
-    { path = "style.fontSize", type = "number", min = 6, max = 32 },
-    { path = "style.borderStyle", type = "string", enum = { ink = true, clean = true, none = true } },
+    -- 視覺風格（style.font / style.statusBarTexture 由 Media.lua 直接讀取，不需驗證規則）
     -- 名牌
     { path = "nameplates.healthTextFormat", type = "string", enum = { percent = true, current = true, both = true } },
     -- 光環過濾
