@@ -19,6 +19,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local format = string.format
+local stringRep = string.rep
 local tableConcat = table.concat
 
 -- 等待 LibActionButton
@@ -659,7 +660,7 @@ function LunarUI:DebugMicroButtons()
         self:Print(
             format(
                 "    %s%s%s|r shown=%s visible=%s alpha=%.2f pos=(%.0f,%.0f)",
-                string.rep("  ", depth),
+                stringRep("  ", depth),
                 color,
                 name,
                 tostring(shown),

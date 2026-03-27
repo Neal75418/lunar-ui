@@ -8,6 +8,7 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local mathAbs = math.abs
 local mathFloor = math.floor
+local mathHuge = math.huge
 local mathMax = math.max
 local mathMin = math.min
 local format = string.format
@@ -211,7 +212,7 @@ local function BuildStep1(parent)
 
     -- 讀取當前 UI 縮放，並過濾非法值（NaN、Infinity、非數字型別）
     local currentScale = UIParent:GetEffectiveScale()
-    if type(currentScale) ~= "number" or currentScale ~= currentScale or mathAbs(currentScale) == math.huge then
+    if type(currentScale) ~= "number" or currentScale ~= currentScale or mathAbs(currentScale) == mathHuge then
         currentScale = 0.75
     end
     currentScale = mathMax(0.5, mathMin(2.0, currentScale))
@@ -660,7 +661,7 @@ function LunarUI.ShowInstallWizard()
     LunarUI.CleanupInstallWizard()
     currentStep = 1
     local currentScale = UIParent:GetEffectiveScale()
-    if type(currentScale) ~= "number" or currentScale ~= currentScale or mathAbs(currentScale) == math.huge then
+    if type(currentScale) ~= "number" or currentScale ~= currentScale or mathAbs(currentScale) == mathHuge then
         currentScale = 0.75
     end
     currentScale = mathMax(0.5, mathMin(2.0, currentScale))

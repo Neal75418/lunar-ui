@@ -6,6 +6,7 @@
 
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
+local mathHuge = math.huge
 
 local C = LunarUI.Colors
 local UNITFRAME_DEBUFF_COLORS = LunarUI.DEBUFF_TYPE_COLORS or _G.DebuffTypeColor or {}
@@ -180,10 +181,10 @@ local function GetAuraSortFunction()
             local aTime = SanitizeNumber(a.expirationTime)
             local bTime = SanitizeNumber(b.expirationTime)
             if aTime == 0 then
-                aTime = math.huge
+                aTime = mathHuge
             end
             if bTime == 0 then
-                bTime = math.huge
+                bTime = mathHuge
             end
             if reverse then
                 return aTime > bTime

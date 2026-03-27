@@ -7,6 +7,7 @@
 local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local mathAbs = math.abs
+local mathHuge = math.huge
 local mathMax = math.max
 local mathMin = math.min
 local format = string.format
@@ -149,7 +150,7 @@ local function DeserializeStringInner(str)
         local num = tonumber(numStr)
         if num then
             -- 拒絕 NaN 與 Infinity（如 1e400 被 tonumber 解析為 Infinity）
-            if num ~= num or mathAbs(num) == math.huge then
+            if num ~= num or mathAbs(num) == mathHuge then
                 return nil, "無效數字：" .. numStr
             end
             return num
