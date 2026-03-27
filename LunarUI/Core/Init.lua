@@ -304,6 +304,11 @@ function LunarUI:OnDisable()
         self:HideDebugOverlay()
     end
 
+    -- 停止事件效能分析（Profiler 不是 RegisterModule 模組，需手動清理）
+    if self.DisableEventProfiling then
+        pcall(self.DisableEventProfiling, self)
+    end
+
     -- 統一走 DisableModules 路徑（設 _modulesEnabled=false、遞增 generation、反向停用所有模組）
     self.DisableModules()
 end

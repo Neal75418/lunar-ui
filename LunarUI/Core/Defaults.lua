@@ -548,6 +548,7 @@ local defaults = {
                 calendar = true,
                 weeklyrewards = true,
                 addonlist = true,
+                questmap = true,
             },
         },
 

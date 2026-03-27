@@ -363,6 +363,7 @@ describe("Defaults skins", function()
         "calendar",
         "weeklyrewards",
         "addonlist",
+        "questmap",
     }
 
     for _, name in ipairs(skinNames) do

@@ -149,6 +149,8 @@ local L = {
     inactiveTabAlphaDesc = "Opacity of inactive chat tab text",
     editBoxOffset = "Edit Box Spacing",
     editBoxOffsetDesc = "Spacing between chat frame and input box",
+    chatKeywords = "Keyword Alerts",
+    chatKeywordsDesc = "Comma-separated list of keywords that trigger chat alerts (e.g. your name, guild name)",
 
     -- Tooltip
     tooltip = "Tooltip",
@@ -170,6 +172,10 @@ local L = {
     autoReleaseDesc = "Automatically release spirit when dying in battlegrounds",
     achievementScreenshot = "Achievement Screenshot",
     achievementScreenshotDesc = "Automatically take a screenshot when earning an achievement",
+    autoAcceptQuest = "Auto Accept/Turn-in Quest",
+    autoAcceptQuestDesc = "Automatically accept and turn in quests from NPCs",
+    autoAcceptQueue = "Auto Accept Queue",
+    autoAcceptQueueDesc = "Automatically accept LFG/battleground queue proposals",
 
     -- ActionBars (extended)
     petBar = "Pet Bar",
@@ -271,9 +277,12 @@ local function GetDB()
 end
 
 local function RefreshUI()
-    -- Trigger HUD scale refresh as a general UI update
     if LunarUI.ApplyHUDScale then
         LunarUI:ApplyHUDScale()
+    end
+    -- 字體/字型大小變更時即時生效（批次更新所有已註冊 FontString）
+    if LunarUI.ApplyFontSettings then
+        LunarUI:ApplyFontSettings()
     end
 end
 
@@ -1993,6 +2002,29 @@ local options = {
                         GetDB().chat.editBoxOffset = v
                     end,
                 },
+                spacerKeywords = { order = 13, type = "description", name = "\n" },
+                keywords = {
+                    order = 14,
+                    type = "input",
+                    name = L.chatKeywords,
+                    desc = L.chatKeywordsDesc,
+                    multiline = false,
+                    width = "full",
+                    get = function()
+                        local kw = GetDB().chat.keywords or {}
+                        return table.concat(kw, ", ")
+                    end,
+                    set = function(_, v)
+                        local list = {}
+                        for word in v:gmatch("[^,]+") do
+                            word = word:match("^%s*(.-)%s*$") -- trim
+                            if word and word ~= "" then
+                                list[#list + 1] = word
+                            end
+                        end
+                        GetDB().chat.keywords = list
+                    end,
+                },
             },
         },
 
@@ -2350,6 +2382,33 @@ local options = {
                     end,
                     set = function(_, v)
                         GetDB().automation.autoScreenshot = v
+                    end,
+                    width = "full",
+                },
+                spacer3 = { order = 12, type = "description", name = "\n" },
+                autoAcceptQuest = {
+                    order = 13,
+                    type = "toggle",
+                    name = L.autoAcceptQuest,
+                    desc = L.autoAcceptQuestDesc,
+                    get = function()
+                        return GetDB().automation.autoAcceptQuest
+                    end,
+                    set = function(_, v)
+                        GetDB().automation.autoAcceptQuest = v
+                    end,
+                    width = "full",
+                },
+                autoAcceptQueue = {
+                    order = 14,
+                    type = "toggle",
+                    name = L.autoAcceptQueue,
+                    desc = L.autoAcceptQueueDesc,
+                    get = function()
+                        return GetDB().automation.autoAcceptQueue
+                    end,
+                    set = function(_, v)
+                        GetDB().automation.autoAcceptQueue = v
                     end,
                     width = "full",
                 },
