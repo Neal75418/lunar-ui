@@ -1380,8 +1380,8 @@ local function OnBagEvent(_self, event, ...)
         local bankSlots = LunarUI.BagsGetBankSlots()
         -- 處理累積的背包更新
         for pendingBag in pairs(pendingBagUpdates) do
-            -- 更新背包（0-4）
-            if pendingBag >= 0 and pendingBag <= 4 then
+            -- 更新背包（0-LAST_BAG，含材料袋）
+            if pendingBag >= 0 and pendingBag <= LAST_BAG then
                 if bagFrame and bagFrame:IsShown() then
                     for _, button in pairs(slots) do
                         if button and button.bag == pendingBag then

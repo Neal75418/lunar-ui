@@ -90,10 +90,18 @@ end
 -- 網格背景
 --------------------------------------------------------------------------------
 
+local gridCachedSize -- 上次建構的 GRID_SIZE，用於判斷是否需要重建
+
 local function ShowGrid()
-    if gridFrame then
+    if gridFrame and gridCachedSize == GRID_SIZE then
         gridFrame:Show()
         return
+    end
+    -- GRID_SIZE 變更或首次建構：銷毀舊 grid 重建
+    if gridFrame then
+        gridFrame:Hide()
+        gridFrame:SetParent(nil)
+        gridFrame = nil
     end
 
     gridFrame = CreateFrame("Frame", "LunarUI_MoverGrid", UIParent)
@@ -140,6 +148,7 @@ local function ShowGrid()
     centerH:SetSize(screenWidth, 1)
     centerH:SetPoint("CENTER", gridFrame, "CENTER", 0, 0)
 
+    gridCachedSize = GRID_SIZE
     gridFrame:Show()
 end
 

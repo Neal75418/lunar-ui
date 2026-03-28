@@ -352,9 +352,9 @@ local function EnterKeybindMode()
 
     local buttons = LunarUI._actionBarButtons
     for _name, button in pairs(buttons) do
-        -- 跳過無法獨立綁定的 bar（如 bar2 主動作條第二頁）
+        -- 只處理有綁定格式的 bar（跳過 bar2 主動作條第二頁和無 parent 的 orphan 按鈕）
         local barId = button:GetParent() and button:GetParent().id
-        if not barId or BINDING_FORMATS[barId] then
+        if barId and BINDING_FORMATS[barId] then
             -- 高亮按鈕
             if button.LunarBorder then
                 button.LunarBorder:SetBackdropBorderColor(unpack(C.highlightBlue))

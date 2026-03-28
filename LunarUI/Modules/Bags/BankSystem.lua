@@ -434,13 +434,11 @@ end
 --------------------------------------------------------------------------------
 
 local bankUpdateQueue = {}
-local bankUpdateInProgress = false
 local bankUpdateGeneration = 0
 local BANK_BATCH_SIZE = 10
 
 local function ProcessBankUpdateBatch()
     if #bankUpdateQueue == 0 then
-        bankUpdateInProgress = false
         -- 完成時更新空格顯示
         if bankFrame and bankFrame.freeSlots then
             local free = GetTotalBankFreeSlots()
@@ -457,7 +455,6 @@ local function ProcessBankUpdateBatch()
             UpdateBankSlot(button)
         end
         if #bankUpdateQueue == 0 then
-            bankUpdateInProgress = false
             -- 完成時更新空格顯示
             if bankFrame and bankFrame.freeSlots then
                 local free = GetTotalBankFreeSlots()
@@ -487,8 +484,8 @@ local function UpdateAllBankSlots()
         end
     end
 
-    if not bankUpdateInProgress and #bankUpdateQueue > 0 then
-        bankUpdateInProgress = true
+    -- generation 遞增使前一批次 callback 失效，直接啟動新批次
+    if #bankUpdateQueue > 0 then
         ProcessBankUpdateBatch()
     end
 end
@@ -618,7 +615,7 @@ local function CloseBank()
         end
         -- 清除銀行批次更新佇列避免洩漏
         wipe(bankUpdateQueue)
-        bankUpdateInProgress = false
+
         -- 重設排序旗標：銀行關閉時排序事件可能不再到達，避免 isSorting 永遠為 true
         LunarUI.BagsSetSorting(false)
     end
@@ -661,9 +658,9 @@ LunarUI.BankSystemCleanup = function()
             button:ClearAllPoints()
         end
     end
-    -- 清除銀行批次更新佇列
+    -- 清除銀行批次更新佇列（generation 遞增使 pending callback 失效）
     wipe(bankUpdateQueue)
-    bankUpdateInProgress = false
+    bankUpdateGeneration = bankUpdateGeneration + 1
 
     if bankFrame then
         CloseBank()
