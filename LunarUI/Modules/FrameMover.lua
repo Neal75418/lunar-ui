@@ -91,33 +91,38 @@ end
 --------------------------------------------------------------------------------
 
 local gridCachedSize -- 上次建構的 GRID_SIZE，用於判斷是否需要重建
+local gridTextures = {} -- 快取已建立的材質，避免洩漏
 
 local function ShowGrid()
     if gridFrame and gridCachedSize == GRID_SIZE then
         gridFrame:Show()
         return
     end
-    -- GRID_SIZE 變更或首次建構：銷毀舊 grid 重建
+    -- GRID_SIZE 變更：隱藏舊材質（WoW frame/texture 無法 GC，重用而非重建）
     if gridFrame then
-        gridFrame:Hide()
-        gridFrame:SetParent(nil)
-        gridFrame = nil
+        for _, tex in ipairs(gridTextures) do
+            tex:Hide()
+        end
+        wipe(gridTextures)
     end
 
-    gridFrame = CreateFrame("Frame", "LunarUI_MoverGrid", UIParent)
-    gridFrame:SetAllPoints(UIParent)
-    gridFrame:SetFrameStrata("BACKGROUND")
+    if not gridFrame then
+        gridFrame = CreateFrame("Frame", nil, UIParent) -- 匿名 frame，避免全域命名衝突
+        gridFrame:SetAllPoints(UIParent)
+        gridFrame:SetFrameStrata("BACKGROUND")
+    end
 
     -- 半透明黑色背景
     local bg = gridFrame:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
     bg:SetTexture("Interface\\Buttons\\WHITE8x8")
     bg:SetVertexColor(0, 0, 0, 0.4)
+    gridTextures[#gridTextures + 1] = bg
 
     -- 繪製網格線
     local screenWidth = GetScreenWidth()
     local screenHeight = GetScreenHeight()
-    local step = GRID_SIZE * 4 -- 每 40 像素一條線
+    local step = GRID_SIZE * 4 -- 每 N 像素一條線
 
     for x = 0, screenWidth, step do
         local line = gridFrame:CreateTexture(nil, "ARTWORK")
@@ -125,6 +130,7 @@ local function ShowGrid()
         line:SetVertexColor(0.3, 0.4, 0.6, 0.15)
         line:SetSize(1, screenHeight)
         line:SetPoint("TOPLEFT", gridFrame, "TOPLEFT", x, 0)
+        gridTextures[#gridTextures + 1] = line
     end
 
     for y = 0, screenHeight, step do
@@ -133,6 +139,7 @@ local function ShowGrid()
         line:SetVertexColor(0.3, 0.4, 0.6, 0.15)
         line:SetSize(screenWidth, 1)
         line:SetPoint("TOPLEFT", gridFrame, "TOPLEFT", 0, -y)
+        gridTextures[#gridTextures + 1] = line
     end
 
     -- 中心十字線
@@ -141,12 +148,14 @@ local function ShowGrid()
     centerV:SetVertexColor(0.6, 0.3, 0.3, 0.3)
     centerV:SetSize(1, screenHeight)
     centerV:SetPoint("CENTER", gridFrame, "CENTER", 0, 0)
+    gridTextures[#gridTextures + 1] = centerV
 
     local centerH = gridFrame:CreateTexture(nil, "OVERLAY")
     centerH:SetTexture("Interface\\Buttons\\WHITE8x8")
     centerH:SetVertexColor(0.6, 0.3, 0.3, 0.3)
     centerH:SetSize(screenWidth, 1)
     centerH:SetPoint("CENTER", gridFrame, "CENTER", 0, 0)
+    gridTextures[#gridTextures + 1] = centerH
 
     gridCachedSize = GRID_SIZE
     gridFrame:Show()

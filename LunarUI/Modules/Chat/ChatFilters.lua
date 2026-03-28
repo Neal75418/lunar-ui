@@ -250,10 +250,14 @@ local function AddURLsToMessage(_self, _event, msg, ...)
 
     local newMsg = msg
     for _, pattern in ipairs(URL_PATTERNS) do
-        -- 跳過已被超連結包裝的區段（避免 https://www.* 被雙重替換）
         newMsg = newMsg:gsub(pattern, function(url)
-            if newMsg:find("|HLunarURL:" .. url, 1, true) then
-                return url -- 已替換，原樣返回
+            -- 檢查此 URL 是否已在超連結內（避免 https://www.* 被雙重替換）
+            local pos = newMsg:find(url, 1, true)
+            if pos and pos > 10 then
+                local before = newMsg:sub(pos - 10, pos - 1)
+                if before:find("|HLunarURL:", 1, true) then
+                    return url -- 已在超連結內，原樣返回
+                end
             end
             return FormatURL(url)
         end)
