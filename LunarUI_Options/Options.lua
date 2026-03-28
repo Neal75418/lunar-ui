@@ -398,6 +398,50 @@ local options = {
                         }
                     end
 
+                    -- Arena-specific toggles
+                    if opts.hasArenaOptions then
+                        args.arenaHeader = { order = 25, type = "header", name = L["Arena"] or "Arena" }
+                        args.showPowerBar = {
+                            order = 26,
+                            type = "toggle",
+                            name = L["ShowPowerBar"] or "Show Power Bar",
+                            desc = L["ShowPowerBarDesc"] or "Show mana/energy bar below health",
+                            get = function()
+                                return GetDB().unitframes[unit].showPowerBar
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].showPowerBar = v
+                                RefreshUI()
+                            end,
+                        }
+                        args.showCastbar = {
+                            order = 27,
+                            type = "toggle",
+                            name = L["ShowCastbar"] or "Show Cast Bar",
+                            desc = L["ShowCastbarDesc"] or "Show enemy cast bar",
+                            get = function()
+                                return GetDB().unitframes[unit].showCastbar
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].showCastbar = v
+                                RefreshUI()
+                            end,
+                        }
+                        args.showClassIcon = {
+                            order = 28,
+                            type = "toggle",
+                            name = L["ShowClassIcon"] or "Show Class Icon",
+                            desc = L["ShowClassIconDesc"] or "Show class icon next to the frame",
+                            get = function()
+                                return GetDB().unitframes[unit].showClassIcon
+                            end,
+                            set = function(_, v)
+                                GetDB().unitframes[unit].showClassIcon = v
+                                RefreshUI()
+                            end,
+                        }
+                    end
+
                     -- Raid-only: autoSwitchSize
                     if opts.hasAutoSwitchSize then
                         args.autoSwitchSize = {
@@ -469,10 +513,16 @@ local options = {
                         },
                     },
                     { "boss", 6, L.boss, { wMin = 100, wMax = 300, hMin = 20, hMax = 80, hasAuras = true } },
-                    { "pet", 7, L["Pet"] or "Pet", { wMin = 80, wMax = 250, hMin = 15, hMax = 60 } },
+                    {
+                        "arena",
+                        7,
+                        L["Arena"] or "Arena",
+                        { wMin = 100, wMax = 300, hMin = 15, hMax = 60, hasAuras = true, hasArenaOptions = true },
+                    },
+                    { "pet", 8, L["Pet"] or "Pet", { wMin = 80, wMax = 250, hMin = 15, hMax = 60 } },
                     {
                         "targettarget",
-                        8,
+                        9,
                         L["TargetOfTarget"] or "Target of Target",
                         { wMin = 80, wMax = 250, hMin = 15, hMax = 60 },
                     },

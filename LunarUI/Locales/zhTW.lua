@@ -231,6 +231,13 @@ L["ItemCountDesc"] = "在滑鼠提示框中顯示物品持有數量（背包/銀
 -- 單位框架增強
 L["Pet"] = "寵物"
 L["TargetOfTarget"] = "目標的目標"
+L["Arena"] = "競技場"
+L["ShowPowerBar"] = "顯示能量條"
+L["ShowPowerBarDesc"] = "在血量下方顯示法力/能量條"
+L["ShowCastbar"] = "顯示施法條"
+L["ShowCastbarDesc"] = "顯示敵方施法條"
+L["ShowClassIcon"] = "顯示職業圖示"
+L["ShowClassIconDesc"] = "在框架旁顯示職業圖示"
 L["ClassPower"] = "職業資源"
 L["ClassPowerDesc"] = "在玩家框架上方顯示職業資源條（連擊點、聖能、符文等）（需重載）"
 L["HealPrediction"] = "治療預測"

@@ -38,6 +38,7 @@ local SIZES = {
     pet = { width = 120, height = 16 },
     targettarget = { width = 120, height = 16 },
     boss = { width = 180, height = 24 },
+    arena = { width = 160, height = 24 },
     party = { width = 150, height = 22 },
     raid = { width = 80, height = 20 },
 }
@@ -177,6 +178,41 @@ local function BossLayout(frame, unit)
     return frame
 end
 
+--[[ 競技場佈局 ]]
+local function ArenaLayout(frame, unit)
+    local ufAll = LunarUI.GetModuleDB("unitframes")
+    local db = ufAll and ufAll.arena
+    local size = db and { width = db.width, height = db.height } or SIZES.arena
+    frame:SetSize(size.width, size.height)
+
+    Shared(frame, unit)
+
+    -- 法力/能量小條（可選）
+    if not db or db.showPowerBar ~= false then
+        LunarUI.UFCreatePowerBar(frame)
+    end
+
+    LunarUI.UFCreateHealthText(frame, unit)
+
+    -- 施法條（可選，預設開啟）
+    if not db or db.showCastbar ~= false then
+        LunarUI.UFCreateCastbar(frame, unit)
+    end
+
+    LunarUI.UFCreateDebuffs(frame, unit)
+
+    -- 職業圖示（框架左側外面）
+    if not db or db.showClassIcon ~= false then
+        local icon = frame:CreateTexture(nil, "OVERLAY")
+        icon:SetSize(size.height, size.height)
+        icon:SetPoint("RIGHT", frame, "LEFT", -2, 0)
+        icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
+        frame.ClassIcon = icon
+    end
+
+    return frame
+end
+
 --[[ 隊伍佈局 ]]
 local function PartyLayout(frame, unit)
     local ufAll = LunarUI.GetModuleDB("unitframes")
@@ -243,6 +279,7 @@ oUF:RegisterStyle("LunarUI_Focus", FocusLayout)
 oUF:RegisterStyle("LunarUI_Pet", PetLayout)
 oUF:RegisterStyle("LunarUI_TargetTarget", TargetTargetLayout)
 oUF:RegisterStyle("LunarUI_Boss", BossLayout)
+oUF:RegisterStyle("LunarUI_Arena", ArenaLayout)
 oUF:RegisterStyle("LunarUI_Party", PartyLayout)
 oUF:RegisterStyle("LunarUI_Raid", RaidLayout)
 oUF:RegisterStyle("LunarUI_Raid1", Raid1Layout)
@@ -334,6 +371,26 @@ local function SpawnBossFrames(uf)
         local boss = oUF:Spawn("boss" .. i, "LunarUI_Boss" .. i)
         boss:SetPoint("RIGHT", UIParent, "RIGHT", uf.boss.x or -50, uf.boss.y or (200 - (i - 1) * 55))
         spawnedFrames["boss" .. i] = boss
+    end
+end
+
+-- 生成競技場框架
+local function SpawnArenaFrames(uf)
+    if not (uf.arena and uf.arena.enabled) then
+        return
+    end
+
+    for i = 1, 5 do
+        oUF:SetActiveStyle("LunarUI_Arena")
+        local arena = oUF:Spawn("arena" .. i, "LunarUI_Arena" .. i)
+        arena:SetPoint(
+            "RIGHT",
+            UIParent,
+            "RIGHT",
+            uf.arena.x or -100,
+            (uf.arena.y or 100) - (i - 1) * (uf.arena.spacing or 45)
+        )
+        spawnedFrames["arena" .. i] = arena
     end
 end
 
@@ -588,6 +645,7 @@ local function SpawnUnitFrames()
     LunarUI.RebuildAuraFilterCache()
     SpawnPlayerFrames(uf)
     SpawnBossFrames(uf)
+    SpawnArenaFrames(uf)
     SpawnGroupFrames(uf)
     unitFramesSpawned = true
 end

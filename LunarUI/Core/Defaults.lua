@@ -210,6 +210,22 @@ local defaults = {
                 maxDebuffs = 8,
                 onlyPlayerDebuffs = false,
             },
+            arena = {
+                enabled = true,
+                width = 160,
+                height = 24,
+                x = -100,
+                y = 100,
+                point = "RIGHT",
+                spacing = 45,
+                showPowerBar = true, -- 法力/能量小條
+                showCastbar = true, -- 施法條
+                showDebuffs = true,
+                debuffSize = 18,
+                maxDebuffs = 4,
+                onlyPlayerDebuffs = true, -- 競技場只看自己施放的控場
+                showClassIcon = true, -- 職業圖示
+            },
         },
 
         -- 名牌設定

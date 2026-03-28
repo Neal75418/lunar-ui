@@ -99,6 +99,7 @@ describe("Defaults unitframes", function()
         "raid2",
         "raid3",
         "boss",
+        "arena",
     }
 
     for _, unit in ipairs(unitTypes) do

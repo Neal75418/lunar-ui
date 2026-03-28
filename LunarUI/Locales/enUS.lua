@@ -225,6 +225,13 @@ L["ItemCountDesc"] = "Show item count (bags/bank) in tooltips"
 -- UnitFrame enhancements
 L["Pet"] = "Pet"
 L["TargetOfTarget"] = "Target of Target"
+L["Arena"] = "Arena"
+L["ShowPowerBar"] = "Show Power Bar"
+L["ShowPowerBarDesc"] = "Show mana/energy bar below health"
+L["ShowCastbar"] = "Show Cast Bar"
+L["ShowCastbarDesc"] = "Show enemy cast bar"
+L["ShowClassIcon"] = "Show Class Icon"
+L["ShowClassIconDesc"] = "Show class icon next to the frame"
 L["ClassPower"] = "Class Power"
 L["ClassPowerDesc"] =
     "Show class resource bar above player frame (combo points, holy power, runes, etc.) (requires reload)"
