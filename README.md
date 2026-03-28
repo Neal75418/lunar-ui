@@ -3,7 +3,7 @@
   <img src="https://img.shields.io/badge/tests-910_passing-brightgreen?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/WoW-12.0.1-0074e0?style=flat-square&logo=battledotnet&logoColor=white" alt="WoW 12.0.1" />
   <img src="https://img.shields.io/badge/Lua-5.1-2C2D72?style=flat-square&logo=lua&logoColor=white" alt="Lua 5.1" />
-  <img src="https://img.shields.io/badge/skins-23-e67e22?style=flat-square" alt="24 Skins" />
+  <img src="https://img.shields.io/badge/skins-23-e67e22?style=flat-square" alt="23 Skins" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square" alt="GPL-3.0" />
 </p>
 

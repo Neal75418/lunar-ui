@@ -5,7 +5,7 @@
 - **平台**：WoW 12.0.1（Interface: 120001），Lua 5.1（LuaJIT）
 - **架構**：Ace3 + oUF + LibActionButton + LibSharedMedia
 - **組成**：
-  - `LunarUI/` &mdash; 主插件（69 個 Lua 檔案，~25,100 行）
+  - `LunarUI/` &mdash; 主插件（69 個 Lua 檔案，~25,500 行）
   - `LunarUI_Options/` &mdash; LoadOnDemand 設定介面
   - `LunarUI_Debug/` &mdash; LoadOnDemand 診斷工具（`/lunar debugvigor` 時自動載入）
 - **進入點**：`Core/Init.lua` 最先執行，建立 `Engine.LunarUI`

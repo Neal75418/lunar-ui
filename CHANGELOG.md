@@ -103,7 +103,7 @@ timeline
 | 測試案例 | 910 |
 | Spec 檔案 | 34 |
 | Skins | 23 |
-| Locale keys | 498 |
+| Locale keys | 591 |
 | luacheck warnings | 0 |
 | stylua violations | 0 |
 
@@ -487,7 +487,8 @@ LunarUI v1.0.0 — 現代化 WoW UI 替換系統，涵蓋 Unit Frames、Nameplat
 ---
 
 <!-- Link references -->
-[Unreleased]: https://github.com/Neal75418/lunar-ui/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/Neal75418/lunar-ui/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/Neal75418/lunar-ui/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/Neal75418/lunar-ui/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Neal75418/lunar-ui/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Neal75418/lunar-ui/compare/v0.9.2...v1.0.0
