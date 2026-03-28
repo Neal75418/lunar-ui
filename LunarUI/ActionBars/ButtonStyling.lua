@@ -58,6 +58,12 @@ end
 local pendingDesaturate = {}
 local desaturateScheduled = false
 
+-- P-perf: 命名函式供 pcall 呼叫，避免每 button 每 GCD 建新 closure
+local function GetCooldownActive(cd)
+    local s, d = cd:GetCooldownTimes()
+    return s and d and s > 0 and d > 0
+end
+
 local function ProcessPendingDesaturate()
     desaturateScheduled = false
     local snapshot = pendingDesaturate
@@ -66,11 +72,7 @@ local function ProcessPendingDesaturate()
         local cd = btn.cooldown
         local btnIcon = btn.icon or (btn:GetName() and _G[btn:GetName() .. "Icon"])
         if btnIcon and cd then
-            local ok, onCD = pcall(function()
-                local s, d = cd:GetCooldownTimes()
-                -- 偵測任何冷卻（s > 0 表示有冷卻開始時間，d > 0 表示有冷卻持續時間）
-                return s and d and s > 0 and d > 0
-            end)
+            local ok, onCD = pcall(GetCooldownActive, cd)
             if ok and onCD then
                 btnIcon:SetDesaturated(true)
                 btnIcon:SetVertexColor(C.textDim[1], C.textDim[2], C.textDim[3])

@@ -242,12 +242,14 @@ local function PostCreateAuraIcon(_self, button)
     end
 end
 
+-- P-perf: 命名函式供 pcall 呼叫，避免 PostUpdateButton 每次建 closure
+local function CheckIsHarmfulAura(data)
+    return data.isHarmfulAura == true
+end
+
 --[[ 減益更新鉤子：根據類型著色邊框 ]]
 local function PostUpdateDebuffIcon(_self, button, _unit, data, _position)
-    -- WoW 12.0: data.isHarmfulAura 在戰鬥中可能為 secret boolean，pcall 保護
-    local ok, isHarmful = pcall(function()
-        return data.isHarmfulAura == true
-    end)
+    local ok, isHarmful = pcall(CheckIsHarmfulAura, data)
     if ok and isHarmful then
         -- WoW DebuffTypeColor 預設 key 為 ""（非 "none"）
         local color = UNITFRAME_DEBUFF_COLORS[""] or UNITFRAME_DEBUFF_COLORS["none"]

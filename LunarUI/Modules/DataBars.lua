@@ -50,6 +50,24 @@ local STANDING_COLORS = {
 --------------------------------------------------------------------------------
 
 local bars = {} -- 所有已建立的資料條框架
+
+-- P-perf: 快取 DB 設定，避免事件處理器每次呼叫 GetModuleDB
+local cachedExpEnabled = false
+local cachedExpTextFmt = "percent"
+local cachedRepEnabled = false
+local cachedRepTextFmt = "percent"
+local cachedHonEnabled = false
+local cachedHonTextFmt = "percent"
+
+local function RefreshDataBarsCache()
+    local db = LunarUI.GetModuleDB("databars")
+    cachedExpEnabled = db and db.experience and db.experience.enabled ~= false
+    cachedExpTextFmt = db and db.experience and db.experience.textFormat or "percent"
+    cachedRepEnabled = db and db.reputation and db.reputation.enabled ~= false
+    cachedRepTextFmt = db and db.reputation and db.reputation.textFormat or "percent"
+    cachedHonEnabled = db and db.honor and db.honor.enabled ~= false
+    cachedHonTextFmt = db and db.honor and db.honor.textFormat or "percent"
+end
 local eventFrame -- 共用事件處理框架
 
 --------------------------------------------------------------------------------
@@ -145,8 +163,8 @@ local function UpdateExperience()
         return
     end
 
-    local db = LunarUI.GetModuleDB("databars")
-    if not db or not db.experience or not db.experience.enabled then
+    -- P-perf: 使用快取值，避免每次事件呼叫 GetModuleDB
+    if not cachedExpEnabled then
         bar:Hide()
         return
     end
@@ -185,9 +203,11 @@ local function UpdateExperience()
         bar.rested:Hide()
     end
 
-    -- 文字
-    if db.experience.showText then
-        bar.text:SetText(FormatBarText(db.experience.textFormat, cur, max, "XP"))
+    -- 文字（使用快取的 textFormat）
+    local expDb = LunarUI.GetModuleDB("databars")
+    local expCfg = expDb and expDb.experience
+    if expCfg and expCfg.showText then
+        bar.text:SetText(FormatBarText(cachedExpTextFmt, cur, max, "XP"))
         bar.text:Show()
     else
         bar.text:Hide()
@@ -245,8 +265,7 @@ local function UpdateReputation()
         return
     end
 
-    local db = LunarUI.GetModuleDB("databars")
-    if not db or not db.reputation or not db.reputation.enabled then
+    if not cachedRepEnabled then
         bar:Hide()
         return
     end
@@ -302,10 +321,12 @@ local function UpdateReputation()
     bar:SetStatusBarColor(color.r, color.g, color.b)
     bar.rested:Hide()
 
-    -- 文字
-    if db.reputation.showText then
+    -- 文字（使用快取的 textFormat）
+    local repDb = LunarUI.GetModuleDB("databars")
+    local repCfg = repDb and repDb.reputation
+    if repCfg and repCfg.showText then
         local displayName = isFriendship and friendName or name
-        bar.text:SetText(FormatBarText(db.reputation.textFormat, cur, max, displayName))
+        bar.text:SetText(FormatBarText(cachedRepTextFmt, cur, max, displayName))
         bar.text:Show()
     else
         bar.text:Hide()
@@ -375,8 +396,7 @@ local function UpdateHonor()
         return
     end
 
-    local db = LunarUI.GetModuleDB("databars")
-    if not db or not db.honor or not db.honor.enabled then
+    if not cachedHonEnabled then
         bar:Hide()
         return
     end
@@ -401,10 +421,12 @@ local function UpdateHonor()
     bar:SetStatusBarColor(1.0, 0.24, 0.0) -- 橙紅色
     bar.rested:Hide()
 
-    -- 文字
-    if db.honor.showText then
+    -- 文字（使用快取的 textFormat）
+    local honDb = LunarUI.GetModuleDB("databars")
+    local honCfg = honDb and honDb.honor
+    if honCfg and honCfg.showText then
         local label = format("%s %d", L["Honor"] or "Honor", level)
-        bar.text:SetText(FormatBarText(db.honor.textFormat, cur, max, label))
+        bar.text:SetText(FormatBarText(cachedHonTextFmt, cur, max, label))
         bar.text:Show()
     else
         bar.text:Hide()
@@ -451,6 +473,7 @@ local function InitializeDataBars()
     if eventFrame then
         return -- 已初始化，防止重複呼叫導致事件 frame 洩漏
     end
+    RefreshDataBarsCache() -- P-perf: 初始化時快取 DB 設定
     local db = LunarUI.GetModuleDB("databars")
     if not db or not db.enabled then
         return
@@ -541,6 +564,7 @@ end
 
 -- 匯出
 LunarUI.InitializeDataBars = InitializeDataBars
+LunarUI.RefreshDataBarsCache = RefreshDataBarsCache -- 供 Options callback 失效快取
 LunarUI.FormatBarText = FormatBarText
 LunarUI.GetStatusBarTexture = GetStatusBarTexture
 LunarUI.STANDING_COLORS = STANDING_COLORS

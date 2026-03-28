@@ -694,20 +694,29 @@ end
 --------------------------------------------------------------------------------
 
 local onUpdateFrame
-local onUpdateElapsed = {}
+local onUpdateList = {} -- P-perf: array 取代 hash，避免每幀 pairs() 遍歷
 
 local function SetupOnUpdate()
     if not onUpdateFrame then
         onUpdateFrame = CreateFrame("Frame")
     end
-    -- Fix 1: 只遍歷 onUpdateProviders，不遍歷全部 providers
-    -- 每次 enable 時重新安裝 script（cleanup 會清除）
-    onUpdateFrame:SetScript("OnUpdate", function(_, elapsed)
-        for name, provider in pairs(onUpdateProviders) do
-            onUpdateElapsed[name] = (onUpdateElapsed[name] or 0) + elapsed
-            if onUpdateElapsed[name] >= (provider.updateInterval or 1) then
-                onUpdateElapsed[name] = 0
-                UpdateProvider(name)
+    -- 建構 array（從 onUpdateProviders hash table）
+    wipe(onUpdateList)
+    for name, provider in pairs(onUpdateProviders) do
+        onUpdateList[#onUpdateList + 1] = {
+            name = name,
+            interval = provider.updateInterval or 1,
+            elapsed = 0,
+        }
+    end
+    -- P-perf: numeric for-loop + inline elapsed，消除 pairs() 和 onUpdateElapsed 表
+    onUpdateFrame:SetScript("OnUpdate", function(_, dt)
+        for i = 1, #onUpdateList do
+            local entry = onUpdateList[i]
+            entry.elapsed = entry.elapsed + dt
+            if entry.elapsed >= entry.interval then
+                entry.elapsed = 0
+                UpdateProvider(entry.name)
             end
         end
     end)
@@ -813,7 +822,7 @@ function LunarUI.CleanupDataTexts()
     end
     wipe(panels)
 
-    wipe(onUpdateElapsed)
+    wipe(onUpdateList)
     wipe(slotsByProvider)
     -- eventToProviders / onUpdateProviders 由模組載入時的 RegisterProvider 靜態建立，
     -- 不隨 profile 改變，不可 wipe（wipe 後重新 enable 時無法重建，providers 停止更新）
