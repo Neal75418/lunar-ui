@@ -233,8 +233,10 @@ end
 
 -- 格式化網址為可點擊的超連結
 local function FormatURL(url)
-    -- 使用 LunarURL 作為自訂超連結類型
-    return format("|cff3399ff|HLunarURL:%s|h[%s]|h|r", url, url)
+    -- 安全性：過濾 | 字元防止 WoW 超連結控制序列注入
+    -- 惡意 URL 如 "https://x.com|Hitem:1234|h[假物品]|h" 會被淨化
+    local safeUrl = url:gsub("|", "")
+    return format("|cff3399ff|HLunarURL:%s|h[%s]|h|r", safeUrl, safeUrl)
 end
 
 -- 過濾函數：偵測網址並轉換為可點擊連結

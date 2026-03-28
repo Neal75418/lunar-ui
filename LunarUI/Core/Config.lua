@@ -108,6 +108,8 @@ end
 -- 驗證規則：{ path, type, min, max, enum }
 -- path 為 "." 分隔的設定路徑，type 為 "number"/"string"/"boolean"
 local VALIDATION_RULES = {
+    -- 安全性：uiScale 匯入時必須限制範圍（惡意值如 99999 會讓 UI 不可用）
+    { path = "uiScale", type = "number", min = 0.5, max = 2.0 },
     -- HUD
     { path = "hud.scale", type = "number", min = 0.5, max = 2.0 },
     { path = "hud.auraIconSize", type = "number", min = 10, max = 80 },

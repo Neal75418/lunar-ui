@@ -489,7 +489,10 @@ function LunarUI:ImportSettings(importString)
             self.db.char.specProfiles = {}
         end
         for specIdx, profileName in pairs(data.charSpecProfiles) do
-            self.db.char.specProfiles[specIdx] = profileName
+            -- 安全性：只接受字串型別的 profile 名稱（防止惡意匯入注入非字串值）
+            if type(profileName) == "string" then
+                self.db.char.specProfiles[specIdx] = profileName
+            end
         end
     end
 
