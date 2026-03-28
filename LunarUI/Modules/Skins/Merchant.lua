@@ -62,7 +62,8 @@ local function SkinMerchant()
     end
 
     -- 商品按鈕（每次開啟商人可能會動態建立）
-    if not merchantHookRegistered then
+    -- WoW 12.0 移除了 MerchantFrame_UpdateMerchantInfo，需先檢查是否存在
+    if not merchantHookRegistered and _G.MerchantFrame_UpdateMerchantInfo then
         merchantHookRegistered = true
         hooksecurefunc("MerchantFrame_UpdateMerchantInfo", function()
             -- hooksecurefunc 無法撤銷，停用時跳過以免修改未換膚的商人介面
