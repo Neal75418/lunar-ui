@@ -196,10 +196,11 @@ local function CreateNameText(frame, unit)
     -- raid/pet/targettarget 不顯示血量文字，名字可以更寬
     local nameWidthPct = (unit == "raid" or unit == "pet" or unit == "targettarget") and 0.9 or 0.6
     name:SetWidth(frame:GetWidth() * nameWidthPct)
+    -- 使用 lunar:* 自訂 tag（SafeTag pcall 保護 + locale 支援 + UTF-8 安全）
     if unit == "raid" or unit == "party" then
-        frame:Tag(name, "[name:short]")
+        frame:Tag(name, "[lunar:name:abbrev]")
     else
-        frame:Tag(name, "[name]")
+        frame:Tag(name, "[lunar:name:medium]")
     end
 
     frame.Name = name
@@ -222,8 +223,8 @@ local function CreateHealthText(frame, unit)
     healthText:SetPoint("RIGHT", frame.Health, "RIGHT", -5, 0)
     healthText:SetJustifyH("RIGHT")
 
-    -- 統一使用百分比（ElvUI 風格）
-    frame:Tag(healthText, "[perhp]%")
+    -- 使用 lunar:health:percent（四捨五入 + SafeTag pcall 保護）
+    frame:Tag(healthText, "[lunar:health:percent]")
 
     frame.HealthText = healthText
     return healthText
@@ -238,7 +239,7 @@ local function CreateLevelText(frame, _unit)
     LunarUI.SetFont(level, 11, "OUTLINE")
     level:SetPoint("RIGHT", frame.Name, "LEFT", -4, 0)
 
-    frame:Tag(level, "[difficulty][level]")
+    frame:Tag(level, "[lunar:level:smart]")
     frame.LevelText = level
     return level
 end

@@ -75,13 +75,6 @@ LunarUI.QUALITY_COLORS = {
 --------------------------------------------------------------------------------
 
 --[[
-    統一風格化光環按鈕（背景、圖示裁切、計數字型）
-    @param button Frame - 光環按鈕框架
-
-    Usage:
-        LunarUI.StyleAuraButton(auraButton)
-]]
---[[
     建立共用背景框架（backdrop）
     @param frame Frame - 父框架
     @param options table|nil - 可選設定

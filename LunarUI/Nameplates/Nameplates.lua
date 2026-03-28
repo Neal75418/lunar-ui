@@ -274,7 +274,7 @@ local function CreateNameText(frame)
     name:SetWidth(frame:GetWidth())
     name:SetTextColor(0.9, 0.9, 0.9)
 
-    frame:Tag(name, "[name]")
+    frame:Tag(name, "[lunar:name:abbrev]") -- 名牌空間有限，使用縮寫
     frame.Name = name
     return name
 end
@@ -287,7 +287,7 @@ local function CreateLevelText(frame)
     level:SetJustifyH("RIGHT")
     level:SetTextColor(0.7, 0.7, 0.7)
 
-    frame:Tag(level, "[difficulty][level]")
+    frame:Tag(level, "[lunar:level:smart]")
     frame.LevelText = level
     return level
 end

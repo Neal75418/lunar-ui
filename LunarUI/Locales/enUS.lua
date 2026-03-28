@@ -312,15 +312,11 @@ L["LootFrameDesc"] = "Replace the default loot window with a LunarUI-styled fram
 -- Visual Style
 L["style"] = "Visual Style"
 L["styleDesc"] = "Customize the overall appearance of LunarUI"
-L["theme"] = "Theme"
+-- theme/fontSize/borderStyle 已移除（無生產代碼消費）
 L["font"] = "Font"
 L["fontDesc"] = "Font used across all LunarUI elements (requires reload)"
-L["fontSize"] = "Font Size"
-L["fontSizeDesc"] = "Base font size for LunarUI elements (requires reload)"
 L["statusBarTexture"] = "Status Bar Texture"
 L["statusBarTextureDesc"] = "Texture used for health, power, and other status bars (requires reload)"
-L["borderStyle"] = "Border Style"
-L["borderStyleDesc"] = "Border style for LunarUI frames"
 
 -- Performance Monitor
 L["HomeLatency"] = "Home Latency"

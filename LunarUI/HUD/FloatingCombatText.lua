@@ -499,7 +499,7 @@ LunarUI.InitFCT = function()
 end
 
 LunarUI.CleanupFCT = CleanupFCT
-LunarUI.Sanitize = Sanitize
+LunarUI.Sanitize = Sanitize -- 匯出供測試存取（生產環境僅檔案內部使用）
 LunarUI.FCTGetSettings = GetSettings
 
 LunarUI:RegisterModule("FloatingCombatText", {
