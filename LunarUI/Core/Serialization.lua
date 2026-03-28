@@ -167,7 +167,7 @@ local function DeserializeStringInner(str)
     -- 輔助函數：解析表格
     local function parseTable(depth)
         depth = depth or 0
-        if depth > MAX_PARSE_DEPTH then
+        if depth >= MAX_PARSE_DEPTH then
             return nil, "表格巢狀深度超過 " .. MAX_PARSE_DEPTH .. " 層"
         end
         if str:sub(pos, pos) ~= "{" then
@@ -278,7 +278,7 @@ local function DeserializeStringInner(str)
         end
         if str:sub(pos, pos + 2) == "nil" then
             pos = pos + 3
-            return nil
+            return nil, "匯入資料包含 nil 值"
         end
 
         return nil, "未預期的字元：" .. c
