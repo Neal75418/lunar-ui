@@ -1735,6 +1735,10 @@ local options = {
                         if LunarUI.RefreshMinimap then
                             LunarUI:RefreshMinimap()
                         end
+                        -- 同步 DataTexts clock 快取（P4-perf 快取需要手動失效）
+                        if LunarUI.RefreshClockFormat then
+                            LunarUI.RefreshClockFormat()
+                        end
                     end,
                 },
                 zoneTextDisplay = {

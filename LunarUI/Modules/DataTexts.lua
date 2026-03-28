@@ -411,6 +411,7 @@ local function RefreshClockFormat()
     local db = LunarUI.GetModuleDB("minimap")
     cachedIs24h = not (db and db.clockFormat == "12h")
 end
+LunarUI.RefreshClockFormat = RefreshClockFormat -- 供 Options callback 失效快取
 
 RegisterProvider("clock", {
     label = L["Clock"] or "Clock",
