@@ -201,13 +201,13 @@ local function ArenaLayout(frame, unit)
 
     LunarUI.UFCreateDebuffs(frame, unit)
 
-    -- 職業圖示（框架左側外面）
+    -- 職業圖示（框架左側外面，使用 oUF Portrait 元素 + showClass 自動更新）
     if not db or db.showClassIcon ~= false then
-        local icon = frame:CreateTexture(nil, "OVERLAY")
-        icon:SetSize(size.height, size.height)
-        icon:SetPoint("RIGHT", frame, "LEFT", -2, 0)
-        icon:SetTexCoord(unpack(LunarUI.ICON_TEXCOORD))
-        frame.ClassIcon = icon
+        local portrait = frame:CreateTexture(nil, "OVERLAY")
+        portrait:SetSize(size.height, size.height)
+        portrait:SetPoint("RIGHT", frame, "LEFT", -2, 0)
+        portrait.showClass = true
+        frame.Portrait = portrait
     end
 
     return frame
