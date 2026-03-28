@@ -42,6 +42,7 @@ local minimapFrame
 local coordText
 local zoneText
 local clockText
+local minimapCleanupDeferFrame -- 戰鬥中延遲 cleanup 用（避免每次建新 frame）
 local buttonFrame
 local collectedButtons = {}
 local zoomResetHandle -- 縮放自動重置計時器
@@ -1428,11 +1429,13 @@ end
 
 -- OnUpdate 清理函數
 function LunarUI.CleanupMinimap()
-    -- 戰鬥中不操作 protected frames — 延遲到脫戰後執行
+    -- 戰鬥中不操作 protected frames — 延遲到脫戰後執行（重用 upvalue frame 避免洩漏）
     if InCombatLockdown() then
-        local deferFrame = CreateFrame("Frame")
-        deferFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-        deferFrame:SetScript("OnEvent", function(f)
+        if not minimapCleanupDeferFrame then
+            minimapCleanupDeferFrame = CreateFrame("Frame")
+        end
+        minimapCleanupDeferFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        minimapCleanupDeferFrame:SetScript("OnEvent", function(f)
             f:UnregisterAllEvents()
             f:SetScript("OnEvent", nil)
             LunarUI.CleanupMinimap()

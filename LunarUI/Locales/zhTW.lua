@@ -611,6 +611,7 @@ L["AutoSwitchSizeDesc"] = "根據團隊人數自動調整團隊框架大小"
 L["ActionBarsEnableDesc"] = "啟用 LunarUI 動作條（停用則使用暴雪預設）"
 L["OutOfRangeColoringDesc"] = "目標超出射程時將動作按鈕標紅"
 L["HidePassiveDesc"] = "隱藏被動效果（持續超過 5 分鐘或永久的增益）"
+L["RequiresReload"] = "需要重新載入介面才能生效"
 
 -- 選項面板：設定檔
 L["profiles"] = "設定檔"

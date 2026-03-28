@@ -613,6 +613,7 @@ L["AutoSwitchSizeDesc"] = "Automatically adjust raid frame size based on group s
 L["ActionBarsEnableDesc"] = "Enable LunarUI action bars (disable to use Blizzard default)"
 L["OutOfRangeColoringDesc"] = "Color action buttons red when the target is out of range"
 L["HidePassiveDesc"] = "Hide passive effects (buffs lasting more than 5 minutes or permanent)"
+L["RequiresReload"] = "Requires /reload to take effect"
 
 -- Export
 Engine.L = L
