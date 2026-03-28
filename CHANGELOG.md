@@ -31,7 +31,12 @@ timeline
 
 ### Planned
 
-- 自訂月相材質（手繪）
+- Theme 系統 — 視覺風格切換（lunar / parchment / minimal）
+
+### Design Decisions
+
+- **月相循環已簡化** — v0.8.0 移除 NEW → WAXING → FULL → WANING 循環機制，保留戰鬥狀態驅動。原因：UI 自動變化在實際遊戲中造成干擾而非輔助
+- **自訂月相材質移除** — 品牌特色收益不足以 justify 維護成本
 
 ---
 
