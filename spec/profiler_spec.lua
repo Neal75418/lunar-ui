@@ -218,7 +218,7 @@ describe("Event profiling", function()
         LunarUI:EnableEventProfiling()
         -- 模擬事件計數（直接寫入內部 eventCounts）
         if LunarUI._eventCounts then
-            LunarUI._eventCounts["TEST_EVENT_HIGH"] = 500 -- 高頻事件
+            LunarUI._eventCounts["TEST_EVENT_HIGH"] = 501 -- 高頻事件（>100/sec threshold）
             LunarUI._eventCounts["TEST_EVENT_LOW"] = 5 -- 低頻事件
         end
         -- 推進時間 5 秒（5,000,000 微秒）
