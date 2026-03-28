@@ -171,7 +171,7 @@ LunarUI.CreateIconBorder(parent, options)
 graph LR
     TypeDef["wow_api.def.lua / busted.def.lua<br/>EmmyLua 型別定義"] -.-> Mock
     Mock["wow_mock.lua<br/>WoW API Stub"] --> Loader["loader.lua<br/>Engine 建立"]
-    Loader --> Spec["*_spec.lua<br/>測試案例（34 檔 / 909 tests）"]
+    Loader --> Spec["*_spec.lua<br/>測試案例（34 檔 / 910 tests）"]
     Spec --> Busted["busted<br/>執行測試"]
     Busted --> Cov["luacov<br/>覆蓋率報告（門檻 43%）"]
 

@@ -52,6 +52,7 @@ timeline
 - **Locale 補充** — enUS + zhTW 各新增 170+ locale key
 - **lunar:\* tags 接線** — 14 個自訂 oUF tag 接入 Elements/Nameplates 佈局（SafeTag pcall 保護 + 四捨五入 + UTF-8 安全）
 - **pet/targettarget/shortChannelNames/coordFontOutline** Options 條目
+- **Arena Frames** — 競技場敵方單位框架（arena1-5），含血量/能量/施法條、職業圖示、Debuffs、Options UI 完整設定
 - **Profiler rate 測試** — 覆蓋 EVENT_RATE_CRIT/WARN 顏色門檻
 
 ### Fixed
@@ -99,7 +100,7 @@ timeline
 | Commits since v1.2.0 | 35 |
 | Lua 檔案 | 69 |
 | 代碼行數 | ~25,500 |
-| 測試案例 | 909 |
+| 測試案例 | 910 |
 | Spec 檔案 | 34 |
 | Skins | 23 |
 | Locale keys | 498 |
