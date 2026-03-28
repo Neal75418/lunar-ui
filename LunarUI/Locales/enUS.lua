@@ -697,6 +697,19 @@ L["MinimapFadeDurationDesc"] = "Duration of the fade animation in seconds"
 -- Misc (missing from Options.lua)
 L["RequiresReload"] = "Requires /reload to take effect"
 
+-- Dropdown display values
+L["FormatPercent"] = "Percent"
+L["FormatCurrent"] = "Current"
+L["FormatCurrentMax"] = "Current / Max"
+L["FormatRemaining"] = "Remaining"
+L["FormatCurrentPercent"] = "Current - Percent"
+L["Clock24h"] = "24-Hour"
+L["Clock12h"] = "12-Hour"
+L["OutlineNone"] = "None"
+L["OutlineOutline"] = "Outline"
+L["OutlineThick"] = "Thick Outline"
+L["OutlineMonochrome"] = "Monochrome"
+
 -- Export
 Engine.L = L
 if Engine.LunarUI then

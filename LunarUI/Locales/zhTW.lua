@@ -695,6 +695,19 @@ L["MinimapFadeDurationDesc"] = "淡出動畫的持續時間（秒）"
 -- 其他（Options.lua 遺漏）
 L["RequiresReload"] = "需要重新載入介面才能生效"
 
+-- 下拉選單顯示值
+L["FormatPercent"] = "百分比"
+L["FormatCurrent"] = "當前值"
+L["FormatCurrentMax"] = "當前 / 最大"
+L["FormatRemaining"] = "剩餘"
+L["FormatCurrentPercent"] = "當前 - 百分比"
+L["Clock24h"] = "24 小時制"
+L["Clock12h"] = "12 小時制"
+L["OutlineNone"] = "無"
+L["OutlineOutline"] = "輪廓"
+L["OutlineThick"] = "粗輪廓"
+L["OutlineMonochrome"] = "單色"
+
 -- 選項面板：設定檔
 L["profiles"] = "設定檔"
 L["profilesDesc"] = "設定檔管理"

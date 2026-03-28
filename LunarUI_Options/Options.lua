@@ -812,9 +812,9 @@ local options = {
                     name = L["HealthTextFormat"] or "Health Text Format",
                     desc = L["HealthTextFormatDesc"] or "Format for health text display",
                     values = {
-                        percent = "Percent",
-                        current = "Current",
-                        both = "Both",
+                        percent = L["FormatPercent"] or "Percent",
+                        current = L["FormatCurrent"] or "Current",
+                        both = L["FormatCurrentPercent"] or "Current - Percent",
                     },
                     disabled = function()
                         return not GetDB().nameplates.showHealthText
@@ -1726,7 +1726,7 @@ local options = {
                     order = 23,
                     type = "select",
                     name = L.clockFormat,
-                    values = { ["24h"] = "24-Hour", ["12h"] = "12-Hour" },
+                    values = { ["24h"] = L["Clock24h"] or "24-Hour", ["12h"] = L["Clock12h"] or "12-Hour" },
                     get = function()
                         return GetDB().minimap.clockFormat
                     end,
@@ -1804,10 +1804,10 @@ local options = {
                     type = "select",
                     name = L.zoneTextOutline,
                     values = {
-                        ["NONE"] = "None",
-                        ["OUTLINE"] = "Outline",
-                        ["THICKOUTLINE"] = "Thick Outline",
-                        ["MONOCHROMEOUTLINE"] = "Monochrome",
+                        ["NONE"] = L["OutlineNone"] or "None",
+                        ["OUTLINE"] = L["OutlineOutline"] or "Outline",
+                        ["THICKOUTLINE"] = L["OutlineThick"] or "Thick Outline",
+                        ["MONOCHROMEOUTLINE"] = L["OutlineMonochrome"] or "Monochrome",
                     },
                     get = function()
                         return GetDB().minimap.zoneFontOutline
@@ -1842,10 +1842,10 @@ local options = {
                     type = "select",
                     name = L["CoordFontOutline"] or "Coordinate Font Outline",
                     values = {
-                        NONE = "None",
-                        OUTLINE = "Outline",
-                        THICKOUTLINE = "Thick Outline",
-                        MONOCHROMEOUTLINE = "Monochrome",
+                        NONE = L["OutlineNone"] or "None",
+                        OUTLINE = L["OutlineOutline"] or "Outline",
+                        THICKOUTLINE = L["OutlineThick"] or "Thick Outline",
+                        MONOCHROMEOUTLINE = L["OutlineMonochrome"] or "Monochrome",
                     },
                     get = function()
                         return GetDB().minimap.coordFontOutline
@@ -2906,10 +2906,10 @@ local options = {
                             type = "select",
                             name = L["TextFormat"] or "Text Format",
                             values = {
-                                percent = "Percent",
-                                curmax = "Current / Max",
-                                cur = "Current",
-                                remaining = "Remaining",
+                                percent = L["FormatPercent"] or "Percent",
+                                curmax = L["FormatCurrentMax"] or "Current / Max",
+                                cur = L["FormatCurrent"] or "Current",
+                                remaining = L["FormatRemaining"] or "Remaining",
                             },
                             get = function()
                                 return GetDB().databars.experience.textFormat
@@ -2965,10 +2965,10 @@ local options = {
                             type = "select",
                             name = L["TextFormat"] or "Text Format",
                             values = {
-                                percent = "Percent",
-                                curmax = "Current / Max",
-                                cur = "Current",
-                                remaining = "Remaining",
+                                percent = L["FormatPercent"] or "Percent",
+                                curmax = L["FormatCurrentMax"] or "Current / Max",
+                                cur = L["FormatCurrent"] or "Current",
+                                remaining = L["FormatRemaining"] or "Remaining",
                             },
                             get = function()
                                 return GetDB().databars.reputation.textFormat
@@ -3024,10 +3024,10 @@ local options = {
                             type = "select",
                             name = L["TextFormat"] or "Text Format",
                             values = {
-                                percent = "Percent",
-                                curmax = "Current / Max",
-                                cur = "Current",
-                                remaining = "Remaining",
+                                percent = L["FormatPercent"] or "Percent",
+                                curmax = L["FormatCurrentMax"] or "Current / Max",
+                                cur = L["FormatCurrent"] or "Current",
+                                remaining = L["FormatRemaining"] or "Remaining",
                             },
                             get = function()
                                 return GetDB().databars.honor.textFormat
