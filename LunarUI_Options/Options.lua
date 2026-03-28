@@ -1747,9 +1747,9 @@ local options = {
                     name = L.zoneText,
                     desc = L.zoneTextDesc,
                     values = {
-                        ["SHOW"] = "Always Show",
-                        ["MOUSEOVER"] = "Show on Mouseover",
-                        ["HIDE"] = "Hidden",
+                        ["SHOW"] = L["ZoneTextShow"] or "Always Show",
+                        ["MOUSEOVER"] = L["ZoneTextMouseover"] or "Show on Mouseover",
+                        ["HIDE"] = L["ZoneTextHide"] or "Hidden",
                     },
                     get = function()
                         return GetDB().minimap.zoneTextDisplay

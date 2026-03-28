@@ -710,6 +710,11 @@ L["OutlineOutline"] = "Outline"
 L["OutlineThick"] = "Thick Outline"
 L["OutlineMonochrome"] = "Monochrome"
 
+-- 區域文字顯示模式
+L["ZoneTextShow"] = "Always Show"
+L["ZoneTextMouseover"] = "Show on Mouseover"
+L["ZoneTextHide"] = "Hidden"
+
 -- Export
 Engine.L = L
 if Engine.LunarUI then

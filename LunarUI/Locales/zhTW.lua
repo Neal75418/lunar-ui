@@ -708,6 +708,11 @@ L["OutlineOutline"] = "輪廓"
 L["OutlineThick"] = "粗輪廓"
 L["OutlineMonochrome"] = "單色"
 
+-- 區域文字顯示模式
+L["ZoneTextShow"] = "永遠顯示"
+L["ZoneTextMouseover"] = "滑鼠懸停時顯示"
+L["ZoneTextHide"] = "隱藏"
+
 -- 選項面板：設定檔
 L["profiles"] = "設定檔"
 L["profilesDesc"] = "設定檔管理"
