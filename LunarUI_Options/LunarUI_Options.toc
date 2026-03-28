@@ -3,7 +3,7 @@
 ## Notes: Configuration interface for LunarUI
 ## Notes-zhTW: LunarUI 設定介面
 ## Author: NealChen
-## Version: 1.1.0
+## Version: 1.3.0
 ## Dependencies: LunarUI
 ## OptionalDeps: LibStub, AceAddon-3.0, AceConfig-3.0, AceConfigDialog-3.0, AceDBOptions-3.0, LibSharedMedia-3.0
 ## LoadOnDemand: 1
