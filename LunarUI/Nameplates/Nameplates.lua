@@ -101,6 +101,14 @@ local function GetNPCRoleColor(unit, db, classification)
     return nil -- 近戰：保持預設反應色
 end
 
+-- P4 效能：命名函式供 pcall 呼叫，避免每次 FilterAura 建新 closure
+local function CheckIsPlayerAura(data)
+    return data.isPlayerAura == true
+end
+local function CheckIsStealable(data)
+    return data.isStealable == true
+end
+
 local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS or _G.DebuffTypeColor or {}
 
 -- 私有事件框架（不暴露到 LunarUI 物件）
@@ -163,14 +171,21 @@ local function CreateHealthBar(frame)
         frame.HealthText = healthText
     end
 
-    -- 動態讀取 DB 設定（Options 變更後下次 PostUpdate 即生效，不需 /reload）
-    health.PostUpdate = function(bar, unit, cur, max)
-        local liveDb = LunarUI.GetModuleDB("nameplates")
-        local liveNpcColors = liveDb and liveDb.npcColors and liveDb.npcColors.enabled
-        local liveFmt = liveDb and liveDb.healthTextFormat or "percent"
+    -- P2 效能修復：快取 DB 設定到 upvalue，避免每次 UNIT_HEALTH 做 GetModuleDB
+    -- Options 變更時由 InvalidateNameplateSettings() 重新整理快取
+    local cachedNpcColorsEnabled = db and db.npcColors and db.npcColors.enabled
+    local cachedHealthFmt = db and db.healthTextFormat or "percent"
 
+    -- 提供外部重新整理快取的方法（Options callback 呼叫）
+    frame._refreshHealthSettings = function()
+        local freshDb = LunarUI.GetModuleDB("nameplates")
+        cachedNpcColorsEnabled = freshDb and freshDb.npcColors and freshDb.npcColors.enabled
+        cachedHealthFmt = freshDb and freshDb.healthTextFormat or "percent"
+    end
+
+    health.PostUpdate = function(bar, unit, cur, max)
         -- NPC 角色分類上色（覆蓋 oUF 的 reaction 顏色）
-        if liveNpcColors and unit then
+        if cachedNpcColorsEnabled and unit then
             local npcColor = frame._npcColorCache
             if npcColor then
                 local reaction = UnitReaction(unit, "player")
@@ -193,11 +208,11 @@ local function CreateHealthBar(frame)
             return
         end
         local pct = mathFloor(cur / max * 100)
-        if liveFmt == "percent" then
+        if cachedHealthFmt == "percent" then
             ht:SetText(format("%d%%", pct))
-        elseif liveFmt == "current" then
+        elseif cachedHealthFmt == "current" then
             ht:SetText(LunarUI.FormatValue(cur))
-        elseif liveFmt == "both" then
+        elseif cachedHealthFmt == "both" then
             ht:SetText(format("%s - %d%%", LunarUI.FormatValue(cur), pct))
         end
     end
@@ -315,10 +330,9 @@ local function CreateDebuffs(frame)
     -- oUF Debuffs element 已限制 aura pool 為 harmful，FilterAura 只需檢查 isPlayerAura。
     -- 不要加 "and data.isHarmful == true"——永遠不會匹配，會隱藏所有 debuffs。
     -- WoW 12.0: data.isPlayerAura 也可能是 secret boolean，pcall 保護
+    -- P4 效能：使用命名函式避免每次建 closure
     debuffs.FilterAura = function(_element, _unit, data)
-        local ok, val = pcall(function()
-            return data.isPlayerAura == true
-        end)
+        local ok, val = pcall(CheckIsPlayerAura, data)
         return ok and val
     end
 
@@ -366,10 +380,9 @@ local function CreateNameplateBuffs(frame)
 
     -- 過濾：只顯示敵方可竊取/可驅散的增益
     -- WoW 12.0: data.isStealable 在戰鬥中為 secret boolean，pcall 保護比較
+    -- P4 效能：使用命名函式避免每次建 closure
     buffs.FilterAura = function(_element, _unit, data)
-        local ok, val = pcall(function()
-            return data.isStealable == true
-        end)
+        local ok, val = pcall(CheckIsStealable, data)
         return ok and val
     end
 
@@ -779,6 +792,10 @@ local stackingDirty = false
 ---@diagnostic disable-next-line
 MarkStackingDirty = function()
     stackingDirty = true
+    -- P5 效能：重新顯示 stacking frame 以啟動 OnUpdate（idle 時已隱藏）
+    if stackingFrame then
+        stackingFrame:Show()
+    end
 end
 
 -- 記錄上一個目標名牌，切換時只更新前/後兩個
@@ -922,10 +939,12 @@ local function StartStackingDetection()
         elapsed = elapsed + dt
         if elapsed >= STACKING_INTERVAL then
             elapsed = 0
-            -- Performance: 只在髒旗標為 true 時才重新計算
             if stackingDirty then
                 stackingDirty = false
                 UpdateNameplateStacking()
+            else
+                -- P5 效能：無待處理工作時隱藏 frame 停止 OnUpdate（MarkStackingDirty 會重新 Show）
+                stackingFrame:Hide()
             end
         end
     end)

@@ -463,11 +463,12 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
             break
         end
 
-        -- taint 安全：字串拼接 ("" ..) 強制建立新字串斷開 taint chain
-        -- tostring() 在 WoW 12.0 下不一定能完全斷開 taint（"table index is secret"）
-        -- #8: 集中淨化所有欄位，UpdateAuraIcon 直接使用已淨化值
-        local name = "" .. tostring(auraData.name or "")
-        local duration = tonumber(tostring(auraData.duration or 0)) or 0
+        -- P6 效能：type guard 避免非戰鬥時不必要的 tostring/tonumber 轉換
+        -- 戰鬥中 aura data 欄位可能是 secret value，需要 tostring 斷鏈
+        local rawName = auraData.name
+        local name = type(rawName) == "string" and rawName or ("" .. tostring(rawName or ""))
+        local rawDur = auraData.duration
+        local duration = type(rawDur) == "number" and rawDur or (tonumber(tostring(rawDur or 0)) or 0)
 
         local shouldShow
         if isDebuff then
@@ -479,8 +480,10 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
         if shouldShow then
             visibleIndex = visibleIndex + 1
             if visibleIndex <= maxIcons then
-                local count = tonumber(tostring(auraData.applications or 0)) or 0
-                local expirationTime = tonumber(tostring(auraData.expirationTime or 0)) or 0
+                local rawCount = auraData.applications
+                local count = type(rawCount) == "number" and rawCount or (tonumber(tostring(rawCount or 0)) or 0)
+                local rawExp = auraData.expirationTime
+                local expirationTime = type(rawExp) == "number" and rawExp or (tonumber(tostring(rawExp or 0)) or 0)
                 UpdateAuraIcon(icons[visibleIndex], auraData, name, count, duration, expirationTime, filter, isDebuff)
             end
         end

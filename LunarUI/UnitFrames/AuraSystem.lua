@@ -68,6 +68,30 @@ end
 -- 光環過濾器
 --------------------------------------------------------------------------------
 
+-- P3 效能：提取為命名函式供 pcall 呼叫，避免每次建 closure
+-- 回傳 true = 過濾掉（隱藏），false = 保留（顯示）
+local function AuraFilterBody(data, unit, cachedSettings, filters, blacklist, whitelist)
+    local spellId = data.spellId
+    if spellId and blacklist[spellId] then
+        return true
+    end
+    if spellId and whitelist[spellId] then
+        return false
+    end
+    if filters.showStealable and data.isStealable and UnitIsEnemy("player", unit) then
+        return false
+    end
+    if cachedSettings.onlyPlayerDebuffs and data.isHarmfulAura and not data.isPlayerAura then
+        return true
+    end
+    if filters.hidePassive and not data.isHarmfulAura and data.duration then
+        if data.duration == 0 or data.duration > 300 then
+            return true
+        end
+    end
+    return false
+end
+
 --[[ 光環過濾器：根據 DB 設定過濾 ]]
 local function AuraFilter(_element, unit, data)
     -- 標準化單位 key（boss1 → boss, party1 → party）
@@ -94,41 +118,10 @@ local function AuraFilter(_element, unit, data)
 
     local filters = GetAuraFilterSettings()
 
-    -- data 的欄位可能是 WoW secret value，用單一 pcall 保護所有存取
-    -- 內部 closure 回傳 true = 過濾掉（隱藏），false = 保留（顯示）
-    -- 外部再轉換為 oUF AuraFilter 慣例（true = 顯示，false = 隱藏）
-    local ok, shouldFilter = pcall(function()
-        local spellId = data.spellId
-
-        -- 黑名單：永遠不顯示
-        if spellId and auraBlacklistCache[spellId] then
-            return true
-        end
-
-        -- 白名單：永遠顯示（跳過其他過濾規則）
-        if spellId and auraWhitelistCache[spellId] then
-            return false
-        end
-
-        -- 可竊取 buff 在敵方目標上永遠顯示
-        if filters.showStealable and data.isStealable and UnitIsEnemy("player", unit) then
-            return false
-        end
-
-        -- 僅顯示玩家施放的 debuff
-        if cachedSettings.onlyPlayerDebuffs and data.isHarmfulAura and not data.isPlayerAura then
-            return true
-        end
-
-        -- 隱藏被動效果（持續超過 5 分鐘的 buff 和永久 buff）
-        if filters.hidePassive and not data.isHarmfulAura and data.duration then
-            if data.duration == 0 or data.duration > 300 then
-                return true
-            end
-        end
-
-        return false
-    end)
+    -- P3 效能修復：提取 pcall 內邏輯為命名函式，避免每次 AuraFilter 呼叫建立新 closure
+    -- 回傳 true = 過濾掉（隱藏），false = 保留（顯示）
+    local ok, shouldFilter =
+        pcall(AuraFilterBody, data, unit, cachedSettings, filters, auraBlacklistCache, auraWhitelistCache)
 
     -- pcall 失敗（secret value 異常）則預設顯示
     if ok and shouldFilter then

@@ -32,6 +32,8 @@ local cachedFadeDelay = 2.0
 local cachedFadeDuration = 0.4
 local cachedBaseAlpha = 1.0 -- #3: 快取 bar 基礎透明度，避免 SetBarAlpha 每幀查 DB
 
+local cachedBarFadeOverrides = {} -- per-bar fade 覆蓋快取（P1 效能：避免 IsBarFadeEnabled 每 0.05s 查 DB）
+
 local function RefreshFadeSettingsCache()
     local db = LunarUI.GetModuleDB("actionbars") or {}
     cachedFadeEnabled = db.fadeEnabled ~= false
@@ -39,22 +41,28 @@ local function RefreshFadeSettingsCache()
     cachedFadeDelay = db.fadeDelay or 2.0
     cachedFadeDuration = db.fadeDuration or 0.4
     cachedBaseAlpha = db.alpha or 1.0 -- #3
+    -- 快取每條 bar 的 per-bar fade 覆蓋值
+    wipe(cachedBarFadeOverrides)
+    for barKey, barCfg in pairs(db) do
+        if type(barCfg) == "table" and barCfg.fadeEnabled ~= nil then
+            cachedBarFadeOverrides[barKey] = barCfg.fadeEnabled
+        end
+    end
 end
 
 local function IsBarFadeEnabled(barKey)
     if isBarsUnlocked then
         return false
     end
-    if not cachedFadeEnabled then -- A1/B5: 使用快取值，避免每條動作列呼叫 GetFadeSettings()
+    if not cachedFadeEnabled then
         return false
     end
-
-    -- 每條 bar 可獨立覆蓋
-    local db = LunarUI.GetModuleDB("actionbars")
-    if db and type(db[barKey]) == "table" and db[barKey].fadeEnabled ~= nil then
-        return db[barKey].fadeEnabled
+    -- P1 效能修復：使用快取的 per-bar 覆蓋值，不再每次查 DB
+    local override = cachedBarFadeOverrides[barKey]
+    if override ~= nil then
+        return override
     end
-    return true -- 預設跟隨全域設定
+    return true
 end
 
 ---@param bar Frame?
