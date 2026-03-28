@@ -3,7 +3,7 @@
   <img src="https://img.shields.io/badge/tests-909_passing-brightgreen?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/WoW-12.0.1-0074e0?style=flat-square&logo=battledotnet&logoColor=white" alt="WoW 12.0.1" />
   <img src="https://img.shields.io/badge/Lua-5.1-2C2D72?style=flat-square&logo=lua&logoColor=white" alt="Lua 5.1" />
-  <img src="https://img.shields.io/badge/skins-22-e67e22?style=flat-square" alt="22 Skins" />
+  <img src="https://img.shields.io/badge/skins-23-e67e22?style=flat-square" alt="24 Skins" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square" alt="GPL-3.0" />
 </p>
 
@@ -21,7 +21,7 @@
 - 🌙 **Phase 狀態機** — 月相驅動的 UI 行為控制，戰鬥前後自動調整顯示策略
 - ⚔️ **完整戰鬥 UI** — UnitFrames / Nameplates / ActionBars 一體化替換，基於 oUF 與 LibActionButton
 - 🎯 **HUD 戰鬥資訊** — 職業資源條、冷卻追蹤、光環框架、浮動戰鬥數字
-- 🎨 **22 個 Blizzard 換膚** — 角色面板、天賦、成就、拍賣場、專業技能等，統一深色視覺主題
+- 🎨 **23 個 Blizzard 換膚** — 角色面板、天賦、成就、拍賣場、專業技能等，統一深色視覺主題
 - 📦 **整合背包系統** — 物品分類、裝等顯示、關鍵字搜尋、自動賣灰
 - 💬 **聊天增強** — 職業著色、頻道顏色、關鍵字警報、文字複製、懸浮背景
 - ⚡ **效能優先** — 框架池回收、材質快取、髒旗標批次處理、平行陣列結構
@@ -63,7 +63,7 @@
 | **Automation** | 自動修裝、戰場自動釋放、成就截圖、自動接受任務                     |
 | **FrameMover** | `/lunar move` 框架拖曳定位系統                      |
 
-### 🎨 Skins（22 個 Blizzard 換膚）
+### 🎨 Skins（23 個 Blizzard 換膚）
 
 <details>
 <summary>展開完整列表</summary>
@@ -74,24 +74,25 @@
 | 2  | Spellbook        | 法術書              |
 | 3  | Talents          | 天賦介面             |
 | 4  | Quest            | 任務日誌             |
-| 5  | Merchant         | 商人介面             |
-| 6  | Gossip           | NPC 對話           |
-| 7  | WorldMap         | 世界地圖             |
-| 8  | Achievements     | 成就面板             |
-| 9  | Mail             | 郵件系統             |
-| 10 | Collections      | 收藏（坐騎 / 寵物 / 幻化） |
-| 11 | LFG              | 尋找隊伍             |
-| 12 | EncounterJournal | 地城 / 團隊手冊        |
-| 13 | AuctionHouse     | 拍賣場              |
-| 14 | Communities      | 社群 / 公會          |
-| 15 | Housing          | 居所系統             |
-| 16 | Professions      | 專業技能             |
-| 17 | PVP              | PvP 介面           |
-| 18 | Settings         | 系統設定             |
-| 19 | Trade            | 交易介面             |
-| 20 | Calendar         | 行事曆              |
-| 21 | WeeklyRewards    | 每週寶庫             |
-| 22 | AddonList        | 插件列表             |
+| 5  | QuestMap         | 任務地圖             |
+| 6  | Merchant         | 商人介面             |
+| 7  | Gossip           | NPC 對話           |
+| 8  | WorldMap         | 世界地圖             |
+| 9  | Achievements     | 成就面板             |
+| 10 | Mail             | 郵件系統             |
+| 11 | Collections      | 收藏（坐騎 / 寵物 / 幻化） |
+| 12 | LFG              | 尋找隊伍             |
+| 13 | EncounterJournal | 地城 / 團隊手冊        |
+| 14 | AuctionHouse     | 拍賣場              |
+| 15 | Communities      | 社群 / 公會          |
+| 16 | Housing          | 居所系統             |
+| 17 | Professions      | 專業技能             |
+| 18 | PVP              | PvP 介面           |
+| 19 | Settings         | 系統設定             |
+| 20 | Trade            | 交易介面             |
+| 21 | Calendar         | 行事曆              |
+| 22 | WeeklyRewards    | 每週寶庫             |
+| 23 | AddonList        | 插件列表             |
 
 </details>
 
@@ -141,7 +142,7 @@ graph TB
         DT["DataTexts"]
         Loot["Loot"]
         Auto["Automation"]
-        Skins["Skins ×22"]
+        Skins["Skins ×23"]
     end
 
     subgraph Addons["LoadOnDemand"]
@@ -353,7 +354,7 @@ make lint         # 執行 luacheck 靜態分析
 make format       # 檢查 stylua 格式
 make format-fix   # 自動修正格式
 make coverage     # 測試 + 覆蓋率報告（含門檻檢查）
-make check        # 一次跑完 lint + format + test
+make check        # 一次跑完 lint + format + locale-check + test
 make locale-check # 檢查語系 key 對稱性
 ```
 

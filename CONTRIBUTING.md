@@ -63,7 +63,7 @@ make lint         # 執行 luacheck 靜態分析
 make format       # 檢查 stylua 格式
 make format-fix   # 自動修正格式
 make coverage     # 測試 + 覆蓋率報告（含門檻檢查）
-make check        # 一次跑完 lint + format + test
+make check        # 一次跑完 lint + format + locale-check + test
 make locale-check # 檢查語系 key 對稱性
 ```
 
@@ -201,7 +201,7 @@ graph LR
 ```
 
 1. Fork 後建立 feature branch
-2. 確認 `make check` 通過（lint + format + test）
+2. 確認 `make check` 通過（lint + format + locale-check + test）
 3. 在遊戲內測試（至少載入 + 基本操作）
 4. 提交 PR 並說明變更內容
 

@@ -35,6 +35,79 @@ timeline
 
 ---
 
+## [1.3.0] &mdash; 2026-03-28
+
+### Security
+
+- **聊天超連結注入防護** — FormatURL 過濾 `|` 字元，防止惡意聊天訊息注入假 WoW 物品/成就連結
+- **uiScale 匯入範圍驗證** — VALIDATION_RULES 限制 0.5–2.0，防止惡意匯入破壞 UI
+- **charSpecProfiles 型別檢查** — 匯入時只接受 string 型別的 profile 名稱
+- **Parser hardening** — depth check off-by-one 修正（20→>=20）、nil keyword 拒絕
+
+### Added
+
+- **Options UI 全模組覆蓋** — DataBars、DataTexts、Chat（8 個功能 flag）、ActionBars（fade/size/hotkeys）、UnitFrames（aura/portrait/castbar）、Nameplates（healthText/buffs/npcColors）、auraFilters（5 keys）、Tooltip、Minimap 等 1200+ 行 Options 條目
+- **中英切換** — Options 面板 locale 系統遷移（498 keys），繁中/英文客戶端自動切換
+- **材料袋（bag 5）支援** — Bags/DataTexts/JunkSelling 全部包含 WoW 12.0 材料袋
+- **Locale 補充** — enUS + zhTW 各新增 170+ locale key
+- **lunar:\* tags 接線** — 14 個自訂 oUF tag 接入 Elements/Nameplates 佈局（SafeTag pcall 保護 + 四捨五入 + UTF-8 安全）
+- **pet/targettarget/shortChannelNames/coordFontOutline** Options 條目
+- **Profiler rate 測試** — 覆蓋 EVENT_RATE_CRIT/WARN 顏色門檻
+
+### Fixed
+
+- **WoW 12.0 Taint** — AuraFrames/LAB cooldown 整體 pcall 保護（tonumber/tostring 不可靠，改用整函式 pcall）
+- **Merchant skin** — guard WoW 12.0 已移除的 MerchantFrame_UpdateMerchantInfo
+- **BAG_UPDATE_DELAYED** — bag 5（材料袋）更新被靜默跳過
+- **Bank 批次佇列** — bankUpdateInProgress 同幀 re-enter 卡住問題
+- **URL 雙重替換** — `https://www.*` 不再產生巢狀壞掉超連結
+- **Grid 重建** — GRID_SIZE 變更後視覺網格即時更新（材質池重用，無洩漏）
+- **Skins retry** — ApplySkin 回傳 false 時不標記為 done（Housing 等延遲框架可正確 retry）
+- **Nameplate PostUpdate** — 動態讀取 DB 設定（Options 變更即時生效）
+- **Layout EditMode hook** — 加 _modulesEnabled guard
+- **Export/Import** — 包含 char.specProfiles、uiScale 在 nilDefaultKeys
+- **CleanupLoot** — 無條件還原 LootFrame alpha
+- **CleanupMinimap** — 戰鬥中延遲到 PLAYER_REGEN_ENABLED（upvalue frame 重用）
+- **InstallWizard Skip** — 儲存已調整的 uiScale
+- **HealthPrediction 錨點** — 改用 oUF 標準鏈式錨點（LEFT → StatusBarTexture RIGHT）
+- **Focus healPrediction** — Options toggle 只出現在有 heal prediction 的單位
+- **DataTexts lifecycle** — disable→enable 重新安裝 scripts/事件
+- **Keybind mode** — orphaned button 不再誤進入綁定模式
+- **DataBars 快取** — enabled/textFormat/showText 全部快取，Options callback 同步失效
+
+### Changed
+
+- **3 輪效能優化**
+  - DB 快取：FadeAndHover per-bar override、Nameplates health PostUpdate、DataBars 事件處理器、DataTexts clock
+  - Closure 消除：AuraFilter → AuraFilterBody、Nameplate FilterAura/PostUpdateButton → module-level、PostUpdateDebuffIcon → CheckIsHarmfulAura、ButtonStyling → GetCooldownActive
+  - OnUpdate 優化：Stacking idle Hide/Show、DataTexts pairs() → array loop、AuraFrames type guard
+- **代碼風格統一**（續）
+  - table.* upvalue 統一 camelCase（9 個檔案）
+  - bare print() → DEFAULT_CHAT_FRAME:AddMessage
+  - Debug.lua GetModuleDB("debug")
+  - Media/Media.lua 英文註解翻譯為繁體中文
+- **死碼清理**
+  - lunar:\* tags 從死碼變為活躍（接線到 Elements/Nameplates）
+  - 移除 5 個已刪除功能的 locale keys
+  - 移除 Media.lua orphaned comment
+  - 移除 Options chat.width/height hidden sliders、dead style entries
+
+### Stats
+
+| 項目 | 數值 |
+|:-----|:-----|
+| Commits since v1.2.0 | 35 |
+| Lua 檔案 | 69 |
+| 代碼行數 | ~25,500 |
+| 測試案例 | 909 |
+| Spec 檔案 | 34 |
+| Skins | 23 |
+| Locale keys | 498 |
+| luacheck warnings | 0 |
+| stylua violations | 0 |
+
+---
+
 ## [1.2.0] &mdash; 2026-03-25
 
 ### Fixed

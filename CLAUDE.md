@@ -10,7 +10,7 @@
   - `LunarUI_Debug/` &mdash; LoadOnDemand 診斷工具（`/lunar debugvigor` 時自動載入）
 - **進入點**：`Core/Init.lua` 最先執行，建立 `Engine.LunarUI`
 - **模組存取**：`local _ADDON_NAME, Engine = ...` → `Engine.LunarUI`
-- **Skin 模組**：22 個 Blizzard 介面換膚（`LunarUI/Modules/Skins/`）
+- **Skin 模組**：23 個 Blizzard 介面換膚（`LunarUI/Modules/Skins/`）
 
 ---
 
@@ -126,7 +126,7 @@ LunarUI.CreateIconBorder(parent, options)
 - stdlib upvalue 統一 camelCase 命名：`mathFloor`、`tableInsert`、`stringUtf8sub`（非 snake_case）
 - FloatingCombatText 預設 opt-in 關閉（`fctEnabled = false`），`LunarUI.Sanitize(val)` 依型別打斷 CLEU taint 鏈（number → `tonumber(tostring())`、string → `tostring()`、boolean → `val == true`）
 - 事件頻率監控：`/lunar profile events on|off`，純計數 + 每秒速率
-- Skin 個別標籤 locale key（如 `skinCharacter`）放 `Options.lua` 的 `local L` 表；通用分類 key（`Skins`、`SkinsDesc`）放 `enUS.lua`/`zhTW.lua`
+- Skin 個別標籤 locale key（如 `skinCharacter`）與通用分類 key（`Skins`、`SkinsDesc`）均放 `enUS.lua`/`zhTW.lua`；`Options.lua` 的 `local L` 是代理 metatable，無獨立定義
 - WoW 12.0 addon API 使用 `C_AddOns` 命名空間（如 `C_AddOns.LoadAddOn`）
 - 所有 `.lua` 檔案第一行統一加入 `---@diagnostic disable:` 抑制 EmmyLua Analyzer 已知誤報
 - 型別定義檔：`wow_api.def.lua`（WoW API stub）、`spec/busted.def.lua`（busted/luassert stub），皆以 `---@meta` 標記
@@ -188,7 +188,7 @@ graph LR
 | **匯出慣例**    | `LunarUI.FnName = localFn`，讓 local 純函數可被測試存取                                                     |
 | **命名衝突**    | 多模組有同名 local 函數時用前綴區分（如 `BagsGetItemLevel` vs `GetItemLevel`）                                    |
 | **Mock 要點** | 模組層級有副作用時（`CreateFrame`、`RegisterModule`），需在 spec 內提供完整 stub                                     |
-| **驗證**      | 每次修改後跑 `make check`（等同 `luacheck .` + `stylua --check .` + `busted spec/`）                       |
+| **驗證**      | 每次修改後跑 `make check`（等同 `luacheck .` + `stylua --check .` + `locale-check` + `busted spec/`）                       |
 
 ---
 
