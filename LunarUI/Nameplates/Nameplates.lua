@@ -109,7 +109,51 @@ local function CheckIsStealable(data)
     return data.isStealable == true
 end
 
+-- cachedDebuffDefaultColor 在 DEBUFF_TYPE_COLORS 定義後初始化（見下方）
+local cachedDebuffDefaultColor
+
+local function NameplateDebuffFilterAura(_element, _unit, data)
+    local ok, val = pcall(CheckIsPlayerAura, data)
+    return ok and val
+end
+
+local function NameplateDebuffPostUpdate(_self, button, _unit, _data, _position)
+    if button.SetBackdropBorderColor then
+        if cachedDebuffDefaultColor then
+            button:SetBackdropBorderColor(
+                cachedDebuffDefaultColor.r,
+                cachedDebuffDefaultColor.g,
+                cachedDebuffDefaultColor.b,
+                1
+            )
+        else
+            button:SetBackdropBorderColor(0.8, 0, 0, 1)
+        end
+    end
+end
+
+local function NameplateBuffFilterAura(_element, _unit, data)
+    local ok, val = pcall(CheckIsStealable, data)
+    return ok and val
+end
+
+local function NameplateBuffPostUpdate(_self, button, _unit, _data, _position)
+    if button.SetBackdropBorderColor then
+        button:SetBackdropBorderColor(
+            C.stealableBorder[1],
+            C.stealableBorder[2],
+            C.stealableBorder[3],
+            C.stealableBorder[4]
+        )
+    end
+end
+
 local DEBUFF_TYPE_COLORS = LunarUI.DEBUFF_TYPE_COLORS or _G.DebuffTypeColor or {}
+cachedDebuffDefaultColor = DEBUFF_TYPE_COLORS[""] or DEBUFF_TYPE_COLORS["none"]
+
+-- P1-perf: 快取名牌尺寸供 Nameplate_OnShow 使用（在 StartStackingDetection 中更新）
+local cachedNpWidth = 120
+local cachedNpHeight = 12
 
 -- 私有事件框架（不暴露到 LunarUI 物件）
 local nameplateTargetFrame
@@ -330,26 +374,10 @@ local function CreateDebuffs(frame)
     -- oUF Debuffs element 已限制 aura pool 為 harmful，FilterAura 只需檢查 isPlayerAura。
     -- 不要加 "and data.isHarmful == true"——永遠不會匹配，會隱藏所有 debuffs。
     -- WoW 12.0: data.isPlayerAura 也可能是 secret boolean，pcall 保護
-    -- P4 效能：使用命名函式避免每次建 closure
-    debuffs.FilterAura = function(_element, _unit, data)
-        local ok, val = pcall(CheckIsPlayerAura, data)
-        return ok and val
-    end
-
+    -- P2-perf: 使用 module-level 命名函式，不在每個 frame 建 closure
+    debuffs.FilterAura = NameplateDebuffFilterAura
     debuffs.PostCreateButton = StyleNameplateAura
-
-    -- WoW 12.0 將 dispelName 設為 secret value，無法存取驅散類型
-    -- 統一使用通用 debuff 顏色
-    debuffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
-        if button.SetBackdropBorderColor then
-            local color = DEBUFF_TYPE_COLORS["none"] or DEBUFF_TYPE_COLORS[""]
-            if color then
-                button:SetBackdropBorderColor(color.r, color.g, color.b, 1)
-            else
-                button:SetBackdropBorderColor(0.8, 0, 0, 1)
-            end
-        end
-    end
+    debuffs.PostUpdateButton = NameplateDebuffPostUpdate
 
     frame.Debuffs = debuffs
     return debuffs
@@ -380,25 +408,10 @@ local function CreateNameplateBuffs(frame)
 
     -- 過濾：只顯示敵方可竊取/可驅散的增益
     -- WoW 12.0: data.isStealable 在戰鬥中為 secret boolean，pcall 保護比較
-    -- P4 效能：使用命名函式避免每次建 closure
-    buffs.FilterAura = function(_element, _unit, data)
-        local ok, val = pcall(CheckIsStealable, data)
-        return ok and val
-    end
-
+    -- P2-perf: 使用 module-level 命名函式
+    buffs.FilterAura = NameplateBuffFilterAura
     buffs.PostCreateButton = StyleNameplateAura
-
-    -- 可竊取增益顯示亮邊框
-    buffs.PostUpdateButton = function(_self, button, _unit, _data, _position)
-        if button.SetBackdropBorderColor then
-            button:SetBackdropBorderColor(
-                C.stealableBorder[1],
-                C.stealableBorder[2],
-                C.stealableBorder[3],
-                C.stealableBorder[4]
-            )
-        end
-    end
+    buffs.PostUpdateButton = NameplateBuffPostUpdate
 
     frame.Buffs = buffs
     return buffs
@@ -575,10 +588,10 @@ local function Nameplate_OnShow(frame)
     -- 重新註冊框架追蹤（隱藏時已移除）
     nameplateFrames[frame] = true
 
-    -- 重新強制固定尺寸（Blizzard 名牌系統可能在回收時重設錨點/尺寸）
+    -- P1-perf: 寬高使用 module-level 快取，其他設定仍從 db 讀取（OnShow 頻率可接受）
     local db = LunarUI.GetModuleDB("nameplates")
-    local width = db and db.width or 120
-    local height = db and db.height or 12
+    local width = cachedNpWidth or (db and db.width) or 120
+    local height = cachedNpHeight or (db and db.height) or 12
     frame:ClearAllPoints()
     frame:SetPoint("CENTER")
     frame:SetSize(width, height)
@@ -778,9 +791,7 @@ end
 local stackingFrame = nil
 local STACKING_INTERVAL = 0.1 -- 更新間隔（秒）
 local STACKING_OFFSET = 10 -- 每層偏移量（像素）
--- B4 效能修復：快取 npHeight（db.height 為靜態設定值，不在戰鬥中改變）
--- 避免 UpdateNameplateStacking（dirty 驅動）每次都呼叫 GetModuleDB + 讀取 db.height
-local cachedNpHeight = 12
+-- cachedNpWidth / cachedNpHeight 已在檔案前段定義，此處由 StartStackingDetection 更新
 
 -- 重用平行陣列，避免每 0.1s 為每個名牌建新 table
 local stackFrames = {}
@@ -927,7 +938,8 @@ local function StartStackingDetection()
     if not db or not db.stackingDetection then
         return
     end
-    -- B4 效能修復：快取 npHeight，UpdateNameplateStacking 直接使用不再查 DB
+    -- B4 效能修復：快取尺寸，UpdateNameplateStacking 和 Nameplate_OnShow 直接使用不再查 DB
+    cachedNpWidth = db.width or 120
     cachedNpHeight = (db.height or 8) + 4
 
     if stackingFrame then

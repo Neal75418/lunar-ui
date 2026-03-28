@@ -405,20 +405,24 @@ RegisterProvider("spec", {
 })
 
 -- 時鐘
+-- P4-perf: 快取 clockFormat，避免 clock provider 每秒呼叫 GetModuleDB
+local cachedIs24h = true
+local function RefreshClockFormat()
+    local db = LunarUI.GetModuleDB("minimap")
+    cachedIs24h = not (db and db.clockFormat == "12h")
+end
+
 RegisterProvider("clock", {
     label = L["Clock"] or "Clock",
     events = {},
     onUpdate = true,
     updateInterval = 1,
     update = function()
-        local db = LunarUI.GetModuleDB("minimap")
-        local is24h = not (db and db.clockFormat == "12h")
         local t = date("*t")
-        return LunarUI.FormatGameTime(t.hour, t.min, is24h)
+        return LunarUI.FormatGameTime(t.hour, t.min, cachedIs24h)
     end,
     tooltip = function(slot)
-        local db = LunarUI.GetModuleDB("minimap")
-        local is24h = not (db and db.clockFormat == "12h")
+        local is24h = cachedIs24h
         local t = date("*t")
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
@@ -743,6 +747,7 @@ local function InitializeDataTexts()
         LunarUI.CleanupDataTexts()
     end
 
+    RefreshClockFormat() -- P4-perf: 初始化時快取 clockFormat
     local db = LunarUI.GetModuleDB("datatexts")
     if not db or not db.enabled then
         return

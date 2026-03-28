@@ -425,12 +425,9 @@ local function UpdateAuraIconInner(iconFrame, auraData, name, count, duration, e
     iconFrame.auraData.isHarmful = (filter == "HARMFUL")
 
     -- 淡入動畫：aura 替換時也需重播（不限於首次顯示）
-    -- WoW 12.0: name 可能仍帶 taint（"" .. tostring() 不一定斷鏈），pcall 保護比較
-    local nameChanged = true
-    pcall(function()
-        nameChanged = (iconFrame.currentAuraName ~= name)
-    end)
-    if nameChanged then
+    -- name 已在 UpdateAuraGroup 中用 "" .. tostring() 淨化，currentAuraName 也是已淨化的值
+    -- P4-perf: 移除不必要的 pcall closure（兩端都是 plain Lua string，不會觸發 taint）
+    if iconFrame.currentAuraName ~= name then
         iconFrame.currentAuraName = name
         if iconFrame.fadeIn then
             iconFrame.fadeIn:Stop()
