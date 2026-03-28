@@ -8,6 +8,9 @@
 local unpack = table.unpack or unpack -- luacheck: ignore 143
 _G.unpack = unpack
 
+-- DEFAULT_CHAT_FRAME mock（Init.lua 和 Utils.lua 的 pre-addon fallback 使用）
+_G.DEFAULT_CHAT_FRAME = { AddMessage = function() end }
+
 -- Lua 5.3+ string.format compatibility: %d/%x/%o require integer arguments
 -- WoW uses Lua 5.1 where floats are silently truncated; replicate that behavior
 local _origFormat = string.format

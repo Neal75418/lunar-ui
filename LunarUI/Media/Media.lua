@@ -1,12 +1,12 @@
 ---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
-    LunarUI - Media Registration
-    Register custom textures, fonts, and sounds with LibSharedMedia
+    LunarUI - 媒體註冊
+    將自訂材質、字體與音效註冊到 LibSharedMedia
 
-    Design Philosophy:
-    - Moon-inspired: soft glows, arcs, incomplete shapes
-    - Restrained: low saturation, subtle details
-    - Functional: clarity over decoration
+    設計理念：
+    - 月相意象：柔和光暈、弧線、不完整的形狀
+    - 克制內斂：低飽和度、細微的細節
+    - 功能優先：清晰勝過裝飾
 ]]
 
 local _ADDON_NAME, Engine = ...
@@ -18,78 +18,78 @@ if not LSM then
 end
 
 --------------------------------------------------------------------------------
--- Media Paths
+-- 媒體路徑
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
--- Texture Definitions
+-- 材質定義
 --------------------------------------------------------------------------------
 
--- Effective textures: built-in paths used at runtime
+-- 運行時使用的內建材質路徑
 local TEXTURES = {
-    -- Status bars
+    -- StatusBar 材質
     flat = "Interface\\Buttons\\WHITE8x8",
     gradient = "Interface\\TARGETINGFRAME\\UI-StatusBar",
     smooth = "Interface\\TARGETINGFRAME\\UI-StatusBar",
 
-    -- Borders
+    -- 邊框材質
     borderThin = "Interface\\Buttons\\WHITE8x8",
     borderInk = "Interface\\Buttons\\WHITE8x8",
     borderGlow = "Interface\\GLUES\\MODELS\\UI_Draenei\\GenericGlow64",
 
-    -- Backgrounds
+    -- 背景材質
     parchment = "Interface\\ACHIEVEMENTFRAME\\UI-Achievement-Parchment-Horizontal",
     dark = "Interface\\Buttons\\WHITE8x8",
 }
 
 --------------------------------------------------------------------------------
--- Color Palettes
+-- 色彩調色盤
 --------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
--- Font Definitions
+-- 字體定義
 --------------------------------------------------------------------------------
 
--- Preferred fonts (custom or system)
+-- 偏好字體（自訂或系統內建）
 local FONTS = {
-    -- Main UI font
+    -- 主要 UI 字體
     normal = "Fonts\\FRIZQT__.TTF",
 
-    -- Number font (for health, damage, etc.)
+    -- 數字字體（血量、傷害等）
     number = "Fonts\\FRIZQT__.TTF",
 
-    -- Header font
+    -- 標題字體
     header = "Fonts\\MORPHEUS.TTF",
 
-    -- Custom fonts: placeholder for future custom font
+    -- 自訂字體：未來自訂字體預留位置
     -- lunar = "Interface\\AddOns\\LunarUI\\Media\\Fonts\\LunarFont.ttf",
 }
 
 --------------------------------------------------------------------------------
--- Media Registration
+-- 媒體註冊
 --------------------------------------------------------------------------------
 
 local function RegisterMedia()
-    -- Register status bar textures
+    -- 註冊 StatusBar 材質
     LSM:Register("statusbar", "Lunar Flat", TEXTURES.flat)
     LSM:Register("statusbar", "Lunar Gradient", TEXTURES.gradient)
     LSM:Register("statusbar", "Lunar Smooth", TEXTURES.smooth)
 
-    -- Register border textures
+    -- 註冊邊框材質
     LSM:Register("border", "Lunar Thin", TEXTURES.borderThin)
     LSM:Register("border", "Lunar Ink", TEXTURES.borderInk)
     LSM:Register("border", "Lunar Glow", TEXTURES.borderGlow)
 
-    -- Register background textures
+    -- 註冊背景材質
     LSM:Register("background", "Lunar Dark", TEXTURES.dark)
     LSM:Register("background", "Lunar Parchment", TEXTURES.parchment)
 
-    -- Register fonts
+    -- 註冊字體
     LSM:Register("font", "Lunar Normal", FONTS.normal)
     LSM:Register("font", "Lunar Number", FONTS.number)
     LSM:Register("font", "Lunar Header", FONTS.header)
 
-    -- Set defaults
+    -- 設定預設值
     LSM:SetDefault("statusbar", "Lunar Flat")
     LSM:SetDefault("border", "Lunar Thin")
     LSM:SetDefault("background", "Lunar Dark")
@@ -97,10 +97,10 @@ local function RegisterMedia()
 end
 
 --------------------------------------------------------------------------------
--- Texture Getter
+-- 材質取得
 --------------------------------------------------------------------------------
 
--- Get user-selected font from LSM (reads db.profile.style.font)
+-- 從 LSM 取得使用者選取的字體（讀取 db.profile.style.font）
 function LunarUI.GetSelectedFont()
     local db = LunarUI.GetModuleDB("style")
     local fontName = db and db.font
@@ -151,7 +151,7 @@ function LunarUI:ApplyFontSettings()
     end
 end
 
--- Get user-selected statusbar texture from LSM (reads db.profile.style.statusBarTexture)
+-- 從 LSM 取得使用者選取的 StatusBar 材質（讀取 db.profile.style.statusBarTexture）
 function LunarUI.GetSelectedStatusBarTexture()
     local db = LunarUI.GetModuleDB("style")
     local texName = db and db.statusBarTexture
@@ -165,10 +165,10 @@ function LunarUI.GetSelectedStatusBarTexture()
 end
 
 --------------------------------------------------------------------------------
--- Initialization
+-- 初始化
 --------------------------------------------------------------------------------
 
--- Register media on load
+-- 載入時註冊媒體資源
 hooksecurefunc(LunarUI, "OnInitialize", function()
     RegisterMedia()
 end)

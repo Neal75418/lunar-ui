@@ -18,7 +18,7 @@ local L = Engine.L or {}
     @param msg 要輸出的訊息
 ]]
 function LunarUI:Debug(msg)
-    if self.db and self.db.profile and self.db.profile.debug then
+    if LunarUI.GetModuleDB("debug") then
         self:Print("|cff888888" .. (L["DebugPrefix"] or "[Debug]") .. "|r " .. tostring(msg))
     end
 end
@@ -28,7 +28,7 @@ end
     @return boolean
 ]]
 function LunarUI:IsDebugMode()
-    return self.db and self.db.profile and self.db.profile.debug
+    return LunarUI.GetModuleDB("debug") or false
 end
 
 --[[
@@ -122,7 +122,7 @@ local function CreateDebugFrame()
         end
         self.elapsed = 0
 
-        if not LunarUI.db or not LunarUI.db.profile or not LunarUI.db.profile.debug then
+        if not LunarUI.GetModuleDB("debug") then
             self:Hide()
             return
         end
@@ -158,7 +158,7 @@ function LunarUI.UpdateDebugOverlay()
     local frame = CreateDebugFrame()
 
     -- debug 是 profile root key（非 sub-table），需直接存取 db.profile.debug
-    if LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug then
+    if LunarUI.GetModuleDB("debug") then
         frame:Show()
     else
         frame:Hide()

@@ -525,7 +525,7 @@ local function CreateNavigationButtons(f)
             LunarUI.db.global.installVersion = LunarUI.version
         end
         -- 儲存已調整的 uiScale（使用者可能移動了滑桿後才按 Skip）
-        if LunarUI.db and LunarUI.db.profile and wizardChoices.uiScale then
+        if wizardChoices.uiScale and LunarUI.db and LunarUI.db.profile then
             LunarUI.db.profile.uiScale = wizardChoices.uiScale
         end
         f:Hide()

@@ -15,7 +15,7 @@ local LunarUI =
     LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "AceHook-3.0")
 
 if not LunarUI then
-    print("|cffff0000[LunarUI]|r 插件建立失敗！")
+    DEFAULT_CHAT_FRAME:AddMessage("|cffff0000[LunarUI]|r 插件建立失敗！")
     return
 end
 

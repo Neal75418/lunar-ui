@@ -176,7 +176,7 @@ function LunarUI.SafeCall(func, context)
         elseif LunarUI.Print then
             LunarUI:Print("|cffff6060" .. msg .. "|r")
         else
-            print("|cffff6060LunarUI:|r " .. msg)
+            DEFAULT_CHAT_FRAME:AddMessage("|cffff6060LunarUI:|r " .. msg)
         end
     end
     return ok
