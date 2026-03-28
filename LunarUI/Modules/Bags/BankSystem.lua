@@ -266,6 +266,7 @@ local function CreateBankFrame()
     bankFrame:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], FRAME_ALPHA)
     bankFrame:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1) -- 銀行用金色邊框
     bankFrame:SetFrameStrata("HIGH")
+    bankFrame:SetFrameLevel(100) -- 高於背包，避免同時開啟時互相穿透
     bankFrame:SetMovable(true)
     bankFrame:EnableMouse(true)
     bankFrame:SetClampedToScreen(true)
