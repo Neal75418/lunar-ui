@@ -603,12 +603,12 @@ describe("GetTotalSlots", function()
         assert.equals(0, LunarUI.GetTotalSlots())
     end)
 
-    it("sums slots across bags 0-4", function()
+    it("sums slots across bags 0-5 including reagent bag", function()
         _G.C_Container.GetContainerNumSlots = function(bag)
-            local sizes = { [0] = 16, [1] = 28, [2] = 32, [3] = 32, [4] = 30 }
+            local sizes = { [0] = 16, [1] = 28, [2] = 32, [3] = 32, [4] = 30, [5] = 18 }
             return sizes[bag] or 0
         end
-        assert.equals(138, LunarUI.GetTotalSlots())
+        assert.equals(156, LunarUI.GetTotalSlots())
     end)
 
     it("handles single bag with slots", function()
@@ -637,12 +637,12 @@ describe("GetTotalFreeSlots", function()
         assert.equals(0, LunarUI.GetTotalFreeSlots())
     end)
 
-    it("sums free slots across bags 0-4", function()
+    it("sums free slots across bags 0-5 including reagent bag", function()
         _G.C_Container.GetContainerNumFreeSlots = function(bag)
-            local free = { [0] = 5, [1] = 10, [2] = 0, [3] = 8, [4] = 3 }
+            local free = { [0] = 5, [1] = 10, [2] = 0, [3] = 8, [4] = 3, [5] = 6 }
             return free[bag] or 0, 0
         end
-        assert.equals(26, LunarUI.GetTotalFreeSlots())
+        assert.equals(32, LunarUI.GetTotalFreeSlots())
     end)
 
     it("handles all bags full", function()

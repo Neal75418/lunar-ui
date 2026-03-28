@@ -41,7 +41,7 @@ local function SellJunk()
     local junkItems = {}
     local totalValue = 0
 
-    for bag = 0, 4 do
+    for bag = 0, 5 do -- 含材料袋（bag 5）
         for slot = 1, C_Container.GetContainerNumSlots(bag) do
             local containerInfo = C_Container.GetContainerItemInfo(bag, slot)
             if containerInfo and containerInfo.quality == 0 and not containerInfo.hasNoValue then
