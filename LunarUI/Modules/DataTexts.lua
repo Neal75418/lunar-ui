@@ -124,8 +124,8 @@ RegisterProvider("latency", {
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
         GameTooltip:AddLine(L["Latency"] or "Latency", 1, 1, 1)
-        GameTooltip:AddDoubleLine(L["LatencyHome"] or "Home", latencyHome .. " ms", 1, 1, 1, 0.3, 1, 0.3)
-        GameTooltip:AddDoubleLine(L["LatencyWorld"] or "World", latencyWorld .. " ms", 1, 1, 1, 0.3, 1, 0.3)
+        GameTooltip:AddDoubleLine(L["LatencyHome"] or "Home", (latencyHome or 0) .. " ms", 1, 1, 1, 0.3, 1, 0.3)
+        GameTooltip:AddDoubleLine(L["LatencyWorld"] or "World", (latencyWorld or 0) .. " ms", 1, 1, 1, 0.3, 1, 0.3)
         GameTooltip:Show()
     end,
 })
@@ -245,7 +245,7 @@ RegisterProvider("bagSlots", {
     events = { "BAG_UPDATE", "PLAYER_ENTERING_WORLD" },
     update = function()
         local totalFree, totalSlots = 0, 0
-        for bag = 0, 4 do
+        for bag = 0, 5 do -- 含材料袋（bag 5）
             local freeSlots = C_Container.GetContainerNumFreeSlots(bag)
             local numSlots = C_Container.GetContainerNumSlots(bag)
             totalFree = totalFree + (freeSlots or 0)
@@ -272,7 +272,7 @@ RegisterProvider("bagSlots", {
         GameTooltip:SetOwner(slot, "ANCHOR_TOP", 0, 4)
         GameTooltip:ClearLines()
         GameTooltip:AddLine(L["BagSlots"] or "Bag Slots", 1, 1, 1)
-        for bag = 0, 4 do
+        for bag = 0, 5 do -- 含材料袋（bag 5）
             local freeSlots = C_Container.GetContainerNumFreeSlots(bag)
             local numSlots = C_Container.GetContainerNumSlots(bag)
             if numSlots and numSlots > 0 then

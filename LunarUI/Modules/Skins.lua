@@ -362,9 +362,10 @@ local function ApplySkin(name)
     end
 
     local ok, result = pcall(skin.func)
-    if ok then
+    if ok and result ~= false then
+        -- skin 函數回傳 true 或 nil = 成功；回傳 false = 目標框架尚未建立，需重試
         skinned[name] = true
-    else
+    elseif not ok then
         -- 生產環境也輸出錯誤，避免 Skin 失敗靜默無感
         LunarUI:Print("|cffff6666[Skin]|r " .. name .. ": " .. tostring(result))
     end

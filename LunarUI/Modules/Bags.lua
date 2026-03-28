@@ -58,8 +58,10 @@ local backdropTemplate = LunarUI.backdropTemplate
 -- 使用集中定義的品質顏色
 local ITEM_QUALITY_COLORS = LunarUI.QUALITY_COLORS
 
+-- 背包容器 ID 範圍（WoW 12.0: bag 0-4 = 一般背包，bag 5 = 材料袋）
+local LAST_BAG = 5 -- 含材料袋（Enum.BagIndex.ReagentBag = 5）
 -- 銀行容器 ID（供事件處理使用）
-local FIRST_BANK_BAG = 6 -- CharacterBankTab_1（WoW 12.0: bag 5 = 材料袋，非銀行包）
+local FIRST_BANK_BAG = 6 -- CharacterBankTab_1
 local LAST_BANK_BAG = 11 -- CharacterBankTab_6
 
 --------------------------------------------------------------------------------
@@ -147,11 +149,11 @@ end
 -- 輔助函數
 --------------------------------------------------------------------------------
 
--- 背包 0-4 各欄位加總輔助，fn 為 C_Container 的槽位查詢函數
+-- 背包 0-LAST_BAG 各欄位加總輔助，fn 為 C_Container 的槽位查詢函數
 -- 使用 (fn(bag)) 限制取第一個回傳值，避免 GetContainerNumFreeSlots 回傳兩個值時的意外累加
 local function SumBagSlots(fn)
     local total = 0
-    for bag = 0, 4 do
+    for bag = 0, LAST_BAG do
         total = total + ((fn(bag)) or 0)
     end
     return total
@@ -738,7 +740,7 @@ local function CreateBagFrame()
         -- 分離視圖：每個背包佔獨立行區塊，需預算額外行數
         local layoutIdx = 0
         local prevBag = nil
-        for bag = 0, 4 do
+        for bag = 0, LAST_BAG do
             local numBagSlots = C_Container.GetContainerNumSlots(bag)
             if numBagSlots > 0 then
                 if prevBag ~= nil then
@@ -858,7 +860,7 @@ local function CreateBagFrame()
 
     -- 收集所有格子的 bag/slot 資料（支援反轉順序）
     local slotList = {}
-    for bag = 0, 4 do
+    for bag = 0, LAST_BAG do
         local numSlots = C_Container.GetContainerNumSlots(bag)
         for slot = 1, numSlots do
             slotList[#slotList + 1] = { bag = bag, slot = slot }
@@ -954,7 +956,7 @@ end
 
 local function UpdateAllSlots()
     -- 預計算所有背包的專業容器顏色（避免逐格重複呼叫）
-    for bag = 0, 4 do
+    for bag = 0, LAST_BAG do
         GetBagTypeColor(bag)
     end
     for _, button in pairs(slots) do
@@ -989,7 +991,7 @@ local function RefreshBagLayout()
 
     -- 收集所有格子的 bag/slot 資料（支援反轉順序）
     local slotList = {}
-    for bag = 0, 4 do
+    for bag = 0, LAST_BAG do
         local numSlots = C_Container.GetContainerNumSlots(bag)
         for slot = 1, numSlots do
             slotList[#slotList + 1] = { bag = bag, slot = slot }
@@ -1007,7 +1009,7 @@ local function RefreshBagLayout()
     if db and db.splitBags then
         local layoutIdx = 0
         local prevBag = nil
-        for bag = 0, 4 do
+        for bag = 0, LAST_BAG do
             local numBagSlots = C_Container.GetContainerNumSlots(bag)
             if numBagSlots > 0 then
                 if prevBag ~= nil then
