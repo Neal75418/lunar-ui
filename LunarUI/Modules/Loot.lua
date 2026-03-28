@@ -420,10 +420,10 @@ local function CleanupLoot()
     if lootCombatRestoreFrame then
         lootCombatRestoreFrame:UnregisterAllEvents()
         lootCombatRestoreFrame:SetScript("OnEvent", nil)
-        -- Blizzard LootFrame 可能因 Show hook 被設為 alpha=0，此處還原
-        if _G.LootFrame then
-            _G.LootFrame:SetAlpha(1)
-        end
+    end
+    -- 無條件還原 Blizzard LootFrame alpha（Show hook 可能已設為 0）
+    if _G.LootFrame then
+        _G.LootFrame:SetAlpha(1)
     end
 end
 

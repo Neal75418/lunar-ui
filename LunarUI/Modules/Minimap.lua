@@ -1428,8 +1428,15 @@ end
 
 -- OnUpdate 清理函數
 function LunarUI.CleanupMinimap()
-    -- 戰鬥中不操作 protected frames（pcall 會吞掉錯誤但 savedState 會被清除）
+    -- 戰鬥中不操作 protected frames — 延遲到脫戰後執行
     if InCombatLockdown() then
+        local deferFrame = CreateFrame("Frame")
+        deferFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        deferFrame:SetScript("OnEvent", function(f)
+            f:UnregisterAllEvents()
+            f:SetScript("OnEvent", nil)
+            LunarUI.CleanupMinimap()
+        end)
         return
     end
     -- 取消縮放重置計時器

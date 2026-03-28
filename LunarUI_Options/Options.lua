@@ -2093,8 +2093,8 @@ local options = {
                     order = 3,
                     type = "range",
                     name = L.slotsPerRow,
-                    min = 8,
-                    max = 16,
+                    min = 6,
+                    max = 24,
                     step = 1,
                     get = function()
                         return GetDB().bags.slotsPerRow
@@ -2871,6 +2871,8 @@ local options = {
                         local db = GetDB()
                         if db and db.loot then
                             db.loot.enabled = v
+                            -- hooksecurefunc 無法撤銷，需 /reload 生效
+                            LunarUI:Print(L["RequiresReload"] or "|cffff8800Requires /reload to take effect|r")
                         end
                     end,
                     width = "full",
