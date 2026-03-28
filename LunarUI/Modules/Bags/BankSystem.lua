@@ -169,6 +169,13 @@ local function ResizeBankFrame(actualSlotCount)
     local numRows = mathMin(displayRows, totalRows)
     numRows = mathMax(numRows, 1) -- 至少 1 行
 
+    -- 高度限制：不超過螢幕 75%
+    local screenHeight = GetScreenHeight()
+    local maxHeight = screenHeight * 0.75
+    local overhead = PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
+    local maxRows = mathFloor((maxHeight - overhead + SLOT_SPACING) / (SLOT_SIZE + SLOT_SPACING))
+    numRows = mathMin(numRows, mathMax(maxRows, 1))
+
     -- 記錄顯示的格子數上限（供 caller 隱藏多餘格子）
     bankFrame.displaySlots = numRows * bankCols
 
