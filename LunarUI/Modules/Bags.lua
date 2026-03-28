@@ -1527,6 +1527,9 @@ end
 LunarUI.InitializeBags = InitializeBags
 LunarUI.GetTotalSlots = GetTotalSlots
 LunarUI.GetTotalFreeSlots = GetTotalFreeSlots
+LunarUI.BagsGetBagFrame = function()
+    return bagFrame
+end
 
 LunarUI:RegisterModule("Bags", {
     onEnable = InitializeBags,

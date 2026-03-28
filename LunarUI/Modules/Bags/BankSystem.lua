@@ -93,7 +93,7 @@ local function GetTotalBankFreeSlots()
     return free
 end
 
--- 動態計算銀行每行格數，避免框架超出螢幕
+-- 動態計算銀行每行格數，同時限制寬度和高度不超出螢幕
 local function GetBankSlotsPerRow(totalSlots)
     local c = GetConstants()
     local SLOT_SIZE = c.SLOT_SIZE
@@ -103,13 +103,21 @@ local function GetBankSlotsPerRow(totalSlots)
     local HEADER_HEIGHT = c.HEADER_HEIGHT
     local FOOTER_HEIGHT = c.FOOTER_HEIGHT
 
+    -- 高度限制：不超過螢幕 80%
     local screenHeight = GetScreenHeight()
-    local maxHeight = screenHeight * 0.80 -- 留 20% 邊距
+    local maxHeight = screenHeight * 0.80
     local overhead = PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
     local maxRows = mathFloor((maxHeight - overhead + SLOT_SPACING) / (SLOT_SIZE + SLOT_SPACING))
     maxRows = mathMax(maxRows, 1)
+
+    -- 寬度限制：不超過螢幕 55%（留空間給背包並排）
+    local screenWidth = GetScreenWidth()
+    local maxWidth = screenWidth * 0.55
+    local maxCols = mathFloor((maxWidth - PADDING * 2 + SLOT_SPACING) / (SLOT_SIZE + SLOT_SPACING))
+    maxCols = mathMax(maxCols, SLOTS_PER_ROW)
+
     local neededCols = mathCeil(totalSlots / maxRows)
-    return mathMax(SLOTS_PER_ROW, neededCols)
+    return mathMin(mathMax(SLOTS_PER_ROW, neededCols), maxCols)
 end
 
 -- 掃描銀行格子，找出最後一個有物品的 slotID
@@ -592,6 +600,14 @@ local function OpenBank()
         RefreshBankLayout()
         bankFrame:Show()
         isBankOpen = true
+
+        -- 並排：把背包錨定到銀行右側（ElvUI 模式）
+        local bagFrame = LunarUI.BagsGetBagFrame and LunarUI.BagsGetBagFrame()
+        if bagFrame and bagFrame:IsShown() then
+            bagFrame._savedPoint = { bagFrame:GetPoint() }
+            bagFrame:ClearAllPoints()
+            bagFrame:SetPoint("TOPLEFT", bankFrame, "TOPRIGHT", 10, 0)
+        end
     end
 end
 
@@ -619,6 +635,14 @@ local function CloseBank()
 
         -- 重設排序旗標：銀行關閉時排序事件可能不再到達，避免 isSorting 永遠為 true
         LunarUI.BagsSetSorting(false)
+
+        -- 並排恢復：背包回到原位
+        local bagFrame = LunarUI.BagsGetBagFrame and LunarUI.BagsGetBagFrame()
+        if bagFrame and bagFrame._savedPoint then
+            bagFrame:ClearAllPoints()
+            bagFrame:SetPoint(unpack(bagFrame._savedPoint))
+            bagFrame._savedPoint = nil
+        end
     end
 end
 

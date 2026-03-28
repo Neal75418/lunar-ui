@@ -75,6 +75,9 @@ _G.C_TransmogCollection = {
 _G.GetScreenHeight = function()
     return 1080
 end
+_G.GetScreenWidth = function()
+    return 1920
+end
 _G.GetInventoryItemLink = function()
     return nil
 end
