@@ -134,6 +134,7 @@ end
 
 local eventProfilingEnabled = false
 local eventCounts = {} -- { [eventName] = number }
+LunarUI._eventCounts = eventCounts -- 導出供測試存取
 local eventProfilingFrame = nil
 local eventProfilingStart = 0 -- 啟用時的時間戳（微秒）
 local eventProfilingEnd = nil -- 停用時的時間戳（微秒），nil 代表仍在監控中

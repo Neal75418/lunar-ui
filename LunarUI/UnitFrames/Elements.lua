@@ -261,23 +261,32 @@ local function CreateHealPrediction(frame, unit)
         return
     end
 
-    -- 自身治療預測（錨定在血條上而非框架，避免 portrait 偏移導致寬度溢出）
+    -- 自身治療預測（從 health fill 右端延伸，符合 oUF healthprediction 錨點慣例）
     local healingPlayer = CreateFrame("StatusBar", nil, hp)
     healingPlayer:SetStatusBarTexture(GetStatusBarTexture())
     healingPlayer:SetStatusBarColor(0.0, 0.8, 0.0, 0.4)
-    healingPlayer:SetAllPoints(hp)
+    healingPlayer:SetPoint("TOP")
+    healingPlayer:SetPoint("BOTTOM")
+    healingPlayer:SetPoint("LEFT", hp:GetStatusBarTexture(), "RIGHT")
+    healingPlayer:SetWidth(hp:GetWidth())
 
     -- 他人治療預測
     local healingOther = CreateFrame("StatusBar", nil, hp)
     healingOther:SetStatusBarTexture(GetStatusBarTexture())
     healingOther:SetStatusBarColor(0.0, 0.6, 0.0, 0.3)
-    healingOther:SetAllPoints(hp)
+    healingOther:SetPoint("TOP")
+    healingOther:SetPoint("BOTTOM")
+    healingOther:SetPoint("LEFT", healingPlayer:GetStatusBarTexture(), "RIGHT")
+    healingOther:SetWidth(hp:GetWidth())
 
     -- 吸收盾
     local damageAbsorb = CreateFrame("StatusBar", nil, hp)
     damageAbsorb:SetStatusBarTexture(GetStatusBarTexture())
     damageAbsorb:SetStatusBarColor(1.0, 1.0, 1.0, 0.3)
-    damageAbsorb:SetAllPoints(hp)
+    damageAbsorb:SetPoint("TOP")
+    damageAbsorb:SetPoint("BOTTOM")
+    damageAbsorb:SetPoint("LEFT", healingOther:GetStatusBarTexture(), "RIGHT")
+    damageAbsorb:SetWidth(hp:GetWidth())
 
     frame.HealthPrediction = {
         healingPlayer = healingPlayer,

@@ -213,4 +213,40 @@ describe("Event profiling", function()
         LunarUI:PrintEventTimings()
         assert.truthy(printLog[#printLog]:find("No event data"))
     end)
+
+    it("prints rate with correct color thresholds", function()
+        LunarUI:EnableEventProfiling()
+        -- 模擬事件計數（直接寫入內部 eventCounts）
+        if LunarUI._eventCounts then
+            LunarUI._eventCounts["TEST_EVENT_HIGH"] = 500 -- 高頻事件
+            LunarUI._eventCounts["TEST_EVENT_LOW"] = 5 -- 低頻事件
+        end
+        -- 推進時間 5 秒（5,000,000 微秒）
+        timestampValue = 5000000
+        wipe(printLog)
+        LunarUI:PrintEventTimings()
+
+        -- 驗證有輸出（非 "No event data"）
+        local hasOutput = false
+        local hasRedColor = false
+        local hasGreenColor = false
+        for _, msg in ipairs(printLog) do
+            if msg:find("TEST_EVENT_HIGH") then
+                hasOutput = true
+                -- 500/5sec = 100/sec → 超過 EVENT_RATE_CRIT (100) → 紅色
+                if msg:find("ff4444") then
+                    hasRedColor = true
+                end
+            end
+            if msg:find("TEST_EVENT_LOW") then
+                -- 5/5sec = 1/sec → 低於 EVENT_RATE_WARN (30) → 綠色
+                if msg:find("00ff00") then
+                    hasGreenColor = true
+                end
+            end
+        end
+        assert.is_true(hasOutput, "PrintEventTimings should output event data")
+        assert.is_true(hasRedColor, "High-rate events should be red (>100/sec)")
+        assert.is_true(hasGreenColor, "Low-rate events should be green (<30/sec)")
+    end)
 end)

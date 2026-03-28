@@ -314,6 +314,9 @@ local options = {
                                 RefreshUI()
                             end,
                         }
+                    end
+
+                    if opts.hasHealPrediction then
                         args.showHealPrediction = {
                             order = 22,
                             type = "toggle",
@@ -429,6 +432,7 @@ local options = {
                             hMax = 100,
                             hasAuras = true,
                             hasPortrait = true,
+                            hasHealPrediction = true,
                             hasCastbar = true,
                         },
                     },
@@ -2355,36 +2359,7 @@ local options = {
                     end,
                     width = "full",
                 },
-                width = {
-                    order = 2,
-                    type = "range",
-                    name = L.width,
-                    hidden = true, -- 尚未接到聊天框實際佈局
-                    min = 200,
-                    max = 600,
-                    step = 10,
-                    get = function()
-                        return GetDB().chat.width
-                    end,
-                    set = function(_, v)
-                        GetDB().chat.width = v
-                    end,
-                },
-                height = {
-                    order = 3,
-                    type = "range",
-                    name = L.height,
-                    hidden = true, -- 尚未接到聊天框實際佈局
-                    min = 100,
-                    max = 400,
-                    step = 10,
-                    get = function()
-                        return GetDB().chat.height
-                    end,
-                    set = function(_, v)
-                        GetDB().chat.height = v
-                    end,
-                },
+                -- chat.width / chat.height 已移除（無生產代碼消費）
                 improvedColors = {
                     order = 4,
                     type = "toggle",
