@@ -2894,6 +2894,9 @@ local options = {
                             end,
                             set = function(_, v)
                                 GetDB().databars.experience.enabled = v
+                                if LunarUI.RefreshDataBarsCache then
+                                    LunarUI.RefreshDataBarsCache()
+                                end
                                 RefreshUI()
                             end,
                             width = "full",
@@ -2913,6 +2916,9 @@ local options = {
                             end,
                             set = function(_, v)
                                 GetDB().databars.experience.textFormat = v
+                                if LunarUI.RefreshDataBarsCache then
+                                    LunarUI.RefreshDataBarsCache()
+                                end
                                 RefreshUI()
                             end,
                         },
@@ -2947,6 +2953,9 @@ local options = {
                             end,
                             set = function(_, v)
                                 GetDB().databars.reputation.enabled = v
+                                if LunarUI.RefreshDataBarsCache then
+                                    LunarUI.RefreshDataBarsCache()
+                                end
                                 RefreshUI()
                             end,
                             width = "full",
@@ -2966,6 +2975,9 @@ local options = {
                             end,
                             set = function(_, v)
                                 GetDB().databars.reputation.textFormat = v
+                                if LunarUI.RefreshDataBarsCache then
+                                    LunarUI.RefreshDataBarsCache()
+                                end
                                 RefreshUI()
                             end,
                         },
@@ -3000,6 +3012,9 @@ local options = {
                             end,
                             set = function(_, v)
                                 GetDB().databars.honor.enabled = v
+                                if LunarUI.RefreshDataBarsCache then
+                                    LunarUI.RefreshDataBarsCache()
+                                end
                                 RefreshUI()
                             end,
                             width = "full",
@@ -3019,6 +3034,9 @@ local options = {
                             end,
                             set = function(_, v)
                                 GetDB().databars.honor.textFormat = v
+                                if LunarUI.RefreshDataBarsCache then
+                                    LunarUI.RefreshDataBarsCache()
+                                end
                                 RefreshUI()
                             end,
                         },

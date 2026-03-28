@@ -54,19 +54,25 @@ local bars = {} -- 所有已建立的資料條框架
 -- P-perf: 快取 DB 設定，避免事件處理器每次呼叫 GetModuleDB
 local cachedExpEnabled = false
 local cachedExpTextFmt = "percent"
+local cachedExpShowText = true
 local cachedRepEnabled = false
 local cachedRepTextFmt = "percent"
+local cachedRepShowText = true
 local cachedHonEnabled = false
 local cachedHonTextFmt = "percent"
+local cachedHonShowText = true
 
 local function RefreshDataBarsCache()
     local db = LunarUI.GetModuleDB("databars")
     cachedExpEnabled = db and db.experience and db.experience.enabled ~= false
     cachedExpTextFmt = db and db.experience and db.experience.textFormat or "percent"
+    cachedExpShowText = db and db.experience and db.experience.showText ~= false
     cachedRepEnabled = db and db.reputation and db.reputation.enabled ~= false
     cachedRepTextFmt = db and db.reputation and db.reputation.textFormat or "percent"
+    cachedRepShowText = db and db.reputation and db.reputation.showText ~= false
     cachedHonEnabled = db and db.honor and db.honor.enabled ~= false
     cachedHonTextFmt = db and db.honor and db.honor.textFormat or "percent"
+    cachedHonShowText = db and db.honor and db.honor.showText ~= false
 end
 local eventFrame -- 共用事件處理框架
 
@@ -203,10 +209,8 @@ local function UpdateExperience()
         bar.rested:Hide()
     end
 
-    -- 文字（使用快取的 textFormat）
-    local expDb = LunarUI.GetModuleDB("databars")
-    local expCfg = expDb and expDb.experience
-    if expCfg and expCfg.showText then
+    -- 文字（全部使用快取值，不再呼叫 GetModuleDB）
+    if cachedExpShowText then
         bar.text:SetText(FormatBarText(cachedExpTextFmt, cur, max, "XP"))
         bar.text:Show()
     else
@@ -321,10 +325,8 @@ local function UpdateReputation()
     bar:SetStatusBarColor(color.r, color.g, color.b)
     bar.rested:Hide()
 
-    -- 文字（使用快取的 textFormat）
-    local repDb = LunarUI.GetModuleDB("databars")
-    local repCfg = repDb and repDb.reputation
-    if repCfg and repCfg.showText then
+    -- 文字（全部使用快取值）
+    if cachedRepShowText then
         local displayName = isFriendship and friendName or name
         bar.text:SetText(FormatBarText(cachedRepTextFmt, cur, max, displayName))
         bar.text:Show()
@@ -421,10 +423,8 @@ local function UpdateHonor()
     bar:SetStatusBarColor(1.0, 0.24, 0.0) -- 橙紅色
     bar.rested:Hide()
 
-    -- 文字（使用快取的 textFormat）
-    local honDb = LunarUI.GetModuleDB("databars")
-    local honCfg = honDb and honDb.honor
-    if honCfg and honCfg.showText then
+    -- 文字（全部使用快取值）
+    if cachedHonShowText then
         local label = format("%s %d", L["Honor"] or "Honor", level)
         bar.text:SetText(FormatBarText(cachedHonTextFmt, cur, max, label))
         bar.text:Show()
