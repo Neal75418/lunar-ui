@@ -31,11 +31,7 @@ LunarUI.L = Engine.L
 -- 插件資訊與常數
 --------------------------------------------------------------------------------
 
-LunarUI.name = ADDON_NAME
 LunarUI.version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "dev"
-
--- oUF 參照（oUF 載入後設定）
-LunarUI.oUF = nil
 
 --------------------------------------------------------------------------------
 -- 模組註冊系統

@@ -31,6 +31,7 @@ local lunarMinimapIsSquare = false
 local MINIMAP_SIZE = 180
 local BORDER_SIZE = 4
 local COORD_UPDATE_INTERVAL = 0.2
+local DEFAULT_BORDER_COLOR = { r = 0.15, g = 0.12, b = 0.08, a = 1 }
 
 local backdropTemplate = LunarUI.backdropTemplate
 
@@ -811,7 +812,7 @@ local function CreateMinimapFrame()
     end
 
     local size = db.size or MINIMAP_SIZE
-    local bc = db.borderColor or { r = 0.15, g = 0.12, b = 0.08, a = 1 }
+    local bc = db.borderColor or DEFAULT_BORDER_COLOR
     local zoneFontSize = db.zoneFontSize or 12
     local zoneFontOutline = db.zoneFontOutline or "OUTLINE"
     local coordFontSize = db.coordFontSize or 10
@@ -1274,7 +1275,7 @@ function LunarUI.RefreshMinimap()
     end
 
     local size = db.size or MINIMAP_SIZE
-    local bc = db.borderColor or { r = 0.15, g = 0.12, b = 0.08, a = 1 }
+    local bc = db.borderColor or DEFAULT_BORDER_COLOR
 
     -- 調整大小
     minimapFrame:SetSize(size + BORDER_SIZE * 2, size + BORDER_SIZE * 2)
@@ -1307,11 +1308,11 @@ function LunarUI.RefreshMinimap()
         end
     end
 
-    -- 時鐘文字
+    -- 時鐘文字（共用座標字體設定）
     if clockText then
-        local coordFontSize = db.coordFontSize or 10
-        local coordFontOutline = db.coordFontOutline or "OUTLINE"
-        clockText:SetFont(LunarUI.GetSelectedFont(), coordFontSize, coordFontOutline)
+        local fontSize = db.coordFontSize or 10
+        local fontOutline = db.coordFontOutline or "OUTLINE"
+        clockText:SetFont(LunarUI.GetSelectedFont(), fontSize, fontOutline)
         if db.showClock then
             clockText:Show()
             lastClockString = nil -- 強制重繪（格式可能改變）

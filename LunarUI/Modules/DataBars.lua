@@ -28,6 +28,17 @@ local function GetStatusBarTexture()
     end
     return statusBarTexture
 end
+
+-- 串聯 statusBarTexture 失效鏈，確保 Options 更換材質時 DataBars 也同步清除
+do
+    local _prev = LunarUI.InvalidateStatusBarTextureCache
+    LunarUI.InvalidateStatusBarTextureCache = function()
+        statusBarTexture = nil
+        if _prev then
+            _prev()
+        end
+    end
+end
 local format = string.format
 local mathFloor = math.floor
 local mathMax = math.max
