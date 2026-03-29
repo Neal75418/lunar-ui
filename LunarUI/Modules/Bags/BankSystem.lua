@@ -281,7 +281,7 @@ local function CreateBankFrame()
     bankFrame:SetBackdropColor(C.bg[1], C.bg[2], C.bg[3], FRAME_ALPHA)
     bankFrame:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1) -- 銀行用金色邊框
     bankFrame:SetFrameStrata("HIGH")
-    bankFrame:SetFrameLevel(100) -- 高於背包，避免同時開啟時互相穿透
+    bankFrame:SetFrameLevel(20) -- 略高於背包（預設 ~1），避免同層重疊時互相穿透
     bankFrame:SetMovable(true)
     bankFrame:EnableMouse(true)
     bankFrame:SetClampedToScreen(true)
@@ -337,19 +337,12 @@ local function CreateBankFrame()
         bankSearchTimer = C_Timer.NewTimer(SEARCH_DEBOUNCE, ApplyBankSearch)
     end)
 
-    -- 排序按鈕
-    local bankSortButton = CreateFrame("Button", nil, bankFrame, "BackdropTemplate")
+    -- 排序按鈕（與背包相同風格：UIPanelButtonTemplate + SkinButton）
+    local bankSortButton = CreateFrame("Button", nil, bankFrame, "UIPanelButtonTemplate")
     bankSortButton:SetSize(60, 20)
     bankSortButton:SetPoint("TOPLEFT", title, "TOPRIGHT", 10, 2)
-    bankSortButton:SetBackdrop(backdropTemplate)
-    bankSortButton:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
-    bankSortButton:SetBackdropBorderColor(BORDER_COLOR_BANK[1], BORDER_COLOR_BANK[2], BORDER_COLOR_BANK[3], 1)
-
-    local sortText = bankSortButton:CreateFontString(nil, "OVERLAY")
-    LunarUI.SetFont(sortText, 11, "OUTLINE")
-    sortText:SetPoint("CENTER")
-    sortText:SetText(L["Sort"] or "Sort")
-    sortText:SetTextColor(0.8, 0.8, 0.8)
+    bankSortButton:SetText(L["Sort"] or "Sort")
+    LunarUI.SkinButton(bankSortButton)
 
     bankSortButton:SetScript("OnClick", function()
         if InCombatLockdown() then
@@ -357,14 +350,6 @@ local function CreateBankFrame()
         end
         LunarUI.BagsSetSorting(true)
         C_Container.SortBankBags()
-    end)
-
-    bankSortButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(C.bgButtonHover[1], C.bgButtonHover[2], C.bgButtonHover[3], C.bgButtonHover[4])
-    end)
-
-    bankSortButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(C.bgIcon[1], C.bgIcon[2], C.bgIcon[3], C.bgIcon[4])
     end)
 
     -- 格子容器
@@ -439,7 +424,7 @@ local function CreateBankFrame()
     local freeSlots = bankFrame:CreateFontString(nil, "OVERLAY")
     LunarUI.SetFont(freeSlots, 10, "OUTLINE")
     freeSlots:SetPoint("BOTTOMRIGHT", -PADDING, 8)
-    freeSlots:SetTextColor(1, 0.82, 0)
+    freeSlots:SetTextColor(0.7, 0.7, 0.7)
     bankFrame.freeSlots = freeSlots
 
     return bankFrame

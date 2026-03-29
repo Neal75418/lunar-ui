@@ -262,6 +262,14 @@ local function SetupSlotBase(button, bag, slot)
         button.flash:Hide()
     end
 
+    -- 隱藏 ContainerFrameItemButtonTemplate 內建的覆蓋材質（我們用自訂 LunarBorder）
+    for _, key in ipairs({ "searchOverlay", "ItemContextOverlay", "IconOverlay", "IconBorder" }) do
+        if button[key] then
+            button[key]:Hide()
+            button[key]:SetAlpha(0)
+        end
+    end
+
     -- 設定圖示樣式
     local icon = button.icon or _G[button:GetName() .. "IconTexture"]
     if icon then
@@ -1524,7 +1532,6 @@ function LunarUI.CleanupBags()
 end
 
 -- 匯出
-LunarUI.InitializeBags = InitializeBags
 LunarUI.GetTotalSlots = GetTotalSlots
 LunarUI.GetTotalFreeSlots = GetTotalFreeSlots
 LunarUI.BagsGetBagFrame = function()
