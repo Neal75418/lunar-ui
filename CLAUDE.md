@@ -5,12 +5,12 @@
 - **平台**：WoW 12.0.1（Interface: 120001），Lua 5.1（LuaJIT）
 - **架構**：Ace3 + oUF + LibActionButton + LibSharedMedia
 - **組成**：
-  - `LunarUI/` &mdash; 主插件（69 個 Lua 檔案，~25,500 行）
+  - `LunarUI/` &mdash; 主插件
   - `LunarUI_Options/` &mdash; LoadOnDemand 設定介面
   - `LunarUI_Debug/` &mdash; LoadOnDemand 診斷工具（`/lunar debugvigor` 時自動載入）
 - **進入點**：`Core/Init.lua` 最先執行，建立 `Engine.LunarUI`
 - **模組存取**：`local _ADDON_NAME, Engine = ...` → `Engine.LunarUI`
-- **Skin 模組**：23 個 Blizzard 介面換膚（`LunarUI/Modules/Skins/`）
+- **Skin 模組**：22 個 Blizzard 介面換膚（`LunarUI/Modules/Skins/`）
 
 ---
 
@@ -71,7 +71,7 @@ graph LR
 ## 模組系統 API
 
 ```lua
--- 註冊模組（Core/Init.lua:135）
+-- 註冊模組（Core/Init.lua）
 LunarUI:RegisterModule("ModuleName", {
     onEnable  = function() ... end,
     onDisable = function() ... end,   -- 可選，反向順序執行
@@ -135,33 +135,33 @@ LunarUI.CreateIconBorder(parent, options)
 
 ## WoW 12.0 Taint 避免模式
 
-| 情境             | 錯誤做法                                   | 正確做法                                       |
-|:---------------|:---------------------------------------|:-------------------------------------------|
-| Hook 全域函數      | 直接覆寫 `_G.Fn = ...`                     | `hooksecurefunc(obj, "Method", fn)`        |
-| Hook 框架腳本      | 替換 `SetScript`                         | `frame:HookScript("OnEvent", fn)`          |
-| 操作安全框架方法       | 直接替換 `bar.SetScale`                    | `hooksecurefunc` + 再入防護旗標                  |
-| 操作 Blizzard 框架 | 直接操作                                   | `if InCombatLockdown() then return end`    |
-| 讀取光環資料         | 直接存取 name / duration                   | `pcall` 安全讀取                               |
-| 讀取光環 boolean 欄位 | `data.isStealable == true`                 | `pcall(function() return data.isStealable == true end)` |
-| Tooltip 掃描     | `_G[tooltip:GetName().."TextLeft"..i]` | `tooltip:GetTooltipData()` + `_G` fallback |
-| Tooltip 方法呼叫   | 直接呼叫                                   | `pcall(GameTooltip.SetHyperlink, ...)`     |
+| 情境              | 錯誤做法                                   | 正確做法                                                    |
+|:----------------|:---------------------------------------|:--------------------------------------------------------|
+| Hook 全域函數       | 直接覆寫 `_G.Fn = ...`                     | `hooksecurefunc(obj, "Method", fn)`                     |
+| Hook 框架腳本       | 替換 `SetScript`                         | `frame:HookScript("OnEvent", fn)`                       |
+| 操作安全框架方法        | 直接替換 `bar.SetScale`                    | `hooksecurefunc` + 再入防護旗標                               |
+| 操作 Blizzard 框架  | 直接操作                                   | `if InCombatLockdown() then return end`                 |
+| 讀取光環資料          | 直接存取 name / duration                   | `pcall` 安全讀取                                            |
+| 讀取光環 boolean 欄位 | `data.isStealable == true`             | `pcall(function() return data.isStealable == true end)` |
+| Tooltip 掃描      | `_G[tooltip:GetName().."TextLeft"..i]` | `tooltip:GetTooltipData()` + `_G` fallback              |
+| Tooltip 方法呼叫    | 直接呼叫                                   | `pcall(GameTooltip.SetHyperlink, ...)`                  |
 
 ---
 
 ## 效能慣例
 
-| 技巧          | 做法                             | 範例                                                                    |
-|:------------|:-------------------------------|:----------------------------------------------------------------------|
-| 減少全域查找      | 模組層級 upvalue                   | `local format = string.format`                                        |
-| stdlib upvalue 命名 | camelCase 取代 snake_case         | `local mathFloor = math.floor`（非 `math_floor`）                        |
-| 降低 GC 壓力    | 平行陣列取代 table-of-tables         | `icons[i]`, `durations[i]`                                            |
-| 批次處理        | 髒旗標 + 批次計時器                    | 取代逐事件 closure                                                         |
-| 卸載閒置腳本      | 動畫結束即移除 OnUpdate               | `SetScript("OnUpdate", nil)`                                          |
-| O(1) 查詢     | 高頻查詢用快取表                       | `spellTextureCache[spellID]` + 上限淘汰                                   |
-| 快取設定值       | 動畫期間避免每幀查 DB                   | `cachedFadeDuration`                                                  |
-| 自動回收        | FontString weak table registry | `__mode = "k"`                                                        |
-| 合併 OnUpdate | 多職責合併為單一 handler               | 協調器 + 子函數分離（如 ActionBars fade + hover）                                |
-| 函數拆分        | 過長函數拆為協調器 + 子函數                | `UpdateFadeAndHover` → `UpdateFadeAnimation` + `UpdateHoverDetection` |
+| 技巧                | 做法                             | 範例                                                                    |
+|:------------------|:-------------------------------|:----------------------------------------------------------------------|
+| 減少全域查找            | 模組層級 upvalue                   | `local format = string.format`                                        |
+| stdlib upvalue 命名 | camelCase 取代 snake_case        | `local mathFloor = math.floor`（非 `math_floor`）                        |
+| 降低 GC 壓力          | 平行陣列取代 table-of-tables         | `icons[i]`, `durations[i]`                                            |
+| 批次處理              | 髒旗標 + 批次計時器                    | 取代逐事件 closure                                                         |
+| 卸載閒置腳本            | 動畫結束即移除 OnUpdate               | `SetScript("OnUpdate", nil)`                                          |
+| O(1) 查詢           | 高頻查詢用快取表                       | `spellTextureCache[spellID]` + 上限淘汰                                   |
+| 快取設定值             | 動畫期間避免每幀查 DB                   | `cachedFadeDuration`                                                  |
+| 自動回收              | FontString weak table registry | `__mode = "k"`                                                        |
+| 合併 OnUpdate       | 多職責合併為單一 handler               | 協調器 + 子函數分離（如 ActionBars fade + hover）                                |
+| 函數拆分              | 過長函數拆為協調器 + 子函數                | `UpdateFadeAndHover` → `UpdateFadeAnimation` + `UpdateHoverDetection` |
 
 ---
 
@@ -188,7 +188,7 @@ graph LR
 | **匯出慣例**    | `LunarUI.FnName = localFn`，讓 local 純函數可被測試存取                                                     |
 | **命名衝突**    | 多模組有同名 local 函數時用前綴區分（如 `BagsGetItemLevel` vs `GetItemLevel`）                                    |
 | **Mock 要點** | 模組層級有副作用時（`CreateFrame`、`RegisterModule`），需在 spec 內提供完整 stub                                     |
-| **驗證**      | 每次修改後跑 `make check`（等同 `luacheck .` + `stylua --check .` + `locale-check` + `busted spec/`）                       |
+| **驗證**      | 每次修改後跑 `make check`（等同 `luacheck .` + `stylua --check .` + `locale-check` + `busted spec/`）      |
 
 ---
 
