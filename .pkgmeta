@@ -19,14 +19,10 @@ externals:
   LunarUI/Libs/AceConfigDialog-3.0: https://github.com/WoWUIDev/Ace3.git/AceConfig-3.0/AceConfigDialog-3.0
   LunarUI/Libs/AceConfigRegistry-3.0: https://github.com/WoWUIDev/Ace3.git/AceConfig-3.0/AceConfigRegistry-3.0
   LunarUI/Libs/AceGUI-3.0: https://github.com/WoWUIDev/Ace3.git/AceGUI-3.0
-  # Other Libraries
+  # Other Libraries (always latest — no tag pinning; see scripts/update-libs.sh)
   LunarUI/Libs/LibSharedMedia-3.0: https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0
-  LunarUI/Libs/LibActionButton-1.0:
-    url: https://github.com/Nevcairiel/LibActionButton-1.0.git
-    tag: 0.57
-  LunarUI/Libs/oUF:
-    url: https://github.com/oUF-wow/oUF.git
-    tag: 13.3.1
+  LunarUI/Libs/LibActionButton-1.0: https://github.com/Nevcairiel/LibActionButton-1.0.git
+  LunarUI/Libs/oUF: https://github.com/oUF-wow/oUF.git
 
 ignore:
   - README.md

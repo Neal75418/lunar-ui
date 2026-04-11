@@ -72,16 +72,14 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 
 ## 依賴庫
 
-所有第三方庫位於 `LunarUI/Libs/`，由根目錄 [.pkgmeta](.pkgmeta) 管理，不納入版本控制。
+所有第三方庫位於 `LunarUI/Libs/`，由根目錄 [.pkgmeta](.pkgmeta) 管理，不納入版本控制；執行 `./scripts/update-libs.sh` 拉最新版。
 
-| 庫                                                                                  | 版本     | 用途                      |
-|:-----------------------------------------------------------------------------------|:-------|:------------------------|
-| **[oUF](https://github.com/oUF-wow/oUF)**                                          | 13.1.1 | UnitFrames / Nameplates |
-| **[Ace3](https://github.com/WoWUIDev/Ace3)**                                       | r1390  | 框架 / 事件 / DB / 設定       |
-| **[LibSharedMedia-3.0](https://www.curseforge.com/wow/addons/libsharedmedia-3-0)** | 11.2.1 | 材質 / 字體                 |
-| **[LibActionButton-1.0](https://github.com/Nevcairiel/LibActionButton-1.0)**       | 0.57   | ActionBars              |
-
-> 更新執行 `./scripts/update-libs.sh`；若失敗參考 [.pkgmeta](.pkgmeta) 手動處理。
+| 庫 | 用途 |
+|:---|:---|
+| **[oUF](https://github.com/oUF-wow/oUF)** | UnitFrames / Nameplates |
+| **[Ace3](https://github.com/WoWUIDev/Ace3)** | 框架 / 事件 / DB / 設定 |
+| **[LibSharedMedia-3.0](https://www.wowace.com/projects/libsharedmedia-3-0)** | 材質 / 字體 |
+| **[LibActionButton-1.0](https://github.com/Nevcairiel/LibActionButton-1.0)** | ActionBars |
 
 ## 故障排除
 
