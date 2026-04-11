@@ -1,4 +1,3 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if, undefined-global
 --[[
     LunarUI - 自訂 oUF Text Tags
     在 oUF 內建 tag 之上擴展格式化 tag，供單位框架文字使用
@@ -7,10 +6,14 @@
     oUF 會自動根據 Events 表監聽事件並更新文字
 ]]
 
-local _ADDON_NAME, Engine = ...
+---@diagnostic disable: undefined-field
+local _, Engine = ...
 local LunarUI = Engine.LunarUI
 
-local oUF = Engine.oUF or _G.LunarUF or _G.oUF
+-- oUF 透過 TOC X-oUF 欄位注入 LunarUF，或 fallback 到 oUF 全域
+-- undefined-field disable：Engine 為動態 table，無型別定義；LunarUF/oUF 為
+-- TOC runtime 注入的全域，沒有 stub 能宣告這些欄位存在於 _G
+local oUF = Engine.oUF or LunarUF or _G.oUF
 if not oUF then
     return
 end

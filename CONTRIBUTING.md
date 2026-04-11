@@ -48,7 +48,7 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 - **DB 存取**：使用 `LunarUI.GetModuleDB(key)` 取代 `LunarUI.db and LunarUI.db.profile.xxx`
 - **效能 upvalue**：`local format = string.format`、`local mathFloor = math.floor`
 - **匯出慣例**：`LunarUI.FnName = localFn`，讓 local 純函數可被測試存取
-- **EmmyLua 診斷**：所有 `.lua` 檔案第一行加 `---@diagnostic disable:` 抑制已知誤報
+- **EmmyLua 診斷**：預設**不加** `---@diagnostic disable:`；純邏輯檔應維持診斷開啟。僅當 stub 型別確實無法修正時才加 narrowed 形式（只列真正誤報的 code），並附行內註解說明原因。參考 [LunarUI/Core/Tags.lua](LunarUI/Core/Tags.lua) / [LunarUI/Core/Serialization.lua](LunarUI/Core/Serialization.lua)
 - **型別定義**：`wow_api.def.lua`、`spec/busted.def.lua` 以 `---@meta` 標記，提供 IDE 補全
 
 ---
@@ -58,16 +58,27 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 專案提供 [Makefile](Makefile) 整合所有開發指令：
 
 ```bash
-make test         # 執行 busted 單元測試
-make lint         # 執行 luacheck 靜態分析
-make format       # 檢查 stylua 格式
-make format-fix   # 自動修正格式
-make coverage     # 測試 + 覆蓋率報告（含門檻檢查）
-make check        # 一次跑完 lint + format + locale-check + test
-make locale-check # 檢查語系 key 對稱性
+make test             # 執行 busted 單元測試
+make lint             # 執行 luacheck 靜態分析
+make format           # 檢查 stylua 格式
+make format-fix       # 自動修正格式
+make coverage         # 測試 + ratchet check（對照 .coverage-baseline）
+make coverage-update  # 將當前覆蓋率寫入 .coverage-baseline
+make check            # 一次跑完 lint + format + locale-check + test
+make locale-check     # 檢查語系 key 對稱性
 ```
 
 CI 要求零警告。提交前請確認 `make check` 通過。
+
+### Coverage Ratchet
+
+`make coverage` 會對照 `.coverage-baseline` 檢查覆蓋率**不可退步**：
+
+- 低於 baseline → FAIL，必須補回測試
+- 高於 baseline 1% 以上 → PASS 但提示可以 ratchet up
+
+當覆蓋率自然上升時，跑 `make coverage-update` 把新數字寫進 baseline，commit
+`.coverage-baseline` 一起提交。**baseline 只能往上不能往下**。
 
 ---
 

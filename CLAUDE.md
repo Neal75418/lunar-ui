@@ -128,7 +128,7 @@ LunarUI.CreateIconBorder(parent, options)
 - 事件頻率監控：`/lunar profile events on|off`，純計數 + 每秒速率
 - Skin 個別標籤 locale key（如 `skinCharacter`）與通用分類 key（`Skins`、`SkinsDesc`）均放 `enUS.lua`/`zhTW.lua`；`Options.lua` 的 `local L` 是代理 metatable，無獨立定義
 - WoW 12.0 addon API 使用 `C_AddOns` 命名空間（如 `C_AddOns.LoadAddOn`）
-- 所有 `.lua` 檔案第一行統一加入 `---@diagnostic disable:` 抑制 EmmyLua Analyzer 已知誤報
+- `---@diagnostic disable:` 預設**不加**——純邏輯檔應維持 diagnostic 開啟。僅當 stub 型別無法修正時才加 narrowed 形式（只列真正誤報的 code）並附行內註解說明原因。範例：[Tags.lua](LunarUI/Core/Tags.lua)（`undefined-field`）、[Serialization.lua](LunarUI/Core/Serialization.lua)（`undefined-field, inject-field`）
 - 型別定義檔：`wow_api.def.lua`（WoW API stub）、`spec/busted.def.lua`（busted/luassert stub），皆以 `---@meta` 標記
 
 ---
@@ -173,7 +173,7 @@ graph LR
     Mock["wow_mock.lua<br/>WoW API Stub"] --> Loader["loader.lua<br/>Engine 建立"]
     Loader --> Spec["*_spec.lua<br/>測試案例（34 檔 / 910 tests）"]
     Spec --> Busted["busted<br/>執行測試"]
-    Busted --> Cov["luacov<br/>覆蓋率報告（門檻 43%）"]
+    Busted --> Cov["luacov<br/>ratchet 檢查<br/>（.coverage-baseline）"]
 
     style TypeDef fill:#2d2d44,stroke:#6c7a89,color:#e0e0e0
     style Mock fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0

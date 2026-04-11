@@ -47,6 +47,8 @@
       "UnitIsFriend",
       "UnitReaction",
       "UnitAffectingCombat",
+      "UnitIsAFK",
+      "LunarUF",
       "UnitThreatSituation",
       "UnitClassification",
       "UnitCreatureType",

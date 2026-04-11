@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch
 --[[
     LunarUI - 名牌系統
     基於 oUF 的名牌系統，支援月相感知
@@ -25,7 +25,7 @@ local format = string.format
 
 -- 等待 oUF
 -- oUF 透過 TOC 的 X-oUF 標頭以 LunarUF 命名空間暴露
-local oUF = Engine.oUF or _G.LunarUF or _G.oUF
+local oUF = Engine.oUF or LunarUF or _G.oUF
 if not oUF then
     return
 end

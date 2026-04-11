@@ -1,10 +1,15 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
+---@diagnostic disable: undefined-field, inject-field
 --[[
     LunarUI - 設定序列化與匯入匯出
     安全的設定序列化（不使用 loadstring）以及匯入/匯出 UI
+
+    diagnostic 窄化原因：
+    - undefined-field：CreateFrame("EditBox", ...) stub 回傳 Frame 而非 EditBox
+      子型別，SetText/SetMultiLine 等方法誤報
+    - inject-field：frame.editBox = editBox 形式的欄位注入
 ]]
 
-local _ADDON_NAME, Engine = ...
+local _, Engine = ...
 local LunarUI = Engine.LunarUI
 local mathAbs = math.abs
 local mathHuge = math.huge

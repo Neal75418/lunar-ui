@@ -581,6 +581,16 @@ function UnitIsConnected(unit)
 end
 ---@param unit string
 ---@return boolean
+function UnitIsAFK(unit)
+    return _rv
+end
+---@param unit string
+---@return boolean
+function UnitIsDND(unit)
+    return _rv
+end
+---@param unit string
+---@return boolean
 function UnitIsTapDenied(unit)
     return _rv
 end
@@ -1159,7 +1169,10 @@ ChatTypeInfo = {}
 CHAT_FRAMES = {}
 ---@type number
 NUM_CHAT_WINDOWS = 0
----@type Frame
+---@class ChatFrame : Frame
+---@field AddMessage fun(self: ChatFrame, msg: string, r?: number, g?: number, b?: number, id?: number)
+
+---@type ChatFrame
 DEFAULT_CHAT_FRAME = {}
 ---@type Button
 ChatFrameMenuButton = {}

@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if, missing-parameter
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, missing-parameter
 --[[
     LunarUI - 單位框架指示器
     職業資源、替代能量、休息/戰鬥/死亡指示器、仇恨/距離指示器
@@ -26,7 +26,7 @@ local function CreateClassPower(frame)
     end
 
     local GetStatusBarTexture = LunarUI.UFGetStatusBarTexture
-    local oUF = Engine.oUF or _G.LunarUF or _G.oUF
+    local oUF = Engine.oUF or LunarUF or _G.oUF
 
     local MAX_POINTS = 10 -- 最多 10（盜賊可到 7+，術士 5 靈魂碎片等）
     local barWidth = frame:GetWidth()

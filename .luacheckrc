@@ -48,6 +48,7 @@ globals = {
 read_globals = {
     -- === Libraries ===
     "LibStub",
+    "LunarUF", -- oUF namespace, injected via TOC X-oUF
 
     -- === Core Lua extensions (WoW-specific) ===
     "bit",

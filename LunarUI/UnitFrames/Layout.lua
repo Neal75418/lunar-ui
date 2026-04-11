@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, unnecessary-if, redundant-value, need-check-nil, return-type-mismatch
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, redundant-value, need-check-nil, return-type-mismatch
 --[[
     LunarUI - oUF 佈局
     定義所有單位框架的視覺風格
@@ -10,7 +10,7 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 
 -- 等待 oUF 可用（TOC 中設定 X-oUF: LunarUF）
-local oUF = Engine.oUF or _G.LunarUF or _G.oUF
+local oUF = Engine.oUF or LunarUF or _G.oUF
 if not oUF then
     local L = Engine.L or {}
     LunarUI:Print("|cffff0000" .. (L["ErrorOUFNotFound"] or "找不到 oUF 框架") .. "|r")

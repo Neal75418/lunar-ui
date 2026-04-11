@@ -1,10 +1,9 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
 --[[
     LunarUI - 工具函式
     共用輔助函式：數值格式化、顏色計算等
 ]]
 
-local _ADDON_NAME, Engine = ...
+local _, Engine = ...
 local LunarUI = Engine.LunarUI
 
 local format = string.format
