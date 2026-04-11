@@ -552,6 +552,21 @@ describe("GetBankSlotsPerRow", function()
         local result = LunarUI.GetBankSlotsPerRow(1)
         assert.equals(12, result) -- should not go below default
     end)
+
+    it("caps at BANK_VIEWPORT_COLS for very large banks (scrollable bank invariant)", function()
+        _G.GetScreenHeight = function()
+            return 1080
+        end
+        _G.GetScreenWidth = function()
+            return 1920
+        end
+        -- WoW 12.0 banks can have 600+ slots (6 tabs × 98). In scrollable-bank
+        -- mode, the viewport width must stay capped so the frame never exceeds
+        -- the fixed ScrollFrame viewport. Columns should never exceed 14.
+        local result = LunarUI.GetBankSlotsPerRow(600)
+        assert.is_true(result <= 14, "bank cols should cap at 14, got " .. tostring(result))
+        assert.is_true(result >= 12, "bank cols should not go below SLOTS_PER_ROW default")
+    end)
 end)
 
 --------------------------------------------------------------------------------
