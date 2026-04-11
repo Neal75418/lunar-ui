@@ -16,9 +16,9 @@
 
 ## 特色
 
-- **完整戰鬥 UI** — UnitFrames / Nameplates / ActionBars / AuraFrames / ClassResources / CooldownTracker / FloatingCombatText（基於 oUF + LibActionButton）
-- **23 個 Blizzard 換膚** — 角色、天賦、任務、拍賣、郵件、收藏、公會、成就等原生介面統一深色主題
-- **整合模組** — Minimap、Bags（裝等 / 搜尋 / 自動賣灰）、Chat、Tooltip、DataBars、DataTexts、Loot、Automation、FrameMover
+- **完整戰鬥 UI** — UnitFrames、Nameplates、ActionBars 等 7 個核心模組（oUF + LibActionButton）
+- **23 個 Blizzard 換膚** — 角色、天賦、任務、拍賣、收藏等原生介面統一深色主題
+- **整合模組** — Bags（裝等 / 搜尋 / 自動賣灰）、Minimap、Chat、Tooltip 等 9 個功能模組
 - **Phase 狀態機** — 戰鬥前後自動調整顯示策略
 - **完整可配置** — AceConfig GUI、設定匯入匯出、DPS / Tank / Healer 佈局預設
 - **效能優先** — 框架池回收、材質快取、髒旗標批次處理
@@ -74,12 +74,12 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 
 所有第三方庫位於 `LunarUI/Libs/`，由根目錄 [.pkgmeta](.pkgmeta) 管理，不納入版本控制。
 
-| 庫                                                                              | 版本     | 用途                      |
-|:-------------------------------------------------------------------------------|:-------|:------------------------|
-| [oUF](https://github.com/oUF-wow/oUF)                                          | 13.1.1 | UnitFrames / Nameplates |
-| [Ace3](https://github.com/WoWUIDev/Ace3)                                       | r1390  | 框架 / 事件 / DB / 設定       |
-| [LibSharedMedia-3.0](https://www.curseforge.com/wow/addons/libsharedmedia-3-0) | 11.2.1 | 材質 / 字體                 |
-| [LibActionButton-1.0](https://github.com/Nevcairiel/LibActionButton-1.0)       | 0.57   | ActionBars              |
+| 庫                                                                                  | 版本     | 用途                      |
+|:-----------------------------------------------------------------------------------|:-------|:------------------------|
+| **[oUF](https://github.com/oUF-wow/oUF)**                                          | 13.1.1 | UnitFrames / Nameplates |
+| **[Ace3](https://github.com/WoWUIDev/Ace3)**                                       | r1390  | 框架 / 事件 / DB / 設定       |
+| **[LibSharedMedia-3.0](https://www.curseforge.com/wow/addons/libsharedmedia-3-0)** | 11.2.1 | 材質 / 字體                 |
+| **[LibActionButton-1.0](https://github.com/Nevcairiel/LibActionButton-1.0)**       | 0.57   | ActionBars              |
 
 > 更新執行 `./scripts/update-libs.sh`；若失敗參考 [.pkgmeta](.pkgmeta) 手動處理。
 
