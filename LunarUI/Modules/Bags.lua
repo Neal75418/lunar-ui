@@ -1117,6 +1117,11 @@ local function OpenBags()
 end
 
 local function CloseBags()
+    -- 早退：背包已經關閉，避免 Esc + BANKFRAME_CLOSED 連續觸發時重跑
+    -- 整個 search-clear + pendingBagUpdates wipe 路徑
+    if not bagFrame or not isOpen then
+        return
+    end
     if bagFrame then
         bagFrame:Hide()
         isOpen = false
@@ -1350,6 +1355,8 @@ local function OnBagEvent(_self, event, ...)
 
     if event == "BANKFRAME_CLOSED" then
         CloseBank()
+        -- 跟 BANKFRAME_OPENED 對稱：關銀行也關背包（背包是和銀行一起開的）
+        CloseBags()
         return
     end
 
@@ -1537,6 +1544,8 @@ LunarUI.GetTotalFreeSlots = GetTotalFreeSlots
 LunarUI.BagsGetBagFrame = function()
     return bagFrame
 end
+-- BankSystem 需要在 Esc / BANKFRAME_CLOSED 時關掉背包以保持對稱
+LunarUI.BagsCloseBags = CloseBags
 
 LunarUI:RegisterModule("Bags", {
     onEnable = InitializeBags,
