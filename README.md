@@ -15,13 +15,15 @@
 </p>
 
 <p align="center">
-  <a href="#特色">特色</a> ·
-  <a href="#安裝">安裝</a> ·
-  <a href="#指令">指令</a> ·
-  <a href="#相容性">相容性</a> ·
-  <a href="#故障排除">故障排除</a> ·
-  <a href="#開發">開發</a>
+  <a href="#features">特色</a> ·
+  <a href="#install">安裝</a> ·
+  <a href="#commands">指令</a> ·
+  <a href="#compatibility">相容性</a> ·
+  <a href="#troubleshooting">故障排除</a> ·
+  <a href="#development">開發</a>
 </p>
+
+<a id="features"></a>
 
 ## 特色
 
@@ -33,6 +35,8 @@
 - **效能優先** — 框架池回收、材質快取、髒旗標批次處理
 
 > 附帶兩個 LoadOnDemand 插件：`LunarUI_Options`（設定介面）與 `LunarUI_Debug`（Vigor 診斷工具），分別在 `/lunar config` 和 `/lunar debugvigor` 時自動載入。
+
+<a id="install"></a>
 
 ## 安裝
 
@@ -58,6 +62,8 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 
 </details>
 
+<a id="commands"></a>
+
 ## 指令
 
 `/lunar` 或 `/lui`
@@ -72,6 +78,8 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 | `/lunar toggle` / `on` / `off` | 切換 / 啟用 / 停用 |
 
 > 其他命令（`status`、`export`、`import`、`debug`、`profile`、`debugvigor`）輸入 `/lunar` 查看完整列表。
+
+<a id="compatibility"></a>
 
 ## 相容性
 
@@ -92,6 +100,8 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 
 > 更新執行 `./scripts/update-libs.sh`；若失敗參考 [.pkgmeta](.pkgmeta) 手動處理。
 
+<a id="troubleshooting"></a>
+
 ## 故障排除
 
 | 問題 | 解決方式 |
@@ -101,6 +111,8 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 | **Skin 載入錯誤** | `/lunar config` → Skins → 個別停用問題 Skin |
 | **重置設定** | `/lunar reset all` 或刪除 `WTF/.../LunarUI.lua` |
 | **字體顯示異常** | `/lunar config` → General → 重選字體 |
+
+<a id="development"></a>
 
 ## 開發
 
