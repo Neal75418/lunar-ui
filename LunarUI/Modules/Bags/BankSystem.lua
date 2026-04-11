@@ -459,7 +459,20 @@ local function CreateBankFrame()
             scroll:SetVerticalScroll(maxScroll)
         elseif key == "ESCAPE" then
             self:SetPropagateKeyboardInput(false)
-            -- 跟 BANKFRAME_OPENED 對稱：關銀行同時關背包（背包是和銀行一起開的）
+            -- 結束 Blizzard 的 banker 互動狀態，讓下一次點擊行員重發
+            -- BANKFRAME_OPENED。原本試過 CloseBankFrame() 無效（WoW 12.0
+            -- 後可能改了 API），改走 HideUIPanel(_G.BankFrame) 模擬 Blizzard
+            -- 的預設 Esc 路徑：UI panel system 會透過 BankFrame 的 OnHide
+            -- 觸發 CloseBankFrame 內部流程，真正結束互動。
+            -- 同時 pcall(CloseBankFrame) 作為保險（若新舊 API 並存也能 work）。
+            if CloseBankFrame then
+                pcall(CloseBankFrame)
+            end
+            if _G.HideUIPanel and _G.BankFrame then
+                pcall(_G.HideUIPanel, _G.BankFrame)
+            end
+            -- Fallback：直接 hide 我們的 frame。CloseBank/CloseBags 都有早退
+            -- 保護，若上方 API 觸發 BANKFRAME_CLOSED event handler 重跑也無害。
             if LunarUI.CloseBank then
                 LunarUI.CloseBank()
             end
@@ -498,8 +511,20 @@ local function CreateBankFrame()
     bankCloseButton:SetPoint("TOPRIGHT", 2, 2)
     LunarUI.SkinCloseButton(bankCloseButton)
     bankCloseButton:SetScript("OnClick", function()
+        -- 跟 Esc handler 一致：先結束 Blizzard banker 互動狀態，否則
+        -- 下一次點擊行員 Blizzard 不會重發 BANKFRAME_OPENED。
+        -- 走 HideUIPanel 路徑（第二次 Esc 實測可行的那條路徑）。
+        if CloseBankFrame then
+            pcall(CloseBankFrame)
+        end
+        if _G.HideUIPanel and _G.BankFrame then
+            pcall(_G.HideUIPanel, _G.BankFrame)
+        end
         if LunarUI.CloseBank then
             LunarUI.CloseBank()
+        end
+        if LunarUI.BagsCloseBags then
+            LunarUI.BagsCloseBags()
         end
     end)
 
