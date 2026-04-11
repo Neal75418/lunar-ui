@@ -74,6 +74,7 @@ HUD\FloatingCombatText.lua
 # Modules (Non-combat UI)
 Modules\Automation.lua
 Modules\FrameMover.lua
+Modules\Minimap\ButtonCorral.lua
 Modules\Minimap.lua
 Modules\Tooltip.lua
 Modules\Chat\ChatStyling.lua

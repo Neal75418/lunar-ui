@@ -1,4 +1,4 @@
----@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
+---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for LunarUI/Modules/Minimap.lua
     Tests lifecycle, coordinate helpers, cleanup
@@ -132,6 +132,8 @@ LunarUI.GetModuleDB = function(key)
     return LunarUI.db.profile[key]
 end
 
+-- Load ButtonCorral sub-module before main Minimap module (mirrors TOC order)
+loader.loadAddonFile("LunarUI/Modules/Minimap/ButtonCorral.lua", LunarUI)
 loader.loadAddonFile("LunarUI/Modules/Minimap.lua", LunarUI)
 
 --------------------------------------------------------------------------------
