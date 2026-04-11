@@ -12,5 +12,27 @@
 # Note: Libraries are loaded by the main LunarUI addon
 # AceConfig-3.0, AceConfigDialog-3.0, AceGUI-3.0, AceDBOptions-3.0
 
+# Section builders (Private.sections.*) — must load before Options.lua
+sections\General.lua
+sections\UnitFrames.lua
+sections\ActionBars.lua
+sections\Nameplates.lua
+sections\HUD.lua
+sections\Minimap.lua
+sections\Bags.lua
+sections\Chat.lua
+sections\Loot.lua
+sections\FrameMover.lua
+sections\Style.lua
+sections\Tooltip.lua
+sections\DataBars.lua
+sections\DataTexts.lua
+sections\Automation.lua
+sections\Skins.lua
+
+# Shared helpers
+Search.lua
+Frame.lua
+
 # Core
 Options.lua

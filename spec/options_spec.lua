@@ -1,4 +1,4 @@
----@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
+---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for LunarUI_Options/Options.lua pure functions
     Tests: SafeGetField, BuildSearchIndex, FilterSearchResults
@@ -79,18 +79,68 @@ _G.GetSpecializationInfo = function()
     return nil, nil
 end
 
--- Load Options.lua — it ignores varargs and uses LibStub directly
+-- Load every section builder first so Private.sections.* is populated. Each
+-- section file gets the same (addonName, Private) varargs via loadfile+chunk,
+-- so they all write into the shared Private.sections table.
+-- Options.lua then reads those builders and calls ApplySection for each — this
+-- is what verifies every section is wired into options.args (regression guard
+-- against Phase 3 Wave 4 where builder files existed but ApplySection calls
+-- were missing, leaving the options panel silently empty).
+local Private = {}
+
+local sectionFiles = {
+    "General",
+    "UnitFrames",
+    "ActionBars",
+    "Nameplates",
+    "HUD",
+    "Minimap",
+    "Bags",
+    "Chat",
+    "Tooltip",
+    "FrameMover",
+    "Style",
+    "Loot",
+    "DataBars",
+    "DataTexts",
+    "Automation",
+    "Skins",
+}
+
+for _, name in ipairs(sectionFiles) do
+    local path = "LunarUI_Options/sections/" .. name .. ".lua"
+    local sc, serr = loadfile(path)
+    if not sc then
+        error("Failed to load " .. path .. ": " .. tostring(serr))
+    end
+    sc("LunarUI_Options", Private)
+end
+
+-- Load shared helpers (Search.lua / Frame.lua) so Private.search.* and
+-- Private.frame.* are populated before Options.lua consumes them.
+for _, helper in ipairs({ "Search", "Frame" }) do
+    local path = "LunarUI_Options/" .. helper .. ".lua"
+    local sc, serr = loadfile(path)
+    if not sc then
+        error("Failed to load " .. path .. ": " .. tostring(serr))
+    end
+    sc("LunarUI_Options", Private)
+end
+
+-- Load Options.lua with the populated Private table so ApplySection wires the
+-- builders into options.args.
 local chunk, err = loadfile("LunarUI_Options/Options.lua")
 if not chunk then
     error("Failed to load LunarUI_Options/Options.lua: " .. tostring(err))
 end
-chunk()
+chunk("LunarUI_Options", Private)
 
 -- Grab exported functions from LunarUI
 local SafeGetField = LunarUI.Options_SafeGetField
 local BuildSearchIndex = LunarUI.Options_BuildSearchIndex
 local FilterSearchResults = LunarUI.Options_FilterSearchResults
 local SetSearchIndex = LunarUI.Options_SetSearchIndex
+local GetOptionsTable = LunarUI.Options_GetOptionsTable
 
 --------------------------------------------------------------------------------
 -- SafeGetField
@@ -532,5 +582,61 @@ describe("FilterSearchResults", function()
             end
         end
         assert.is_true(found)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- Section wiring — regression guard for Phase 3 refactor
+--
+-- These tests ensure every extracted sections/*.lua builder is registered via
+-- ApplySection in Options.lua. Without them, a section file can exist and
+-- populate Private.sections.X but never get wired into options.args, leaving
+-- that tab silently missing from the in-game panel.
+--------------------------------------------------------------------------------
+
+describe("Section wiring", function()
+    local expectedSectionKeys = {
+        "general",
+        "unitframes",
+        "actionbars",
+        "nameplates",
+        "hud",
+        "minimap",
+        "bags",
+        "chat",
+        "tooltip",
+        "frameMover",
+        "style",
+        "loot",
+        "databars",
+        "datatexts",
+        "automation",
+        "skins",
+    }
+
+    it("GetOptionsTable is exported", function()
+        assert.is_function(GetOptionsTable)
+    end)
+
+    it("options.args contains every extracted section", function()
+        local opts = GetOptionsTable()
+        assert.is_not_nil(opts)
+        assert.is_not_nil(opts.args)
+        for _, key in ipairs(expectedSectionKeys) do
+            assert.is_not_nil(opts.args[key], "missing options.args." .. key)
+            assert.equals("group", opts.args[key].type, key .. " should be a group")
+        end
+    end)
+
+    it("ActionBars dynamic bars are populated (bar1..bar6 / petbar / stancebar)", function()
+        local opts = GetOptionsTable()
+        local ab = opts.args.actionbars
+        assert.is_not_nil(ab, "actionbars section not wired")
+        assert.is_not_nil(ab.args, "actionbars.args missing")
+        for i = 1, 6 do
+            assert.is_not_nil(ab.args["bar" .. i], "missing actionbars.args.bar" .. i)
+        end
+        assert.is_not_nil(ab.args.petbar, "missing actionbars.args.petbar")
+        assert.is_not_nil(ab.args.stancebar, "missing actionbars.args.stancebar")
     end)
 end)
