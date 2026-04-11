@@ -174,30 +174,6 @@ local function GetLastOccupiedSlotID()
     return lastOccupied
 end
 
--- Cheap fingerprint of the current bank layout inputs. Used by
--- RefreshBankLayout to skip the O(N) SetPoint loop when nothing layout-
--- relevant has changed between opens — a huge win for users with 500+
--- slot banks who reopen the frame frequently. Item *contents* changing is
--- handled by UpdateAllBankSlots, not re-layout.
---
--- Includes SLOT_SIZE and SLOT_SPACING in addition to the container shape
--- so any option path that mutates pixel geometry without going through
--- RebuildBags is still caught (defence-in-depth against silent stale
--- layouts if a future option handler forgets to rebuild).
-local function ComputeBankLayoutSignature()
-    local c = GetConstants()
-    local parts = {
-        GetViewportCols(),
-        c.SLOT_SIZE,
-        c.SLOT_SPACING,
-        C_Container.GetContainerNumSlots(BANK_CONTAINER) or 0,
-    }
-    for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
-        parts[#parts + 1] = C_Container.GetContainerNumSlots(bag) or 0
-    end
-    return table.concat(parts, ":")
-end
-
 -- Compute bank slot layout with row-based sections.
 --
 -- Each bank container (main bank + 6 tabs) occupies its own block of rows —
@@ -637,9 +613,10 @@ local function CreateBankFrame()
     -- 在 section 交界處畫上細線視覺分隔
     UpdateSectionDividers(layout.sectionBreaks, slotContainer, viewportContentWidth)
 
-    -- 記錄剛建好的 layout fingerprint，下一個 RefreshBankLayout（OpenBank 觸發）
-    -- 會比對 signature 然後走 fast path，避免剛建好又重算一次
-    bankFrame._layoutSig = ComputeBankLayoutSignature()
+    -- 注意：ContainerFrameItemButtonTemplate 的 OnLoad 在 WoW 12.0 會把
+    -- button 初始化為 hidden 狀態（預期被 ContainerFrame 的 layout code 接管）。
+    -- 後續 RefreshBankLayout 會 explicit :Show() 每一顆 slot 還原可見性。
+    -- 不在此處加 :Show() 迴圈，避免跟 RefreshBankLayout 重複。
 
     -- 銀行搜尋過濾（委託共用 SearchSlots，並自動捲到第一個符合結果）
     ApplyBankSearch = function()
@@ -775,57 +752,51 @@ local function RefreshBankLayout()
         return
     end
 
-    -- Fast path: 當銀行格子數量 / 分頁配置 / viewport 欄數都沒變時，跳過
-    -- 整個 SetPoint + UpdateSectionDividers 迴圈（對 ~600 格銀行影響巨大：
-    -- 省下 ~600 個 ClearAllPoints+SetPoint 呼叫以及 texture 重建）。
-    -- 項目內容的變化由下方 UpdateAllBankSlots 處理，不需要 re-layout。
-    local sig = ComputeBankLayoutSignature()
-    if bankFrame._layoutSig ~= sig then
-        local c = GetConstants()
-        local SLOT_SIZE = c.SLOT_SIZE
-        local SLOT_SPACING = c.SLOT_SPACING
+    local c = GetConstants()
+    local SLOT_SIZE = c.SLOT_SIZE
+    local SLOT_SPACING = c.SLOT_SPACING
 
-        -- 重算 layout（考慮 section 邊界 + viewport cols）
-        local layout = ComputeBankLayout()
-        local slotID = layout.slotCount
+    -- 重算 layout（考慮 section 邊界 + viewport cols）
+    local layout = ComputeBankLayout()
+    local slotID = layout.slotCount
 
-        -- 建立/重用 slot button 並根據新 layout 定位
-        for i = 1, slotID do
-            local pos = layout.positions[i]
-            local button = bankSlots[i]
-            if not button then
-                button = CreateBankSlot(slotContainer, i, pos.bag, pos.slot)
-                bankSlots[i] = button
-            end
-            button.bag = pos.bag
-            button.slot = pos.slot
-            button:ClearAllPoints()
-            button:SetPoint(
-                "TOPLEFT",
-                slotContainer,
-                "TOPLEFT",
-                pos.col * (SLOT_SIZE + SLOT_SPACING),
-                -pos.row * (SLOT_SIZE + SLOT_SPACING)
-            )
-            button:SetID(pos.slot)
-            button:Show()
+    -- 建立/重用 slot button 並根據新 layout 定位
+    -- NB: 刻意**不**快取 layout signature 跳過這個迴圈 —— 之前嘗試過快取
+    -- (commit e031603) 導致 slot 被意外留在 hidden 狀態的 bug。這個迴圈對
+    -- ~600 格銀行的成本約 30-100ms，可以接受。
+    for i = 1, slotID do
+        local pos = layout.positions[i]
+        local button = bankSlots[i]
+        if not button then
+            button = CreateBankSlot(slotContainer, i, pos.bag, pos.slot)
+            bankSlots[i] = button
         end
+        button.bag = pos.bag
+        button.slot = pos.slot
+        button:ClearAllPoints()
+        button:SetPoint(
+            "TOPLEFT",
+            slotContainer,
+            "TOPLEFT",
+            pos.col * (SLOT_SIZE + SLOT_SPACING),
+            -pos.row * (SLOT_SIZE + SLOT_SPACING)
+        )
+        button:SetID(pos.slot)
+        button:Show()
+    end
 
-        -- 更新 slotContainer 高度（會觸發 ScrollFrame 重算捲軸範圍）
-        ResizeBankFrame(slotID, layout.totalRows)
+    -- 更新 slotContainer 高度（會觸發 ScrollFrame 重算捲軸範圍）
+    ResizeBankFrame(slotID, layout.totalRows)
 
-        -- 更新 section 分隔線（跟 viewport 寬度一致）
-        local viewportContentWidth = layout.bankCols * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING
-        UpdateSectionDividers(layout.sectionBreaks, slotContainer, viewportContentWidth)
+    -- 更新 section 分隔線（跟 viewport 寬度一致）
+    local viewportContentWidth = layout.bankCols * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING
+    UpdateSectionDividers(layout.sectionBreaks, slotContainer, viewportContentWidth)
 
-        -- 隱藏多餘格子（已刪除的舊格子）
-        for i = slotID + 1, #bankSlots do
-            if bankSlots[i] then
-                bankSlots[i]:Hide()
-            end
+    -- 隱藏多餘格子（已刪除的舊格子）
+    for i = slotID + 1, #bankSlots do
+        if bankSlots[i] then
+            bankSlots[i]:Hide()
         end
-
-        bankFrame._layoutSig = sig
     end
 
     UpdateAllBankSlots()
@@ -953,7 +924,6 @@ LunarUI.GetLastOccupiedSlotID = GetLastOccupiedSlotID
 -- viewport invariant directly. Underscore prefix marks these as internal.
 LunarUI._ResizeBankFrame = ResizeBankFrame
 LunarUI._ComputeBankLayout = ComputeBankLayout
-LunarUI._ComputeBankLayoutSignature = ComputeBankLayoutSignature
 LunarUI._GetViewportCols = GetViewportCols
 LunarUI._GetViewportRows = GetViewportRows
 LunarUI._BANK_VIEWPORT_COLS_DEFAULT = BANK_VIEWPORT_COLS_DEFAULT
