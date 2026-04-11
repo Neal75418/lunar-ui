@@ -1,5 +1,19 @@
 # LunarUI &mdash; Claude Context
 
+## 常用指令
+
+```bash
+make check            # lint + format + locale-check + 920 tests（提交前必跑）
+make test             # 僅跑 busted spec/
+make coverage         # 跑覆蓋率 + ratchet 檢查（對照 .coverage-baseline）
+make coverage-update  # 測試覆蓋率上升時更新 baseline
+make format-fix       # stylua 自動修格式
+```
+
+> ratchet：`make coverage` 若低於 `.coverage-baseline` 會失敗；提升覆蓋率後跑 `make coverage-update` 提交新 baseline。
+
+---
+
 ## 專案概要
 
 - **平台**：WoW 12.0.1（Interface: 120001），Lua 5.1（LuaJIT）
@@ -7,10 +21,14 @@
 - **組成**：
   - `LunarUI/` &mdash; 主插件
   - `LunarUI_Options/` &mdash; LoadOnDemand 設定介面
+    - `Options.lua` 僅含 header + `ApplySection` dispatcher；實際區段在 `sections/*.lua`
+    - 每個 section 透過 TOC varargs `Private.sections.X = function(ctx) ... end` 註冊，`ctx` 注入 `L` / `GetDB` / `RefreshUI` / `LunarUI`
+    - 搜尋與 Frame 樣式分別在 `Search.lua` / `Frame.lua`，spec 以共用 `Private` table 驗證 wiring
   - `LunarUI_Debug/` &mdash; LoadOnDemand 診斷工具（`/lunar debugvigor` 時自動載入）
 - **進入點**：`Core/Init.lua` 最先執行，建立 `Engine.LunarUI`
 - **模組存取**：`local _ADDON_NAME, Engine = ...` → `Engine.LunarUI`
 - **Skin 模組**：22 個 Blizzard 介面換膚（`LunarUI/Modules/Skins/`）
+- **Sub-module pattern**：`LunarUI/Modules/<Parent>/<Sub>.lua`（如 `Minimap/ButtonCorral.lua`），由 parent module 以 `LunarUI.<SubName>.Init/Scan/Reset` 形式協作
 
 ---
 
@@ -82,6 +100,11 @@ LunarUI:RegisterModule("ModuleName", {
 --   "reversible"       — onDisable 完全還原 Blizzard 預設狀態（預設值；ActionBars、Minimap、Bags、Tooltip）
 --   "soft_disable"     — 僅隱藏框架，不還原 Blizzard，需 /reload（UnitFrames、Nameplates）
 --   "reload_required"  — 深度修改無法撤銷，需 /reload（Chat、Skins）
+
+-- 判斷當前模組組合是否需要 /reload（Commands.lua 用於決定是否跳確認對話框）
+LunarUI.RequiresReloadForDisable()  -- 任一 non-reversible 模組即 true
+-- /lunar off 首次遇到 non-reversible 模組會跳 LUNARUI_DISABLE_CONFIRM 對話框；
+-- 使用者點「不再顯示」→ 寫入 profile.warnedOnDisable = true，後續直接停用
 
 -- 註冊 HUD 框架 → 自動納入 ApplyHUDScale（Config.lua）
 LunarUI:RegisterHUDFrame("FrameName")
@@ -171,7 +194,7 @@ LunarUI.CreateIconBorder(parent, options)
 graph LR
     TypeDef["wow_api.def.lua / busted.def.lua<br/>EmmyLua 型別定義"] -.-> Mock
     Mock["wow_mock.lua<br/>WoW API Stub"] --> Loader["loader.lua<br/>Engine 建立"]
-    Loader --> Spec["*_spec.lua<br/>測試案例（34 檔 / 910 tests）"]
+    Loader --> Spec["*_spec.lua<br/>測試案例（34 檔）"]
     Spec --> Busted["busted<br/>執行測試"]
     Busted --> Cov["luacov<br/>ratchet 檢查<br/>（.coverage-baseline）"]
 
