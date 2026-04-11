@@ -278,6 +278,65 @@ Private.sections.Bags = function(ctx)
                     end
                 end,
             },
+
+            -- Bank scrollable viewport (WoW 12.0 character banks can reach
+            -- 600+ slots across 6 tabs; fixed viewport + scroll is required).
+            bankHeader = {
+                order = 40,
+                type = "header",
+                name = L.bankHeader,
+            },
+            bankViewportCols = {
+                order = 41,
+                type = "range",
+                name = L.bankViewportCols,
+                desc = L.bankViewportColsDesc,
+                min = 8,
+                max = 20,
+                step = 1,
+                get = function()
+                    return GetDB().bags.bankViewportCols or 14
+                end,
+                set = function(_, v)
+                    GetDB().bags.bankViewportCols = v
+                    if LunarUI.RebuildBags then
+                        LunarUI:RebuildBags()
+                    end
+                end,
+            },
+            bankViewportRows = {
+                order = 42,
+                type = "range",
+                name = L.bankViewportRows,
+                desc = L.bankViewportRowsDesc,
+                min = 8,
+                max = 20,
+                step = 1,
+                get = function()
+                    return GetDB().bags.bankViewportRows or 14
+                end,
+                set = function(_, v)
+                    GetDB().bags.bankViewportRows = v
+                    if LunarUI.RebuildBags then
+                        LunarUI:RebuildBags()
+                    end
+                end,
+            },
+            bankDimEmpty = {
+                order = 43,
+                type = "toggle",
+                name = L.bankDimEmpty,
+                desc = L.bankDimEmptyDesc,
+                get = function()
+                    return GetDB().bags.bankDimEmpty ~= false
+                end,
+                set = function(_, v)
+                    GetDB().bags.bankDimEmpty = v
+                    if LunarUI.RebuildBags then
+                        LunarUI:RebuildBags()
+                    end
+                end,
+            },
         },
     }
 end

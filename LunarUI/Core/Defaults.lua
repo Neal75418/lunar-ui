@@ -390,6 +390,10 @@ local defaults = {
             splitBags = false, -- 分離背包視圖
             bagPosition = nil, -- 背包框架位置 { point, x, y }
             bankPosition = nil, -- 銀行框架位置 { point, x, y }
+            bankViewportCols = 14, -- 銀行 viewport 欄數（8-20），scrollable bank 的固定寬度
+            bankViewportRows = 14, -- 銀行 viewport 列數（8-20），超出用捲軸捲動
+            bankScrollPos = 0, -- 最後捲動位置（下次開銀行時恢復）
+            bankDimEmpty = true, -- 空格降低透明度凸顯有物品的 slot
         },
 
         -- 聊天設定

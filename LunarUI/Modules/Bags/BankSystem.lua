@@ -60,12 +60,38 @@ local BANK_CONTAINER = -1
 local FIRST_BANK_BAG = 6 -- CharacterBankTab_1（WoW 12.0: bag 5 = 材料袋，非銀行包）
 local LAST_BANK_BAG = 11 -- CharacterBankTab_6
 
--- Fixed viewport dimensions for scrollable bank (WoW 12.0: 6 tabs × 98 slots is
--- too large to fit on screen at once — use scroll instead of dynamic sizing).
--- Visible area = 14 columns × 14 rows = 196 slots; overflow uses the scroll bar.
-local BANK_VIEWPORT_COLS = 14
-local BANK_VIEWPORT_ROWS = 14
+-- Scrollable bank viewport defaults (WoW 12.0: 6 tabs × 98 slots is too large
+-- to fit on screen at once — use scroll instead of dynamic sizing). Visible
+-- area defaults to 14 columns × 14 rows = 196 slots; overflow uses the scroll
+-- bar. Actual values read from db.bags.bankViewportCols/Rows at runtime so
+-- users can customise via /lunar config without requiring a constant change.
+local BANK_VIEWPORT_COLS_DEFAULT = 14
+local BANK_VIEWPORT_ROWS_DEFAULT = 14
+local BANK_VIEWPORT_MIN = 8
+local BANK_VIEWPORT_MAX = 20
 local BANK_SCROLLBAR_WIDTH = 18 -- UIPanelScrollFrameTemplate scroll bar reserves this much
+
+local function clampViewport(v, fallback)
+    if type(v) ~= "number" then
+        return fallback
+    end
+    if v < BANK_VIEWPORT_MIN then
+        return BANK_VIEWPORT_MIN
+    elseif v > BANK_VIEWPORT_MAX then
+        return BANK_VIEWPORT_MAX
+    end
+    return mathFloor(v)
+end
+
+local function GetViewportCols()
+    local db = GetBagDB()
+    return clampViewport(db and db.bankViewportCols, BANK_VIEWPORT_COLS_DEFAULT)
+end
+
+local function GetViewportRows()
+    local db = GetBagDB()
+    return clampViewport(db and db.bankViewportRows, BANK_VIEWPORT_ROWS_DEFAULT)
+end
 
 --------------------------------------------------------------------------------
 -- 模組狀態
@@ -119,7 +145,7 @@ local function GetBankSlotsPerRow(totalSlots)
     maxRows = mathMax(maxRows, 1)
 
     local neededCols = mathCeil(totalSlots / maxRows)
-    return mathMin(mathMax(SLOTS_PER_ROW, neededCols), BANK_VIEWPORT_COLS)
+    return mathMin(mathMax(SLOTS_PER_ROW, neededCols), GetViewportCols())
 end
 
 -- 掃描銀行格子，找出最後一個有物品的 slotID
@@ -148,9 +174,68 @@ local function GetLastOccupiedSlotID()
     return lastOccupied
 end
 
+-- Compute bank slot layout with row-based sections.
+--
+-- Each bank container (main bank + 6 tabs) occupies its own block of rows —
+-- tabs don't share rows with each other, so each section starts at a clean
+-- row boundary. Returns slot positions (row/col), section break rows (for
+-- divider rendering), total row count (for ResizeBankFrame), and slot count.
+--
+-- This is the single source of truth for "where does slotID N go". Both
+-- CreateBankFrame and RefreshBankLayout delegate to this helper so flat and
+-- refreshed layouts never drift.
+local function ComputeBankLayout()
+    local bankCols = GetViewportCols()
+    local positions = {} -- [slotID] = { bag, slot, row, col }
+    local sectionBreaks = {} -- [i] = { row = N, bag = B }  (skip first section)
+    local currentRow = 0
+    local slotID = 0
+
+    local containers = { BANK_CONTAINER }
+    for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
+        containers[#containers + 1] = bag
+    end
+
+    local firstNonEmptyHandled = false
+    for _, bag in ipairs(containers) do
+        local numSlots = C_Container.GetContainerNumSlots(bag) or 0
+        if numSlots > 0 then
+            if firstNonEmptyHandled then
+                sectionBreaks[#sectionBreaks + 1] = { row = currentRow, bag = bag }
+            end
+            firstNonEmptyHandled = true
+
+            for slot = 1, numSlots do
+                slotID = slotID + 1
+                local rowInSection = mathFloor((slot - 1) / bankCols)
+                local col = (slot - 1) % bankCols
+                positions[slotID] = {
+                    bag = bag,
+                    slot = slot,
+                    row = currentRow + rowInSection,
+                    col = col,
+                }
+            end
+            currentRow = currentRow + mathCeil(numSlots / bankCols)
+        end
+    end
+
+    return {
+        positions = positions,
+        sectionBreaks = sectionBreaks,
+        totalRows = mathMax(currentRow, 1),
+        slotCount = slotID,
+        bankCols = bankCols,
+    }
+end
+
 -- Scrollable bank：viewport（bankFrame）大小固定，slotContainer 依實際
 -- slot 數決定高度，超出 viewport 的部分透過 ScrollFrame 捲動顯示。
-local function ResizeBankFrame(actualSlotCount)
+--
+-- `overrideRows` 允許呼叫端傳入預先算好的總列數（例如 ComputeBankLayout 考慮
+-- section 邊界後的列數）。若未提供，則退回「slot 數 / cols 向上取整」的 flat
+-- 假設（保留給 spec test 和向後相容呼叫點使用）。
+local function ResizeBankFrame(actualSlotCount, overrideRows)
     if not bankFrame or not actualSlotCount or actualSlotCount == 0 then
         return
     end
@@ -158,11 +243,11 @@ local function ResizeBankFrame(actualSlotCount)
     local SLOT_SIZE = c.SLOT_SIZE
     local SLOT_SPACING = c.SLOT_SPACING
 
-    -- viewport 固定為 BANK_VIEWPORT_COLS 欄；slotContainer 高度隨 slot 數增長
-    local bankCols = BANK_VIEWPORT_COLS
+    -- viewport 欄數由 DB 控制（clamp 到 [8, 20]）；slotContainer 高度隨 slot 數增長
+    local bankCols = GetViewportCols()
     bankFrame.bankCols = bankCols
 
-    local totalRows = mathCeil(actualSlotCount / bankCols)
+    local totalRows = overrideRows or mathCeil(actualSlotCount / bankCols)
     totalRows = mathMax(totalRows, 1)
 
     -- slotContainer 實際高度（可能 > viewport → 觸發捲軸）
@@ -174,6 +259,45 @@ local function ResizeBankFrame(actualSlotCount)
     -- 所有 slot 都透過捲軸可見；displaySlots 等同實際 slot 數（保留欄位名稱相容）
     bankFrame.displaySlots = actualSlotCount
     return bankCols
+end
+
+-- Draw/update section divider lines between bank containers. Each divider is
+-- a thin horizontal texture positioned at a row boundary between two sections.
+-- Dividers are kept in bankFrame.sectionDividers for reuse across refreshes.
+local function UpdateSectionDividers(sectionBreaks, slotContainer, viewportContentWidth)
+    if not bankFrame then
+        return
+    end
+    bankFrame.sectionDividers = bankFrame.sectionDividers or {}
+    local dividers = bankFrame.sectionDividers
+    local c = GetConstants()
+    local SLOT_SIZE = c.SLOT_SIZE
+    local SLOT_SPACING = c.SLOT_SPACING
+    local rowHeight = SLOT_SIZE + SLOT_SPACING
+
+    for i, section in ipairs(sectionBreaks) do
+        local divider = dividers[i]
+        if not divider then
+            divider = slotContainer:CreateTexture(nil, "ARTWORK")
+            divider:SetColorTexture(C.borderWarm[1], C.borderWarm[2], C.borderWarm[3], 0.45)
+            dividers[i] = divider
+        end
+        divider:Show()
+        divider:ClearAllPoints()
+        divider:SetHeight(1)
+        -- Place the line at the vertical midpoint of the spacing between the
+        -- previous section's last row and this section's first row.
+        local yOffset = -(section.row * rowHeight) + (SLOT_SPACING / 2)
+        divider:SetPoint("TOPLEFT", slotContainer, "TOPLEFT", 0, yOffset)
+        divider:SetPoint("TOPRIGHT", slotContainer, "TOPLEFT", viewportContentWidth, yOffset)
+    end
+
+    -- Hide any dividers left over from a previous layout with more sections.
+    for i = #sectionBreaks + 1, #dividers do
+        if dividers[i] then
+            dividers[i]:Hide()
+        end
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -199,6 +323,25 @@ local function CreateBankSlot(parent, slotID, bag, slot)
     return button
 end
 
+-- Empty slot visual denoise: when db.bankDimEmpty is true, fade the slot
+-- background for empty slots so items stand out more against sparse grids.
+-- `slotBg` alpha is used (not button alpha) to avoid fighting with the
+-- SearchSlots match-dimming mechanic.
+local EMPTY_SLOT_BG_ALPHA = 0.25
+local DEFAULT_SLOT_BG_ALPHA = 1
+
+local function ApplyEmptySlotDim(button, isEmpty)
+    if not button or not button.slotBg then
+        return
+    end
+    local db = GetBagDB()
+    if db and db.bankDimEmpty then
+        button.slotBg:SetAlpha(isEmpty and EMPTY_SLOT_BG_ALPHA or DEFAULT_SLOT_BG_ALPHA)
+    else
+        button.slotBg:SetAlpha(DEFAULT_SLOT_BG_ALPHA)
+    end
+end
+
 local function UpdateBankSlot(button)
     if not button or not button.bag or not button.slot then
         return
@@ -213,9 +356,11 @@ local function UpdateBankSlot(button)
         local quality = containerInfo.quality or 0
         UpdateSlotVisuals(button, containerInfo, quality)
         UpdateSlotText(button, db, itemLink)
+        ApplyEmptySlotDim(button, false)
         -- 銀行格子不需要 UpdateSlotEffects（無冷卻、新物品發光、垃圾/任務/升級指示）
     else
         ClearSlot(button, db, bag)
+        ApplyEmptySlotDim(button, true)
     end
 end
 
@@ -246,11 +391,12 @@ local function CreateBankFrame()
     local FRAME_ALPHA = c.FRAME_ALPHA
     local BORDER_COLOR_BANK = c.BORDER_COLOR_BANK
 
-    -- Scrollable bank：固定 viewport 尺寸（BANK_VIEWPORT_COLS × BANK_VIEWPORT_ROWS
-    -- 可見格子），slotContainer 可以比 viewport 更高，用 ScrollFrame 捲動
-    local bankCols = BANK_VIEWPORT_COLS
+    -- Scrollable bank：viewport 尺寸由 DB 控制（clamp 到 [8, 20]），
+    -- slotContainer 可以比 viewport 更高，用 ScrollFrame 捲動
+    local bankCols = GetViewportCols()
+    local bankRows = GetViewportRows()
     local viewportContentWidth = bankCols * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING
-    local viewportContentHeight = BANK_VIEWPORT_ROWS * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING
+    local viewportContentHeight = bankRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING
     local frameWidth = viewportContentWidth + PADDING * 2 + BANK_SCROLLBAR_WIDTH
     local frameHeight = viewportContentHeight + PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
 
@@ -281,6 +427,44 @@ local function CreateBankFrame()
     bankFrame:EnableMouse(true)
     bankFrame:SetClampedToScreen(true)
     bankFrame:Hide()
+
+    -- 鍵盤捲動：PgUp/PgDn/Home/End/Esc 支援
+    -- SetPropagateKeyboardInput(true) 讓 WASD/T/1-9 等非導覽鍵透傳到遊戲
+    bankFrame:EnableKeyboard(true)
+    bankFrame:SetPropagateKeyboardInput(true)
+    bankFrame:SetScript("OnKeyDown", function(self, key)
+        -- 每次事件先重設為透傳（預設讓遊戲處理），下方 nav key 分支再明確
+        -- 攔截。避免 propagation state 在 nav key 後 latch 造成下一個按鍵被吃掉。
+        self:SetPropagateKeyboardInput(true)
+
+        local scroll = self.scrollFrame
+        if not scroll then
+            return
+        end
+        local current = scroll:GetVerticalScroll()
+        local maxScroll = scroll:GetVerticalScrollRange()
+        local pageHeight = scroll:GetHeight()
+
+        if key == "PAGEUP" then
+            self:SetPropagateKeyboardInput(false)
+            scroll:SetVerticalScroll(mathMax(0, current - pageHeight))
+        elseif key == "PAGEDOWN" then
+            self:SetPropagateKeyboardInput(false)
+            scroll:SetVerticalScroll(mathMin(maxScroll, current + pageHeight))
+        elseif key == "HOME" then
+            self:SetPropagateKeyboardInput(false)
+            scroll:SetVerticalScroll(0)
+        elseif key == "END" then
+            self:SetPropagateKeyboardInput(false)
+            scroll:SetVerticalScroll(maxScroll)
+        elseif key == "ESCAPE" then
+            self:SetPropagateKeyboardInput(false)
+            if LunarUI.CloseBank then
+                LunarUI.CloseBank()
+            end
+        end
+        -- 其他鍵維持入口處設定的 propagation = true，遊戲會接到
+    end)
 
     -- 可拖曳
     bankFrame:RegisterForDrag("LeftButton")
@@ -320,6 +504,11 @@ local function CreateBankFrame()
     bankSearchBox:SetSize(120, 20)
     bankSearchBox:SetPoint("TOPRIGHT", bankCloseButton, "TOPLEFT", -8, -2)
 
+    -- Skin search box clear button (X) to match dark theme
+    if bankSearchBox.clearButton and LunarUI.SkinCloseButton then
+        LunarUI.SkinCloseButton(bankSearchBox.clearButton)
+    end
+
     -- 搜尋過濾函數（forward declare，實際定義在格子建立後）
     local ApplyBankSearch
 
@@ -357,6 +546,11 @@ local function CreateBankFrame()
     -- 使用者可以從捲動區域任意位置拖曳銀行（而非只能從 header 拖）
     scrollFrame:EnableMouse(false)
 
+    -- 皮膚化預設捲軸以符合 LunarUI 深色主題
+    if LunarUI.SkinScrollBar and scrollFrame.ScrollBar then
+        LunarUI.SkinScrollBar(scrollFrame.ScrollBar)
+    end
+
     -- 捲動速度：每次滾輪 = 1 列高度，從 GetConstants() 動態讀取以支援
     -- 運行時 slot size 變更（RebuildBags 會在設定改動時整個重建 bankFrame）
     scrollFrame:SetScript("OnMouseWheel", function(self, delta)
@@ -373,6 +567,14 @@ local function CreateBankFrame()
         self:SetVerticalScroll(newScroll)
     end)
 
+    -- 捲動位置持久化：使用者捲動後儲存到 DB，下次開啟銀行時恢復
+    scrollFrame:SetScript("OnVerticalScroll", function(_self, offset)
+        local d = GetBagDB()
+        if d then
+            d.bankScrollPos = offset
+        end
+    end)
+
     -- 格子容器（scrollFrame 的 scroll child）
     local slotContainer = CreateFrame("Frame", nil, scrollFrame)
     slotContainer:SetSize(viewportContentWidth, 1) -- 高度稍後由 ResizeBankFrame 設定
@@ -382,57 +584,80 @@ local function CreateBankFrame()
     bankFrame.scrollFrame = scrollFrame
     bankFrame.slotContainer = slotContainer
 
-    -- 建立主銀行格子（-1）
-    local slotID = 0
-    local numMainBankSlots = C_Container.GetContainerNumSlots(BANK_CONTAINER)
-    for slot = 1, numMainBankSlots do
-        slotID = slotID + 1
-        local button = CreateBankSlot(slotContainer, slotID, BANK_CONTAINER, slot)
-
-        local row = mathFloor((slotID - 1) / bankCols)
-        local col = (slotID - 1) % bankCols
-
+    -- Layout 計算：每個銀行容器佔整行邊界，避免 slot 跨越 section 分隔線
+    local layout = ComputeBankLayout()
+    for i = 1, layout.slotCount do
+        local pos = layout.positions[i]
+        local button = CreateBankSlot(slotContainer, i, pos.bag, pos.slot)
         button:SetPoint(
             "TOPLEFT",
             slotContainer,
             "TOPLEFT",
-            col * (SLOT_SIZE + SLOT_SPACING),
-            -row * (SLOT_SIZE + SLOT_SPACING)
+            pos.col * (SLOT_SIZE + SLOT_SPACING),
+            -pos.row * (SLOT_SIZE + SLOT_SPACING)
         )
-
-        button:SetID(slot)
-        bankSlots[slotID] = button
+        button:SetID(pos.slot)
+        bankSlots[i] = button
     end
+    local slotID = layout.slotCount
 
-    -- 建立銀行包格子（6-11）
-    for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
-        local numSlots = C_Container.GetContainerNumSlots(bag)
-        for slot = 1, numSlots do
-            slotID = slotID + 1
-            local button = CreateBankSlot(slotContainer, slotID, bag, slot)
+    -- 依實際列數（含 section 邊界 padding）調整 slotContainer 高度
+    ResizeBankFrame(slotID, layout.totalRows)
 
-            local row = mathFloor((slotID - 1) / bankCols)
-            local col = (slotID - 1) % bankCols
+    -- 在 section 交界處畫上細線視覺分隔
+    UpdateSectionDividers(layout.sectionBreaks, slotContainer, viewportContentWidth)
 
-            button:SetPoint(
-                "TOPLEFT",
-                slotContainer,
-                "TOPLEFT",
-                col * (SLOT_SIZE + SLOT_SPACING),
-                -row * (SLOT_SIZE + SLOT_SPACING)
-            )
-
-            button:SetID(slot)
-            bankSlots[slotID] = button
-        end
-    end
-
-    -- 依實際格子數調整 slotContainer 高度（觸發 ScrollFrame 捲軸）
-    ResizeBankFrame(slotID)
-
-    -- 銀行搜尋過濾（委託共用 SearchSlots）
+    -- 銀行搜尋過濾（委託共用 SearchSlots，並自動捲到第一個符合結果）
     ApplyBankSearch = function()
         SearchSlots(bankSearchBox, bankSlots, "BankSearchError")
+
+        -- 搜尋非空時，找第一個符合的格子並捲動顯示
+        local text = bankSearchBox and bankSearchBox:GetText() or ""
+        if text == "" or not bankFrame or not bankFrame.scrollFrame then
+            return
+        end
+
+        local firstMatch
+        for i = 1, #bankSlots do
+            local button = bankSlots[i]
+            if button and button:IsShown() and button.bag and button.slot then
+                -- 符合條件：alpha 回到 1（SearchSlots 將符合項目設為 alpha 1）
+                -- 用顯式 if 避免 `a and b() or fallback` 在 b() 回傳 0 時的 Lua 陷阱
+                local alpha = 1
+                if button.GetAlpha then
+                    alpha = button:GetAlpha()
+                end
+                if alpha and alpha >= 0.99 then
+                    local ok, link = pcall(C_Container.GetContainerItemLink, button.bag, button.slot)
+                    if ok and link then
+                        firstMatch = button
+                        break
+                    end
+                end
+            end
+        end
+
+        if not firstMatch then
+            return
+        end
+
+        -- 計算 scrollFrame 中 firstMatch 的 Y 偏移並捲動到它
+        local scrollChild = bankFrame.slotContainer
+        if not scrollChild then
+            return
+        end
+        local buttonTop = firstMatch.GetTop and firstMatch:GetTop()
+        local containerTop = scrollChild.GetTop and scrollChild:GetTop()
+        if buttonTop and containerTop then
+            local offset = containerTop - buttonTop
+            local maxScroll = bankFrame.scrollFrame:GetVerticalScrollRange()
+            if offset < 0 then
+                offset = 0
+            elseif offset > maxScroll then
+                offset = maxScroll
+            end
+            bankFrame.scrollFrame:SetVerticalScroll(offset)
+        end
     end
 
     -- 空格指示器
@@ -514,61 +739,43 @@ local function RefreshBankLayout()
     local c = GetConstants()
     local SLOT_SIZE = c.SLOT_SIZE
     local SLOT_SPACING = c.SLOT_SPACING
-
-    -- 先建立/更新所有格子，再依實際數量調整框架大小
-    local slotID = 0
-
-    -- 主銀行格子
-    local numMainBankSlots = C_Container.GetContainerNumSlots(BANK_CONTAINER)
-    for slot = 1, numMainBankSlots do
-        slotID = slotID + 1
-
-        local button = bankSlots[slotID]
-        if not button then
-            button = CreateBankSlot(bankFrame.slotContainer, slotID, BANK_CONTAINER, slot)
-            bankSlots[slotID] = button
-        end
-        button.bag = BANK_CONTAINER
-        button.slot = slot
+    local slotContainer = bankFrame.slotContainer
+    if not slotContainer then
+        return
     end
 
-    -- 銀行包格子
-    for bag = FIRST_BANK_BAG, LAST_BANK_BAG do
-        local numSlots = C_Container.GetContainerNumSlots(bag)
-        for slot = 1, numSlots do
-            slotID = slotID + 1
+    -- 重算 layout（考慮 section 邊界 + viewport cols）
+    local layout = ComputeBankLayout()
+    local slotID = layout.slotCount
 
-            local button = bankSlots[slotID]
-            if not button then
-                button = CreateBankSlot(bankFrame.slotContainer, slotID, bag, slot)
-                bankSlots[slotID] = button
-            end
-            button.bag = bag
-            button.slot = slot
+    -- 建立/重用 slot button 並根據新 layout 定位
+    for i = 1, slotID do
+        local pos = layout.positions[i]
+        local button = bankSlots[i]
+        if not button then
+            button = CreateBankSlot(slotContainer, i, pos.bag, pos.slot)
+            bankSlots[i] = button
         end
+        button.bag = pos.bag
+        button.slot = pos.slot
+        button:ClearAllPoints()
+        button:SetPoint(
+            "TOPLEFT",
+            slotContainer,
+            "TOPLEFT",
+            pos.col * (SLOT_SIZE + SLOT_SPACING),
+            -pos.row * (SLOT_SIZE + SLOT_SPACING)
+        )
+        button:SetID(pos.slot)
+        button:Show()
     end
 
     -- 更新 slotContainer 高度（會觸發 ScrollFrame 重算捲軸範圍）
-    local bankCols = ResizeBankFrame(slotID) or BANK_VIEWPORT_COLS
+    ResizeBankFrame(slotID, layout.totalRows)
 
-    -- 重新定位所有格子（全部可見，超出 viewport 的部分由 ScrollFrame 捲動顯示）
-    for i = 1, slotID do
-        local button = bankSlots[i]
-        if button then
-            local row = mathFloor((i - 1) / bankCols)
-            local col = (i - 1) % bankCols
-
-            button:ClearAllPoints()
-            button:SetPoint(
-                "TOPLEFT",
-                bankFrame.slotContainer,
-                "TOPLEFT",
-                col * (SLOT_SIZE + SLOT_SPACING),
-                -row * (SLOT_SIZE + SLOT_SPACING)
-            )
-            button:Show()
-        end
-    end
+    -- 更新 section 分隔線（跟 viewport 寬度一致）
+    local viewportContentWidth = layout.bankCols * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING
+    UpdateSectionDividers(layout.sectionBreaks, slotContainer, viewportContentWidth)
 
     -- 隱藏多餘格子（已刪除的舊格子）
     for i = slotID + 1, #bankSlots do
@@ -599,6 +806,28 @@ local function OpenBank()
         RefreshBankLayout()
         bankFrame:Show()
         isBankOpen = true
+
+        -- 恢復上次捲動位置：ScrollFrame 的 GetVerticalScrollRange 需要一個 frame
+        -- tick 才會在 Show 後算好，同一 frame 內會回傳 0 導致 savedPos 被錯誤
+        -- clamp 成 0（等於每次開銀行都跳回頂部）。用 C_Timer.After(0) 延後到
+        -- 下一 frame。若使用者在 tick 前關掉銀行則跳過恢復避免作用在已隱藏的框架。
+        if bankFrame.scrollFrame then
+            C_Timer.After(0, function()
+                if not isBankOpen or not bankFrame or not bankFrame.scrollFrame then
+                    return
+                end
+                local d = GetBagDB()
+                local savedPos = (d and d.bankScrollPos) or 0
+                local maxScroll = bankFrame.scrollFrame:GetVerticalScrollRange() or 0
+                if savedPos > maxScroll then
+                    savedPos = maxScroll
+                end
+                if savedPos < 0 then
+                    savedPos = 0
+                end
+                bankFrame.scrollFrame:SetVerticalScroll(savedPos)
+            end)
+        end
 
         -- 並排：把背包錨定到銀行右側（ElvUI 模式）
         local bagFrame = LunarUI.BagsGetBagFrame and LunarUI.BagsGetBagFrame()
@@ -672,10 +901,15 @@ LunarUI.GetTotalBankFreeSlots = GetTotalBankFreeSlots
 LunarUI.GetLastOccupiedSlotID = GetLastOccupiedSlotID
 
 -- Spec-only exports: allow unit tests to exercise the scrollable-bank
--- viewport invariant directly (`bankFrame.bankCols == BANK_VIEWPORT_COLS`
--- regardless of slot count). Underscore prefix marks these as internal.
+-- viewport invariant directly. Underscore prefix marks these as internal.
 LunarUI._ResizeBankFrame = ResizeBankFrame
-LunarUI._BANK_VIEWPORT_COLS = BANK_VIEWPORT_COLS
+LunarUI._ComputeBankLayout = ComputeBankLayout
+LunarUI._GetViewportCols = GetViewportCols
+LunarUI._GetViewportRows = GetViewportRows
+LunarUI._BANK_VIEWPORT_COLS_DEFAULT = BANK_VIEWPORT_COLS_DEFAULT
+LunarUI._BANK_VIEWPORT_ROWS_DEFAULT = BANK_VIEWPORT_ROWS_DEFAULT
+LunarUI._BANK_VIEWPORT_MIN = BANK_VIEWPORT_MIN
+LunarUI._BANK_VIEWPORT_MAX = BANK_VIEWPORT_MAX
 LunarUI._SetBankFrameForTest = function(f)
     bankFrame = f
 end

@@ -538,6 +538,15 @@ L["clearSearchOnCloseDesc"] = "關閉背包時自動清除搜尋欄"
 L["resetPosition"] = "重置位置"
 L["resetPositionDesc"] = "將背包和銀行框架位置重置為預設"
 
+-- 銀行可捲動視窗（WoW 12.0 角色銀行可能有 600+ 格）
+L["bankHeader"] = "銀行（可捲動）"
+L["bankViewportCols"] = "銀行視窗欄數"
+L["bankViewportColsDesc"] = "銀行視窗可見欄數（8-20）。超出範圍用捲軸捲動。"
+L["bankViewportRows"] = "銀行視窗列數"
+L["bankViewportRowsDesc"] = "銀行視窗可見列數上限（8-20）。超出即觸發捲軸。"
+L["bankDimEmpty"] = "淡化空格"
+L["bankDimEmptyDesc"] = "降低空格的透明度讓有物品的格子更突出。"
+
 -- 選項面板：聊天
 L["chat"] = "聊天"
 L["chatDesc"] = "聊天框設定"

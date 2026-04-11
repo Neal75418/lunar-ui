@@ -536,6 +536,15 @@ L["clearSearchOnCloseDesc"] = "Automatically clear the search box when closing b
 L["resetPosition"] = "Reset Position"
 L["resetPositionDesc"] = "Reset bag and bank frame positions to default"
 
+-- Bank scrollable viewport (WoW 12.0 character banks can have 600+ slots)
+L["bankHeader"] = "Bank (Scrollable)"
+L["bankViewportCols"] = "Bank Viewport Columns"
+L["bankViewportColsDesc"] = "Number of columns visible in the bank window (8-20). Rows beyond this scroll."
+L["bankViewportRows"] = "Bank Viewport Rows"
+L["bankViewportRowsDesc"] = "Number of rows visible in the bank window before scrolling kicks in (8-20)."
+L["bankDimEmpty"] = "Dim Empty Slots"
+L["bankDimEmptyDesc"] = "Reduce the opacity of empty bank slots to make items stand out more."
+
 -- Options Panel: Chat
 L["chat"] = "Chat"
 L["chatDesc"] = "Chat frame settings"

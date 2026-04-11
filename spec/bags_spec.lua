@@ -587,14 +587,40 @@ describe("ResizeBankFrame viewport invariant", function()
         return fake, calls
     end
 
-    it("pins bankFrame.bankCols to BANK_VIEWPORT_COLS (14) regardless of slot count", function()
+    before_each(function()
+        -- Clean DB state — fall back to defaults (14) for viewport
+        LunarUI.db.profile.bags.bankViewportCols = nil
+        LunarUI.db.profile.bags.bankViewportRows = nil
+    end)
+
+    it("pins bankFrame.bankCols to viewport default (14) regardless of slot count", function()
         local fake = makeFakeBank()
         LunarUI._SetBankFrameForTest(fake)
         LunarUI._ResizeBankFrame(600) -- simulate WoW 12.0 fully-unlocked character bank
-        assert.equals(14, LunarUI._BANK_VIEWPORT_COLS)
+        assert.equals(14, LunarUI._BANK_VIEWPORT_COLS_DEFAULT)
         assert.equals(14, fake.bankCols, "bankCols must stay at viewport width, got " .. tostring(fake.bankCols))
         assert.equals(600, fake.displaySlots, "all slots reachable via scroll; displaySlots = actual count")
         LunarUI._SetBankFrameForTest(nil) -- cleanup
+    end)
+
+    it("respects DB override for viewport columns", function()
+        local fake = makeFakeBank()
+        LunarUI.db.profile.bags.bankViewportCols = 12
+        LunarUI._SetBankFrameForTest(fake)
+        LunarUI._ResizeBankFrame(600)
+        assert.equals(12, fake.bankCols, "DB override should drive bankCols")
+        LunarUI._SetBankFrameForTest(nil)
+    end)
+
+    it("clamps out-of-range DB values to [8, 20]", function()
+        assert.equals(LunarUI._BANK_VIEWPORT_MIN, 8)
+        assert.equals(LunarUI._BANK_VIEWPORT_MAX, 20)
+        LunarUI.db.profile.bags.bankViewportCols = 50 -- above max
+        assert.equals(20, LunarUI._GetViewportCols())
+        LunarUI.db.profile.bags.bankViewportCols = 2 -- below min
+        assert.equals(8, LunarUI._GetViewportCols())
+        LunarUI.db.profile.bags.bankViewportCols = "invalid" -- wrong type
+        assert.equals(14, LunarUI._GetViewportCols(), "falls back to default on bad type")
     end)
 
     it("sets slotContainer height based on totalRows, not total slot count", function()
@@ -617,6 +643,115 @@ describe("ResizeBankFrame viewport invariant", function()
         assert.equals(0, #calls.setHeight, "no SetHeight call for empty bank")
         assert.is_nil(fake.bankCols, "bankCols untouched when actualSlotCount is 0")
         LunarUI._SetBankFrameForTest(nil)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- ComputeBankLayout: row-based section layout
+-- Each bank container (main + 6 tabs) starts at its own row boundary so
+-- sections do not overlap mid-row. Tests mock C_Container.GetContainerNumSlots
+-- to simulate various bank configurations.
+--------------------------------------------------------------------------------
+
+describe("ComputeBankLayout", function()
+    local originalGetNumSlots
+
+    before_each(function()
+        originalGetNumSlots = _G.C_Container.GetContainerNumSlots
+        LunarUI.db.profile.bags.bankViewportCols = nil -- use default 14
+    end)
+
+    after_each(function()
+        _G.C_Container.GetContainerNumSlots = originalGetNumSlots
+    end)
+
+    -- Helper: install a per-bag-ID slot count mock
+    local function setSlotCounts(counts)
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            return counts[bag] or 0
+        end
+    end
+
+    it("handles a single-container bank (main bank only, 28 slots)", function()
+        setSlotCounts({ [-1] = 28 })
+        local layout = LunarUI._ComputeBankLayout()
+        assert.equals(28, layout.slotCount)
+        -- 28 slots / 14 cols = 2 rows exactly
+        assert.equals(2, layout.totalRows)
+        -- No section breaks (only one non-empty container)
+        assert.equals(0, #layout.sectionBreaks, "first section should not get a divider")
+        -- Slot 28 ends at row 1, col 13 (0-indexed)
+        assert.equals(1, layout.positions[28].row)
+        assert.equals(13, layout.positions[28].col)
+    end)
+
+    it("places each container on a row boundary", function()
+        -- Main bank: 28 (2 rows), tab 6: 98 (7 rows), tab 7: 98 (7 rows)
+        setSlotCounts({ [-1] = 28, [6] = 98, [7] = 98 })
+        local layout = LunarUI._ComputeBankLayout()
+        assert.equals(28 + 98 + 98, layout.slotCount)
+        -- Total rows: 2 (main) + 7 (tab 6) + 7 (tab 7) = 16
+        assert.equals(16, layout.totalRows)
+        -- Section break at row 2 (start of tab 6) and row 9 (start of tab 7)
+        assert.equals(2, #layout.sectionBreaks)
+        assert.equals(2, layout.sectionBreaks[1].row)
+        assert.equals(6, layout.sectionBreaks[1].bag, "first break belongs to tab 6")
+        assert.equals(9, layout.sectionBreaks[2].row)
+        assert.equals(7, layout.sectionBreaks[2].bag, "second break belongs to tab 7")
+        -- First slot of tab 6 starts at row 2, col 0
+        assert.equals(2, layout.positions[29].row)
+        assert.equals(0, layout.positions[29].col)
+        -- First slot of tab 7 starts at row 9, col 0
+        assert.equals(9, layout.positions[29 + 98].row)
+        assert.equals(0, layout.positions[29 + 98].col)
+    end)
+
+    it("skips empty containers without creating a stray divider", function()
+        -- Main bank empty, tab 6 empty, tab 7 has 40 slots, tab 8 empty, tab 9 has 20
+        setSlotCounts({ [-1] = 0, [6] = 0, [7] = 40, [8] = 0, [9] = 20 })
+        local layout = LunarUI._ComputeBankLayout()
+        assert.equals(40 + 20, layout.slotCount)
+        -- Tab 7 (first non-empty) should not produce a divider
+        -- Tab 9 (second non-empty) should produce one divider
+        assert.equals(1, #layout.sectionBreaks, "only second non-empty section gets a divider")
+        assert.equals(9, layout.sectionBreaks[1].bag)
+        -- Tab 7: 40 slots / 14 cols = ceil(2.857) = 3 rows
+        -- Tab 9 starts at row 3
+        assert.equals(3, layout.sectionBreaks[1].row)
+    end)
+
+    it("handles partial last row in a section — next section starts cleanly", function()
+        -- Main bank: 20 slots (fills 2 rows: row 0 full + row 1 cols 0-5)
+        -- Tab 6: 10 slots — must start at row 2, NOT row 1 col 6
+        setSlotCounts({ [-1] = 20, [6] = 10 })
+        local layout = LunarUI._ComputeBankLayout()
+        assert.equals(30, layout.slotCount)
+        -- First slot of tab 6 (slotID 21) should be at row 2, col 0
+        local tab6FirstSlot = layout.positions[21]
+        assert.equals(2, tab6FirstSlot.row, "tab 6 must start on row 2 (next row after partial row 1)")
+        assert.equals(0, tab6FirstSlot.col, "tab 6 must start at col 0")
+        -- Total rows = 2 (main, partially full) + 1 (tab 6, 10 slots = 1 row) = 3
+        assert.equals(3, layout.totalRows)
+    end)
+
+    it("respects DB viewport column override", function()
+        LunarUI.db.profile.bags.bankViewportCols = 10
+        setSlotCounts({ [-1] = 28 })
+        local layout = LunarUI._ComputeBankLayout()
+        -- 28 slots / 10 cols = 3 rows
+        assert.equals(10, layout.bankCols)
+        assert.equals(3, layout.totalRows)
+        -- Slot 11 starts at row 1, col 0
+        assert.equals(1, layout.positions[11].row)
+        assert.equals(0, layout.positions[11].col)
+    end)
+
+    it("handles fully empty bank (all containers = 0)", function()
+        setSlotCounts({}) -- all default to 0
+        local layout = LunarUI._ComputeBankLayout()
+        assert.equals(0, layout.slotCount)
+        assert.equals(0, #layout.sectionBreaks)
+        assert.equals(1, layout.totalRows, "totalRows should floor at 1 to avoid SetHeight(0)")
     end)
 end)
 
