@@ -53,13 +53,13 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 
 `/lunar` 或 `/lui`
 
-| 指令 | 說明 |
-|:---|:---|
-| `/lunar config` | 開啟設定面板 |
-| `/lunar install` | 重新執行安裝精靈 |
-| `/lunar move` | 框架拖曳模式 |
-| `/lunar keybind` | 按鍵綁定模式 |
-| `/lunar reset [all]` | 重置框架位置 |
+| 指令                             | 說明           |
+|:-------------------------------|:-------------|
+| `/lunar config`                | 開啟設定面板       |
+| `/lunar install`               | 重新執行安裝精靈     |
+| `/lunar move`                  | 框架拖曳模式       |
+| `/lunar keybind`               | 按鍵綁定模式       |
+| `/lunar reset [all]`           | 重置框架位置       |
 | `/lunar toggle` / `on` / `off` | 切換 / 啟用 / 停用 |
 
 > 其他命令（`status`、`export`、`import`、`debug`、`profile`、`debugvigor`）輸入 `/lunar` 查看完整列表。
@@ -74,24 +74,24 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 
 所有第三方庫位於 `LunarUI/Libs/`，由根目錄 [.pkgmeta](.pkgmeta) 管理，不納入版本控制。
 
-| 庫 | 版本 | 用途 |
-|:---|:---|:---|
-| [oUF](https://github.com/oUF-wow/oUF) | 13.1.1 | UnitFrames / Nameplates |
-| [Ace3](https://github.com/WoWUIDev/Ace3) | r1390 | 框架 / 事件 / DB / 設定 |
-| [LibSharedMedia-3.0](https://www.curseforge.com/wow/addons/libsharedmedia-3-0) | 11.2.1 | 材質 / 字體 |
-| [LibActionButton-1.0](https://github.com/Nevcairiel/LibActionButton-1.0) | 0.57 | ActionBars |
+| 庫                                                                              | 版本     | 用途                      |
+|:-------------------------------------------------------------------------------|:-------|:------------------------|
+| [oUF](https://github.com/oUF-wow/oUF)                                          | 13.1.1 | UnitFrames / Nameplates |
+| [Ace3](https://github.com/WoWUIDev/Ace3)                                       | r1390  | 框架 / 事件 / DB / 設定       |
+| [LibSharedMedia-3.0](https://www.curseforge.com/wow/addons/libsharedmedia-3-0) | 11.2.1 | 材質 / 字體                 |
+| [LibActionButton-1.0](https://github.com/Nevcairiel/LibActionButton-1.0)       | 0.57   | ActionBars              |
 
 > 更新執行 `./scripts/update-libs.sh`；若失敗參考 [.pkgmeta](.pkgmeta) 手動處理。
 
 ## 故障排除
 
-| 問題 | 解決方式 |
-|:---|:---|
-| **Taint 錯誤** | LunarUI 內建 taint 過濾器，可安全忽略 |
-| **插件衝突** | 停用衝突插件的對應模組 |
-| **Skin 載入錯誤** | `/lunar config` → Skins → 個別停用問題 Skin |
-| **重置設定** | `/lunar reset all` 或刪除 `WTF/.../LunarUI.lua` |
-| **字體顯示異常** | `/lunar config` → General → 重選字體 |
+| 問題            | 解決方式                                         |
+|:--------------|:---------------------------------------------|
+| **Taint 錯誤**  | LunarUI 內建 taint 過濾器，可安全忽略                   |
+| **插件衝突**      | 停用衝突插件的對應模組                                  |
+| **Skin 載入錯誤** | `/lunar config` → Skins → 個別停用問題 Skin        |
+| **重置設定**      | `/lunar reset all` 或刪除 `WTF/.../LunarUI.lua` |
+| **字體顯示異常**    | `/lunar config` → General → 重選字體             |
 
 ## 開發
 
