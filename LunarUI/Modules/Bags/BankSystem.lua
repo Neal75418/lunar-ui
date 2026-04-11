@@ -353,10 +353,15 @@ local function CreateBankFrame()
     scrollFrame:SetPoint("TOPLEFT", PADDING, -HEADER_HEIGHT)
     scrollFrame:SetPoint("BOTTOMRIGHT", -PADDING - BANK_SCROLLBAR_WIDTH, FOOTER_HEIGHT)
     scrollFrame:EnableMouseWheel(true)
+    -- EnableMouse(false) 讓 left-click drag 事件透傳到父框架 bankFrame，
+    -- 使用者可以從捲動區域任意位置拖曳銀行（而非只能從 header 拖）
+    scrollFrame:EnableMouse(false)
 
-    -- 捲動速度：每次滾輪 = 1 列高度（SLOT_SIZE + SLOT_SPACING = 41px）
-    local scrollStep = SLOT_SIZE + SLOT_SPACING
+    -- 捲動速度：每次滾輪 = 1 列高度，從 GetConstants() 動態讀取以支援
+    -- 運行時 slot size 變更（RebuildBags 會在設定改動時整個重建 bankFrame）
     scrollFrame:SetScript("OnMouseWheel", function(self, delta)
+        local cc = GetConstants()
+        local scrollStep = cc.SLOT_SIZE + cc.SLOT_SPACING
         local current = self:GetVerticalScroll()
         local maxScroll = self:GetVerticalScrollRange()
         local newScroll = current - delta * scrollStep
@@ -665,6 +670,15 @@ LunarUI.GetBankSlotsPerRow = GetBankSlotsPerRow
 LunarUI.GetTotalBankSlots = GetTotalBankSlots
 LunarUI.GetTotalBankFreeSlots = GetTotalBankFreeSlots
 LunarUI.GetLastOccupiedSlotID = GetLastOccupiedSlotID
+
+-- Spec-only exports: allow unit tests to exercise the scrollable-bank
+-- viewport invariant directly (`bankFrame.bankCols == BANK_VIEWPORT_COLS`
+-- regardless of slot count). Underscore prefix marks these as internal.
+LunarUI._ResizeBankFrame = ResizeBankFrame
+LunarUI._BANK_VIEWPORT_COLS = BANK_VIEWPORT_COLS
+LunarUI._SetBankFrameForTest = function(f)
+    bankFrame = f
+end
 
 -- 供 RebuildBags 使用的清理函數
 LunarUI.BankSystemCleanup = function()

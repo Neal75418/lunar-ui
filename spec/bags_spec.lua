@@ -553,19 +553,70 @@ describe("GetBankSlotsPerRow", function()
         assert.equals(12, result) -- should not go below default
     end)
 
-    it("caps at BANK_VIEWPORT_COLS for very large banks (scrollable bank invariant)", function()
+    it("legacy helper caps at BANK_VIEWPORT_COLS for very large banks", function()
         _G.GetScreenHeight = function()
             return 1080
         end
         _G.GetScreenWidth = function()
             return 1920
         end
-        -- WoW 12.0 banks can have 600+ slots (6 tabs × 98). In scrollable-bank
-        -- mode, the viewport width must stay capped so the frame never exceeds
-        -- the fixed ScrollFrame viewport. Columns should never exceed 14.
+        -- Legacy path: GetBankSlotsPerRow is still callable by old code but
+        -- must also respect the scrollable-bank cap.
         local result = LunarUI.GetBankSlotsPerRow(600)
         assert.is_true(result <= 14, "bank cols should cap at 14, got " .. tostring(result))
         assert.is_true(result >= 12, "bank cols should not go below SLOTS_PER_ROW default")
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- ResizeBankFrame: scrollable-bank viewport invariant
+-- Directly exercises the production path that actually sets bankFrame.bankCols
+-- during OpenBank, independently of the legacy GetBankSlotsPerRow helper.
+--------------------------------------------------------------------------------
+
+describe("ResizeBankFrame viewport invariant", function()
+    local function makeFakeBank()
+        local calls = { setHeight = {} }
+        local fake = {
+            slotContainer = {
+                SetHeight = function(_, h)
+                    calls.setHeight[#calls.setHeight + 1] = h
+                end,
+            },
+        }
+        return fake, calls
+    end
+
+    it("pins bankFrame.bankCols to BANK_VIEWPORT_COLS (14) regardless of slot count", function()
+        local fake = makeFakeBank()
+        LunarUI._SetBankFrameForTest(fake)
+        LunarUI._ResizeBankFrame(600) -- simulate WoW 12.0 fully-unlocked character bank
+        assert.equals(14, LunarUI._BANK_VIEWPORT_COLS)
+        assert.equals(14, fake.bankCols, "bankCols must stay at viewport width, got " .. tostring(fake.bankCols))
+        assert.equals(600, fake.displaySlots, "all slots reachable via scroll; displaySlots = actual count")
+        LunarUI._SetBankFrameForTest(nil) -- cleanup
+    end)
+
+    it("sets slotContainer height based on totalRows, not total slot count", function()
+        local fake, calls = makeFakeBank()
+        LunarUI._SetBankFrameForTest(fake)
+        LunarUI._ResizeBankFrame(200)
+        -- With 14 cols and 200 slots, totalRows = ceil(200/14) = 15
+        -- contentHeight = 15 * (37+4) - 4 = 611
+        assert.equals(1, #calls.setHeight, "SetHeight should be called exactly once")
+        local h = calls.setHeight[1]
+        assert.is_true(h > 0, "contentHeight must be positive")
+        assert.equals(611, h, "contentHeight for 200 slots should be 611, got " .. tostring(h))
+        LunarUI._SetBankFrameForTest(nil)
+    end)
+
+    it("guards against empty bank (actualSlotCount = 0)", function()
+        local fake, calls = makeFakeBank()
+        LunarUI._SetBankFrameForTest(fake)
+        LunarUI._ResizeBankFrame(0)
+        assert.equals(0, #calls.setHeight, "no SetHeight call for empty bank")
+        assert.is_nil(fake.bankCols, "bankCols untouched when actualSlotCount is 0")
+        LunarUI._SetBankFrameForTest(nil)
     end)
 end)
 
