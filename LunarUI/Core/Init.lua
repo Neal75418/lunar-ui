@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch
 --[[
     LunarUI - 現代化戰鬥 UI 系統
     使用 Ace3 框架的核心初始化模組
@@ -213,20 +213,25 @@ function LunarUI.DisableModules()
     end
 
     -- 根據已註冊模組的 lifecycle 類型決定提示訊息
-    local needsReload = false
-    for _, mod in ipairs(moduleRegistry) do
-        if mod.lifecycle ~= "reversible" then
-            needsReload = true
-            break
-        end
-    end
-
     local L = Engine.L or {}
-    if needsReload then
+    if LunarUI.RequiresReloadForDisable() then
         LunarUI:Print(L["LunarUIDisabledReload"] or "LunarUI disabled (requires UI reload)")
     else
         LunarUI:Print(L["LunarUIDisabled"] or "LunarUI disabled")
     end
+end
+
+--[[
+    RequiresReloadForDisable - 判斷 /lunar off 是否會留下需要 /reload 才能
+    完全還原的模組（任一 non-reversible 模組即回傳 true）
+]]
+function LunarUI.RequiresReloadForDisable()
+    for _, mod in ipairs(moduleRegistry) do
+        if mod.lifecycle ~= "reversible" then
+            return true
+        end
+    end
+    return false
 end
 
 --------------------------------------------------------------------------------
@@ -252,7 +257,7 @@ end
 ]]
 function LunarUI:OnEnable()
     -- 取得 oUF 參照（TOC 中設定 X-oUF: LunarUF）
-    self.oUF = Engine.oUF or _G.LunarUF or _G.oUF
+    self.oUF = Engine.oUF or LunarUF or _G.oUF
 
     -- 註冊斜線命令
     self:RegisterCommands()

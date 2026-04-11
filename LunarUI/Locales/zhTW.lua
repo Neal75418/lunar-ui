@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch
 --[[
     LunarUI - 繁體中文本地化
 ]]
@@ -402,6 +402,11 @@ L["OptionsDesc"] = "月光主題現代化戰鬥 UI 替換"
 L["EnableLunarUI"] = "啟用 LunarUI"
 L["LunarUIDisabled"] = "LunarUI 已停用"
 L["LunarUIDisabledReload"] = "LunarUI 已停用（需重載 UI）"
+L["DisableConfirmText"] =
+    "停用 LunarUI 後，部分模組（UnitFrames / Nameplates / 換膚）需要 /reload 才能完全還原 Blizzard 原生 UI。是否繼續？"
+L["DisableConfirmContinue"] = "繼續停用"
+L["DisableConfirmCancel"] = "取消"
+L["DisableConfirmDontShow"] = "繼續並不再提醒"
 L["DebugModeDesc"] = "顯示除錯面板（FPS 和記憶體資訊）"
 L["RolePresets"] = "角色佈局預設"
 L["RolePresetsDesc"] = "根據你的角色快速調整團隊/隊伍框架佈局。"

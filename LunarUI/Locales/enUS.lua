@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch
 --[[
     LunarUI - English (US) Localization
 ]]
@@ -400,6 +400,11 @@ L["OptionsDesc"] = "Modern combat UI replacement with Lunar theme"
 L["EnableLunarUI"] = "Enable LunarUI"
 L["LunarUIDisabled"] = "LunarUI disabled"
 L["LunarUIDisabledReload"] = "LunarUI disabled (requires UI reload)"
+L["DisableConfirmText"] =
+    "After disabling LunarUI, some modules (UnitFrames / Nameplates / Skins) require /reload to fully restore the Blizzard default UI. Continue?"
+L["DisableConfirmContinue"] = "Disable"
+L["DisableConfirmCancel"] = "Cancel"
+L["DisableConfirmDontShow"] = "Disable and don't ask again"
 L["DebugModeDesc"] = "Show debug overlay with FPS and memory info"
 L["RolePresets"] = "Role Presets"
 L["RolePresetsDesc"] = "Quickly adjust raid/party frame layout for your role."

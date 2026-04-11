@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch
 --[[
     LunarUI - 資料庫預設值
     AceDB defaults 表定義
@@ -65,6 +65,7 @@ local defaults = {
         enabled = true,
         debug = false,
         uiScale = nil, -- 由安裝精靈設定；nil = 不覆寫系統縮放
+        warnedOnDisable = false, -- /lunar off 首次 reload-required 時顯示確認對話框
 
         -- 單位框架設定
         unitframes = {

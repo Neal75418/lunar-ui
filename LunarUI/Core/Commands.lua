@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, unnecessary-if
+---@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch
 --[[
     LunarUI - 斜線命令
     /lunar 命令實作
@@ -270,6 +270,71 @@ end
 --------------------------------------------------------------------------------
 
 --[[
+    實際停用：關閉 db.enabled 旗標並跑 DisableModules
+    （抽出為 helper 以便 confirm dialog 的 OnAccept 呼叫）
+]]
+local function PerformDisable()
+    LunarUI.db.profile.enabled = false
+    if LunarUI.DisableModules then
+        LunarUI.DisableModules()
+    end
+end
+
+--[[
+    首次 /lunar off 確認對話框（只在 non-reversible 模組存在時出現）
+    使用 StaticPopupDialogs 以支援 Escape / 取消 / 不再提醒
+]]
+local function EnsureDisableConfirmDialog()
+    local L = Engine.L or {}
+    if not StaticPopupDialogs["LUNARUI_DISABLE_CONFIRM"] then
+        StaticPopupDialogs["LUNARUI_DISABLE_CONFIRM"] = {
+            text = L["DisableConfirmText"]
+                or "停用 LunarUI 後，部分模組（UnitFrames / Nameplates / 換膚）需要 /reload 才能完全還原 Blizzard 原生 UI。是否繼續？",
+            button1 = L["DisableConfirmContinue"] or "繼續停用",
+            button2 = L["DisableConfirmCancel"] or "取消",
+            button3 = L["DisableConfirmDontShow"] or "繼續並不再提醒",
+            OnAccept = function()
+                PerformDisable()
+            end,
+            OnAlt = function()
+                -- button3：不再提醒 + 繼續停用
+                LunarUI.db.profile.warnedOnDisable = true
+                PerformDisable()
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            -- 不設 exclusive：user-initiated /lunar off 不應被其他 popup 無聲吃掉
+        }
+    end
+end
+
+--[[
+    執行 /lunar off 流程：視模組 lifecycle 與使用者偏好決定是否彈 dialog
+]]
+local function RequestDisable()
+    -- 所有模組都是 reversible：/lunar off 無副作用，直接停用不彈 dialog
+    if not LunarUI.RequiresReloadForDisable or not LunarUI.RequiresReloadForDisable() then
+        PerformDisable()
+        return
+    end
+
+    -- 使用者已選「不再提醒」：直接停用
+    if LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.warnedOnDisable then
+        PerformDisable()
+        return
+    end
+
+    -- 首次 /lunar off 遇到 non-reversible：彈 dialog 讓使用者確認
+    EnsureDisableConfirmDialog()
+    StaticPopup_Show("LUNARUI_DISABLE_CONFIRM")
+end
+
+-- 測試用匯出（spec 直接驅動 RequestDisable 避開 print 噪音）
+LunarUI._RequestDisable = RequestDisable
+LunarUI._PerformDisable = PerformDisable
+
+--[[
     切換插件開關
 ]]
 function LunarUI:ToggleAddon(cmd)
@@ -282,24 +347,17 @@ function LunarUI:ToggleAddon(cmd)
         end
         self:Print(L["Enabled"] or "Enabled")
     elseif cmd == "off" then
-        self.db.profile.enabled = false
-        -- 真的停用所有模組（呼叫 onDisable + 還原暴雪動作條）
-        -- DisableModules 會輸出 LunarUIDisabledReload 訊息，不需額外 print
-        if LunarUI.DisableModules then
-            LunarUI.DisableModules()
-        end
+        -- RequestDisable 處理 confirm dialog + 實際停用
+        RequestDisable()
     else
-        self.db.profile.enabled = not self.db.profile.enabled
         if self.db.profile.enabled then
+            RequestDisable()
+        else
+            self.db.profile.enabled = true
             if LunarUI.EnableModules then
                 LunarUI.EnableModules()
             end
             self:Print(L["Enabled"] or "Enabled")
-        else
-            -- DisableModules 會輸出 LunarUIDisabledReload 訊息，不需額外 print
-            if LunarUI.DisableModules then
-                LunarUI.DisableModules()
-            end
         end
     end
 end

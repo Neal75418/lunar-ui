@@ -1,4 +1,4 @@
----@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unnecessary-if, unused, global-in-non-module, access-invisible, deprecated
+---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for LunarUI/Core/Commands.lua
     Tests slash command dispatch, toggle logic, and help output
@@ -115,6 +115,13 @@ describe("ToggleAddon", function()
     before_each(function()
         LunarUI.db.profile.enabled = true
         wipe(printLog)
+        -- 每次測試重置 RequiresReloadForDisable（預設全 reversible，無需確認）
+        LunarUI.RequiresReloadForDisable = function()
+            return false
+        end
+        LunarUI.db.profile.warnedOnDisable = false
+        _G.StaticPopupDialogs = {}
+        _G.StaticPopup_Show = function() end
     end)
 
     it("toggles addon off", function()
@@ -138,6 +145,109 @@ describe("ToggleAddon", function()
         LunarUI.db.profile.enabled = false
         LunarUI:ToggleAddon("toggle")
         assert.is_true(LunarUI.db.profile.enabled)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- DisableConfirm dialog (Phase 5)
+--------------------------------------------------------------------------------
+
+describe("DisableConfirm dialog", function()
+    local shownPopup
+
+    before_each(function()
+        LunarUI.db.profile.enabled = true
+        LunarUI.db.profile.warnedOnDisable = false
+        wipe(printLog)
+        shownPopup = nil
+        _G.StaticPopupDialogs = {}
+        _G.StaticPopup_Show = function(id)
+            shownPopup = id
+        end
+    end)
+
+    after_each(function()
+        -- 避免 `RequiresReloadForDisable` override 洩漏到其他 describe
+        -- block（Phase 5 新增，否則 SlashCommand integration / ToggleAddon
+        -- 會隨 test ordering 閃爍失敗）
+        LunarUI.RequiresReloadForDisable = nil
+    end)
+
+    it("no dialog when all modules reversible (direct disable)", function()
+        LunarUI.RequiresReloadForDisable = function()
+            return false
+        end
+        LunarUI:ToggleAddon("off")
+        assert.is_nil(shownPopup, "dialog should not appear when reversible")
+        assert.is_false(LunarUI.db.profile.enabled)
+    end)
+
+    it("no dialog when warnedOnDisable flag is true", function()
+        LunarUI.RequiresReloadForDisable = function()
+            return true
+        end
+        LunarUI.db.profile.warnedOnDisable = true
+        LunarUI:ToggleAddon("off")
+        assert.is_nil(shownPopup, "dialog should not reappear after opt-out")
+        assert.is_false(LunarUI.db.profile.enabled)
+    end)
+
+    it("shows dialog on first /lunar off with non-reversible modules", function()
+        LunarUI.RequiresReloadForDisable = function()
+            return true
+        end
+        LunarUI:ToggleAddon("off")
+        assert.equals("LUNARUI_DISABLE_CONFIRM", shownPopup)
+        -- DB flag unchanged until user picks an option; addon not yet disabled
+        assert.is_true(LunarUI.db.profile.enabled)
+        assert.is_false(LunarUI.db.profile.warnedOnDisable)
+    end)
+
+    it("dialog OnAccept performs disable", function()
+        LunarUI.RequiresReloadForDisable = function()
+            return true
+        end
+        LunarUI:ToggleAddon("off")
+        local dlg = _G.StaticPopupDialogs["LUNARUI_DISABLE_CONFIRM"]
+        assert.is_not_nil(dlg)
+        dlg.OnAccept()
+        assert.is_false(LunarUI.db.profile.enabled)
+        -- Continue button does NOT set the opt-out flag
+        assert.is_false(LunarUI.db.profile.warnedOnDisable)
+    end)
+
+    it("dialog OnAlt ('continue and don't ask again') sets flag and disables", function()
+        LunarUI.RequiresReloadForDisable = function()
+            return true
+        end
+        LunarUI:ToggleAddon("off")
+        local dlg = _G.StaticPopupDialogs["LUNARUI_DISABLE_CONFIRM"]
+        dlg.OnAlt()
+        assert.is_false(LunarUI.db.profile.enabled)
+        assert.is_true(LunarUI.db.profile.warnedOnDisable)
+    end)
+
+    it("toggle (no arg) with non-reversible modules routes through dialog", function()
+        LunarUI.RequiresReloadForDisable = function()
+            return true
+        end
+        LunarUI:ToggleAddon("toggle")
+        assert.equals("LUNARUI_DISABLE_CONFIRM", shownPopup)
+        assert.is_true(LunarUI.db.profile.enabled, "should not disable until user confirms")
+    end)
+
+    it("dialog Cancel path (neither OnAccept nor OnAlt) leaves addon enabled", function()
+        LunarUI.RequiresReloadForDisable = function()
+            return true
+        end
+        LunarUI:ToggleAddon("off")
+        local dlg = _G.StaticPopupDialogs["LUNARUI_DISABLE_CONFIRM"]
+        assert.is_not_nil(dlg)
+        -- Simulate user clicking Cancel: neither OnAccept nor OnAlt fires
+        assert.is_nil(dlg.OnCancel, "no custom OnCancel; StaticPopup default is no-op")
+        -- Addon still enabled, flag unchanged
+        assert.is_true(LunarUI.db.profile.enabled)
+        assert.is_false(LunarUI.db.profile.warnedOnDisable)
     end)
 end)
 
@@ -236,6 +346,8 @@ describe("SlashCommand integration", function()
         wipe(printLog)
         LunarUI.db.profile.enabled = true
         LunarUI.db.profile.debug = false
+        -- RequiresReloadForDisable 的 test overrides 已由 DisableConfirm
+        -- describe 的 after_each 清掉，此處無需手動 reset
     end)
 
     it("dispatches 'toggle' command", function()
