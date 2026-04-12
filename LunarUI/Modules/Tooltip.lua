@@ -591,10 +591,15 @@ local function GetTooltipItemInfo(itemID)
         wipe(tooltipItemCache)
         tooltipItemCacheSize = 0
     end
+    -- P3 fix: 只在 showItemCount 啟用時才查 GetItemCount（2 次 C call）。
+    -- showItemCount 預設關閉，品質著色只需 GetItemQualityByID。
+    -- 快速掃背包/商人時省掉不必要的 count 查詢。
+    local db = LunarUI.GetModuleDB("tooltip")
+    local needCount = db and db.showItemCount
     entry = {
         quality = C_Item.GetItemQualityByID(numID),
-        bagCount = C_Item.GetItemCount(numID, false) or 0,
-        totalCount = C_Item.GetItemCount(numID, true) or 0,
+        bagCount = needCount and (C_Item.GetItemCount(numID, false) or 0) or 0,
+        totalCount = needCount and (C_Item.GetItemCount(numID, true) or 0) or 0,
         countStamp = now,
     }
     tooltipItemCache[numID] = entry

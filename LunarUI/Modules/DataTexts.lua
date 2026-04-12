@@ -240,9 +240,11 @@ RegisterProvider("durability", {
 })
 
 -- 背包空位
+-- P3 fix: BAG_UPDATE 在排序/拾取/移動時連續觸發多次，每次都全量統計 0..5 號容器。
+-- 改用 BAG_UPDATE_DELAYED（WoW 在一串 BAG_UPDATE 結束後只觸發一次），合併重複統計。
 RegisterProvider("bagSlots", {
     label = L["BagSlots"] or "Bag Slots",
-    events = { "BAG_UPDATE", "PLAYER_ENTERING_WORLD" },
+    events = { "BAG_UPDATE_DELAYED", "PLAYER_ENTERING_WORLD" },
     update = function()
         local totalFree, totalSlots = 0, 0
         for bag = 0, 5 do -- 含材料袋（bag 5）
@@ -671,22 +673,24 @@ local function UpdateProvider(providerName)
         return
     end
 
+    -- P3 fix: 先檢查此 provider 是否被任何 slot 使用；未使用時跳過 update() 呼叫，
+    -- 避免 coords/clock 等 OnUpdate 型 provider 在未啟用時仍持續執行 API 查詢。
+    local slots = slotsByProvider[providerName]
+    if not slots or #slots == 0 then
+        return
+    end
+
     local text = provider.update()
     if not text then
         return
     end
 
-    -- Fix 5: 直接查反查表，不遍歷所有面板/欄位
     -- Perf A5: value-unchanged short-circuit 避免 SetText thrash。
-    -- FPS / 時鐘這類每秒刷新但多數 tick 值不變的 provider 從此零重繪成本。
-    local slots = slotsByProvider[providerName]
-    if slots then
-        for i = 1, #slots do
-            local slot = slots[i]
-            if slot._lastText ~= text then
-                slot.text:SetText(text)
-                slot._lastText = text
-            end
+    for i = 1, #slots do
+        local slot = slots[i]
+        if slot._lastText ~= text then
+            slot.text:SetText(text)
+            slot._lastText = text
         end
     end
 end
