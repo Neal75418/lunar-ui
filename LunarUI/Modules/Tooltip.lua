@@ -1,4 +1,4 @@
----@diagnostic disable: unbalanced-assignments, undefined-field, inject-field, param-type-mismatch, assign-type-mismatch, redundant-parameter, cast-local-type, need-check-nil, return-type-mismatch, missing-parameter, undefined-global, unused-local
+---@diagnostic disable: undefined-field, inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, missing-parameter, undefined-global, redundant-parameter, unused-local
 --[[
     LunarUI - 滑鼠提示模組（增強版）
     Lunar 主題風格的統一滑鼠提示

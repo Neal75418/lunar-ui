@@ -1,4 +1,4 @@
----@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unused, global-in-non-module, access-invisible, deprecated
+---@diagnostic disable: inject-field, undefined-field, undefined-global, need-check-nil, param-type-mismatch, assign-type-mismatch, missing-parameter, unused, global-in-non-module, access-invisible, duplicate-set-field, redundant-parameter
 --[[
     Unit tests for LunarUI/HUD/CooldownTracker.lua
     Tests FormatCooldown, GetSpellTexture cache, GetSpellCooldownInfo,
