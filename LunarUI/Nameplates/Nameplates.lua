@@ -1061,20 +1061,29 @@ end
 
 oUF:RegisterStyle("LunarUI_Nameplate", NameplateLayout)
 
--- 早期事件緩衝：捕捉 SpawnNameplates 延遲期間被錯過的 NAME_PLATE_UNIT_ADDED
--- 模組有 delay=0.2，reload 後事件可能在 oUF driver 註冊前就觸發
--- P2 fix: 加上 cap 防止 unbounded growth + 提供 cleanup helper 給 early-return / disable 路徑
+-- 戰鬥緩衝：SpawnNameplates 確認啟用後，若處於戰鬥鎖定才啟動
+-- oUF:SpawnNamePlates 內部做 SetAttribute（protected），無法在戰鬥中執行，
+-- 等待 REGEN_ENABLED 期間 NAME_PLATE_UNIT_ADDED 仍會觸發，需要暫存以便脫戰後回放
+-- delay=0 使 SpawnNameplates 在 PLAYER_LOGIN handler 中同步執行，
+-- NAME_PLATE_UNIT_ADDED 在 PLAYER_LOGIN 之後才觸發，正常路徑不需要 buffer
 local EARLY_BUFFER_CAP = 40 -- 名牌最多 ~40 個，超過就不緩衝
-local earlyPlateBuffer = CreateFrame("Frame")
-earlyPlateBuffer._units = {}
-earlyPlateBuffer:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-earlyPlateBuffer:SetScript("OnEvent", function(_self, _event, unit)
-    if #earlyPlateBuffer._units < EARLY_BUFFER_CAP then
-        earlyPlateBuffer._units[#earlyPlateBuffer._units + 1] = unit
-    end
-end)
+local earlyPlateBuffer -- nil：僅在 combat wait 時建立
 
--- 停止早期緩衝並釋放資源（供 early-return / cleanup / 成功 spawn 三路徑共用）
+local function StartEarlyPlateBuffer()
+    if earlyPlateBuffer then
+        return
+    end
+    earlyPlateBuffer = CreateFrame("Frame")
+    earlyPlateBuffer._units = {}
+    earlyPlateBuffer:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+    earlyPlateBuffer:SetScript("OnEvent", function(_self, _event, unit)
+        if #earlyPlateBuffer._units < EARLY_BUFFER_CAP then
+            earlyPlateBuffer._units[#earlyPlateBuffer._units + 1] = unit
+        end
+    end)
+end
+
+-- 停止緩衝並釋放資源（供 combat spawn 成功 / cleanup / disabled 三路徑共用）
 local function StopEarlyPlateBuffer()
     if not earlyPlateBuffer then
         return
@@ -1088,13 +1097,15 @@ end
 local function SpawnNameplates()
     local db = LunarUI.GetModuleDB("nameplates")
     if not db or not db.enabled then
-        -- P2 fix: 模組未啟用時停止早期緩衝，避免常駐收集事件 + unbounded buffer
         StopEarlyPlateBuffer()
         return
     end
 
     -- 使用事件驅動重試處理戰鬥鎖定（singleton 避免重複呼叫建立多個 frame）
     if InCombatLockdown() then
+        -- 戰鬥中無法呼叫 oUF:SpawnNamePlates（SetAttribute 受保護），
+        -- 啟動 buffer 捕捉等待期間的事件，脫戰後回放
+        StartEarlyPlateBuffer()
         if not npCombatWaitFrame then
             npCombatWaitFrame = CreateFrame("Frame")
         end
@@ -1271,6 +1282,8 @@ LunarUI:RegisterModule("Nameplates", {
     onDisable = function()
         LunarUI.CleanupNameplates()
     end,
-    delay = 0.2,
+    -- delay=0：在 PLAYER_LOGIN handler 中同步執行，早於 NAME_PLATE_UNIT_ADDED，
+    -- 無需 file-load 階段的事件緩衝；戰鬥鎖定時才按需啟動 buffer
+    delay = 0,
     lifecycle = "soft_disable",
 })

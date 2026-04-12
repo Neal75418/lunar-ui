@@ -485,7 +485,7 @@ describe("ClampImportedValues", function()
         assert.same({ unitframes = { player = {} } }, profile)
     end)
 
-    it("ignores non-number fontSize", function()
+    it("ignores non-number slotSize", function()
         local profile = { bags = { slotSize = "big" } }
         LunarUI.ClampImportedValues(profile)
         assert.equals("big", profile.bags.slotSize)

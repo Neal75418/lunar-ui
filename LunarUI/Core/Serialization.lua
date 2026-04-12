@@ -348,7 +348,12 @@ local function MergeTable(target, source, template, extra)
         local tval = template[k]
         local extraVal = extra and extra[k]
         if tval ~= nil or extraVal then
-            if type(v) == "table" and type(target[k]) == "table" and type(tval) == "table" then
+            if type(v) == "table" and type(tval) == "table" then
+                -- 確保 target[k] 是 table 才遞迴合併；若為 nil（使用者從未配置）則初始化空表，
+                -- 避免 raw import table 繞過遞迴白名單驗證
+                if type(target[k]) ~= "table" then
+                    target[k] = {}
+                end
                 MergeTable(target[k], v, tval, type(extraVal) == "table" and extraVal or nil)
             elseif tval == nil or type(v) == type(tval) then
                 -- tval == nil: extra key（無 template 型別資訊，允許任意型別）
