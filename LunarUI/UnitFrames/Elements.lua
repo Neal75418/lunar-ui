@@ -14,6 +14,7 @@ local UnitReaction = UnitReaction
 local UnitClass = UnitClass
 local UnitExists = UnitExists
 local UnitIsDeadOrGhost = UnitIsDeadOrGhost
+local UnitGUID = UnitGUID -- Perf B4: GUID cache hot path
 local RAID_CLASS_COLORS = RAID_CLASS_COLORS
 
 local C = LunarUI.Colors
@@ -87,6 +88,11 @@ local function CreateHealthBar(frame, unit)
     health.frequentUpdates = true
 
     -- 更新後鉤子：確保職業顏色正確套用（含 color cache 避免每幀重設）
+    -- Perf B4: frequentUpdates=true 下每幀呼叫此 PostUpdate，原本每次都查
+    -- UnitIsPlayer / UnitClass / UnitReaction / UnitIsDeadOrGhost ~5 個 C call。
+    -- 實務上 unit 身分/職業/陣營在 unit 不變時不會變，快取 GUID；GUID 相同時
+    -- 從快取讀 (r, g, b)，大幅減少 C call（15 frames × 60fps × 5 call = 4500/sec baseline）。
+    -- 死亡狀態保留每幀檢查（死亡狀態會變但 GUID 不變）。
     health.PostUpdate = function(self, _unit, _cur, _max)
         -- M11：快取 __owner 避免後段二次存取時 owner 已失效
         local ownerFrame = self.__owner
@@ -99,29 +105,38 @@ local function CreateHealthBar(frame, unit)
             return
         end
 
+        -- Perf B4: GUID 快取顏色。GUID 相同 → 身分不變 → 顏色不變，跳過所有查詢
+        local currentGUID = UnitGUID(ownerUnit)
         local r, g, b
-
-        -- 玩家使用職業顏色
-        if UnitIsPlayer(ownerUnit) then
-            local _, class = UnitClass(ownerUnit)
-            if class then
-                local color = RAID_CLASS_COLORS[class]
-                if color then
-                    r, g, b = color.r, color.g, color.b
+        if currentGUID and currentGUID == self._colorGUID then
+            r, g, b = self._lastR, self._lastG, self._lastB
+        else
+            -- 玩家使用職業顏色
+            if UnitIsPlayer(ownerUnit) then
+                local _, class = UnitClass(ownerUnit)
+                if class then
+                    local color = RAID_CLASS_COLORS[class]
+                    if color then
+                        r, g, b = color.r, color.g, color.b
+                    end
                 end
             end
-        end
 
-        -- NPC 使用聲望顏色
-        if not r then
-            local reaction = UnitReaction(ownerUnit, "player")
-            if reaction then
-                local rc = REACTION_COLORS[reaction]
-                if rc then
-                    r, g, b = rc[1], rc[2], rc[3]
-                else
-                    r, g, b = REACTION_COLORS[3][1], REACTION_COLORS[3][2], REACTION_COLORS[3][3]
+            -- NPC 使用聲望顏色
+            if not r then
+                local reaction = UnitReaction(ownerUnit, "player")
+                if reaction then
+                    local rc = REACTION_COLORS[reaction]
+                    if rc then
+                        r, g, b = rc[1], rc[2], rc[3]
+                    else
+                        r, g, b = REACTION_COLORS[3][1], REACTION_COLORS[3][2], REACTION_COLORS[3][3]
+                    end
                 end
+            end
+            -- 只在能算出顏色時更新 GUID 快取；算不出就保持舊 GUID，下一幀再試
+            if r then
+                self._colorGUID = currentGUID
             end
         end
 

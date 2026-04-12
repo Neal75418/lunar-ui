@@ -103,6 +103,11 @@ local isBankOpen = false
 local bankSearchBox
 local bankSearchTimer
 
+-- Perf B3: generation counter 使前一批 incremental-create / batch-update
+-- callback 失效；銀行關閉或重開時遞增，所有 in-flight C_Timer 都會 bail out。
+-- 宣告在 CreateBankFrame 之上以便兩個 ticker 共用。
+local bankUpdateGeneration = 0
+
 local backdropTemplate = LunarUI.backdropTemplate
 
 --------------------------------------------------------------------------------
@@ -592,9 +597,16 @@ local function CreateBankFrame()
     bankFrame.scrollFrame = scrollFrame
     bankFrame.slotContainer = slotContainer
 
-    -- Layout 計算：每個銀行容器佔整行邊界，避免 slot 跨越 section 分隔線
+    -- Perf B3: 分批建立 slot 以避免首次開啟銀行 ~1s 卡頓。
+    -- 同步建立 viewport 大小（預設 14×14=196）供第一幀即見可滑動區塊，
+    -- 剩餘 slot 由 C_Timer.NewTicker 每 frame 分批創建 40 個（~10 frames）。
+    -- bankUpdateGeneration 保證銀行關閉/重開時前一批次 callback 失效。
     local layout = ComputeBankLayout()
-    for i = 1, layout.slotCount do
+    local INITIAL_SLOTS = 196 -- 約 14×14 viewport 大小
+    local INCREMENTAL_BATCH = 40 -- 每 frame 創建數量
+    local totalSlots = layout.slotCount
+    local initialEnd = mathMin(INITIAL_SLOTS, totalSlots)
+    for i = 1, initialEnd do
         local pos = layout.positions[i]
         local button = CreateBankSlot(slotContainer, i, pos.bag, pos.slot)
         button:SetPoint(
@@ -607,7 +619,59 @@ local function CreateBankFrame()
         button:SetID(pos.slot)
         bankSlots[i] = button
     end
-    local slotID = layout.slotCount
+    local slotID = totalSlots
+
+    -- Perf B1: 通知 Bags 模組反向索引失效，新銀行 slot 需納入 slotsByBag
+    if LunarUI.BagsMarkSlotsByBagDirty then
+        LunarUI.BagsMarkSlotsByBagDirty()
+    end
+
+    -- 剩餘 slot 分批異步建立
+    if totalSlots > initialEnd then
+        local nextIdx = initialEnd + 1
+        local thisGen = bankUpdateGeneration
+        local ticker
+        ticker = C_Timer.NewTicker(0, function()
+            -- 銀行已關閉或重開 → 放棄這批次
+            if thisGen ~= bankUpdateGeneration or not bankFrame or not bankFrame.slotContainer then
+                if ticker then
+                    ticker:Cancel()
+                end
+                return
+            end
+            local batchEnd = mathMin(nextIdx + INCREMENTAL_BATCH - 1, totalSlots)
+            for i = nextIdx, batchEnd do
+                local pos = layout.positions[i]
+                if pos then
+                    local button = CreateBankSlot(bankFrame.slotContainer, i, pos.bag, pos.slot)
+                    button:SetPoint(
+                        "TOPLEFT",
+                        bankFrame.slotContainer,
+                        "TOPLEFT",
+                        pos.col * (SLOT_SIZE + SLOT_SPACING),
+                        -pos.row * (SLOT_SIZE + SLOT_SPACING)
+                    )
+                    button:SetID(pos.slot)
+                    button:Show()
+                    bankSlots[i] = button
+                    -- 畫物品內容
+                    if LunarUI.BagsUpdateBankSlot then
+                        LunarUI.BagsUpdateBankSlot(button)
+                    end
+                end
+            end
+            nextIdx = batchEnd + 1
+            if nextIdx > totalSlots then
+                if ticker then
+                    ticker:Cancel()
+                end
+                -- 最後 batch 完成：通知反向索引失效，讓下一次事件處理重建索引
+                if LunarUI.BagsMarkSlotsByBagDirty then
+                    LunarUI.BagsMarkSlotsByBagDirty()
+                end
+            end
+        end)
+    end
 
     -- 依實際列數（含 section 邊界 padding）調整 slotContainer 高度
     ResizeBankFrame(slotID, layout.totalRows)
@@ -688,7 +752,7 @@ end
 --------------------------------------------------------------------------------
 
 local bankUpdateQueue = {}
-local bankUpdateGeneration = 0
+-- bankUpdateGeneration declared at top of file (shared with B3 incremental create)
 local BANK_BATCH_SIZE = 10
 
 local function ProcessBankUpdateBatch()
@@ -767,6 +831,10 @@ local function RefreshBankLayout()
     -- 但 ContainerFrameItemButtonTemplate 的 OnLoad 會自動 Hide 按鈕，而 slow
     -- path 的 button:Show() 才會把它們顯示出來；跳過迴圈就會讓所有 slot 留在
     -- 隱藏狀態。~600 格銀行的成本約 30-100ms，可以接受。
+    -- Perf B1: layout 重建時 slot 的 .bag 映射可能改變，通知反向索引失效
+    if LunarUI.BagsMarkSlotsByBagDirty then
+        LunarUI.BagsMarkSlotsByBagDirty()
+    end
     for i = 1, slotID do
         local pos = layout.positions[i]
         local button = bankSlots[i]
@@ -882,6 +950,9 @@ local function CloseBank()
     end
     -- 清除銀行批次更新佇列避免洩漏
     wipe(bankUpdateQueue)
+    -- Perf B3: 遞增 generation 使 in-flight incremental-create / batch-update
+    -- ticker 在下一幀 bail out，避免關閉後 ticker 仍在隱藏框架上 CreateBankSlot
+    bankUpdateGeneration = bankUpdateGeneration + 1
 
     -- 重設排序旗標：銀行關閉時排序事件可能不再到達，避免 isSorting 永遠為 true
     LunarUI.BagsSetSorting(false)

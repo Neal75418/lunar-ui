@@ -541,6 +541,51 @@ end
 -- 物品滑鼠提示增強
 --------------------------------------------------------------------------------
 
+-- Perf B2: per-itemID 資料快取。掃過背包/商人時每秒 ~60-100 次 hover 不應每次
+-- 重新呼叫 GetItemLevel / GetItemQualityByID / GetItemCount ×2 / 掃 tooltip lines。
+-- 快取結構：itemID -> { ilvl, quality, bagCount, totalCount, stamp }
+-- 使用 GetTime() 秒數作 stamp，GetItemCount 快取 1 秒（避免跨操作仍殘留舊數）；
+-- ilvl / quality 對同 itemID 不會變，session 內永久有效。
+local tooltipItemCache = {}
+local TOOLTIP_ITEM_CACHE_MAX = 200
+local tooltipItemCacheSize = 0
+local COUNT_CACHE_TTL = 1.0 -- 秒；物品數量變動較頻繁，要週期 expire
+
+local function GetTooltipItemInfo(itemID)
+    local numID = tonumber(itemID)
+    if not numID then
+        return nil
+    end
+    local now = GetTime()
+    local entry = tooltipItemCache[numID]
+    if entry then
+        -- 對同一 itemID，ilvl/quality 不會變；但 bag/totalCount 會跟著物品移動變。
+        -- 如果 count 超過 TTL 就重新查 count，但保留 ilvl/quality。
+        if now - entry.countStamp > COUNT_CACHE_TTL then
+            entry.bagCount = C_Item.GetItemCount(numID, false) or 0
+            entry.totalCount = C_Item.GetItemCount(numID, true) or 0
+            entry.countStamp = now
+        end
+        return entry
+    end
+
+    -- 新 entry：需要完整查詢
+    if tooltipItemCacheSize >= TOOLTIP_ITEM_CACHE_MAX then
+        -- 簡單 wipe 策略：快取滿時全清（hover 模式下每分鐘最多觸發一次）
+        wipe(tooltipItemCache)
+        tooltipItemCacheSize = 0
+    end
+    entry = {
+        quality = C_Item.GetItemQualityByID(numID),
+        bagCount = C_Item.GetItemCount(numID, false) or 0,
+        totalCount = C_Item.GetItemCount(numID, true) or 0,
+        countStamp = now,
+    }
+    tooltipItemCache[numID] = entry
+    tooltipItemCacheSize = tooltipItemCacheSize + 1
+    return entry
+end
+
 local function OnTooltipSetItem(tooltip)
     if not LunarUI._modulesEnabled then
         return
@@ -558,79 +603,78 @@ local function OnTooltipSetItem(tooltip)
         return
     end
 
-    -- 顯示物品等級
+    -- Perf B2: 解析 itemID 一次，查快取一次，供後續所有 feature 重用
+    local itemIDStr = itemLink:match("item:(%d+)")
+    local itemID = itemIDStr and tonumber(itemIDStr)
+    local itemCache = itemID and GetTooltipItemInfo(itemID)
+
+    -- 顯示物品等級（ilvl 不在快取中因為要從 itemLink 抽，跟 itemID 不是一一對應）
     if db.showItemLevel then
         local itemLevel = GetItemLevel(itemLink)
         if itemLevel and itemLevel > 1 then
-            local found = false
-            local tooltipData = tooltip.GetTooltipData and tooltip:GetTooltipData()
-            if tooltipData and tooltipData.lines then
-                for i = 2, #tooltipData.lines do
-                    local lineData = tooltipData.lines[i]
-                    if
-                        lineData
-                        and lineData.leftText
-                        and (lineData.leftText:find("Item Level") or lineData.leftText:find("物品等級"))
-                    then
-                        found = true
-                        break
-                    end
-                end
-            else
-                for i = 2, tooltip:NumLines() do
-                    local line = _G[tooltip:GetName() .. "TextLeft" .. i]
-                    if line then
-                        local text = line:GetText()
-                        if text and (text:find("Item Level") or text:find("物品等級")) then
+            -- Perf B2: 使用 tooltip 上的 marker 去重，避免每次 hover 都掃 tooltip lines
+            -- OnTooltipSetItem 對同 tooltip instance 在同一 hover 只觸發一次，所以
+            -- marker 只需標記「本次 hover 已加過 ilvl line」即可。
+            if tooltip.LunarUI_ilvlAdded ~= itemLink then
+                local found = false
+                local tooltipData = tooltip.GetTooltipData and tooltip:GetTooltipData()
+                if tooltipData and tooltipData.lines then
+                    for i = 2, #tooltipData.lines do
+                        local lineData = tooltipData.lines[i]
+                        if
+                            lineData
+                            and lineData.leftText
+                            and (lineData.leftText:find("Item Level") or lineData.leftText:find("物品等級"))
+                        then
                             found = true
                             break
                         end
                     end
+                else
+                    for i = 2, tooltip:NumLines() do
+                        local line = _G[tooltip:GetName() .. "TextLeft" .. i]
+                        if line then
+                            local text = line:GetText()
+                            if text and (text:find("Item Level") or text:find("物品等級")) then
+                                found = true
+                                break
+                            end
+                        end
+                    end
                 end
-            end
 
-            if not found then
-                local L = Engine.L or _EMPTY
-                tooltip:AddLine(" ")
-                tooltip:AddLine("|cff00ff00" .. (L["TooltipItemLevel"] or "Item Level:") .. " " .. itemLevel .. "|r")
+                if not found then
+                    local L = Engine.L or _EMPTY
+                    tooltip:AddLine(" ")
+                    tooltip:AddLine(
+                        "|cff00ff00" .. (L["TooltipItemLevel"] or "Item Level:") .. " " .. itemLevel .. "|r"
+                    )
+                end
+                tooltip.LunarUI_ilvlAdded = itemLink
             end
         end
     end
 
-    -- 顯示物品持有數量
-    if db.showItemCount then
-        local itemID = itemLink:match("item:(%d+)")
-        if itemID then
-            local numID = tonumber(itemID)
-            if numID then
-                local bagCount = C_Item.GetItemCount(numID, false) or 0 -- M-4: nil guard
-                local totalCount = C_Item.GetItemCount(numID, true) -- 含銀行
-                if totalCount and totalCount > 0 then
-                    local bankCount = totalCount - bagCount
-                    local L = Engine.L or _EMPTY
-                    local countText = format("%s: %d", L["ItemCount"] or "Count", bagCount)
-                    if bankCount > 0 then
-                        countText = countText .. format("  (%s: %d)", L["BankTitle"] or "Bank", bankCount)
-                    end
-                    tooltip:AddLine("|cff888888" .. countText .. "|r")
-                end
-            end
+    -- 顯示物品持有數量（從 cache 取）
+    if db.showItemCount and itemCache and itemCache.totalCount > 0 then
+        local bankCount = itemCache.totalCount - itemCache.bagCount
+        local L = Engine.L or _EMPTY
+        local countText = format("%s: %d", L["ItemCount"] or "Count", itemCache.bagCount)
+        if bankCount > 0 then
+            countText = countText .. format("  (%s: %d)", L["BankTitle"] or "Bank", bankCount)
         end
+        tooltip:AddLine("|cff888888" .. countText .. "|r")
     end
 
     -- 顯示物品 ID
-    if db.showItemID then
-        local itemID = itemLink:match("item:(%d+)")
-        if itemID then
-            tooltip:AddLine("|cff888888物品 ID: " .. itemID .. "|r")
-        end
+    if db.showItemID and itemIDStr then
+        tooltip:AddLine("|cff888888物品 ID: " .. itemIDStr .. "|r")
     end
 
-    -- 依物品品質著色邊框
-    local itemID = itemLink:match("item:(%d+)")
+    -- 依物品品質著色邊框（從 cache 取）
     -- 12.0: GetItemQualityByID 是正確 API，GetItemInfo 已 deprecated
-    -- 物品未快取時兩者都回傳 nil（async），不做 fallback 避免呼叫 deprecated API
-    local quality = itemID and C_Item.GetItemQualityByID(tonumber(itemID))
+    -- 物品未快取時回傳 nil（async），不做 fallback 避免呼叫 deprecated API
+    local quality = itemCache and itemCache.quality
     if quality and quality > 1 then
         local qr, qg, qb = C_Item.GetItemQualityColor(quality)
         if qr and qg and qb then
@@ -826,11 +870,13 @@ local function InitializeTooltip()
             StyleTooltip(self)
         end)
 
-        -- 清除時重設邊框顏色
+        -- 清除時重設邊框顏色 + 清除 ilvl dedup marker（Perf B2: 避免 re-hover
+        -- 同物品時 marker 殘留導致 ilvl 行被誤跳過）
         GameTooltip:HookScript("OnTooltipCleared", function(self)
             if not LunarUI._modulesEnabled then
                 return
             end
+            self.LunarUI_ilvlAdded = nil
             if self.SetBackdropBorderColor then
                 self:SetBackdropBorderColor(C.border[1], C.border[2], C.border[3], C.border[4])
             elseif self.LunarBackdrop then

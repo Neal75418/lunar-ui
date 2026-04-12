@@ -102,6 +102,48 @@ local searchTimer -- 背包搜尋防抖計時器
 local pendingBagUpdates = {} -- BAG_UPDATE 累積的背包 ID（由 BAG_UPDATE_DELAYED 處理）
 local isSorting = false -- 排序進行中標記（排序期間跳過 ITEM_LOCK_CHANGED 全量更新）
 
+-- Perf B1: bag -> { button, button, ... } 反向索引，避免 BAG_UPDATE_DELAYED /
+-- ITEM_LOCK_CHANGED 對 600+ 個 slot 做 O(N) 線性掃描找匹配 bag 的 button。
+-- Dirty flag：任何 slot 的 .bag 變更都要設為 true，下次使用時 rebuild。
+local slotsByBag = {}
+local slotsByBagDirty = true
+
+local function MarkSlotsByBagDirty()
+    slotsByBagDirty = true
+end
+
+local function RebuildSlotsByBag()
+    wipe(slotsByBag)
+    for _, button in pairs(slots) do
+        if button and button.bag ~= nil then
+            local list = slotsByBag[button.bag]
+            if not list then
+                list = {}
+                slotsByBag[button.bag] = list
+            end
+            list[#list + 1] = button
+        end
+    end
+    -- 一併納入銀行 slots（若 BankSystem 已建立）
+    local bankSlotsRef = LunarUI.BagsGetBankSlots and LunarUI.BagsGetBankSlots()
+    if bankSlotsRef then
+        for _, button in pairs(bankSlotsRef) do
+            if button and button.bag ~= nil then
+                local list = slotsByBag[button.bag]
+                if not list then
+                    list = {}
+                    slotsByBag[button.bag] = list
+                end
+                list[#list + 1] = button
+            end
+        end
+    end
+    slotsByBagDirty = false
+end
+
+-- 導出給 BankSystem 用（建立/刷新銀行 slot 時通知索引失效）
+LunarUI.BagsMarkSlotsByBagDirty = MarkSlotsByBagDirty
+
 -- 從 DB 載入背包設定（覆寫模組常數）
 local function LoadBagSettings()
     local db = GetBagDB()
@@ -915,6 +957,7 @@ local function CreateBagFrame()
         SetItemButtonDesaturated(button, false)
 
         slots[slotID] = button
+        slotsByBagDirty = true -- Perf B1: 新 slot 加入，需重建反向索引
         layoutIdx = layoutIdx + 1
     end
 
@@ -1050,6 +1093,10 @@ local function RefreshBagLayout()
         if not button then
             button = CreateItemSlot(bagFrame.slotContainer, slotID, slotInfo.bag, slotInfo.slot)
             slots[slotID] = button
+        end
+        -- Perf B1: .bag 可能從舊 bag 變更為新 bag，索引需失效
+        if button.bag ~= slotInfo.bag then
+            slotsByBagDirty = true
         end
         button.bag = slotInfo.bag
         button.slot = slotInfo.slot
@@ -1392,25 +1439,24 @@ local function OnBagEvent(_self, event, ...)
     -- 這是 Bagnon 使用的模式，比 C_Timer 節流更可靠且零開銷
     if event == "BAG_UPDATE_DELAYED" then
         local bankFrame = LunarUI.BagsGetBankFrame()
-        local bankSlots = LunarUI.BagsGetBankSlots()
-        -- 處理累積的背包更新
+        -- Perf B1: 透過反向索引路由到目標 button，取代 600+ slot 線性掃描
+        if slotsByBagDirty then
+            RebuildSlotsByBag()
+        end
         for pendingBag in pairs(pendingBagUpdates) do
-            -- 更新背包（0-LAST_BAG，含材料袋）
-            if pendingBag >= 0 and pendingBag <= LAST_BAG then
-                if bagFrame and bagFrame:IsShown() then
-                    for _, button in pairs(slots) do
-                        if button and button.bag == pendingBag then
-                            UpdateSlot(button)
+            local list = slotsByBag[pendingBag]
+            if list then
+                local isBank = pendingBag >= FIRST_BANK_BAG and pendingBag <= LAST_BANK_BAG
+                if isBank then
+                    if bankFrame and bankFrame:IsShown() then
+                        for i = 1, #list do
+                            UpdateBankSlot(list[i])
                         end
                     end
-                end
-            end
-            -- 更新銀行包
-            if pendingBag >= FIRST_BANK_BAG and pendingBag <= LAST_BANK_BAG then
-                if bankFrame and bankFrame:IsShown() then
-                    for _, button in pairs(bankSlots) do
-                        if button and button.bag == pendingBag then
-                            UpdateBankSlot(button)
+                else
+                    if bagFrame and bagFrame:IsShown() then
+                        for i = 1, #list do
+                            UpdateSlot(list[i])
                         end
                     end
                 end
@@ -1446,10 +1492,36 @@ local function OnBagEvent(_self, event, ...)
         -- 排序期間跳過：SortBags 會密集觸發 ITEM_LOCK_CHANGED（每次物品移動 2 次），
         -- 每次都呼叫 UpdateAllSlots 會造成嚴重卡頓。排序結束後由 BAG_UPDATE_DELAYED 統一更新。
         if not isSorting then
-            UpdateAllSlots()
-            local bankFrame = LunarUI.BagsGetBankFrame()
-            if bankFrame and bankFrame:IsShown() then
-                UpdateAllBankSlots()
+            -- Perf B1: 容器 slot lock 事件攜帶 (bag, slot) 兩個參數，直接路由
+            -- 到單一 button 而非全量刷新 600+ slot。WoW 對每次 click 觸發
+            -- ITEM_LOCK_CHANGED 兩次（lock + unlock），單擊成本從 ~1400 UpdateSlot 降到 2 次。
+            -- 裝備 slot 事件只帶一個 INVSLOT 參數（bag~=nil, slot==nil）——對這
+            -- 種情況 fall through 到 full refresh（背包視覺不會受裝備 slot 影響，
+            -- 但保持跟舊行為一致）。
+            local bag, slot = ...
+            if bag ~= nil and slot ~= nil then
+                if slotsByBagDirty then
+                    RebuildSlotsByBag()
+                end
+                local list = slotsByBag[bag]
+                if list then
+                    local isBank = bag >= FIRST_BANK_BAG and bag <= LAST_BANK_BAG
+                    local updater = isBank and UpdateBankSlot or UpdateSlot
+                    for i = 1, #list do
+                        local button = list[i]
+                        if button.slot == slot then
+                            updater(button)
+                            break
+                        end
+                    end
+                end
+            else
+                -- 裝備 slot lock 或 edge case：保留全量刷新 fallback
+                UpdateAllSlots()
+                local bankFrame = LunarUI.BagsGetBankFrame()
+                if bankFrame and bankFrame:IsShown() then
+                    UpdateAllBankSlots()
+                end
             end
         end
     elseif event == "BAG_SLOT_FLAGS_UPDATED" then
