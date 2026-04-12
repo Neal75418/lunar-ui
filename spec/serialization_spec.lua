@@ -22,7 +22,7 @@ LunarUI.VALIDATION_RULES = {
     { path = "hud.scale", type = "number", min = 0.5, max = 2.0 },
     { path = "hud.auraIconSize", type = "number", min = 10, max = 80 },
     { path = "hud.cdIconSize", type = "number", min = 10, max = 80 },
-    { path = "style.fontSize", type = "number", min = 6, max = 32 },
+    { path = "bags.slotSize", type = "number", min = 28, max = 48 },
     { path = "actionbars.buttonSize", type = "number", min = 16, max = 64 },
 }
 
@@ -97,7 +97,7 @@ LunarUI.OnProfileChanged = function() end
 -- Defaults template for ImportSettings tests
 local testDefaults = {
     profile = {
-        style = { fontSize = 12, theme = "lunar" },
+        bags = { slotSize = 37, frameAlpha = 0.95 },
         hud = { scale = 1.0, enabled = true },
         actionbars = {
             bar1 = { buttonSize = 36, enabled = true },
@@ -271,7 +271,7 @@ describe("Serialization round-trip", function()
                 target = { enabled = true, width = 220, height = 45 },
             },
             hud = { scale = 1.0 },
-            style = { theme = "lunar" },
+            bags = { frameAlpha = 0.95 },
         }
         local serialized = LunarUI.SerializeValue(input)
         local result = LunarUI.DeserializeString(serialized)
@@ -437,22 +437,22 @@ end)
 --------------------------------------------------------------------------------
 
 describe("ClampImportedValues", function()
-    it("clamps fontSize below min to min", function()
-        local profile = { style = { fontSize = 4 } }
+    it("clamps slotSize below min to min", function()
+        local profile = { bags = { slotSize = 20 } }
         LunarUI.ClampImportedValues(profile)
-        assert.equals(6, profile.style.fontSize)
+        assert.equals(28, profile.bags.slotSize)
     end)
 
-    it("clamps fontSize above max to max", function()
-        local profile = { style = { fontSize = 50 } }
+    it("clamps slotSize above max to max", function()
+        local profile = { bags = { slotSize = 60 } }
         LunarUI.ClampImportedValues(profile)
-        assert.equals(32, profile.style.fontSize)
+        assert.equals(48, profile.bags.slotSize)
     end)
 
-    it("leaves fontSize in range unchanged", function()
-        local profile = { style = { fontSize = 14 } }
+    it("leaves slotSize in range unchanged", function()
+        local profile = { bags = { slotSize = 37 } }
         LunarUI.ClampImportedValues(profile)
-        assert.equals(14, profile.style.fontSize)
+        assert.equals(37, profile.bags.slotSize)
     end)
 
     it("clamps hud.scale below 0.5", function()
@@ -479,16 +479,16 @@ describe("ClampImportedValues", function()
         assert.equals(64, profile.actionbars.bar3.buttonSize)
     end)
 
-    it("does nothing when profile has no style/hud/actionbars", function()
+    it("does nothing when profile has no bags/hud/actionbars", function()
         local profile = { unitframes = { player = {} } }
         LunarUI.ClampImportedValues(profile)
         assert.same({ unitframes = { player = {} } }, profile)
     end)
 
     it("ignores non-number fontSize", function()
-        local profile = { style = { fontSize = "big" } }
+        local profile = { bags = { slotSize = "big" } }
         LunarUI.ClampImportedValues(profile)
-        assert.equals("big", profile.style.fontSize)
+        assert.equals("big", profile.bags.slotSize)
     end)
 end)
 
@@ -512,7 +512,7 @@ describe("ExportSettings", function()
     end)
 
     it("returns string starting with LUNARUI header", function()
-        LunarUI.db = { profile = { style = { fontSize = 12 } } }
+        LunarUI.db = { profile = { bags = { slotSize = 37 } } }
         local result = LunarUI:ExportSettings()
         assert.is_string(result)
         assert.truthy(result:find("^LUNARUI"))
@@ -537,7 +537,7 @@ describe("ImportSettings", function()
         end
         LunarUI.db = {
             profile = {
-                style = { fontSize = 12, theme = "lunar" },
+                bags = { slotSize = 37, frameAlpha = 0.95 },
                 hud = { scale = 1.0, enabled = true },
                 actionbars = {
                     bar1 = { buttonSize = 36, enabled = true },
@@ -588,31 +588,31 @@ describe("ImportSettings", function()
     end)
 
     it("succeeds with round-trip export then import", function()
-        LunarUI.db.profile.style.fontSize = 16
+        LunarUI.db.profile.bags.slotSize = 40
         local exported = LunarUI:ExportSettings()
         -- Reset to defaults
-        LunarUI.db.profile.style.fontSize = 12
+        LunarUI.db.profile.bags.slotSize = 37
         local ok, msg = LunarUI:ImportSettings(exported)
         assert.is_true(ok)
         assert.is_string(msg)
-        assert.equals(16, LunarUI.db.profile.style.fontSize)
+        assert.equals(40, LunarUI.db.profile.bags.slotSize)
     end)
 
-    it("clamps out-of-range fontSize during import", function()
+    it("clamps out-of-range slotSize during import", function()
         local data = {
             version = "1.0",
-            profile = { style = { fontSize = 100 } },
+            profile = { bags = { slotSize = 100 } },
         }
         local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
         local ok = LunarUI:ImportSettings(serialized)
         assert.is_true(ok)
-        assert.equals(32, LunarUI.db.profile.style.fontSize)
+        assert.equals(48, LunarUI.db.profile.bags.slotSize)
     end)
 
     it("skips unknown keys not in defaults template", function()
         local data = {
             version = "1.0",
-            profile = { style = { fontSize = 14 }, hackedKey = "evil" },
+            profile = { bags = { slotSize = 37 }, hackedKey = "evil" },
         }
         local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
         LunarUI:ImportSettings(serialized)
@@ -622,7 +622,7 @@ describe("ImportSettings", function()
     it("includes version in success message", function()
         local data = {
             version = "2.5",
-            profile = { style = { fontSize = 14 } },
+            profile = { bags = { slotSize = 37 } },
         }
         local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
         local ok, msg = LunarUI:ImportSettings(serialized)
@@ -638,7 +638,7 @@ describe("ImportSettings", function()
         end
         local data = {
             version = "1.0",
-            profile = { style = { fontSize = 14 } },
+            profile = { bags = { slotSize = 37 } },
         }
         local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
         LunarUI:ImportSettings(serialized)
@@ -647,10 +647,10 @@ describe("ImportSettings", function()
     end)
 
     it("preserves special characters in profile string values", function()
-        LunarUI.db.profile.style.theme = "lunar"
+        LunarUI.db.profile.bags.frameAlpha = "lunar"
         local data = {
             version = "1.0",
-            profile = { style = { theme = "parchment" } },
+            profile = { bags = { frameAlpha = 0.80 } },
         }
         local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
         local ok = LunarUI:ImportSettings(serialized)
@@ -659,7 +659,7 @@ describe("ImportSettings", function()
 
     it("handles import with no version field", function()
         local data = {
-            profile = { style = { fontSize = 14 } },
+            profile = { bags = { slotSize = 37 } },
         }
         local serialized = "LUNARUI" .. LunarUI.SerializeValue(data)
         local ok, msg = LunarUI:ImportSettings(serialized)
@@ -855,19 +855,19 @@ describe("ExportSettings additional coverage", function()
         -- non-function/non-userdata values are included
         LunarUI.db = {
             profile = {
-                style = { fontSize = 14 },
+                bags = { slotSize = 37 },
                 name = "test",
             },
         }
         local result = LunarUI:ExportSettings()
         assert.is_string(result)
-        assert.truthy(result:find("fontSize"))
+        assert.truthy(result:find("slotSize"))
         assert.truthy(result:find("test"))
     end)
 
     it("includes version in exported data", function()
         LunarUI.version = "2.0-test"
-        LunarUI.db = { profile = { style = { fontSize = 12 } } }
+        LunarUI.db = { profile = { bags = { slotSize = 37 } } }
         local result = LunarUI:ExportSettings()
         assert.truthy(result:find("2.0%-test"))
     end)
@@ -881,7 +881,7 @@ describe("ImportSettings additional coverage", function()
     before_each(function()
         LunarUI.db = {
             profile = {
-                style = { fontSize = 12, theme = "lunar" },
+                bags = { slotSize = 37, frameAlpha = 0.95 },
                 hud = { scale = 1.0, enabled = true },
                 actionbars = {
                     bar1 = { buttonSize = 36, enabled = true },

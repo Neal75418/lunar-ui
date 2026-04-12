@@ -5,7 +5,6 @@
     包含一次性診斷、持續監控（VigorTrace）、測試模式
 ]]
 
-local _ADDON_NAME = "LunarUI_Debug"
 local LunarUI = LibStub("AceAddon-3.0"):GetAddon("LunarUI")
 
 --------------------------------------------------------------------------------

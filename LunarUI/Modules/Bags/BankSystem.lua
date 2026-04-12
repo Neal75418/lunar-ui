@@ -1006,7 +1006,6 @@ LunarUI._ComputeBankLayout = ComputeBankLayout
 LunarUI._GetViewportCols = GetViewportCols
 LunarUI._GetViewportRows = GetViewportRows
 LunarUI._BANK_VIEWPORT_COLS_DEFAULT = BANK_VIEWPORT_COLS_DEFAULT
-LunarUI._BANK_VIEWPORT_ROWS_DEFAULT = BANK_VIEWPORT_ROWS_DEFAULT
 LunarUI._BANK_VIEWPORT_MIN = BANK_VIEWPORT_MIN
 LunarUI._BANK_VIEWPORT_MAX = BANK_VIEWPORT_MAX
 LunarUI._SetBankFrameForTest = function(f)

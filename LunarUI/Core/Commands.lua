@@ -330,10 +330,6 @@ local function RequestDisable()
     StaticPopup_Show("LUNARUI_DISABLE_CONFIRM")
 end
 
--- 測試用匯出（spec 直接驅動 RequestDisable 避開 print 噪音）
-LunarUI._RequestDisable = RequestDisable
-LunarUI._PerformDisable = PerformDisable
-
 --[[
     切換插件開關
 ]]
