@@ -578,8 +578,11 @@ local function GetTooltipItemInfo(itemID)
         -- 對同一 itemID，ilvl/quality 不會變；但 bag/totalCount 會跟著物品移動變。
         -- 如果 count 超過 TTL 就重新查 count，但保留 ilvl/quality。
         if now - entry.countStamp > COUNT_CACHE_TTL then
-            entry.bagCount = C_Item.GetItemCount(numID, false) or 0
-            entry.totalCount = C_Item.GetItemCount(numID, true) or 0
+            local db = LunarUI.GetModuleDB("tooltip")
+            if db and db.showItemCount then
+                entry.bagCount = C_Item.GetItemCount(numID, false) or 0
+                entry.totalCount = C_Item.GetItemCount(numID, true) or 0
+            end
             entry.countStamp = now
         end
         return entry
