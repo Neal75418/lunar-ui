@@ -105,10 +105,15 @@ local function CreateHealthBar(frame, unit)
             return
         end
 
-        -- Perf B4: GUID 快取顏色。GUID 相同 → 身分不變 → 顏色不變，跳過所有查詢
+        -- Perf B4: (GUID + reaction) 複合 key 快取顏色。
+        -- GUID 相同但 reaction 不同的情境：中立 NPC 被攻擊後變敵對（GUID 不變但
+        -- UnitReaction 從 4→3），原本只用 GUID 做 key 會 false-positive 短路而
+        -- 持續顯示舊聲望顏色（#1 correctness fix）。
+        -- UnitReaction 是 C call 但比 UnitClass + RAID_CLASS_COLORS 鏈便宜得多。
         local currentGUID = UnitGUID(ownerUnit)
+        local currentReaction = UnitReaction(ownerUnit, "player") or 0
         local r, g, b
-        if currentGUID and currentGUID == self._colorGUID then
+        if currentGUID and currentGUID == self._colorGUID and currentReaction == self._colorReaction then
             r, g, b = self._lastR, self._lastG, self._lastB
         else
             -- 玩家使用職業顏色
@@ -124,9 +129,8 @@ local function CreateHealthBar(frame, unit)
 
             -- NPC 使用聲望顏色
             if not r then
-                local reaction = UnitReaction(ownerUnit, "player")
-                if reaction then
-                    local rc = REACTION_COLORS[reaction]
+                if currentReaction > 0 then
+                    local rc = REACTION_COLORS[currentReaction]
                     if rc then
                         r, g, b = rc[1], rc[2], rc[3]
                     else
@@ -134,9 +138,10 @@ local function CreateHealthBar(frame, unit)
                     end
                 end
             end
-            -- 只在能算出顏色時更新 GUID 快取；算不出就保持舊 GUID，下一幀再試
+            -- 只在能算出顏色時更新快取；算不出就保持舊值，下一幀再試
             if r then
                 self._colorGUID = currentGUID
+                self._colorReaction = currentReaction
             end
         end
 

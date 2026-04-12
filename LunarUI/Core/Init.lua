@@ -47,6 +47,22 @@ local pendingDelayedModules = 0
 local modulesReadyFired = false
 local enableGeneration = 0 -- 每次 OnDisable 遞增，使飛行中的 C_Timer.After callback 失效
 
+-- 執行模組初始化並處理錯誤（共用 helper，消除 delayed/immediate 兩份重複的 pcall+error 區塊）
+local function RunModuleInit(entry)
+    local ok, err
+    if LunarUI.ProfileModuleInit then
+        ok, err = LunarUI.ProfileModuleInit(entry.name, entry.onEnable)
+    else
+        ok, err = pcall(entry.onEnable)
+    end
+    if not ok then
+        LunarUI:Error(
+            format((Engine.L or {})["ModuleInitFailed"] or "Module '%s' failed: %s", entry.name or "?", tostring(err))
+        )
+        LunarUI:Print(debugstack(2))
+    end
+end
+
 local function ExecuteModuleCallback(entry)
     if entry.delay > 0 then
         local gen = enableGeneration -- 捕捉當前世代，callback 可藉此判斷是否已過期
@@ -65,22 +81,7 @@ local function ExecuteModuleCallback(entry)
                 end
                 return
             end
-            local ok, err
-            if LunarUI.ProfileModuleInit then
-                ok, err = LunarUI.ProfileModuleInit(entry.name, entry.onEnable)
-            else
-                ok, err = pcall(entry.onEnable)
-            end
-            if not ok then
-                LunarUI:Error(
-                    format(
-                        (Engine.L or {})["ModuleInitFailed"] or "Module '%s' failed: %s",
-                        entry.name or "?",
-                        tostring(err)
-                    )
-                )
-                LunarUI:Print(debugstack(2))
-            end
+            RunModuleInit(entry)
             pendingDelayedModules = pendingDelayedModules - 1
             if pendingDelayedModules == 0 and not modulesReadyFired then
                 modulesReadyFired = true
@@ -88,22 +89,7 @@ local function ExecuteModuleCallback(entry)
             end
         end)
     else
-        local ok, err
-        if LunarUI.ProfileModuleInit then
-            ok, err = LunarUI.ProfileModuleInit(entry.name, entry.onEnable)
-        else
-            ok, err = pcall(entry.onEnable)
-        end
-        if not ok then
-            LunarUI:Error(
-                format(
-                    (Engine.L or {})["ModuleInitFailed"] or "Module '%s' failed: %s",
-                    entry.name or "?",
-                    tostring(err)
-                )
-            )
-            LunarUI:Print(debugstack(2))
-        end
+        RunModuleInit(entry)
     end
 end
 

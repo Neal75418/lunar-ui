@@ -583,7 +583,12 @@ local function SpawnUnitFrames()
                 if not LunarUI._modulesEnabled then
                     return
                 end
-                pcall(SpawnUnitFrames)
+                -- #4: 用 SafeCall 取代 bare pcall——SpawnUnitFrames 是關鍵 UI，
+                -- 失敗時使用者必須看到錯誤訊息（原本 pcall 完全吞 error）
+                local ok, err = pcall(SpawnUnitFrames)
+                if not ok then
+                    LunarUI:Error("SpawnUnitFrames failed: " .. tostring(err))
+                end
             end)
             return
         end
@@ -592,7 +597,11 @@ local function SpawnUnitFrames()
                 -- Group headers 需重新註冊 StateDriver（CleanupUnitFrames 會 Unregister）
                 local vis = savedStateDrivers[frame]
                 if vis then
-                    pcall(_G.RegisterStateDriver, frame, "visibility", vis)
+                    -- #9: RegisterStateDriver 失敗 → UF 可見性管理壞掉；log 錯誤
+                    local sdOk, sdErr = pcall(_G.RegisterStateDriver, frame, "visibility", vis)
+                    if not sdOk then
+                        LunarUI:Warn("RegisterStateDriver failed: " .. tostring(sdErr))
+                    end
                 end
                 if frame.Enable then
                     frame:Enable() -- oUF API: RegisterUnitWatch + conditional Show

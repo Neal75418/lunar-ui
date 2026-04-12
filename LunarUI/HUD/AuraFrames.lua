@@ -207,8 +207,13 @@ local function SetupAuraIconInteraction(icon)
         -- 根據 aura 類型使用對應的 Buff/Debuff tooltip method
         local tooltipMethod = isHarmful and GameTooltip.SetUnitDebuffByAuraInstanceID
             or GameTooltip.SetUnitBuffByAuraInstanceID
-        pcall(tooltipMethod, GameTooltip, "player", instanceID, filter)
-        GameTooltip:Show()
+        -- #6: pcall 失敗時不 Show 空白 tooltip
+        local ttOk = pcall(tooltipMethod, GameTooltip, "player", instanceID, filter)
+        if ttOk then
+            GameTooltip:Show()
+        else
+            GameTooltip:Hide()
+        end
     end)
     icon:SetScript("OnLeave", function()
         GameTooltip:Hide()

@@ -144,6 +144,32 @@ end
 -- 導出給 BankSystem 用（建立/刷新銀行 slot 時通知索引失效）
 LunarUI.BagsMarkSlotsByBagDirty = MarkSlotsByBagDirty
 
+-- 計算分離背包視圖的行數（共用 helper，消除 CreateBagFrame / RefreshBagLayout 重複）
+-- splitBags=true 時每個 bag 的 slot 佔獨立行區塊（不與上一個 bag 共行），
+-- 需要遍歷所有 bag 計算 padding 後的 layoutIdx 再算行數。
+-- splitBags=false 時直接用 totalSlots / SLOTS_PER_ROW。
+local function CalculateBagRowCount(splitBags, totalSlots)
+    if not splitBags then
+        return mathCeil(totalSlots / SLOTS_PER_ROW)
+    end
+    local layoutIdx = 0
+    local prevBag = nil
+    for bag = 0, LAST_BAG do
+        local numBagSlots = C_Container.GetContainerNumSlots(bag)
+        if numBagSlots > 0 then
+            if prevBag ~= nil then
+                local currentCol = layoutIdx % SLOTS_PER_ROW
+                if currentCol ~= 0 then
+                    layoutIdx = layoutIdx + (SLOTS_PER_ROW - currentCol)
+                end
+            end
+            prevBag = bag
+            layoutIdx = layoutIdx + numBagSlots
+        end
+    end
+    return mathCeil(layoutIdx / SLOTS_PER_ROW)
+end
+
 -- 從 DB 載入背包設定（覆寫模組常數）
 local function LoadBagSettings()
     local db = GetBagDB()
@@ -788,30 +814,9 @@ local function CreateBagFrame()
     -- 從 DB 載入設定
     LoadBagSettings()
 
-    -- 計算框架大小
+    -- 計算框架大小（共用 CalculateBagRowCount helper 消除 splitBags 行數計算重複）
     local totalSlots = GetTotalSlots()
-    local numRows
-    if db.splitBags then
-        -- 分離視圖：每個背包佔獨立行區塊，需預算額外行數
-        local layoutIdx = 0
-        local prevBag = nil
-        for bag = 0, LAST_BAG do
-            local numBagSlots = C_Container.GetContainerNumSlots(bag)
-            if numBagSlots > 0 then
-                if prevBag ~= nil then
-                    local currentCol = layoutIdx % SLOTS_PER_ROW
-                    if currentCol ~= 0 then
-                        layoutIdx = layoutIdx + (SLOTS_PER_ROW - currentCol)
-                    end
-                end
-                prevBag = bag
-                layoutIdx = layoutIdx + numBagSlots
-            end
-        end
-        numRows = mathCeil(layoutIdx / SLOTS_PER_ROW)
-    else
-        numRows = mathCeil(totalSlots / SLOTS_PER_ROW)
-    end
+    local numRows = CalculateBagRowCount(db.splitBags, totalSlots)
     local width = SLOTS_PER_ROW * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
     local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
 
@@ -1060,28 +1065,8 @@ local function RefreshBagLayout()
         end
     end
 
-    -- 計算框架大小（支援分離背包視圖）
-    local numRows
-    if db and db.splitBags then
-        local layoutIdx = 0
-        local prevBag = nil
-        for bag = 0, LAST_BAG do
-            local numBagSlots = C_Container.GetContainerNumSlots(bag)
-            if numBagSlots > 0 then
-                if prevBag ~= nil then
-                    local currentCol = layoutIdx % SLOTS_PER_ROW
-                    if currentCol ~= 0 then
-                        layoutIdx = layoutIdx + (SLOTS_PER_ROW - currentCol)
-                    end
-                end
-                prevBag = bag
-                layoutIdx = layoutIdx + numBagSlots
-            end
-        end
-        numRows = mathCeil(layoutIdx / SLOTS_PER_ROW)
-    else
-        numRows = mathCeil(#slotList / SLOTS_PER_ROW)
-    end
+    -- 計算框架大小（共用 CalculateBagRowCount helper）
+    local numRows = CalculateBagRowCount(db and db.splitBags, #slotList)
     local width = SLOTS_PER_ROW * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2
     local height = numRows * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING + PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
 
@@ -1298,21 +1283,22 @@ local function HookBagFunctions()
 
     -- 徹底禁用暴雪背包框架（alpha 0 + 移到螢幕外 + 禁用滑鼠）
     -- 只設 alpha 0 不夠：框架仍接收滑鼠事件，會擋住我們的自訂背包
+    -- #7: 每個操作獨立 pcall，避免部分失敗留下不一致狀態
+    -- （隱形但仍攔截滑鼠，或可見但在螢幕外）
     local function KillBlizzardFrame(frame)
         if not frame then
             return
         end
-        pcall(function()
-            frame:SetAlpha(0)
-            frame:EnableMouse(false)
-            frame:ClearAllPoints()
-            frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
-            for _, child in ipairs({ frame:GetChildren() }) do
-                pcall(function()
-                    child:EnableMouse(false)
-                end)
+        pcall(frame.SetAlpha, frame, 0)
+        pcall(frame.EnableMouse, frame, false)
+        pcall(frame.ClearAllPoints, frame)
+        pcall(frame.SetPoint, frame, "TOPLEFT", UIParent, "TOPLEFT", -10000, 10000)
+        local ok, children = pcall(frame.GetChildren, frame)
+        if ok and children then
+            for _, child in ipairs({ children }) do
+                pcall(child.EnableMouse, child, false)
             end
-        end)
+        end
     end
 
     -- 掛鉤 Show：暴雪每次打開背包都會 Show 這些框架，需持續壓制
@@ -1590,25 +1576,25 @@ function LunarUI.CleanupBags()
         LunarUI.InvalidateSellJunk()
     end
     -- 還原被 KillBlizzardFrame 壓制的原生背包框架
+    -- #8: 同 #7，每個操作獨立 pcall 避免部分還原失敗
     local function RestoreBlizzardFrame(frame)
         if not frame then
             return
         end
-        pcall(function()
-            frame:SetAlpha(1)
-            frame:EnableMouse(true)
-            -- 還原原始定位（KillBlizzardFrame 移到了螢幕外）
-            if frame._lunarSavedPoint then
-                local p = frame._lunarSavedPoint
-                frame:ClearAllPoints()
-                frame:SetPoint(p[1], p[2], p[3], p[4], p[5])
+        pcall(frame.SetAlpha, frame, 1)
+        pcall(frame.EnableMouse, frame, true)
+        -- 還原原始定位（KillBlizzardFrame 移到了螢幕外）
+        if frame._lunarSavedPoint then
+            local p = frame._lunarSavedPoint
+            pcall(frame.ClearAllPoints, frame)
+            pcall(frame.SetPoint, frame, p[1], p[2], p[3], p[4], p[5])
+        end
+        local ok, children = pcall(frame.GetChildren, frame)
+        if ok and children then
+            for _, child in ipairs({ children }) do
+                pcall(child.EnableMouse, child, true)
             end
-            for _, child in ipairs({ frame:GetChildren() }) do
-                pcall(function()
-                    child:EnableMouse(true)
-                end)
-            end
-        end)
+        end
     end
     for i = 1, 13 do
         RestoreBlizzardFrame(_G["ContainerFrame" .. i])

@@ -506,6 +506,11 @@ local function SetupTrackedSpells()
         end
     end
 
+    -- #3 correctness fix: 反向索引也要一起 wipe，避免 SetupTrackedSpells 後
+    -- stale 的 iconBySpellID 引用殘留舊 icon → WakeOnUpdate 立即呼叫
+    -- UpdateCooldownIcons 時 flash 路徑讀到 stale .wasOnCooldown 觸發偽閃光
+    wipe(iconBySpellID)
+
     -- 重設所有圖示的 wasOnCooldown 旗標，避免 spec 切換後殘留狀態導致偽閃光
     for i = 1, #cooldownIcons do
         if cooldownIcons[i] then

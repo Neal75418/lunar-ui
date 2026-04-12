@@ -970,10 +970,16 @@ local function UpdateNameplateStacking()
     -- 執行堆疊調整流程
     local count = CollectVisibleNameplates()
     if count > 0 then
-        -- Perf C2: 計算 (count, weightedSum(baseY * i)) 簽名，與上次相同就短路。
-        -- 加權（乘以 index）可偵測 plate swap：兩個 plate 交換 Y 時單純的 sum 不變
-        -- 但加權後會不同（只要 stackYs 不對稱）。index 從 collect 順序決定，
-        -- 會隨 plate 生命週期變動，因此 swap 可靠地產生不同 weighted sum。
+        -- 先排序，讓 stackYs 成為確定性的升序
+        if count > 1 then
+            SortNameplatesByY(count)
+        end
+
+        -- Perf C2（#2 correctness fix）: 簽名在 sort **之後** 計算。
+        -- CollectVisibleNameplates 使用 pairs() 迭代 weak table，順序不確定。
+        -- 若在 sort 前計算 weighted sum，同一批 plates 兩次呼叫會因 pairs 順序
+        -- 不同而產生不同 sigSum → 無意義的 false negative（白重算）。sort 後
+        -- stackYs[1..count] 是升序，index 唯一確定 → 簽名穩定且正確反映位置變化。
         local sigSum = 0
         for i = 1, count do
             sigSum = sigSum + stackYs[i] * i
@@ -985,7 +991,6 @@ local function UpdateNameplateStacking()
         _lastStackSig_sum = sigSum
 
         if count > 1 then
-            SortNameplatesByY(count)
             DetectOverlaps(count, npHeight)
         end
         ApplyStackOffsets(count)
