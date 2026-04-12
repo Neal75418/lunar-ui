@@ -14,21 +14,24 @@ local L = Engine.L or {}
 --------------------------------------------------------------------------------
 
 --[[
+    檢查是否處於除錯模式
+    debug 是 profile 的 root boolean key（非 module sub-table），所以
+    不走 GetModuleDB（那個 helper 的語意是回傳模組設定表）。直接讀
+    db.profile.debug 並以此 helper 統一所有呼叫點。
+    @return boolean
+]]
+function LunarUI:IsDebugMode()
+    return (LunarUI.db and LunarUI.db.profile and LunarUI.db.profile.debug) or false
+end
+
+--[[
     輸出除錯訊息（僅在除錯模式下）
     @param msg 要輸出的訊息
 ]]
 function LunarUI:Debug(msg)
-    if LunarUI.GetModuleDB("debug") then
+    if self:IsDebugMode() then
         self:Print("|cff888888" .. (L["DebugPrefix"] or "[Debug]") .. "|r " .. tostring(msg))
     end
-end
-
---[[
-    檢查是否處於除錯模式
-    @return boolean
-]]
-function LunarUI:IsDebugMode()
-    return LunarUI.GetModuleDB("debug") or false
 end
 
 --[[
@@ -122,7 +125,7 @@ local function CreateDebugFrame()
         end
         self.elapsed = 0
 
-        if not LunarUI.GetModuleDB("debug") then
+        if not LunarUI:IsDebugMode() then
             self:Hide()
             return
         end
@@ -156,9 +159,7 @@ end
 ]]
 function LunarUI.UpdateDebugOverlay()
     local frame = CreateDebugFrame()
-
-    -- debug 是 profile root key（非 sub-table），需直接存取 db.profile.debug
-    if LunarUI.GetModuleDB("debug") then
+    if LunarUI:IsDebugMode() then
         frame:Show()
     else
         frame:Hide()

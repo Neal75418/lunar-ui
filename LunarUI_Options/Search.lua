@@ -181,10 +181,11 @@ local function CreateSearchUI(dialogFrame, options, AceConfigDialog)
     searchBox:SetAutoFocus(false)
     searchBox:SetFontObject(GameFontNormalSmall)
 
-    -- 占位文字
+    -- 占位文字（locale 經由全域 LunarUI.L 取得，Search.lua 未捕獲 Engine）
     local placeholder = searchBox:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
     placeholder:SetPoint("LEFT", searchBox, "LEFT", 6, 0)
-    placeholder:SetText("Search settings...")
+    local L = (_G.LunarUI and _G.LunarUI.L) or {}
+    placeholder:SetText(L.OptionsSearchPlaceholder or "Search settings...")
     searchBox._placeholder = placeholder
 
     -- 結果下拉面板

@@ -736,6 +736,33 @@ L["ZoneTextShow"] = "Always Show"
 L["ZoneTextMouseover"] = "Show on Mouseover"
 L["ZoneTextHide"] = "Hidden"
 
+-- Minimap icon labels (Options panel)
+L["MinimapIconCalendar"] = "Calendar"
+L["MinimapIconTracking"] = "Tracking"
+L["MinimapIconMail"] = "Mail Indicator"
+L["MinimapIconDifficulty"] = "Difficulty Text"
+L["MinimapIconLFG"] = "LFG Queue"
+L["MinimapIconExpansion"] = "Expansion Button"
+L["MinimapIconCompartment"] = "Addon Compartment"
+
+-- Anchor / position values (Options panel)
+L["AnchorTopLeft"] = "Top Left"
+L["AnchorTop"] = "Top"
+L["AnchorTopRight"] = "Top Right"
+L["AnchorLeft"] = "Left"
+L["AnchorCenter"] = "Center"
+L["AnchorRight"] = "Right"
+L["AnchorBottomLeft"] = "Bottom Left"
+L["AnchorBottom"] = "Bottom"
+L["AnchorBottomRight"] = "Bottom Right"
+
+-- Action Bar numbered label
+L["ActionBarN"] = "Bar %d"
+
+-- Options search
+L["OptionsSearchPlaceholder"] = "Search settings..."
+L["OptionsDbNotReady"] = "[Options] DB not ready — settings may not save"
+
 -- Export
 Engine.L = L
 if Engine.LunarUI then

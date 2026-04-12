@@ -53,7 +53,9 @@ local function GetDB()
     if not profile then
         if not getDBWarned then
             getDBWarned = true
-            LunarUI:Print("|cffff0000[Options] DB not ready — settings may not save|r")
+            local msg = (LunarUI.L and LunarUI.L.OptionsDbNotReady)
+                or "[Options] DB not ready — settings may not save"
+            LunarUI:Print("|cffff0000" .. msg .. "|r")
         end
         return nil
     end
@@ -71,16 +73,165 @@ local function RefreshUI()
 end
 
 --------------------------------------------------------------------------------
+-- DB path traversal helpers
+--------------------------------------------------------------------------------
+
+-- 沿著 path（陣列）從 profile 取值；任何中間節點為 nil 即安全返回 nil。
+-- path 以陣列表示，末段是 leaf key：{"bags", "enabled"} → profile.bags.enabled
+local function getByPath(path)
+    local node = GetDB()
+    if not node then
+        return nil
+    end
+    for i = 1, #path - 1 do
+        node = node[path[i]]
+        if type(node) ~= "table" then
+            return nil
+        end
+    end
+    return node[path[#path]]
+end
+
+-- 沿著 path 寫入值；中間節點不存在時不寫入（AceDB 會建立 module 子表，所以
+-- 正常情況一定存在）。避免 silent write-to-nowhere。
+local function setByPath(path, value)
+    local node = GetDB()
+    if not node then
+        return
+    end
+    for i = 1, #path - 1 do
+        node = node[path[i]]
+        if type(node) ~= "table" then
+            return
+        end
+    end
+    node[path[#path]] = value
+end
+
+--------------------------------------------------------------------------------
+-- Option widget factories（Fix #2: 消除 418 處 GetDB().x.y 重複 + NPE 風險）
+--
+-- 每個 factory 回傳符合 AceConfig-3.0 規格的 widget table。`opts` 是可選的
+-- 覆寫表，會 shallow-merge 進結果（例：width, disabled, hidden, onValueSet）。
+-- `onValueSet` 在 set 完成後呼叫，用途是觸發 RefreshUI/RebuildX 等副作用。
+--------------------------------------------------------------------------------
+
+-- opts 中的 meta 欄位（不屬於 AceConfig，不應 merge 到 widget）
+local FACTORY_META_KEYS = {
+    onValueSet = true,
+    default = true,
+}
+
+local function mergeOpts(widget, opts)
+    if opts then
+        for k, v in pairs(opts) do
+            if not FACTORY_META_KEYS[k] then
+                widget[k] = v
+            end
+        end
+    end
+    return widget
+end
+
+-- 建立 get 閉包：若 opts.default 有值，用作 nil-safety 防線（給定非常舊的
+-- profile 缺欄位時的 fallback；正常情況下 AceDB + Defaults.lua 會先填好）
+local function makeGetter(path, defaultValue)
+    if defaultValue ~= nil then
+        return function()
+            local v = getByPath(path)
+            if v == nil then
+                return defaultValue
+            end
+            return v
+        end
+    end
+    return function()
+        return getByPath(path)
+    end
+end
+
+local function makeSetter(path, onValueSet)
+    return function(_, v)
+        setByPath(path, v)
+        if onValueSet then
+            onValueSet(v)
+        end
+    end
+end
+
+local function makeToggle(order, path, name, desc, opts)
+    local widget = {
+        order = order,
+        type = "toggle",
+        name = name,
+        desc = desc,
+        get = makeGetter(path, opts and opts.default),
+        set = makeSetter(path, opts and opts.onValueSet),
+    }
+    return mergeOpts(widget, opts)
+end
+
+local function makeRange(order, path, name, desc, min, max, step, opts)
+    local widget = {
+        order = order,
+        type = "range",
+        name = name,
+        desc = desc,
+        min = min,
+        max = max,
+        step = step,
+        get = makeGetter(path, opts and opts.default),
+        set = makeSetter(path, opts and opts.onValueSet),
+    }
+    return mergeOpts(widget, opts)
+end
+
+local function makeSelect(order, path, name, desc, values, opts)
+    local widget = {
+        order = order,
+        type = "select",
+        name = name,
+        desc = desc,
+        values = values,
+        get = makeGetter(path, opts and opts.default),
+        set = makeSetter(path, opts and opts.onValueSet),
+    }
+    return mergeOpts(widget, opts)
+end
+
+local function makeHeader(order, name)
+    return { order = order, type = "header", name = name }
+end
+
+local function makeExecute(order, name, desc, func, opts)
+    local widget = {
+        order = order,
+        type = "execute",
+        name = name,
+        desc = desc,
+        func = func,
+    }
+    return mergeOpts(widget, opts)
+end
+
+--------------------------------------------------------------------------------
 -- Section builder context
 --------------------------------------------------------------------------------
 
 -- ctx is passed to every Private.sections.*(ctx) builder. Fields are captured
 -- by value (stable references). See LunarUI_Options/sections/*.lua.
+-- toggle/range/select/header/execute factories are available to reduce boilerplate;
+-- sections can migrate to them incrementally.
 local ctx = {
     L = L,
     GetDB = GetDB,
     RefreshUI = RefreshUI,
     LunarUI = LunarUI,
+    toggle = makeToggle,
+    range = makeRange,
+    select = makeSelect,
+    header = makeHeader,
+    execute = makeExecute,
 }
 
 --------------------------------------------------------------------------------

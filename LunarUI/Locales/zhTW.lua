@@ -734,6 +734,33 @@ L["ZoneTextShow"] = "永遠顯示"
 L["ZoneTextMouseover"] = "滑鼠懸停時顯示"
 L["ZoneTextHide"] = "隱藏"
 
+-- 小地圖圖示標籤（選項面板）
+L["MinimapIconCalendar"] = "行事曆"
+L["MinimapIconTracking"] = "追蹤"
+L["MinimapIconMail"] = "信件提示"
+L["MinimapIconDifficulty"] = "難度文字"
+L["MinimapIconLFG"] = "地城隊列"
+L["MinimapIconExpansion"] = "資料片按鈕"
+L["MinimapIconCompartment"] = "插件快捷列"
+
+-- 定位點 / 位置值（選項面板）
+L["AnchorTopLeft"] = "左上"
+L["AnchorTop"] = "上方"
+L["AnchorTopRight"] = "右上"
+L["AnchorLeft"] = "左方"
+L["AnchorCenter"] = "中央"
+L["AnchorRight"] = "右方"
+L["AnchorBottomLeft"] = "左下"
+L["AnchorBottom"] = "下方"
+L["AnchorBottomRight"] = "右下"
+
+-- 動作條編號標籤
+L["ActionBarN"] = "動作條 %d"
+
+-- 選項面板搜尋
+L["OptionsSearchPlaceholder"] = "搜尋設定..."
+L["OptionsDbNotReady"] = "[選項] 資料庫尚未就緒 — 設定可能無法儲存"
+
 -- 選項面板：設定檔
 L["profiles"] = "設定檔"
 L["profilesDesc"] = "設定檔管理"

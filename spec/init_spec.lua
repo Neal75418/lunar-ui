@@ -251,7 +251,7 @@ describe("DisableModules", function()
 
         local hasReloadMsg = false
         for _, msg in ipairs(aceAddonObj._printLog) do
-            if msg:find("requires UI reload") or msg:find("需重載") then
+            if msg:find("需要重新載入介面", 1, true) then
                 hasReloadMsg = true
             end
         end
@@ -270,7 +270,7 @@ describe("DisableModules", function()
 
         local hasReloadMsg = false
         for _, msg in ipairs(aceAddonObj._printLog) do
-            if msg:find("requires UI reload") or msg:find("需重載") then
+            if msg:find("需要重新載入介面", 1, true) then
                 hasReloadMsg = true
             end
         end
@@ -294,7 +294,7 @@ describe("DisableModules", function()
 
         local hasReloadMsg = false
         for _, msg in ipairs(aceAddonObj._printLog) do
-            if msg:find("requires UI reload") or msg:find("需重載") then
+            if msg:find("需要重新載入介面", 1, true) then
                 hasReloadMsg = true
             end
         end
@@ -312,13 +312,15 @@ describe("DisableModules", function()
         wipe(aceAddonObj._printLog)
         LunarUI.DisableModules()
 
+        -- 測試走 fallback 路徑（Engine.L 為空 table），檢查繁中 fallback 字串。
+        -- 重載訊息含「需要重新載入介面」，clean 訊息只有「LunarUI 已停用」結尾無括號。
         local hasReloadMsg = false
         local hasCleanMsg = false
         for _, msg in ipairs(aceAddonObj._printLog) do
-            if msg:find("requires UI reload") then
+            if msg:find("需要重新載入介面", 1, true) then
                 hasReloadMsg = true
             end
-            if msg:find("LunarUI disabled") and not msg:find("reload") then
+            if msg:find("LunarUI 已停用", 1, true) and not msg:find("需要重新載入介面", 1, true) then
                 hasCleanMsg = true
             end
         end

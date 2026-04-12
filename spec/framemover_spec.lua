@@ -192,16 +192,24 @@ describe("Move mode", function()
         _G.InCombatLockdown = function()
             return true
         end
-        LunarUI.EnterMoveMode()
-        local found = false
-        for _, msg in ipairs(printLog) do
-            if msg:find("combat") or msg:find("Cannot") then
-                found = true
+        -- 使用 pcall 確保即使 assert 失敗，cleanup 仍會還原 InCombatLockdown，
+        -- 避免污染後續測試。
+        local ok, err = pcall(function()
+            LunarUI.EnterMoveMode()
+            local found = false
+            for _, msg in ipairs(printLog) do
+                -- 比對繁中 fallback 字串（CombatLockdown 類訊息）
+                if msg:find("戰鬥中", 1, true) then
+                    found = true
+                end
             end
-        end
-        assert.is_true(found)
+            assert.is_true(found)
+        end)
         _G.InCombatLockdown = function()
             return false
+        end
+        if not ok then
+            error(err)
         end
     end)
 end)

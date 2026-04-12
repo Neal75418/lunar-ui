@@ -345,25 +345,25 @@ Private.sections.Minimap = function(ctx)
                 inline = true,
                 args = (function()
                     local ICON_NAMES = {
-                        { key = "calendar", name = "Calendar" },
-                        { key = "tracking", name = "Tracking" },
-                        { key = "mail", name = "Mail Indicator" },
-                        { key = "difficulty", name = "Difficulty Text" },
-                        { key = "lfg", name = "LFG Queue" },
-                        { key = "expansion", name = "Expansion Button" },
-                        { key = "compartment", name = "Addon Compartment" },
+                        { key = "calendar", name = L.MinimapIconCalendar },
+                        { key = "tracking", name = L.MinimapIconTracking },
+                        { key = "mail", name = L.MinimapIconMail },
+                        { key = "difficulty", name = L.MinimapIconDifficulty },
+                        { key = "lfg", name = L.MinimapIconLFG },
+                        { key = "expansion", name = L.MinimapIconExpansion },
+                        { key = "compartment", name = L.MinimapIconCompartment },
                     }
 
                     local POSITION_VALUES = {
-                        TOPLEFT = "Top Left",
-                        TOP = "Top",
-                        TOPRIGHT = "Top Right",
-                        LEFT = "Left",
-                        CENTER = "Center",
-                        RIGHT = "Right",
-                        BOTTOMLEFT = "Bottom Left",
-                        BOTTOM = "Bottom",
-                        BOTTOMRIGHT = "Bottom Right",
+                        TOPLEFT = L.AnchorTopLeft,
+                        TOP = L.AnchorTop,
+                        TOPRIGHT = L.AnchorTopRight,
+                        LEFT = L.AnchorLeft,
+                        CENTER = L.AnchorCenter,
+                        RIGHT = L.AnchorRight,
+                        BOTTOMLEFT = L.AnchorBottomLeft,
+                        BOTTOM = L.AnchorBottom,
+                        BOTTOMRIGHT = L.AnchorBottomRight,
                     }
 
                     local args = {}

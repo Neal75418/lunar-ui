@@ -83,7 +83,7 @@ function LunarUI:OnProfileChanged()
         end
     end
 
-    self:Print(L["ProfileChanged"] or "Profile changed, UI refreshed")
+    self:Print(L["ProfileChanged"] or "設定檔已切換，介面已刷新")
 end
 
 --------------------------------------------------------------------------------

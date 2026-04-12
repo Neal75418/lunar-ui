@@ -1059,11 +1059,11 @@ function LunarUI.RefreshMinimap()
         buttonFrame:SetBackdropBorderColor(bc.r, bc.g, bc.b, bc.a * 0.8)
     end
 
-    -- 區域文字字體 + 寬度
+    -- 區域文字字體 + 寬度（走統一 SetFont 路徑確保 fontRegistry 同步）
     if zoneText then
         local zoneFontSize = db.zoneFontSize or 12
         local zoneFontOutline = db.zoneFontOutline or "OUTLINE"
-        zoneText:SetFont(LunarUI.GetSelectedFont(), zoneFontSize, zoneFontOutline)
+        LunarUI.SetFont(zoneText, zoneFontSize, zoneFontOutline)
         zoneText:SetWidth(size)
     end
     ApplyZoneTextDisplayMode(db.zoneTextDisplay or "SHOW")
@@ -1072,7 +1072,7 @@ function LunarUI.RefreshMinimap()
     if coordText then
         local coordFontSize = db.coordFontSize or 10
         local coordFontOutline = db.coordFontOutline or "OUTLINE"
-        coordText:SetFont(LunarUI.GetSelectedFont(), coordFontSize, coordFontOutline)
+        LunarUI.SetFont(coordText, coordFontSize, coordFontOutline)
         if db.showCoords then
             coordText:Show()
         else
@@ -1084,7 +1084,7 @@ function LunarUI.RefreshMinimap()
     if clockText then
         local fontSize = db.coordFontSize or 10
         local fontOutline = db.coordFontOutline or "OUTLINE"
-        clockText:SetFont(LunarUI.GetSelectedFont(), fontSize, fontOutline)
+        LunarUI.SetFont(clockText, fontSize, fontOutline)
         if db.showClock then
             clockText:Show()
             lastClockString = nil -- 強制重繪（格式可能改變）

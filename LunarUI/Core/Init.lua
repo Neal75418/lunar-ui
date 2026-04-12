@@ -215,9 +215,9 @@ function LunarUI.DisableModules()
     -- 根據已註冊模組的 lifecycle 類型決定提示訊息
     local L = Engine.L or {}
     if LunarUI.RequiresReloadForDisable() then
-        LunarUI:Print(L["LunarUIDisabledReload"] or "LunarUI disabled (requires UI reload)")
+        LunarUI:Print(L["LunarUIDisabledReload"] or "LunarUI 已停用（需要重新載入介面）")
     else
-        LunarUI:Print(L["LunarUIDisabled"] or "LunarUI disabled")
+        LunarUI:Print(L["LunarUIDisabled"] or "LunarUI 已停用")
     end
 end
 

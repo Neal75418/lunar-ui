@@ -176,7 +176,7 @@ function LunarUI:SlashCommand(input)
     -- 需要子命令的命令
     if cmd == "toggle" or cmd == "on" or cmd == "off" then
         if InCombatLockdown() then
-            self:Print(_L["CombatLocked"] or "Cannot change addon state during combat")
+            self:Print(_L["CombatLocked"] or "戰鬥中無法變更插件狀態")
             return
         end
         self:ToggleAddon(cmd)

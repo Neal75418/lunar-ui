@@ -55,12 +55,15 @@ local gridFrame = nil -- 網格背景框架
 --------------------------------------------------------------------------------
 
 local function GetSavedPositions()
+    local positions = LunarUI.GetModuleDB("framePositions")
+    if positions then
+        return positions
+    end
+    -- 首次呼叫或 DB 尚未就緒：lazy init
     if not LunarUI.db or not LunarUI.db.profile then
         return {}
     end
-    if not LunarUI.db.profile.framePositions then
-        LunarUI.db.profile.framePositions = {}
-    end
+    LunarUI.db.profile.framePositions = {}
     return LunarUI.db.profile.framePositions
 end
 
@@ -346,7 +349,7 @@ local UpdateEscHandler -- 前向宣告（定義於 ESC 退出支援區段）
 
 local function EnterMoveMode()
     if InCombatLockdown() then
-        LunarUI:Print(L["MoverCombatLocked"] or "Cannot enter move mode during combat")
+        LunarUI:Print(L["MoverCombatLocked"] or "戰鬥中無法進入移動模式")
         return
     end
 
@@ -475,7 +478,7 @@ combatExitFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 combatExitFrame:SetScript("OnEvent", function()
     if isMoving then
         ExitMoveMode()
-        LunarUI:Print(L["MoverCombatLocked"] or "Cannot enter move mode during combat")
+        LunarUI:Print(L["MoverCombatLocked"] or "戰鬥中無法進入移動模式")
     end
 end)
 
@@ -485,13 +488,12 @@ end
 
 function LunarUI.ResetAllPositions()
     if InCombatLockdown() then
-        LunarUI:Print(L["MoverCombatLocked"] or "Cannot enter move mode during combat")
+        LunarUI:Print(L["MoverCombatLocked"] or "戰鬥中無法進入移動模式")
         return
     end
-    if not LunarUI.db or not LunarUI.db.profile then
-        return
-    end
-    LunarUI.db.profile.framePositions = {}
+    -- 透過 GetSavedPositions() lazy init 後就地清空，避免直接 db.profile.X = {} 破壞統一 DB 存取慣例
+    local positions = GetSavedPositions()
+    wipe(positions)
 
     -- 重設所有框架到預設位置，並同步 mover 位置（若在移動模式中）
     for _, data in pairs(movers) do

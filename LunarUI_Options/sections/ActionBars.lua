@@ -10,6 +10,7 @@ Private.sections.ActionBars = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
     local RefreshUI = ctx.RefreshUI
+    local format = string.format
 
     -- args is assembled incrementally so we can mix the static `global` subgroup
     -- with dynamically-generated bar1..bar6 / petbar / stancebar groups below.
@@ -201,7 +202,8 @@ Private.sections.ActionBars = function(ctx)
         args["bar" .. i] = {
             order = i,
             type = "group",
-            name = "Bar " .. i,
+            -- L is metatable-backed; dead-code `or` fallback removed
+            name = format(L.ActionBarN, i),
             args = {
                 enabled = {
                     order = 1,
