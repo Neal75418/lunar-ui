@@ -81,6 +81,10 @@ end
 local lastCoordString = nil
 local lastClockString = nil
 
+-- 前向宣告（定義在 UpdateClock 之後）
+local MinimapOnUpdate
+local ApplyMinimapOnUpdate
+
 local function UpdateCoordinates()
     if not coordText then
         return
@@ -152,6 +156,28 @@ local function UpdateClock()
     if clockString ~= lastClockString then
         clockText:SetText(clockString)
         lastClockString = clockString
+    end
+end
+
+-- Perf C5: 共用的 OnUpdate handler + idle-detach 控制器
+-- 定義於此因為需要 reference 前面的 UpdateCoordinates / UpdateClock
+MinimapOnUpdate = function(self, elapsed)
+    self.elapsed = (self.elapsed or 0) + elapsed
+    if self.elapsed >= COORD_UPDATE_INTERVAL then
+        self.elapsed = 0
+        UpdateCoordinates()
+        UpdateClock()
+    end
+end
+
+ApplyMinimapOnUpdate = function(minimapFrameRef, db)
+    if not minimapFrameRef then
+        return
+    end
+    if db and (db.showCoords or db.showClock) then
+        minimapFrameRef:SetScript("OnUpdate", MinimapOnUpdate)
+    else
+        minimapFrameRef:SetScript("OnUpdate", nil)
     end
 end
 
@@ -671,15 +697,10 @@ local function CreateMinimapFrame()
         UpdateZoneText()
     end)
 
-    -- 座標與時鐘的更新計時器
-    minimapFrame:SetScript("OnUpdate", function(self, elapsed)
-        self.elapsed = (self.elapsed or 0) + elapsed
-        if self.elapsed >= COORD_UPDATE_INTERVAL then
-            self.elapsed = 0
-            UpdateCoordinates()
-            UpdateClock()
-        end
-    end)
+    -- 座標與時鐘的更新計時器（共用 handler）
+    -- Perf C5: 兩個功能都關閉時 SetScript(nil) 避免 0.2s tick 空轉。
+    -- ApplyMinimapOnUpdate 在 RefreshMinimap 被呼叫時同步 attach/detach。
+    ApplyMinimapOnUpdate(minimapFrame, LunarUI.GetModuleDB("minimap"))
 
     -- 右鍵選單追蹤（HookScript 是永久的，用 flag 防止累積）
     if not Minimap._lunarMouseUpHooked then
@@ -1106,6 +1127,9 @@ function LunarUI.RefreshMinimap()
     if db.organizeButtons then
         MinimapButtons.Scan()
     end
+
+    -- Perf C5: 同步 OnUpdate attach/detach 狀態
+    ApplyMinimapOnUpdate(minimapFrame, db)
 end
 
 --------------------------------------------------------------------------------

@@ -955,6 +955,12 @@ local function ApplyStackOffsets(count)
     end
 end
 
+-- Perf C2: 快取上一次的 (count, sum(baseY)) 作為位置簽名。
+-- stackingDirty 已 gate 執行頻率，但 show/hide 事件觸發的 dirty 有時候其實
+-- 沒改變位置版面（例如 pet 短暫隱身）。簽名短路讓這些無變化的觸發直接 bail。
+local _lastStackSig_count = -1
+local _lastStackSig_sum = -1
+
 -- 主協調器：名牌堆疊偵測與調整
 -- 注意：只操作非 secure 的子框架（Health/Backdrop），不需要 InCombatLockdown 檢查
 local function UpdateNameplateStacking()
@@ -964,11 +970,28 @@ local function UpdateNameplateStacking()
     -- 執行堆疊調整流程
     local count = CollectVisibleNameplates()
     if count > 0 then
+        -- Perf C2: 計算 (count, weightedSum(baseY * i)) 簽名，與上次相同就短路。
+        -- 加權（乘以 index）可偵測 plate swap：兩個 plate 交換 Y 時單純的 sum 不變
+        -- 但加權後會不同（只要 stackYs 不對稱）。index 從 collect 順序決定，
+        -- 會隨 plate 生命週期變動，因此 swap 可靠地產生不同 weighted sum。
+        local sigSum = 0
+        for i = 1, count do
+            sigSum = sigSum + stackYs[i] * i
+        end
+        if count == _lastStackSig_count and sigSum == _lastStackSig_sum then
+            return
+        end
+        _lastStackSig_count = count
+        _lastStackSig_sum = sigSum
+
         if count > 1 then
             SortNameplatesByY(count)
             DetectOverlaps(count, npHeight)
         end
         ApplyStackOffsets(count)
+    else
+        _lastStackSig_count = 0
+        _lastStackSig_sum = 0
     end
 end
 

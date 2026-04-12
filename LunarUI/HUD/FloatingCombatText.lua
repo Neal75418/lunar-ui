@@ -310,18 +310,22 @@ local function OnCombatLogEvent()
         return
     end
 
-    -- 一次性解構所有需要的欄位（零分配、單次呼叫）
-    -- CombatLogGetCurrentEventInfo() 回傳值索引：
-    -- 1=timestamp, 2=subevent, 4=sourceGUID, 8=destGUID
-    -- SWING_DAMAGE: 12=amount, 18=critical
-    -- SPELL_DAMAGE/HEAL: 15=amount, 21=critical (damage) / 18=critical (heal)
-    local _, subevent, _, sourceGUID, _, _, _, destGUID, _, _, _, a12, _, _, a15, _, _, a18, _, _, a21 =
-        CombatLogGetCurrentEventInfo()
-
-    local event = Sanitize(subevent)
+    -- Perf C1: 兩階段 destructure 避免在 AOE 拉怪（~1000 CLEU/sec）時對每個
+    -- 事件都解包 21 個回傳值。先只取 subevent 做 damage/heal 過濾，95% 的 CLEU
+    -- 事件（AURA、CAST_START 等）在這裡 early-bail，直接跳過大 destructure 的
+    -- stack 成本。匹配的才呼叫第二次取完整 tuple。
+    local _, rawSubevent = CombatLogGetCurrentEventInfo()
+    local event = Sanitize(rawSubevent)
     if not DAMAGE_EVENTS[event] and not HEAL_EVENTS[event] then
         return
     end
+
+    -- 二次呼叫：取完整欄位
+    -- 回傳值索引：1=timestamp, 2=subevent, 4=sourceGUID, 8=destGUID
+    -- SWING_DAMAGE: 12=amount, 18=critical
+    -- SPELL_DAMAGE/HEAL: 15=amount, 21=critical (damage) / 18=critical (heal)
+    local _t, _s, _h, sourceGUID, _sn, _sf, _sRf, destGUID, _dn, _df, _dRf, a12, _x13, _x14, a15, _x16, _x17, a18, _x19, _x20, a21 =
+        CombatLogGetCurrentEventInfo()
 
     sourceGUID = Sanitize(sourceGUID)
     destGUID = Sanitize(destGUID)

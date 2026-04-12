@@ -109,17 +109,15 @@ local function GetCachedInspectData(guid)
     return nil
 end
 
-local function CacheInspectData(guid, ilvl, spec)
-    inspectCache[guid] = {
-        ilvl = ilvl,
-        spec = spec,
-        time = GetTime(),
-    }
-    -- 清理：過期條目一律刪除，再檢查大小上限
-    local count = 0
+-- Perf C6: count 已達上限才做 O(N) prune。未滿上限時直接 insert，節省每次 hover
+-- 都掃過整個 cache 的 overhead（之前的 prune 每次呼叫都執行，N=50 雖小但無必要）。
+local inspectCacheCount = 0
+
+local function PruneInspectCache()
     local now = GetTime()
     local oldestKey, oldestTime = nil, now
     local toEvict = {}
+    local count = 0
     for k, v in pairs(inspectCache) do
         if (now - v.time) >= INSPECT_CACHE_TTL then
             toEvict[#toEvict + 1] = k
@@ -134,14 +132,32 @@ local function CacheInspectData(guid, ilvl, spec)
     for i = 1, #toEvict do
         inspectCache[toEvict[i]] = nil
     end
+    inspectCacheCount = count
     -- 超過上限時移除最舊的條目
-    if count > INSPECT_CACHE_MAX and oldestKey then
+    if inspectCacheCount > INSPECT_CACHE_MAX and oldestKey then
         inspectCache[oldestKey] = nil
+        inspectCacheCount = inspectCacheCount - 1
+    end
+end
+
+local function CacheInspectData(guid, ilvl, spec)
+    if inspectCache[guid] == nil then
+        inspectCacheCount = inspectCacheCount + 1
+    end
+    inspectCache[guid] = {
+        ilvl = ilvl,
+        spec = spec,
+        time = GetTime(),
+    }
+    -- Perf C6: 只在 count 達上限時 prune，未滿時純 O(1) 插入
+    if inspectCacheCount >= INSPECT_CACHE_MAX then
+        PruneInspectCache()
     end
 end
 
 local function ClearInspectCache()
     wipe(inspectCache)
+    inspectCacheCount = 0
 end
 
 -- 計算裝備等級（從 inspect 資料）

@@ -729,6 +729,27 @@ end
 -- 共用搜尋過濾（背包 / 銀行共用）
 --------------------------------------------------------------------------------
 
+-- Perf C3: 提升為 module-local named function，避免每個 slot 建立 closure。
+-- 搜尋 debounce ~150ms 觸發時原本對 600 個 slot 各建一個匿名 closure
+-- （~600 次 alloc/搜尋按鍵），現在 pcall 呼叫 named function 零 alloc。
+local function SearchSlotUpdate(button, text)
+    local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
+    if itemLink then
+        local itemName = C_Item.GetItemInfo(itemLink)
+        if itemName then
+            if text == "" or itemName:lower():find(text, 1, true) then
+                button:SetAlpha(1)
+            else
+                button:SetAlpha(SEARCH_DIM_ALPHA)
+            end
+        else
+            button:SetAlpha(1)
+        end
+    else
+        button:SetAlpha(text == "" and 1 or SEARCH_DIM_ALPHA)
+    end
+end
+
 local function SearchSlots(searchBoxRef, slotList, errorKey)
     if not searchBoxRef then
         return
@@ -736,23 +757,7 @@ local function SearchSlots(searchBoxRef, slotList, errorKey)
     local text = searchBoxRef:GetText():lower()
     for _, button in pairs(slotList) do
         if button and button:IsShown() and button.bag and button.slot then
-            local success, err = pcall(function()
-                local itemLink = C_Container.GetContainerItemLink(button.bag, button.slot)
-                if itemLink then
-                    local itemName = C_Item.GetItemInfo(itemLink)
-                    if itemName then
-                        if text == "" or itemName:lower():find(text, 1, true) then
-                            button:SetAlpha(1)
-                        else
-                            button:SetAlpha(SEARCH_DIM_ALPHA)
-                        end
-                    else
-                        button:SetAlpha(1)
-                    end
-                else
-                    button:SetAlpha(text == "" and 1 or SEARCH_DIM_ALPHA)
-                end
-            end)
+            local success, err = pcall(SearchSlotUpdate, button, text)
             if not success then
                 button:SetAlpha(1)
                 if LunarUI:IsDebugMode() then

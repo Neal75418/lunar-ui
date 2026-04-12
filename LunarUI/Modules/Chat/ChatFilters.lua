@@ -259,6 +259,14 @@ local function AddURLsToMessage(_self, _event, msg, ...)
         return false, msg, ...
     end
 
+    -- Perf C6: 快速 gate——95% 聊天訊息不含 URL/email，在進入 3 個 gsub loop
+    -- 之前用 plain-text find 篩掉。URL_PATTERNS 目前包含 https?://、www.、
+    -- 以及 email（`user@host.tld`），所以 gate 要同時涵蓋 `://` / `www.` / `@`
+    -- 三種標記——漏掉 @ 會讓 non-.com 域名的 email 不再被包成超連結。
+    if not (msg:find("://", 1, true) or msg:find("www.", 1, true) or msg:find("@", 1, true)) then
+        return false, msg, ...
+    end
+
     local newMsg = msg
     for _, pattern in ipairs(URL_PATTERNS) do
         newMsg = newMsg:gsub(pattern, function(url)

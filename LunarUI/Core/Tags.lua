@@ -85,9 +85,12 @@ if not Tags or not Tags.Methods or not Tags.Events then
 end
 
 -- 安全包裝 tag 函數，避免 WoW API 呼叫失敗導致 oUF 崩潰
+-- Perf C4: 特化 (unit, realUnit) 簽名取代 vararg `...`，避免每次 tag call
+-- 為 vararg 做 table alloc。oUF 對 tag 最多傳 2 個參數（unit + realUnit for
+-- vehicle），其他都是單 unit。
 local function SafeTag(func)
-    return function(...)
-        local ok, result = pcall(func, ...)
+    return function(u1, u2)
+        local ok, result = pcall(func, u1, u2)
         if ok then
             return result
         end
@@ -231,6 +234,8 @@ end)
 Tags.Events["lunar:class"] = "UNIT_NAME_UPDATE"
 
 -- [lunar:class:color] — 職業色彩前綴（用於著色後續文字）
+-- Perf C4: 只有 13 個職業，預計算 cache 避免每次 UNIT_NAME_UPDATE 都做 3x 乘法 + format
+local classColorCache = {}
 Tags.Methods["lunar:class:color"] = SafeTag(function(unit)
     if not UnitIsPlayer(unit) then
         return ""
@@ -239,11 +244,17 @@ Tags.Methods["lunar:class:color"] = SafeTag(function(unit)
     if not class then
         return ""
     end
+    local cached = classColorCache[class]
+    if cached then
+        return cached
+    end
     local color = RAID_CLASS_COLORS[class]
     if not color then
         return ""
     end
-    return format("|cff%02x%02x%02x", color.r * 255, color.g * 255, color.b * 255)
+    cached = format("|cff%02x%02x%02x", color.r * 255, color.g * 255, color.b * 255)
+    classColorCache[class] = cached
+    return cached
 end)
 Tags.Events["lunar:class:color"] = "UNIT_NAME_UPDATE"
 
@@ -297,6 +308,9 @@ if CreateFrame then
     end)
 end
 
+-- Perf C4: cache hit 回傳 false 表示「這個 token 在表但 group 未知」，
+-- 避免 nil 存在 table 裡會被判定為 cache miss 導致每次 tag call 都 fall through
+-- 到 O(N) UnitIsUnit 掃描。
 Tags.Methods["lunar:group"] = SafeTag(function(unit)
     if not IsInRaid() then
         return ""
@@ -308,7 +322,9 @@ Tags.Methods["lunar:group"] = SafeTag(function(unit)
         for i = 1, GetNumGroupMembers() do
             local _, _, group = GetRaidRosterInfo(i)
             raidIndexToGroup[i] = group
-            raidTokenToGroup["raid" .. i] = group -- #10: O(1) 直接查詢
+            -- Perf C4: 若 group 為 nil（loading / 跨 realm edge case），存 false 當 sentinel
+            -- 下次查詢命中 cache 直接回傳空字串，不會 fall through 到 O(N) 掃描
+            raidTokenToGroup["raid" .. i] = group or false
         end
     end
     -- #10: 標準 raid token 直接查表（O(1)），避免 UnitIsUnit 掃描
@@ -316,7 +332,11 @@ Tags.Methods["lunar:group"] = SafeTag(function(unit)
     if direct then
         return tostring(direct)
     end
-    -- fallback：非標準 token（如跨隊伍匹配）仍走 UnitIsUnit O(N) 掃描
+    if direct == false then
+        -- Cache 已查過，group 不可用；不 fall through 到線性掃描
+        return ""
+    end
+    -- direct == nil：非標準 token（如跨隊伍匹配），fallback 走 UnitIsUnit O(N) 掃描
     for i = 1, GetNumGroupMembers() do
         if UnitIsUnit(unit, "raid" .. i) then
             return tostring(raidIndexToGroup[i] or "")
