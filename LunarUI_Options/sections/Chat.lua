@@ -26,6 +26,7 @@ Private.sections.Chat = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().chat.enabled = v
+                    LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
                 end,
                 width = "full",
             },

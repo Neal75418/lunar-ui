@@ -32,7 +32,12 @@ Private.sections.Bags = function(ctx)
         name = L.bags,
         desc = L.bagsDesc,
         args = {
-            enabled = toggle(1, { "bags", "enabled" }, L.enable, nil, { width = "full" }),
+            enabled = toggle(1, { "bags", "enabled" }, L.enable, nil, {
+                width = "full",
+                onValueSet = function()
+                    LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
+                end,
+            }),
             layoutHeader = header(2, L.layout),
             slotsPerRow = range(3, { "bags", "slotsPerRow" }, L.slotsPerRow, nil, 6, 24, 1, rebuildOnSet),
             slotSize = range(4, { "bags", "slotSize" }, L.slotSize, nil, 28, 48, 1, rebuildOnSet),

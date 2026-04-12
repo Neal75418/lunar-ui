@@ -26,7 +26,8 @@ Private.sections.General = function(ctx)
                     return GetDB().enabled
                 end,
                 set = function(_, v)
-                    GetDB().enabled = v
+                    -- 走 ToggleAddon 共用生命週期（含 EnableModules / DisableModules / 確認對話框）
+                    LunarUI:ToggleAddon(v and "on" or "off")
                 end,
                 width = "full",
             },

@@ -9,6 +9,7 @@ Private.sections = Private.sections or {}
 Private.sections.Skins = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
+    local LunarUI = ctx.LunarUI
 
     return {
         order = 11,
@@ -26,6 +27,7 @@ Private.sections.Skins = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().skins.enabled = v
+                    LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
                 end,
                 width = "full",
             },

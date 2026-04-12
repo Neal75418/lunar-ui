@@ -10,6 +10,7 @@ Private.sections = Private.sections or {}
 Private.sections.DataTexts = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
+    local LunarUI = ctx.LunarUI
     local RefreshUI = ctx.RefreshUI
 
     return {
@@ -43,7 +44,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.enabled = v
-                        RefreshUI()
+                        LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
                     end,
                     width = "full",
                 },

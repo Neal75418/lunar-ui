@@ -274,6 +274,12 @@ end
     （抽出為 helper 以便 confirm dialog 的 OnAccept 呼叫）
 ]]
 local function PerformDisable()
+    -- 先檢查戰鬥鎖定：DisableModules 操作 protected API，戰鬥中會失敗。
+    -- 若先寫 DB 再被 DisableModules 擋回，會導致 DB 顯示停用但模組仍在跑
+    if InCombatLockdown() then
+        LunarUI:Print((Engine.L or {})["CombatLocked"] or "戰鬥中無法變更插件狀態")
+        return
+    end
     LunarUI.db.profile.enabled = false
     if LunarUI.DisableModules then
         LunarUI.DisableModules()
