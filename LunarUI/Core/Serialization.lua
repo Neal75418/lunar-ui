@@ -497,12 +497,28 @@ function LunarUI:ImportSettings(importString)
         if not self.db.char.specProfiles then
             self.db.char.specProfiles = {}
         end
-        -- P3 fix: 只接受合法的 specIdx (1..GetNumSpecializations) + 字串 profileName。
-        -- 惡意匯入可能塞入非 numeric key 或映射到不存在的 profile；Config.lua 的
-        -- spec 切換會無條件 SetProfile(target)，可能建立/切換到非預期設定檔。
+        -- P3 fix: 只接受合法的 specIdx (1..GetNumSpecializations) + 存在的 profileName。
+        -- specIdx 限制為有效範圍；profileName 必須是已存在的 AceDB profile，防止
+        -- Config.lua 專精切換時 SetProfile(target) 建立/切到非預期設定檔。
         local maxSpec = (GetNumSpecializations and GetNumSpecializations(false)) or 4
+        -- 建立已存在 profile 的白名單（AceDB:GetProfiles 回傳陣列）
+        local existingProfiles = {}
+        if self.db.GetProfiles then
+            local profileList = self.db:GetProfiles()
+            if profileList then
+                for _, pName in ipairs(profileList) do
+                    existingProfiles[pName] = true
+                end
+            end
+        end
         for specIdx, profileName in pairs(data.charSpecProfiles) do
-            if type(specIdx) == "number" and specIdx >= 1 and specIdx <= maxSpec and type(profileName) == "string" then
+            if
+                type(specIdx) == "number"
+                and specIdx >= 1
+                and specIdx <= maxSpec
+                and type(profileName) == "string"
+                and existingProfiles[profileName]
+            then
                 self.db.char.specProfiles[specIdx] = profileName
             end
         end

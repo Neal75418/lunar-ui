@@ -390,15 +390,28 @@ local function EnterKeybindMode()
         end
     end
 
-    -- 註冊戰鬥事件：進入戰鬥時自動退出 keybind mode
-    -- SecureActionButtonTemplate 上的 OnKeyDown handler 是 tainted Lua，
-    -- 戰鬥中會觸發 ADDON_ACTION_BLOCKED
+    -- 註冊戰鬥事件：進入戰鬥時自動退出 keybind mode + 脫戰後清理 handler
+    -- 使用穩定的 unified OnEvent handler 同時處理 DISABLED（auto-exit）和
+    -- ENABLED（延後清 EnableKeyboard/OnKeyDown），避免 re-enter keybind mode
+    -- 時因 OnEvent 被覆寫而失去 combat auto-exit 能力。
     if not keybindCombatFrame then
         keybindCombatFrame = CreateFrame("Frame")
-        keybindCombatFrame:SetScript("OnEvent", function()
-            if keybindMode then
-                ExitKeybindMode()
-                LunarUI:Print(L["KeybindCombatExited"] or "Keybind mode auto-exited (entering combat)")
+        keybindCombatFrame:SetScript("OnEvent", function(self, event)
+            if event == "PLAYER_REGEN_DISABLED" then
+                if keybindMode then
+                    ExitKeybindMode()
+                    LunarUI:Print(L["KeybindCombatExited"] or "快捷鍵模式已自動退出（進入戰鬥）")
+                end
+            elseif event == "PLAYER_REGEN_ENABLED" then
+                -- 脫戰後真正清掉 protected ops（EnableKeyboard / SetScript）
+                self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+                local btns = LunarUI._actionBarButtons
+                if btns then
+                    for _, btn in pairs(btns) do
+                        btn:EnableKeyboard(false)
+                        btn:SetScript("OnKeyDown", nil)
+                    end
+                end
             end
         end)
     end
@@ -414,9 +427,9 @@ ExitKeybindMode = function()
     end
     keybindMode = false
 
-    -- 解除戰鬥自動退出事件
+    -- 解除 PLAYER_REGEN_DISABLED（不需要再自動退出了，已經退出了）
     if keybindCombatFrame then
-        keybindCombatFrame:UnregisterAllEvents()
+        keybindCombatFrame:UnregisterEvent("PLAYER_REGEN_DISABLED")
     end
 
     local buttons = LunarUI._actionBarButtons
@@ -427,33 +440,17 @@ ExitKeybindMode = function()
         end
 
         -- Security S-A2: EnableKeyboard / SetScript("OnKeyDown", nil) 對
-        -- SecureActionButton 是 protected operation。PLAYER_REGEN_DISABLED
-        -- 觸發時 InCombatLockdown() 已 true，直接呼叫會被 Blizzard 拒絕。
-        -- 戰鬥中只清視覺和旗標；keyboard 解綁延後到 PLAYER_REGEN_ENABLED
-        -- 後真正清掉 handler（handler 本身已有 keybindMode guard）。
+        -- SecureActionButton 是 protected operation。戰鬥中延後到脫戰清理。
         if not InCombatLockdown() then
             button:EnableKeyboard(false)
             button:SetScript("OnKeyDown", nil)
         end
     end
 
-    -- P2 fix: 戰鬥中無法清 handler，註冊 PLAYER_REGEN_ENABLED 延後清理。
-    -- 非戰鬥時不需要（上面已同步清完）。
-    if InCombatLockdown() then
-        if not keybindCombatFrame then
-            keybindCombatFrame = CreateFrame("Frame")
-        end
+    -- 戰鬥中無法清 handler，讓 unified handler 的 PLAYER_REGEN_ENABLED 分支處理。
+    -- OnEvent handler 不會被覆寫（stable），下次 EnterKeybindMode 不受影響。
+    if InCombatLockdown() and keybindCombatFrame then
         keybindCombatFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-        keybindCombatFrame:SetScript("OnEvent", function(self, event)
-            if event == "PLAYER_REGEN_ENABLED" then
-                self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-                local btns = LunarUI._actionBarButtons
-                for _, btn in pairs(btns) do
-                    btn:EnableKeyboard(false)
-                    btn:SetScript("OnKeyDown", nil)
-                end
-            end
-        end)
     end
 
     local msg = L["KeybindDisabled"] or "快捷鍵模式已停用。"
