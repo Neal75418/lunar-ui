@@ -639,6 +639,14 @@ local function CreateBankFrame()
                 end
                 return
             end
+            -- Security S-A1: CreateBankSlot 呼叫 SetAttribute("type2"/"item2") 對
+            -- SecureActionButtonTemplate 是 protected operation。若使用者開銀行後
+            -- 在 ticker 跑完前進戰鬥，SetAttribute 會被 Blizzard 拒絕。戰鬥中暫停
+            -- ticker，PLAYER_REGEN_ENABLED 後自動 resume（RefreshBankLayout 會在下
+            -- 一次開銀行/設定變更時補上遺漏的 slot）。
+            if InCombatLockdown() then
+                return -- 不 Cancel：戰鬥結束後下一 tick 自然 retry
+            end
             local batchEnd = mathMin(nextIdx + INCREMENTAL_BATCH - 1, totalSlots)
             for i = nextIdx, batchEnd do
                 local pos = layout.positions[i]

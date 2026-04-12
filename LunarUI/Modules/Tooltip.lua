@@ -916,6 +916,10 @@ local function CleanupTooltip()
     end
     pendingInspect = nil -- H-4: 清除飛行中的 inspect，避免舊 GUID 洩漏到下次啟用週期
     ClearInspectCache()
+    -- Security S-A12: reversible 模組 disable = 零保留狀態。tooltipItemCache（Wave B 加的
+    -- per-itemID 快取）也需在 cleanup 時清除，避免 enable/disable 循環殘留。
+    wipe(tooltipItemCache)
+    tooltipItemCacheSize = 0
 end
 
 -- 匯出

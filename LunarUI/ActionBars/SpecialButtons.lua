@@ -419,12 +419,18 @@ ExitKeybindMode = function()
             button.LunarBorder:SetBackdropBorderColor(unpack(C.border))
         end
 
-        -- 停用鍵盤
-        button:EnableKeyboard(false)
-        button:SetScript("OnKeyDown", nil)
+        -- Security S-A2: EnableKeyboard / SetScript("OnKeyDown", nil) 對
+        -- SecureActionButton 是 protected operation。PLAYER_REGEN_DISABLED
+        -- 觸發時 InCombatLockdown() 已 true，直接呼叫會被 Blizzard 拒絕。
+        -- 戰鬥中只清視覺和旗標；keyboard 解綁延後到 PLAYER_REGEN_ENABLED
+        -- 後自然生效（keybindMode=false 已阻止 OnKeyDown handler 做任何操作）。
+        if not InCombatLockdown() then
+            button:EnableKeyboard(false)
+            button:SetScript("OnKeyDown", nil)
+        end
     end
 
-    local msg = L["KeybindDisabled"] or "Keybind mode disabled."
+    local msg = L["KeybindDisabled"] or "快捷鍵模式已停用。"
     LunarUI:Print(msg)
 end
 

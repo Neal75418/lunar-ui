@@ -711,6 +711,12 @@ local function CreateMinimapFrame()
                 return
             end
             if button == "RightButton" then
+                -- Security S-A4: MinimapCluster.Tracking.Button 是 protected frame，
+                -- 戰鬥中呼叫 OpenMenu/ToggleMenu/Click 都可能觸發 taint。
+                -- 統一在最外層 guard 而非只在 Click fallback 分支。
+                if InCombatLockdown() then
+                    return
+                end
                 -- 使用安全的選單 API 而非直接 Click() 安全按鈕（避免 taint）
                 if MinimapCluster and MinimapCluster.Tracking and MinimapCluster.Tracking.Button then
                     local btn = MinimapCluster.Tracking.Button

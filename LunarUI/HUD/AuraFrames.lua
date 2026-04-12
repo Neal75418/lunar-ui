@@ -92,7 +92,9 @@ local debuffFrame = nil
 local buffIcons = {}
 local debuffIcons = {}
 local isInitialized = false
-local auraInitGeneration = 0
+-- Security S-A11: auraInitGeneration 已移除——宣告 + cleanup 遞增但全庫無讀取，
+-- 是未完成的 generation-counter pattern。isInitialized guard 足以保護 C_Timer
+-- 回呼（初始化延遲回呼在 cleanup 後 isInitialized=false 直接早退）。
 local auraCombatDeferFrame = nil -- singleton：戰鬥中 cleanup 時延遲還原 Blizzard 框架
 
 -- /reload 時舊框架已在正確位置，不隱藏它（避免閃爍和位置跳動）
@@ -908,7 +910,6 @@ function LunarUI.CleanupAuraFrames()
 
     -- H-1: 重置排程旗標，避免 re-enable 後首次 UNIT_AURA 靜默失敗
     auraUpdateScheduled = false
-    auraInitGeneration = auraInitGeneration + 1
 
     isInitialized = false
     -- 不取消事件註冊：OnEvent 已有 isInitialized guard，

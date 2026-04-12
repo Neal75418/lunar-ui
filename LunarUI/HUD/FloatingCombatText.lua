@@ -309,6 +309,12 @@ local function OnCombatLogEvent()
     if not isEnabled then
         return
     end
+    -- Security S-A14: enqueue-time clamp。QueueOnUpdate 每幀最多處理 POOL_SIZE 筆，
+    -- 超出的本來就丟掉——在 enqueue 端直接早退更省（避免 AOE 拉怪時 pending 陣列
+    -- 高水位膨脹到 ~5000 且 Lua array backing 整個 session 不會 shrink）。
+    if pendingCount >= POOL_SIZE then
+        return
+    end
 
     -- Perf C1: 兩階段 destructure 避免在 AOE 拉怪（~1000 CLEU/sec）時對每個
     -- 事件都解包 21 個回傳值。先只取 subevent 做 damage/heal 過濾，95% 的 CLEU

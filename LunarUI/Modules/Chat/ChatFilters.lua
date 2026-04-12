@@ -579,6 +579,11 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
         cachedPlayerName = UnitName("player")
     end
     local playerName = cachedPlayerName
+    -- Security S-A9: loading screen 中 UnitName("player") 可能回 nil；不 guard
+    -- 的話 playerName:lower() 在後面的 keyword cache 會 raise error 進 chat pipeline
+    if not playerName then
+        return false, msg, author, ...
+    end
     if author then
         local shortAuthor = Ambiguate(author, "short")
         if shortAuthor == playerName then

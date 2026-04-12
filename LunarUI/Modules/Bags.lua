@@ -1531,6 +1531,11 @@ local function OnBagEvent(_self, event, ...)
         end
     elseif event == "BAG_SLOT_FLAGS_UPDATED" then
         -- 背包類型可能已改變（換包），清除專業容器快取
+        -- Security S-A3: RefreshBagLayout 可能建新 slot（SetAttribute on
+        -- SecureActionButton），戰鬥中延後到 PLAYER_REGEN_ENABLED 處理
+        if InCombatLockdown() then
+            return
+        end
         LunarUI.BagsClearBagTypeCache()
         RefreshBagLayout()
         local bankFrame = LunarUI.BagsGetBankFrame()
