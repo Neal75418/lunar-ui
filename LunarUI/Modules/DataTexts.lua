@@ -655,6 +655,8 @@ local function BindSlotToProvider(slot, providerName)
         local text = provider.update()
         if text then
             slot.text:SetText(text)
+            -- Perf A5: prime _lastText 避免第一次 UpdateProvider 無謂重繪
+            slot._lastText = text
         end
     end
 end
@@ -675,10 +677,16 @@ local function UpdateProvider(providerName)
     end
 
     -- Fix 5: 直接查反查表，不遍歷所有面板/欄位
+    -- Perf A5: value-unchanged short-circuit 避免 SetText thrash。
+    -- FPS / 時鐘這類每秒刷新但多數 tick 值不變的 provider 從此零重繪成本。
     local slots = slotsByProvider[providerName]
     if slots then
         for i = 1, #slots do
-            slots[i].text:SetText(text)
+            local slot = slots[i]
+            if slot._lastText ~= text then
+                slot.text:SetText(text)
+                slot._lastText = text
+            end
         end
     end
 end

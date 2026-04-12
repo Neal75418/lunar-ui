@@ -162,6 +162,15 @@ local _cachedTimestampMinute = -1
 -- M8 效能修復：關鍵字列表快取（模組層，避免每則訊息建立新 table）
 local keywordCheckList = {}
 
+-- Perf A6: 預先 lower-cased keyword 陣列 + 記憶 db.keywords 的 identity 與 count。
+-- 每則訊息重建 keywordCheckList + 對每個 keyword 呼叫 :lower() 是熱路徑的大浪費
+-- （10+ 訊息/秒 × 5-50 keywords × 每則重建）。改成只在 db.keywords 表指針變更
+-- 或長度變更時 rebuild，平時 O(1) 比對 + 零 alloc。
+local keywordsLowerCache = {} -- 陣列 [1..n]，已 lower-cased
+local keywordsLowerCacheRef = nil -- 記憶 db.keywords 的 table identity
+local keywordsLowerCacheCount = 0
+local keywordsLowerCachePlayerName = nil -- 記憶當時的 playerName（用於 cache invalidation）
+
 -- Fix 3b: 預快取 keyword escaped pattern
 local escapedKeywordCache = {}
 local escapedKeywordCacheSize = 0
@@ -569,20 +578,47 @@ local function CheckKeywordAlert(_self, _event, msg, author, ...)
         end
     end
 
-    -- M8 效能修復：複用模組層 keywordCheckList，每次呼叫重建以確保內容最新
-    -- 使用 count 短路曾導致同數量但不同內容的 keyword 變更無法反映
+    -- Perf A6: 維護兩個同步的陣列：
+    --   keywordCheckList — 原始 keyword（用於後續高亮 gsub）
+    --   keywordsLowerCache — 預 lower 過的 keyword（用於比對，避免每則訊息 :lower()）
+    -- 只在 db.keywords table identity / 長度 / playerName 變更時 rebuild，
+    -- 平時穩態下是 O(1) 比對 + 零 alloc。
     local keywords = db.keywords or {}
-    wipe(keywordCheckList)
-    tableInsert(keywordCheckList, playerName)
-    for _, kw in ipairs(keywords) do
-        tableInsert(keywordCheckList, kw)
+    local keywordsCount = #keywords
+    if
+        keywordsLowerCacheRef ~= keywords
+        or keywordsLowerCacheCount ~= keywordsCount
+        or keywordsLowerCachePlayerName ~= playerName
+    then
+        wipe(keywordCheckList)
+        wipe(keywordsLowerCache)
+        tableInsert(keywordCheckList, playerName)
+        tableInsert(keywordsLowerCache, playerName:lower())
+        for i = 1, keywordsCount do
+            local kw = keywords[i]
+            if kw and kw ~= "" then
+                tableInsert(keywordCheckList, kw)
+                tableInsert(keywordsLowerCache, kw:lower())
+            end
+        end
+        keywordsLowerCacheRef = keywords
+        keywordsLowerCacheCount = keywordsCount
+        keywordsLowerCachePlayerName = playerName
+    end
+
+    -- Early return：沒任何可比對的 keyword（連 playerName 都空字串）就直接跳過
+    -- 這些 case 在 `:lower()` 之前就應該 bail out 以避免 msg:lower() 的字串 copy。
+    local lowerCount = #keywordsLowerCache
+    if lowerCount == 0 then
+        return false, msg, author, ...
     end
 
     local msgLower = msg:lower()
     local matched = false
 
-    for _, keyword in ipairs(keywordCheckList) do
-        if keyword and keyword ~= "" and msgLower:find(keyword:lower(), 1, true) then
+    for i = 1, lowerCount do
+        local keywordLower = keywordsLowerCache[i]
+        if keywordLower ~= "" and msgLower:find(keywordLower, 1, true) then
             matched = true
             break
         end

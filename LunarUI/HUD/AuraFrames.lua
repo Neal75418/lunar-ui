@@ -359,6 +359,25 @@ end
 -- WoW 12.0: 即使經過 tonumber(tostring()) / "" .. tostring() 淨化，
 -- aura 數據在戰鬥中仍可能攜帶 taint，整個函式用 pcall 保護
 local function UpdateAuraIconInner(iconFrame, auraData, name, count, duration, expirationTime, filter, isDebuff)
+    -- Perf A1: cache short-circuit——若 instanceID + count + duration + expirationTime
+    -- 全部沒變，該光環沒任何視覺變化，整個函式 skip。UpdateIconTimers 仍每 0.1s
+    -- 從既有 OnUpdate 讀 _cachedDuration/_cachedExpiration 來推進進度條。
+    -- 這是 HUD 熱路徑最大單一 win：戰鬥中每次 UNIT_AURA debounce 都會呼叫這
+    -- 個函式 ~24 次，短路後未變動的光環成本降到 ~0。
+    --
+    -- 四個 cache field 必須一起 atomic 更新到函式尾端，避免 pcall 在中間抓到
+    -- taint error 導致 cache 半寫——半寫狀態下一次呼叫會 false positive 短路
+    -- 而跳過刷新。
+    local instanceID = auraData.auraInstanceID
+    if
+        iconFrame._cachedInstanceID == instanceID
+        and iconFrame._cachedCount == count
+        and iconFrame._cachedDuration == duration
+        and iconFrame._cachedExpiration == expirationTime
+    then
+        return
+    end
+
     -- H-3: 斷開 taint 鏈（aura API 回傳的 icon fileID 可能攜帶 taint）
     local iconTexture = tonumber(auraData.icon) or tostring(auraData.icon or "")
 
@@ -385,9 +404,9 @@ local function UpdateAuraIconInner(iconFrame, auraData, name, count, duration, e
         iconFrame.count:Hide()
     end
 
-    -- 快取持續時間（供 UpdateIconTimers 使用，避免每 0.1s 呼叫 GetCooldownTimes）
-    iconFrame._cachedDuration = duration
-    iconFrame._cachedExpiration = expirationTime
+    -- NB: 所有 cache field 在函式最尾 atomic 寫入，見結尾註解。
+    -- 計時條使用 local `duration` / `expirationTime` 參數（舊版用 _cachedXxx，
+    -- 但那兩個 field 現在只給 UpdateIconTimers 讀，不在函式中段寫入）。
 
     -- 計時條
     if duration > 0 and expirationTime > 0 then
@@ -445,6 +464,14 @@ local function UpdateAuraIconInner(iconFrame, auraData, name, count, duration, e
     end
 
     iconFrame:Show()
+
+    -- Perf A1: atomic cache commit——在所有視覺更新之後才寫全部四個 field。
+    -- 若 pcall 在本函式中途抓到 taint error，cache 保持舊值，下次 cache miss
+    -- 完整重算，避免半寫狀態導致 false positive 短路。
+    iconFrame._cachedInstanceID = instanceID
+    iconFrame._cachedCount = count
+    iconFrame._cachedDuration = duration
+    iconFrame._cachedExpiration = expirationTime
 end
 
 local function UpdateAuraIcon(iconFrame, auraData, name, count, duration, expirationTime, filter, isDebuff)
@@ -504,9 +531,15 @@ local function UpdateAuraGroup(icons, maxIcons, isDebuff)
 
     -- 隱藏多餘圖示
     for i = visibleIndex + 1, maxIcons do
-        if icons[i] then
-            icons[i]:Hide()
-            icons[i].currentAuraName = nil
+        local icon = icons[i]
+        if icon then
+            icon:Hide()
+            icon.currentAuraName = nil
+            -- Perf A1: icon 被回收時清除 cache，避免下次重用時 short-circuit false positive
+            icon._cachedInstanceID = nil
+            icon._cachedCount = nil
+            icon._cachedDuration = nil
+            icon._cachedExpiration = nil
         end
     end
 end

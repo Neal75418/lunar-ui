@@ -246,15 +246,31 @@ local function CreateHealthBar(frame)
         end
 
         -- 生命值文字（動態查找，showHealthText 在 layout 時建立）
+        -- Perf A4: cache `(pct, fmt, cur)` 三元組，沒變就 skip SetText 避免每幀
+        -- 對每個可見名牌 alloc 新字串（地城 30 plates × 60fps 原本 ~1800 strings/sec）
         local ht = frame.HealthText
         if not ht then
             return
         end
         if type(cur) ~= "number" or type(max) ~= "number" or max == 0 then
-            ht:SetText("")
+            if ht._lastText ~= "" then
+                ht:SetText("")
+                ht._lastText = ""
+            end
             return
         end
         local pct = mathFloor(cur / max * 100)
+        -- 短路：pct + fmt 沒變（percent 模式）或 pct + cur + fmt 都沒變（其他模式）
+        if
+            ht._lastPct == pct
+            and ht._lastFmt == cachedHealthFmt
+            and (cachedHealthFmt == "percent" or ht._lastCur == cur)
+        then
+            return
+        end
+        ht._lastPct = pct
+        ht._lastFmt = cachedHealthFmt
+        ht._lastCur = cur
         if cachedHealthFmt == "percent" then
             ht:SetText(format("%d%%", pct))
         elseif cachedHealthFmt == "current" then

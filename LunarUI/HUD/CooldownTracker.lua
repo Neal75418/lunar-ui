@@ -202,6 +202,12 @@ local initGeneration = 0 -- 每次 Cleanup 遞增，使飛行中的 C_Timer.Afte
 local spellTextureCache = {} -- 法術圖示快取，避免重複查詢 API
 local CACHE_MAX_SIZE = 2000 -- 快取上限，防止無限增長（每筆約 32 bytes，2000 筆 ≈ 64KB）
 local cacheSize = 0
+-- Perf A3: spellID -> icon 反向索引，flash 分支 O(N) 線性搜尋改 O(1)
+local iconBySpellID = {}
+-- Perf A2: OnUpdate 附加狀態；閒置時卸載，SPELL_UPDATE_COOLDOWN 事件重新喚醒
+-- 前向宣告 eventFrame 以便 UpdateCooldownIcons 的 idle-detach 分支可以 reference
+local eventFrame
+local onUpdateAttached = false
 
 --------------------------------------------------------------------------------
 -- 輔助函數
@@ -428,31 +434,41 @@ local function UpdateCooldownIcons()
                         end
                         icon:Show()
 
-                        -- 儲存 spellID 用於閃光
+                        -- 儲存 spellID 用於閃光；維護反向索引供 flash 分支 O(1) 查詢
+                        if icon.spellID ~= spellID and icon.spellID then
+                            iconBySpellID[icon.spellID] = nil
+                        end
                         icon.spellID = spellID
                         icon.wasOnCooldown = true
+                        iconBySpellID[spellID] = icon
                     end
                 end
             else
-                -- 冷卻剛結束，觸發閃光
-                for i = 1, MAX_ICONS do
-                    local icon = cooldownIcons[i]
-                    if icon and icon.spellID == spellID and icon.wasOnCooldown then
-                        icon.flashAnim:Play()
-                        icon.wasOnCooldown = false
-                    end
+                -- Perf A3: 冷卻剛結束，O(1) 反向查表觸發閃光（原本 O(N) 線性搜尋）
+                local icon = iconBySpellID[spellID]
+                if icon and icon.wasOnCooldown then
+                    icon.flashAnim:Play()
+                    icon.wasOnCooldown = false
                 end
             end
         end
     end
 
     -- 隱藏多餘的圖示（保留正在播放閃光動畫的圖示）
+    local flashPlaying = false
     for i = visibleIndex + 1, MAX_ICONS do
-        if cooldownIcons[i] then
-            if not cooldownIcons[i].flashAnim:IsPlaying() then
-                cooldownIcons[i]:Hide()
-                cooldownIcons[i].spellID = nil
-                cooldownIcons[i]._layoutIndex = nil -- 清除快取，下次顯示時重設 anchor
+        local icon = cooldownIcons[i]
+        if icon then
+            if not icon.flashAnim:IsPlaying() then
+                icon:Hide()
+                -- Perf A3: 清除反向索引避免陳舊 entry 造成假閃光
+                if icon.spellID then
+                    iconBySpellID[icon.spellID] = nil
+                end
+                icon.spellID = nil
+                icon._layoutIndex = nil -- 清除快取，下次顯示時重設 anchor
+            else
+                flashPlaying = true
             end
         end
     end
@@ -461,6 +477,16 @@ local function UpdateCooldownIcons()
     if visibleIndex > 0 then
         local width = visibleIndex * (ICON_SIZE + ICON_SPACING) - ICON_SPACING
         cooldownFrame:SetWidth(width)
+    end
+
+    -- Perf A2: 完全閒置時卸載 OnUpdate，SPELL_UPDATE_COOLDOWN 事件會重新喚醒。
+    -- 避免出戰鬥後 10Hz 循環白燒 CPU。
+    if visibleIndex == 0 and not flashPlaying and onUpdateAttached then
+        if eventFrame then
+            eventFrame:SetScript("OnUpdate", nil)
+        end
+        updateTimer = 0
+        onUpdateAttached = false
     end
 end
 
@@ -487,9 +513,6 @@ local function SetupTrackedSpells()
         end
     end
 end
-
--- 前向宣告（實際定義在下方事件處理區段）
-local eventFrame
 
 local function CooldownOnUpdate(_self, elapsed)
     updateTimer = updateTimer + elapsed
@@ -521,7 +544,19 @@ local function Initialize()
     -- 啟動 OnUpdate
     if eventFrame then
         eventFrame:SetScript("OnUpdate", CooldownOnUpdate)
+        onUpdateAttached = true
     end
+end
+
+-- Perf A2: SPELL_UPDATE_COOLDOWN 處理器用於從閒置狀態重新喚醒 OnUpdate
+local function WakeOnUpdate()
+    if not isInitialized or onUpdateAttached or not eventFrame then
+        return
+    end
+    eventFrame:SetScript("OnUpdate", CooldownOnUpdate)
+    onUpdateAttached = true
+    -- 立即執行一次，避免等到下一 tick 才刷新新的冷卻圖示
+    UpdateCooldownIcons()
 end
 
 -- 暴露函數供 Options toggle 即時切換與測試使用
@@ -541,7 +576,7 @@ LunarUI.ClearSpellTextureCache = ClearSpellTextureCache
 --------------------------------------------------------------------------------
 
 eventFrame = LunarUI.CreateEventHandler(
-    { "PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "SPELLS_CHANGED" },
+    { "PLAYER_ENTERING_WORLD", "PLAYER_SPECIALIZATION_CHANGED", "SPELLS_CHANGED", "SPELL_UPDATE_COOLDOWN" },
     function(_self, event)
         if event == "PLAYER_ENTERING_WORLD" then
             if LunarUI.GetHUDSetting("cooldownTracker", true) == false then
@@ -562,6 +597,9 @@ eventFrame = LunarUI.CreateEventHandler(
             if isInitialized then
                 SetupTrackedSpells()
             end
+        elseif event == "SPELL_UPDATE_COOLDOWN" then
+            -- Perf A2: 從閒置狀態重新喚醒 OnUpdate；若已附加則 no-op
+            WakeOnUpdate()
         end
     end
 )
@@ -632,9 +670,11 @@ function LunarUI.CleanupCooldownTracker()
     if eventFrame then
         eventFrame:SetScript("OnUpdate", nil)
     end
+    onUpdateAttached = false
     updateTimer = 0
     wipe(spellTextureCache) -- 清理圖示快取
     wipe(trackedSpells) -- 清理追蹤列表
+    wipe(iconBySpellID) -- Perf A3: 清理反向索引避免 disable/enable 循環殘留
     cacheSize = 0
     isInitialized = false
     -- 事件註冊保留：OnEvent 已有 isInitialized guard，
