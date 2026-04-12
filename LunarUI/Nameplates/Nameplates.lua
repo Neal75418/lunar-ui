@@ -1063,16 +1063,33 @@ oUF:RegisterStyle("LunarUI_Nameplate", NameplateLayout)
 
 -- 早期事件緩衝：捕捉 SpawnNameplates 延遲期間被錯過的 NAME_PLATE_UNIT_ADDED
 -- 模組有 delay=0.2，reload 後事件可能在 oUF driver 註冊前就觸發
+-- P2 fix: 加上 cap 防止 unbounded growth + 提供 cleanup helper 給 early-return / disable 路徑
+local EARLY_BUFFER_CAP = 40 -- 名牌最多 ~40 個，超過就不緩衝
 local earlyPlateBuffer = CreateFrame("Frame")
 earlyPlateBuffer._units = {}
 earlyPlateBuffer:RegisterEvent("NAME_PLATE_UNIT_ADDED")
 earlyPlateBuffer:SetScript("OnEvent", function(_self, _event, unit)
-    earlyPlateBuffer._units[#earlyPlateBuffer._units + 1] = unit
+    if #earlyPlateBuffer._units < EARLY_BUFFER_CAP then
+        earlyPlateBuffer._units[#earlyPlateBuffer._units + 1] = unit
+    end
 end)
+
+-- 停止早期緩衝並釋放資源（供 early-return / cleanup / 成功 spawn 三路徑共用）
+local function StopEarlyPlateBuffer()
+    if not earlyPlateBuffer then
+        return
+    end
+    earlyPlateBuffer:UnregisterAllEvents()
+    earlyPlateBuffer:SetScript("OnEvent", nil)
+    earlyPlateBuffer._units = nil
+    earlyPlateBuffer = nil
+end
 
 local function SpawnNameplates()
     local db = LunarUI.GetModuleDB("nameplates")
     if not db or not db.enabled then
+        -- P2 fix: 模組未啟用時停止早期緩衝，避免常駐收集事件 + unbounded buffer
+        StopEarlyPlateBuffer()
         return
     end
 
@@ -1114,22 +1131,22 @@ local function SpawnNameplates()
 
         -- 回放早期緩衝：將 delay 期間錯過的 NAME_PLATE_UNIT_ADDED 事件送給 oUF
         if earlyPlateBuffer then
-            -- 停止捕捉（oUF driver 已註冊，後續事件由 oUF 直接處理）
-            earlyPlateBuffer:UnregisterAllEvents()
-            earlyPlateBuffer:SetScript("OnEvent", nil)
+            local bufferedUnits = earlyPlateBuffer._units
+            -- 先停止捕捉（oUF driver 已註冊，後續事件由 oUF 直接處理）
+            StopEarlyPlateBuffer()
 
-            local driverHandler = nameplateDriver.GetScript and nameplateDriver:GetScript("OnEvent")
-            if driverHandler then
-                for _, unit in ipairs(earlyPlateBuffer._units) do
-                    -- 只處理 oUF 尚未建立 unitFrame 的名牌
-                    local plate = C_NamePlate.GetNamePlateForUnit(unit)
-                    if plate and not plate.unitFrame then
-                        driverHandler(nameplateDriver, "NAME_PLATE_UNIT_ADDED", unit)
+            if bufferedUnits then
+                local driverHandler = nameplateDriver.GetScript and nameplateDriver:GetScript("OnEvent")
+                if driverHandler then
+                    for _, unit in ipairs(bufferedUnits) do
+                        -- 只處理 oUF 尚未建立 unitFrame 的名牌
+                        local plate = C_NamePlate.GetNamePlateForUnit(unit)
+                        if plate and not plate.unitFrame then
+                            driverHandler(nameplateDriver, "NAME_PLATE_UNIT_ADDED", unit)
+                        end
                     end
                 end
             end
-            earlyPlateBuffer._units = nil
-            earlyPlateBuffer = nil -- 釋放框架引用，允許 GC
         end
     else
         -- re-enable：對當前已可見的名牌重新觸發 OnShow（HookScript 只在下次 Show 時觸發）
@@ -1219,6 +1236,9 @@ function LunarUI.CleanupNameplates()
     -- 不呼叫 frame:Hide()：名牌框架由 WoW 引擎管理（secure），
     -- 強制 Hide 在戰鬥中會 taint，且框架不會自動恢復
     nameplateModuleEnabled = false
+
+    -- P2 fix: disable 時停止早期緩衝（若 enable→disable 循環在 delay 視窗內發生）
+    StopEarlyPlateBuffer()
 
     -- 清理戰鬥等待框架
     if npCombatWaitFrame then
