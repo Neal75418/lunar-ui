@@ -32,7 +32,6 @@ local LunarUI = {
             auraFilters = {
                 hidePassive = true,
                 showStealable = true,
-                showDispellable = true,
                 sortMethod = "time",
                 sortReverse = false,
             },
@@ -179,7 +178,6 @@ describe("AuraFilter", function()
         LunarUI.db.profile.auraFilters = {
             hidePassive = false,
             showStealable = false,
-            showDispellable = false,
             sortMethod = "time",
             sortReverse = false,
         }

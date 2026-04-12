@@ -219,7 +219,6 @@ L["ShortChannelNamesDesc"] = "Abbreviate channel names (e.g., Guild → [G])"
 L["ShowItemCount"] = "Show Item Count"
 L["ShowItemCountDesc"] = "Show bag and bank item counts in tooltips"
 L["ItemCount"] = "Item Count"
-L["ItemCountDesc"] = "Show item count (bags/bank) in tooltips"
 
 -- UnitFrame enhancements
 L["Pet"] = "Pet"

@@ -225,7 +225,6 @@ L["ShortChannelNamesDesc"] = "縮寫頻道名稱（例如：公會 → [會]）"
 L["ShowItemCount"] = "顯示物品數量"
 L["ShowItemCountDesc"] = "在提示中顯示背包與銀行物品數量"
 L["ItemCount"] = "物品數量"
-L["ItemCountDesc"] = "在滑鼠提示框中顯示物品持有數量（背包/銀行）"
 
 -- 單位框架增強
 L["Pet"] = "寵物"
