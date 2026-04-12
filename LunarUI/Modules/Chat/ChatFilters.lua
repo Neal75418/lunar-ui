@@ -272,8 +272,10 @@ local function AddURLsToMessage(_self, _event, msg, ...)
         newMsg = newMsg:gsub(pattern, function(url)
             -- 檢查此 URL 是否已在超連結內（避免 https://www.* 被雙重替換）
             local pos = newMsg:find(url, 1, true)
-            if pos and pos > 10 then
-                local before = newMsg:sub(pos - 10, pos - 1)
+            -- Security S-B7: lookbehind 視窗需 ≥ 12 才能完整捕捉 "|HLunarURL:" (11 字元)
+            -- 前一版用 10，少 1 byte 導致首個 "|" 被截斷而 false negative → 二次包裝
+            if pos and pos > 12 then
+                local before = newMsg:sub(pos - 12, pos - 1)
                 if before:find("|HLunarURL:", 1, true) then
                     return url -- 已在超連結內，原樣返回
                 end
@@ -747,7 +749,16 @@ local function SetupLinkTooltipPreview()
                     if spellID then
                         pcall(GameTooltip.SetSpellByID, GameTooltip, tonumber(spellID))
                     end
-                else
+                elseif
+                    linkType == "quest"
+                    or linkType == "achievement"
+                    or linkType == "enchant"
+                    or linkType == "trade"
+                    or linkType == "talent"
+                    or linkType == "currency"
+                then
+                    -- Security S-B10: 白名單安全的 linktype，避免 garrmission 等
+                    -- 曾被濫用的 linktype 觸發非預期 secure action
                     pcall(GameTooltip.SetHyperlink, GameTooltip, link)
                 end
 

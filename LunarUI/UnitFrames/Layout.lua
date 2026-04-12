@@ -664,6 +664,12 @@ end
 
 -- 清理函數
 local function CleanupUnitFrames()
+    -- Security S-B5: frame:Disable() 呼叫 UnregisterUnitWatch 對 SecureUnitButton
+    -- 是 protected op。目前只從 /lunar off 進入（Commands.lua 已 combat-guard），
+    -- 加內建守衛防止未來新呼叫路徑（profile reset 等）在戰鬥中觸發。
+    if InCombatLockdown() then
+        return
+    end
     -- Soft disable：隱藏 LunarUI 框架 + 停止事件，但不銷毀 oUF singleton
     -- oUF:Spawn() 是一次性的（相同 unit 不可二次 spawn），因此：
     -- - /lunar off：frame:Disable()（UnregisterUnitWatch + Hide）

@@ -55,6 +55,25 @@ local diff -- 難度圖示框架
 local savedMinimapState = nil
 local isInitialized = false -- HookScript runtime guard（hook 無法解除，用此 flag 控制行為）
 
+-- Security S-B15: module-level upvalue 避免 UpdateDifficulty 每次呼叫重建 table
+local MINIMAP_DIFFICULTY_ABBREV = {
+    [1] = "N", -- Normal (5)
+    [2] = "H", -- Heroic (5)
+    [3] = "N", -- Normal (10)
+    [4] = "N", -- Normal (25)
+    [5] = "H", -- Heroic (10)
+    [6] = "H", -- Heroic (25)
+    [7] = "LFR", -- Looking For Raid (legacy)
+    [8] = "M+", -- Mythic Keystone
+    [14] = "N", -- Normal (Flex)
+    [15] = "H", -- Heroic (Flex)
+    [16] = "M", -- Mythic
+    [17] = "LFR", -- Looking For Raid (Flex)
+    [23] = "M", -- Mythic (5)
+    [24] = "TW", -- Timewalking (party)
+    [33] = "TW", -- Timewalking (raid)
+}
+
 --------------------------------------------------------------------------------
 -- 輔助函數
 --------------------------------------------------------------------------------
@@ -869,24 +888,8 @@ local function CreateDifficultyIndicator()
         end
 
         -- 縮寫難度名稱（id-based，語系無關）
-        local DIFFICULTY_ABBREV = {
-            [1] = "N", -- Normal (5)
-            [2] = "H", -- Heroic (5)
-            [3] = "N", -- Normal (10)
-            [4] = "N", -- Normal (25)
-            [5] = "H", -- Heroic (10)
-            [6] = "H", -- Heroic (25)
-            [7] = "LFR", -- Looking For Raid (legacy)
-            [8] = "M+", -- Mythic Keystone
-            [14] = "N", -- Normal (Flex)
-            [15] = "H", -- Heroic (Flex)
-            [16] = "M", -- Mythic
-            [17] = "LFR", -- Looking For Raid (Flex)
-            [23] = "M", -- Mythic (5)
-            [24] = "TW", -- Timewalking (party)
-            [33] = "TW", -- Timewalking (raid)
-        }
-        local abbrev = DIFFICULTY_ABBREV[difficulty] or diffName
+        -- Security S-B15: hoist 到 module level 避免每次 ZONE_CHANGED 都重建 14 entry table
+        local abbrev = MINIMAP_DIFFICULTY_ABBREV[difficulty] or diffName
         text:SetText(abbrev)
         diff:Show()
     end

@@ -189,6 +189,13 @@ function LunarUI.DisableModules()
     if not LunarUI._modulesEnabled then
         return
     end
+    -- Security S-B6: 部分 onDisable callback（UnitFrames.Disable、ActionBars
+    -- UnregisterStateDriver）操作 protected API。pcall 不攔截 taint violation，
+    -- 只攔截 Lua error。戰鬥中呼叫會產生 "Action blocked" 錯誤。
+    if InCombatLockdown() then
+        LunarUI:Print((Engine.L or {})["CombatLocked"] or "戰鬥中無法變更插件狀態")
+        return
+    end
     LunarUI._modulesEnabled = false
     -- 遞增世代，使飛行中的 C_Timer.After 延遲模組 callback 失效
     enableGeneration = enableGeneration + 1

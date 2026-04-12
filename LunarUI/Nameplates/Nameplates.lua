@@ -1174,8 +1174,14 @@ local function SpawnNameplates()
         nameplateQuestFrame:RegisterEvent("QUEST_LOG_UPDATE")
         local questUpdatePending = false
         -- #9: 具名函數，避免 QUEST_LOG_UPDATE 每次觸發時分配新 closure
+        -- Security S-B13: C_Timer.After(0.5) 沒有 generation guard，cleanup 後
+        -- nameplateFrames 被 wipe 所以目前「意外安全」。加顯式 enabled guard
+        -- 防止未來在 OnQuestTimerFired 加 module-level 操作時遺漏保護。
         local function OnQuestTimerFired()
             questUpdatePending = false
+            if not nameplateModuleEnabled then
+                return
+            end
             for np in pairs(nameplateFrames) do
                 if np:IsShown() then
                     UpdateQuestIndicator(np)
