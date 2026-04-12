@@ -234,9 +234,9 @@ local defaults = {
             enabled = true, -- LunarUI 名牌（設為 false 使用暴雪預設）
             width = 120,
             height = 8,
-            showHealthText = true, -- ★ 顯示生命值文字
-            healthTextFormat = "percent", -- ★ "percent" / "current" / "both"
-            stackingDetection = false, -- ★ 堆疊偵測（偏移重疊名牌）
+            showHealthText = true, -- 顯示生命值文字
+            healthTextFormat = "percent", -- "percent" / "current" / "both"
+            stackingDetection = false, -- 堆疊偵測（偏移重疊名牌）
             -- 敵方名牌
             enemy = {
                 enabled = true,
@@ -245,11 +245,11 @@ local defaults = {
                 showAuras = true,
                 auraSize = 18,
                 maxAuras = 5,
-                showBuffs = false, -- ★ 顯示敵方可竊取 Buff
-                buffSize = 14, -- ★ Buff 圖示大小
-                maxBuffs = 4, -- ★ 最大 Buff 顯示數量
-                showLevel = true, -- ★ 顯示等級文字
-                showQuestIcon = true, -- ★ 任務目標高亮圖示
+                showBuffs = false, -- 顯示敵方可竊取 Buff
+                buffSize = 14, -- Buff 圖示大小
+                maxBuffs = 4, -- 最大 Buff 顯示數量
+                showLevel = true, -- 顯示等級文字
+                showQuestIcon = true, -- 任務目標高亮圖示
             },
             -- 友方名牌
             friendly = {
@@ -257,7 +257,7 @@ local defaults = {
                 showHealth = true,
                 showCastbar = false,
                 showAuras = false,
-                showLevel = false, -- ★ 顯示等級文字（友方預設關閉）
+                showLevel = false, -- 顯示等級文字（友方預設關閉）
             },
             -- 仇恨顏色（永遠啟用，由 oUF ThreatIndicator element 控制）
             threat = {},

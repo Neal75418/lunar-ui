@@ -945,8 +945,8 @@ local function UpdateMoney()
     end
 
     local money = GetMoney()
-    local gold = floor(money / 10000)
-    local silver = floor((money % 10000) / 100)
+    local gold = mathFloor(money / 10000)
+    local silver = mathFloor((money % 10000) / 100)
     local copper = money % 100
 
     bagFrame.money:SetFormattedText("|cffffd700%d|r.|cffc0c0c0%02d|r.|cffeda55f%02d|r", gold, silver, copper)

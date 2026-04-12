@@ -15,11 +15,14 @@ local _ADDON_NAME, Engine = ...
 local LunarUI = Engine.LunarUI
 local C = LunarUI.Colors
 
--- 效能：快取全域變數（PostUpdate / GetNPCRoleColor hot path）
+-- 效能：快取全域變數（PostUpdate / GetNPCRoleColor / Nameplate_OnShow hot path）
 local UnitIsPlayer = UnitIsPlayer
+local UnitIsUnit = UnitIsUnit
+local UnitIsTapDenied = UnitIsTapDenied
 local UnitReaction = UnitReaction
 local UnitClassification = UnitClassification
 local UnitPowerType = UnitPowerType
+local C_QuestLog = C_QuestLog
 local mathFloor = math.floor
 local format = string.format
 
@@ -659,9 +662,16 @@ local function Nameplate_OnShow(frame)
             end
 
             -- Castbar（oUF 元素，用 EnableElement/DisableElement 控制更新週期）
+            -- 使用 explicit if/else 取代 and/or ternary，邏輯等價但更易讀（#3 code review）
             if frame.Castbar then
-                local showCastbar = isEnemy and (not enemyDb or enemyDb.showCastbar ~= false)
-                    or (not isEnemy and friendlyDb and friendlyDb.showCastbar)
+                local showCastbar
+                if isEnemy then
+                    -- 敵方預設顯示（opt-out）：缺設定或未顯式設為 false 都顯示
+                    showCastbar = not enemyDb or enemyDb.showCastbar ~= false
+                else
+                    -- 友方預設隱藏（opt-in）：必須顯式啟用
+                    showCastbar = friendlyDb and friendlyDb.showCastbar
+                end
                 if showCastbar then
                     frame:EnableElement("Castbar")
                 else
@@ -674,10 +684,23 @@ local function Nameplate_OnShow(frame)
             -- 只用 Show/Hide 控制可見性，oUF UNIT_AURA 處理仍會執行（已知限制）
             -- Debuffs 預設顯示（opt-out），Buffs 預設隱藏（opt-in）— 與原始 EnemyNameplateLayout 一致
             if frame.Debuffs then
-                frame.Debuffs:SetShown(isEnemy and (not enemyDb or enemyDb.showAuras ~= false))
+                local showDebuffs
+                if isEnemy then
+                    showDebuffs = not enemyDb or enemyDb.showAuras ~= false
+                else
+                    showDebuffs = false
+                end
+                frame.Debuffs:SetShown(showDebuffs)
             end
             if frame.Buffs then
-                frame.Buffs:SetShown(isEnemy and enemyDb and enemyDb.showBuffs or false)
+                local showBuffs
+                if isEnemy then
+                    showBuffs = enemyDb and enemyDb.showBuffs
+                else
+                    showBuffs = false
+                end
+                -- SetShown 對 nil 視同 false，所以 truthy 檢查即可
+                frame.Buffs:SetShown(showBuffs or false)
             end
 
             -- ThreatIndicator（oUF 元素）

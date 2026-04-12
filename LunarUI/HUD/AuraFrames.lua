@@ -189,15 +189,24 @@ end
 local function SetupAuraIconInteraction(icon)
     icon:EnableMouse(true)
     icon:SetScript("OnEnter", function(self)
-        if self.auraData and self.auraData.auraInstanceID then
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            -- 使用 auraInstanceID 而非 index（WoW 12.0+ 支援）
-            -- 根據 aura 類型使用對應的 Buff/Debuff tooltip method
-            local tooltipMethod = self.auraData.isHarmful and GameTooltip.SetUnitDebuffByAuraInstanceID
-                or GameTooltip.SetUnitBuffByAuraInstanceID
-            pcall(tooltipMethod, GameTooltip, "player", self.auraData.auraInstanceID, self.auraData.filter)
-            GameTooltip:Show()
+        -- Snapshot auraData 欄位避免 one-frame race：self.auraData 跨光環換位重用，
+        -- 若 OnEnter 執行期間剛好發生更新，auraInstanceID 可能來自新光環但
+        -- isHarmful/filter 仍是舊光環，tooltip 會呼叫錯 API 導致靜默失敗。
+        local data = self.auraData
+        if not data or not data.auraInstanceID then
+            return
         end
+        local instanceID = data.auraInstanceID
+        local isHarmful = data.isHarmful
+        local filter = data.filter
+
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        -- 使用 auraInstanceID 而非 index（WoW 12.0+ 支援）
+        -- 根據 aura 類型使用對應的 Buff/Debuff tooltip method
+        local tooltipMethod = isHarmful and GameTooltip.SetUnitDebuffByAuraInstanceID
+            or GameTooltip.SetUnitBuffByAuraInstanceID
+        pcall(tooltipMethod, GameTooltip, "player", instanceID, filter)
+        GameTooltip:Show()
     end)
     icon:SetScript("OnLeave", function()
         GameTooltip:Hide()

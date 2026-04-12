@@ -98,40 +98,44 @@ local function DeserializeStringInner(str)
     end
 
     -- 輔助函數：解析字串字面值
+    -- 累積到 table + tableConcat 而非逐字元 ..，避免匯入大設定檔時 O(n²) 效能退化
     local function parseString()
         local quote = str:sub(pos, pos)
         if quote ~= '"' and quote ~= "'" then
             return nil, "預期字串"
         end
         pos = pos + 1
-        local result = ""
+        local parts = {}
+        local partsCount = 0
 
         while pos <= len do
             local c = str:sub(pos, pos)
             if c == "\\" and pos < len then
                 -- 處理跳脫序列
                 local next = str:sub(pos + 1, pos + 1)
+                partsCount = partsCount + 1
                 if next == "n" then
-                    result = result .. "\n"
+                    parts[partsCount] = "\n"
                 elseif next == "t" then
-                    result = result .. "\t"
+                    parts[partsCount] = "\t"
                 elseif next == "r" then
-                    result = result .. "\r"
+                    parts[partsCount] = "\r"
                 elseif next == "\\" then
-                    result = result .. "\\"
+                    parts[partsCount] = "\\"
                 elseif next == '"' then
-                    result = result .. '"'
+                    parts[partsCount] = '"'
                 elseif next == "'" then
-                    result = result .. "'"
+                    parts[partsCount] = "'"
                 else
-                    result = result .. next
+                    parts[partsCount] = next
                 end
                 pos = pos + 2
             elseif c == quote then
                 pos = pos + 1
-                return result
+                return tableConcat(parts)
             else
-                result = result .. c
+                partsCount = partsCount + 1
+                parts[partsCount] = c
                 pos = pos + 1
             end
         end

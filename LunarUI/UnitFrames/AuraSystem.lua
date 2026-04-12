@@ -165,7 +165,7 @@ local function GetAuraSortFunction()
     -- 避免每次 comparator 呼叫（每次排序 ~30 次）都重複做 3 層 DB table lookup
     -- 已知限制：排序設定變更後需重新呼叫 GetAuraSortFunction() 更新 SortBuffs/SortDebuffs
     -- 目前選項面板僅呼叫 RebuildAuraFilterCache()，不會更新已存在框架的排序函式
-    -- 需要 /reload 才能生效。TODO: 未來可在選項回調中遍歷 oUF 框架更新排序函式
+    -- 需要 /reload 才能生效（接受此限制，排序方式變更本來就罕見）
     local reverse = af.sortReverse or false
     return function(a, b)
         if method == "time" then

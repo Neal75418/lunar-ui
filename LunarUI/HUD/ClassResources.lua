@@ -141,7 +141,7 @@ local CLASS_RESOURCE_CONFIG = {
         end
         if specID == 1 then -- 浩劫
             return POWER_TYPE_FURY, 100, true, RESOURCE_COLORS.fury
-        else -- 乘禦
+        else -- 復仇
             return POWER_TYPE_PAIN, 100, true, RESOURCE_COLORS.pain
         end
     end,

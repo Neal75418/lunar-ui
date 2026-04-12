@@ -125,29 +125,6 @@ local function GetTotalBankFreeSlots()
     return free
 end
 
--- 計算銀行每行格數。新架構（scrollable bank）下，橫向視窗寬度固定為
--- BANK_VIEWPORT_COLS，此函數僅用於舊的測試和 layout 呼叫點。回傳值永遠不
--- 超過 BANK_VIEWPORT_COLS；不足則回退到 SLOTS_PER_ROW。
-local function GetBankSlotsPerRow(totalSlots)
-    local c = GetConstants()
-    local SLOT_SIZE = c.SLOT_SIZE
-    local SLOT_SPACING = c.SLOT_SPACING
-    local SLOTS_PER_ROW = c.SLOTS_PER_ROW
-    local PADDING = c.PADDING
-    local HEADER_HEIGHT = c.HEADER_HEIGHT
-    local FOOTER_HEIGHT = c.FOOTER_HEIGHT
-
-    -- 僅在 viewport 範圍內計算 needed columns（scroll 負責處理縱向溢出）
-    local screenHeight = GetScreenHeight()
-    local maxHeight = screenHeight * 0.80
-    local overhead = PADDING * 2 + HEADER_HEIGHT + FOOTER_HEIGHT
-    local maxRows = mathFloor((maxHeight - overhead + SLOT_SPACING) / (SLOT_SIZE + SLOT_SPACING))
-    maxRows = mathMax(maxRows, 1)
-
-    local neededCols = mathCeil(totalSlots / maxRows)
-    return mathMin(mathMax(SLOTS_PER_ROW, neededCols), GetViewportCols())
-end
-
 -- 掃描銀行格子，找出最後一個有物品的 slotID
 local function GetLastOccupiedSlotID()
     local lastOccupied = 0
@@ -182,8 +159,8 @@ end
 -- divider rendering), total row count (for ResizeBankFrame), and slot count.
 --
 -- This is the single source of truth for "where does slotID N go". Both
--- CreateBankFrame and RefreshBankLayout delegate to this helper so flat and
--- refreshed layouts never drift.
+-- CreateBankFrame (initial creation) and RefreshBankLayout (live updates)
+-- delegate here so slot positions never drift between code paths.
 local function ComputeBankLayout()
     local bankCols = GetViewportCols()
     local positions = {} -- [slotID] = { bag, slot, row, col }
@@ -785,10 +762,11 @@ local function RefreshBankLayout()
     local layout = ComputeBankLayout()
     local slotID = layout.slotCount
 
-    -- 建立/重用 slot button 並根據新 layout 定位
-    -- NB: 刻意**不**快取 layout signature 跳過這個迴圈 —— 之前嘗試過快取
-    -- (commit e031603) 導致 slot 被意外留在 hidden 狀態的 bug。這個迴圈對
-    -- ~600 格銀行的成本約 30-100ms，可以接受。
+    -- 建立/重用 slot button 並根據新 layout 定位。
+    -- NB: 刻意**不**快取 layout signature 跳過這個迴圈。曾嘗試過 fast path，
+    -- 但 ContainerFrameItemButtonTemplate 的 OnLoad 會自動 Hide 按鈕，而 slow
+    -- path 的 button:Show() 才會把它們顯示出來；跳過迴圈就會讓所有 slot 留在
+    -- 隱藏狀態。~600 格銀行的成本約 30-100ms，可以接受。
     for i = 1, slotID do
         local pos = layout.positions[i]
         local button = bankSlots[i]
@@ -885,37 +863,35 @@ local function CloseBank()
     if not bankFrame or not isBankOpen then
         return
     end
-    if bankFrame then
-        bankFrame:Hide()
-        isBankOpen = false
-        -- 取消銀行搜尋計時器避免洩漏
-        if bankSearchTimer then
-            bankSearchTimer:Cancel()
-            bankSearchTimer = nil
-        end
-        -- 關閉時清除搜尋
-        local db = GetBagDB()
-        if db and db.clearSearchOnClose and bankSearchBox then
-            bankSearchBox:SetText("")
-            for _, button in pairs(bankSlots) do
-                if button then
-                    button:SetAlpha(1)
-                end
+    bankFrame:Hide()
+    isBankOpen = false
+    -- 取消銀行搜尋計時器避免洩漏
+    if bankSearchTimer then
+        bankSearchTimer:Cancel()
+        bankSearchTimer = nil
+    end
+    -- 關閉時清除搜尋
+    local db = GetBagDB()
+    if db and db.clearSearchOnClose and bankSearchBox then
+        bankSearchBox:SetText("")
+        for _, button in pairs(bankSlots) do
+            if button then
+                button:SetAlpha(1)
             end
         end
-        -- 清除銀行批次更新佇列避免洩漏
-        wipe(bankUpdateQueue)
+    end
+    -- 清除銀行批次更新佇列避免洩漏
+    wipe(bankUpdateQueue)
 
-        -- 重設排序旗標：銀行關閉時排序事件可能不再到達，避免 isSorting 永遠為 true
-        LunarUI.BagsSetSorting(false)
+    -- 重設排序旗標：銀行關閉時排序事件可能不再到達，避免 isSorting 永遠為 true
+    LunarUI.BagsSetSorting(false)
 
-        -- 並排恢復：背包回到原位
-        local bagFrame = LunarUI.BagsGetBagFrame and LunarUI.BagsGetBagFrame()
-        if bagFrame and bagFrame._savedPoint then
-            bagFrame:ClearAllPoints()
-            bagFrame:SetPoint(unpack(bagFrame._savedPoint))
-            bagFrame._savedPoint = nil
-        end
+    -- 並排恢復：背包回到原位
+    local bagFrame = LunarUI.BagsGetBagFrame and LunarUI.BagsGetBagFrame()
+    if bagFrame and bagFrame._savedPoint then
+        bagFrame:ClearAllPoints()
+        bagFrame:SetPoint(unpack(bagFrame._savedPoint))
+        bagFrame._savedPoint = nil
     end
 end
 
@@ -940,7 +916,6 @@ end
 -- 向後相容匯出
 LunarUI.OpenBank = OpenBank
 LunarUI.CloseBank = CloseBank
-LunarUI.GetBankSlotsPerRow = GetBankSlotsPerRow
 LunarUI.GetTotalBankSlots = GetTotalBankSlots
 LunarUI.GetTotalBankFreeSlots = GetTotalBankFreeSlots
 LunarUI.GetLastOccupiedSlotID = GetLastOccupiedSlotID
@@ -975,8 +950,8 @@ LunarUI.BankSystemCleanup = function()
     bankUpdateGeneration = bankUpdateGeneration + 1
 
     if bankFrame then
+        -- CloseBank 已經呼叫 bankFrame:Hide()，無需重複
         CloseBank()
-        bankFrame:Hide()
         bankFrame = nil
     end
 

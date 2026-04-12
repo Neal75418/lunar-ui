@@ -1,8 +1,10 @@
 ---@diagnostic disable: inject-field, need-check-nil, param-type-mismatch, assign-type-mismatch, redundant-parameter, undefined-field, undefined-global, missing-parameter, call-non-callable, unused, global-in-non-module, access-invisible, deprecated
 --[[
     Unit tests for Bags module pure functions
-    Tests: GetItemLevel, IsEquipment, IsItemUpgrade, GetBagTypeColor, GetBankSlotsPerRow,
-           MaybeEvictCache, GetTotalSlots, GetTotalFreeSlots, GetTotalBankSlots, GetTotalBankFreeSlots
+    Tests: GetItemLevel, IsEquipment, IsItemUpgrade, GetBagTypeColor,
+           GetViewportCols/Rows, ResizeBankFrame, ComputeBankLayout,
+           MaybeEvictCache, GetTotalSlots, GetTotalFreeSlots,
+           GetTotalBankSlots, GetTotalBankFreeSlots
 ]]
 
 require("spec.wow_mock")
@@ -523,55 +525,9 @@ describe("GetBagTypeColor", function()
 end)
 
 --------------------------------------------------------------------------------
--- GetBankSlotsPerRow
---------------------------------------------------------------------------------
-
-describe("GetBankSlotsPerRow", function()
-    it("returns default SLOTS_PER_ROW for small bank", function()
-        _G.GetScreenHeight = function()
-            return 1080
-        end
-        -- Small bank, should use default 12
-        local result = LunarUI.GetBankSlotsPerRow(24)
-        assert.equals(12, result)
-    end)
-
-    it("increases columns for very large bank", function()
-        _G.GetScreenHeight = function()
-            return 600
-        end
-        -- Small screen + many slots should need more columns
-        local result = LunarUI.GetBankSlotsPerRow(200)
-        assert.is_true(result >= 12)
-    end)
-
-    it("handles minimum case (1 slot)", function()
-        _G.GetScreenHeight = function()
-            return 1080
-        end
-        local result = LunarUI.GetBankSlotsPerRow(1)
-        assert.equals(12, result) -- should not go below default
-    end)
-
-    it("legacy helper caps at BANK_VIEWPORT_COLS for very large banks", function()
-        _G.GetScreenHeight = function()
-            return 1080
-        end
-        _G.GetScreenWidth = function()
-            return 1920
-        end
-        -- Legacy path: GetBankSlotsPerRow is still callable by old code but
-        -- must also respect the scrollable-bank cap.
-        local result = LunarUI.GetBankSlotsPerRow(600)
-        assert.is_true(result <= 14, "bank cols should cap at 14, got " .. tostring(result))
-        assert.is_true(result >= 12, "bank cols should not go below SLOTS_PER_ROW default")
-    end)
-end)
-
---------------------------------------------------------------------------------
 -- ResizeBankFrame: scrollable-bank viewport invariant
 -- Directly exercises the production path that actually sets bankFrame.bankCols
--- during OpenBank, independently of the legacy GetBankSlotsPerRow helper.
+-- during OpenBank.
 --------------------------------------------------------------------------------
 
 describe("ResizeBankFrame viewport invariant", function()
@@ -621,6 +577,17 @@ describe("ResizeBankFrame viewport invariant", function()
         assert.equals(8, LunarUI._GetViewportCols())
         LunarUI.db.profile.bags.bankViewportCols = "invalid" -- wrong type
         assert.equals(14, LunarUI._GetViewportCols(), "falls back to default on bad type")
+    end)
+
+    it("GetViewportRows clamps out-of-range DB values to [8, 20]", function()
+        -- Mirror of the cols test — ensures rows helper goes through the same
+        -- clampViewport path and can't drift from cols in future refactors.
+        LunarUI.db.profile.bags.bankViewportRows = 50
+        assert.equals(20, LunarUI._GetViewportRows())
+        LunarUI.db.profile.bags.bankViewportRows = 2
+        assert.equals(8, LunarUI._GetViewportRows())
+        LunarUI.db.profile.bags.bankViewportRows = "invalid"
+        assert.equals(14, LunarUI._GetViewportRows(), "falls back to default on bad type")
     end)
 
     it("sets slotContainer height based on totalRows, not total slot count", function()
