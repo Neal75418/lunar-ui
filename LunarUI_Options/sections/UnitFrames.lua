@@ -9,8 +9,14 @@ Private.sections = Private.sections or {}
 Private.sections.UnitFrames = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
-    local RefreshUI = ctx.RefreshUI
     local LunarUI = ctx.LunarUI
+
+    -- UnitFrames 設定全部在 oUF 建立時讀 DB（尺寸、光環、肖像、castbar、角色預設...），
+    -- 不會隨 DB 變動重讀。RefreshUI() 只套 HUD scale 和字體，對 unit frame 是假刷新；
+    -- 因此所有 setter 改完後都需要 /reload 才會生效
+    local function notifyReload()
+        LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
+    end
 
     return {
         order = 3,
@@ -32,7 +38,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].enabled = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     },
                     width = {
@@ -47,7 +53,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].width = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     },
                     height = {
@@ -62,7 +68,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].height = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     },
                 }
@@ -79,7 +85,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].spacing = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                 end
@@ -97,7 +103,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].showBuffs = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                     args.buffSize = {
@@ -112,7 +118,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].buffSize = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                     args.maxBuffs = {
@@ -127,7 +133,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].maxBuffs = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                     args.showDebuffs = {
@@ -140,7 +146,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].showDebuffs = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                     args.debuffSize = {
@@ -155,7 +161,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].debuffSize = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                     args.maxDebuffs = {
@@ -170,7 +176,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].maxDebuffs = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                     args.onlyPlayerDebuffs = {
@@ -183,7 +189,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].onlyPlayerDebuffs = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                 end
@@ -201,7 +207,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].showPortrait = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                 end
@@ -217,7 +223,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].showHealPrediction = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                 end
@@ -242,7 +248,7 @@ Private.sections.UnitFrames = function(ctx)
                                 end,
                                 set = function(_, v)
                                     GetDB().unitframes[unit].castbar.height = v
-                                    RefreshUI()
+                                    notifyReload()
                                 end,
                             },
                             showLatency = {
@@ -255,7 +261,7 @@ Private.sections.UnitFrames = function(ctx)
                                 end,
                                 set = function(_, v)
                                     GetDB().unitframes[unit].castbar.showLatency = v
-                                    RefreshUI()
+                                    notifyReload()
                                 end,
                             },
                             showTicks = {
@@ -268,7 +274,7 @@ Private.sections.UnitFrames = function(ctx)
                                 end,
                                 set = function(_, v)
                                     GetDB().unitframes[unit].castbar.showTicks = v
-                                    RefreshUI()
+                                    notifyReload()
                                 end,
                             },
                             showEmpowered = {
@@ -281,7 +287,7 @@ Private.sections.UnitFrames = function(ctx)
                                 end,
                                 set = function(_, v)
                                     GetDB().unitframes[unit].castbar.showEmpowered = v
-                                    RefreshUI()
+                                    notifyReload()
                                 end,
                             },
                         },
@@ -301,7 +307,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].showPowerBar = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                     args.showCastbar = {
@@ -314,7 +320,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].showCastbar = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                     args.showClassIcon = {
@@ -327,7 +333,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].showClassIcon = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                     }
                 end
@@ -344,7 +350,7 @@ Private.sections.UnitFrames = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().unitframes[unit].autoSwitchSize = v
-                            RefreshUI()
+                            notifyReload()
                         end,
                         width = "full",
                     }
@@ -437,7 +443,7 @@ Private.sections.UnitFrames = function(ctx)
                             desc = L["DPSLayoutDesc"] or "Compact raid frames, optimized for damage dealers",
                             func = function()
                                 LunarUI:ApplyRolePreset("DAMAGER")
-                                RefreshUI()
+                                notifyReload()
                             end,
                             width = 0.8,
                         },
@@ -448,7 +454,7 @@ Private.sections.UnitFrames = function(ctx)
                             desc = L["TankLayoutDesc"] or "Wider frames with larger nameplates for threat awareness",
                             func = function()
                                 LunarUI:ApplyRolePreset("TANK")
-                                RefreshUI()
+                                notifyReload()
                             end,
                             width = 0.8,
                         },
@@ -459,7 +465,7 @@ Private.sections.UnitFrames = function(ctx)
                             desc = L["HealerLayoutDesc"] or "Large raid frames centered for heal targeting",
                             func = function()
                                 LunarUI:ApplyRolePreset("HEALER")
-                                RefreshUI()
+                                notifyReload()
                             end,
                             width = 0.8,
                         },

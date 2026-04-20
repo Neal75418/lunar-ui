@@ -10,8 +10,15 @@ Private.sections.ActionBars = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
     local LunarUI = ctx.LunarUI
-    local RefreshUI = ctx.RefreshUI
     local format = string.format
+
+    -- ActionBars 設定（buttonSize/spacing/showHotkeys/fade/microBar/各 bar 設定等）
+    -- 都在 SpawnActionBars 時讀 DB；fade 路徑另有 FadeAndHover 快取。RefreshUI() 只套
+    -- HUD scale 和字體，對 action bar 是假刷新。rebuild 涉及 LAB secure button 回收，
+    -- 風險高於預期收益 → 統一標示 reload-only
+    local function notifyReload()
+        LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
+    end
 
     -- args is assembled incrementally so we can mix the static `global` subgroup
     -- with dynamically-generated bar1..bar6 / petbar / stancebar groups below.
@@ -31,7 +38,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.enabled = v
-                        LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
+                        notifyReload()
                     end,
                     width = "full",
                 },
@@ -48,7 +55,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.buttonSize = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                 },
                 buttonSpacing = {
@@ -64,7 +71,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.buttonSpacing = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                 },
                 showHotkeys = {
@@ -77,7 +84,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.showHotkeys = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                 },
                 showMacroNames = {
@@ -90,7 +97,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.showMacroNames = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                 },
                 outOfRangeColoring = {
@@ -103,7 +110,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.outOfRangeColoring = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                 },
                 fadeHeader = { order = 10, type = "header", name = L["FadeSettings"] or "Fade Settings" },
@@ -117,7 +124,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.fadeEnabled = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                     width = "full",
                 },
@@ -138,7 +145,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.fadeAlpha = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                 },
                 fadeDelay = {
@@ -157,7 +164,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.fadeDelay = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                 },
                 fadeDuration = {
@@ -176,7 +183,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.fadeDuration = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                 },
                 microBarHeader = { order = 20, type = "header", name = L["MicroBar"] or "Micro Bar" },
@@ -190,7 +197,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars.microBar.enabled = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                     width = "full",
                 },
@@ -215,7 +222,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars["bar" .. i].enabled = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                     width = "full",
                 },
@@ -231,7 +238,7 @@ Private.sections.ActionBars = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().actionbars["bar" .. i].buttons = v
-                        RefreshUI()
+                        notifyReload()
                     end,
                 },
             },
@@ -253,7 +260,7 @@ Private.sections.ActionBars = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().actionbars.petbar.enabled = v
-                    RefreshUI()
+                    notifyReload()
                 end,
                 width = "full",
             },
@@ -274,7 +281,7 @@ Private.sections.ActionBars = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().actionbars.stancebar.enabled = v
-                    RefreshUI()
+                    notifyReload()
                 end,
                 width = "full",
             },

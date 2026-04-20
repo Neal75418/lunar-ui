@@ -10,7 +10,13 @@ Private.sections.Nameplates = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
     local LunarUI = ctx.LunarUI
-    local RefreshUI = ctx.RefreshUI
+
+    -- Nameplates 設定（width/height/敵友方元素/buff 數量/highlight 等）都在 NameplateLayout
+    -- 建立或 OnShow 時讀 DB；stacking detection 還另外快取寬高。nameplate 模組無 refresh path，
+    -- 改完對已顯示框架無效，需 /reload
+    local function notifyReload()
+        LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
+    end
 
     return {
         order = 5,
@@ -27,7 +33,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.enabled = v
-                    LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
+                    notifyReload()
                 end,
                 width = "full",
             },
@@ -43,7 +49,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.width = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             height = {
@@ -58,7 +64,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.height = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             stackingDetection = {
@@ -72,7 +78,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.stackingDetection = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             showHealthText = {
@@ -85,7 +91,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.showHealthText = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             healthTextFormat = {
@@ -106,7 +112,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.healthTextFormat = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             spacer1 = { order = 10, type = "description", name = "\n" },
@@ -124,7 +130,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.enemy.enabled = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             enemyShowCastbar = {
@@ -136,7 +142,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.enemy.showCastbar = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             enemyShowAuras = {
@@ -148,7 +154,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.enemy.showAuras = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             enemyShowLevel = {
@@ -161,7 +167,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.enemy.showLevel = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             enemyShowQuestIcon = {
@@ -174,7 +180,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.enemy.showQuestIcon = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             enemyShowBuffs = {
@@ -187,7 +193,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.enemy.showBuffs = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             enemyBuffSize = {
@@ -205,7 +211,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.enemy.buffSize = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             enemyMaxBuffs = {
@@ -223,7 +229,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.enemy.maxBuffs = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             spacer2 = { order = 20, type = "description", name = "\n" },
@@ -241,7 +247,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.friendly.enabled = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             friendlyShowHealth = {
@@ -253,7 +259,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.friendly.showHealth = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             friendlyShowLevel = {
@@ -266,7 +272,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.friendly.showLevel = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             spacer3 = { order = 30, type = "description", name = "\n" },
@@ -285,7 +291,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.npcColors.enabled = v
-                    RefreshUI()
+                    notifyReload()
                 end,
                 width = "full",
             },
@@ -305,7 +311,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.highlight.rare = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             highlightElite = {
@@ -318,7 +324,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.highlight.elite = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
             highlightBoss = {
@@ -331,7 +337,7 @@ Private.sections.Nameplates = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().nameplates.highlight.boss = v
-                    RefreshUI()
+                    notifyReload()
                 end,
             },
         },

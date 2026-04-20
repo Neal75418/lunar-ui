@@ -9,7 +9,6 @@ Private.sections = Private.sections or {}
 Private.sections.Minimap = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
-    local RefreshUI = ctx.RefreshUI
     local LunarUI = ctx.LunarUI
 
     return {
@@ -27,6 +26,7 @@ Private.sections.Minimap = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().minimap.enabled = v
+                    LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
                 end,
                 width = "full",
             },
@@ -254,7 +254,11 @@ Private.sections.Minimap = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().minimap.coordFontOutline = v
-                    RefreshUI()
+                    -- RefreshMinimap 會重新對 coordText/clockText 呼叫 SetFont 並讀取 outline；
+                    -- RefreshUI 只套用 HUD scale 和字體路徑，不會更新 outline flag
+                    if LunarUI.RefreshMinimap then
+                        LunarUI:RefreshMinimap()
+                    end
                 end,
             },
 
