@@ -887,8 +887,15 @@ local function InitializeTooltip()
         end
 
         -- 顯示時重新樣式化
+        -- HookScript 無法移除，Cleanup 後此 closure 仍會在每次 OnShow 執行；
+        -- 必須同時檢查 db.enabled，否則使用者在 Options 關閉 tooltip 模組時
+        -- 仍會被重新樣式化（繞過 live toggle 語義）
         GameTooltip:HookScript("OnShow", function(self)
             if not LunarUI._modulesEnabled then
+                return
+            end
+            local tooltipDB = LunarUI.GetModuleDB("tooltip")
+            if not tooltipDB or not tooltipDB.enabled then
                 return
             end
             StyleTooltip(self)
@@ -898,6 +905,10 @@ local function InitializeTooltip()
         -- 同物品時 marker 殘留導致 ilvl 行被誤跳過）
         GameTooltip:HookScript("OnTooltipCleared", function(self)
             if not LunarUI._modulesEnabled then
+                return
+            end
+            local tooltipDB = LunarUI.GetModuleDB("tooltip")
+            if not tooltipDB or not tooltipDB.enabled then
                 return
             end
             self.LunarUI_ilvlAdded = nil

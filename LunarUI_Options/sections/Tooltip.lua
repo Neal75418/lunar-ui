@@ -9,6 +9,7 @@ Private.sections = Private.sections or {}
 Private.sections.Tooltip = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
+    local LunarUI = ctx.LunarUI
 
     return {
         order = 9,
@@ -25,6 +26,18 @@ Private.sections.Tooltip = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().tooltip.enabled = v
+                    -- reversible 模組：直接走 Init/Cleanup 即時套用。
+                    -- Init 內部會跳過已註冊 hooks；Cleanup 還原樣式並停 inspect 事件，
+                    -- 永久性 HookScript 回呼在內部有 db.enabled guard，Cleanup 後不會再 re-style
+                    if v then
+                        if LunarUI.InitializeTooltip then
+                            LunarUI.InitializeTooltip()
+                        end
+                    else
+                        if LunarUI.CleanupTooltip then
+                            LunarUI.CleanupTooltip()
+                        end
+                    end
                 end,
                 width = "full",
             },
