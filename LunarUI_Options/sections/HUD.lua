@@ -11,6 +11,21 @@ Private.sections.HUD = function(ctx)
     local GetDB = ctx.GetDB
     local LunarUI = ctx.LunarUI
 
+    -- HUD 子模組 toggle 共用 apply 邏輯：
+    -- 啟用分支需 guard 全域 modules 狀態，避免使用者 /lunar off 後透過 HUD 子模組
+    -- toggle 繞過全域停用語義；停用分支無副作用，永遠安全執行
+    local function applyHUDToggle(v, init, cleanup)
+        if v then
+            if LunarUI._modulesEnabled and init then
+                init()
+            end
+        else
+            if cleanup then
+                cleanup()
+            end
+        end
+    end
+
     return {
         order = 5.5,
         type = "group",
@@ -63,15 +78,7 @@ Private.sections.HUD = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().hud.performanceMonitor = v
-                            if v then
-                                if LunarUI.InitPerformanceMonitor then
-                                    LunarUI.InitPerformanceMonitor()
-                                end
-                            else
-                                if LunarUI.CleanupPerformanceMonitor then
-                                    LunarUI.CleanupPerformanceMonitor()
-                                end
-                            end
+                            applyHUDToggle(v, LunarUI.InitPerformanceMonitor, LunarUI.CleanupPerformanceMonitor)
                         end,
                         width = "full",
                     },
@@ -85,15 +92,7 @@ Private.sections.HUD = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().hud.classResources = v
-                            if v then
-                                if LunarUI.InitClassResources then
-                                    LunarUI.InitClassResources()
-                                end
-                            else
-                                if LunarUI.CleanupClassResources then
-                                    LunarUI.CleanupClassResources()
-                                end
-                            end
+                            applyHUDToggle(v, LunarUI.InitClassResources, LunarUI.CleanupClassResources)
                         end,
                         width = "full",
                     },
@@ -107,15 +106,7 @@ Private.sections.HUD = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().hud.cooldownTracker = v
-                            if v then
-                                if LunarUI.InitCooldownTracker then
-                                    LunarUI.InitCooldownTracker()
-                                end
-                            else
-                                if LunarUI.CleanupCooldownTracker then
-                                    LunarUI.CleanupCooldownTracker()
-                                end
-                            end
+                            applyHUDToggle(v, LunarUI.InitCooldownTracker, LunarUI.CleanupCooldownTracker)
                         end,
                         width = "full",
                     },
@@ -129,15 +120,7 @@ Private.sections.HUD = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().hud.auraFrames = v
-                            if v then
-                                if LunarUI.InitAuraFrames then
-                                    LunarUI.InitAuraFrames()
-                                end
-                            else
-                                if LunarUI.CleanupAuraFrames then
-                                    LunarUI.CleanupAuraFrames()
-                                end
-                            end
+                            applyHUDToggle(v, LunarUI.InitAuraFrames, LunarUI.CleanupAuraFrames)
                         end,
                         width = "full",
                     },
@@ -151,15 +134,7 @@ Private.sections.HUD = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().hud.fctEnabled = v
-                            if v then
-                                if LunarUI.InitFCT then
-                                    LunarUI.InitFCT()
-                                end
-                            else
-                                if LunarUI.CleanupFCT then
-                                    LunarUI.CleanupFCT()
-                                end
-                            end
+                            applyHUDToggle(v, LunarUI.InitFCT, LunarUI.CleanupFCT)
                         end,
                         width = "full",
                     },
