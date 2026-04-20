@@ -2,6 +2,45 @@
 --[[
     LunarUI - 隱藏暴雪動作條
     安全隱藏暴雪預設動作條，避免 UI taint
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    ⚠️  已知 Tech Debt — 拆分成本高於當下收益，刻意維持現狀
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    涵蓋的 Blizzard 框架（共 ~25 個 MultiBar/Micro/Status 相關）：
+        MultiBarBottomLeft / BottomRight / Right / Left / 5 / 6 / 7
+        MainMenuBar、MicroButtonAndBagsBar、StatusTrackingBarManager、StanceBar、PetActionBar
+        OverrideActionBar、各種 EditMode 附掛、MainMenuBarVehicleLeaveButton 等
+
+    複雜度來源：
+    1. **Mutation 分 5 類**：savedBarStates / hiddenFrames / hiddenRegions /
+       explicitlyHidden / hiddenTextures — 每類 restore 策略不同（SetParent
+       vs SetAlpha vs Show vs SetTexture），不能統一處理
+    2. **EditMode 交互**：必須覆蓋 OnEditModeEnter/Exit 為 no-op，否則
+       enter edit mode 時會抓回被我們改的 parent，引發 taint + 視覺錯亂
+    3. **CVar 無權處理**：例如 `multiBarLeftVerticalLayout` 等 CVar 我們
+       不動，玩家改過的 CVar 在 disable 後保留（預期行為，但增加測試排列）
+    4. **戰鬥鎖定**：`InCombatLockdown()` 時絕對不能 SetParent／SetAlpha／
+       Show／Hide secure frame，所以 Hide 與 Restore 都有 combat defer
+       路徑（`auraCombatDeferFrame` 模式），各分支行為要配對
+    5. **延遲 timer 重入**：HideBlizzardBarsDelayed 用 C_Timer，disable
+       後仍可能 fire → 靠 `hideGeneration` 世代計數器防護
+
+    為什麼不拆：
+    - Restore 對稱性依賴同檔內 5 張追蹤表，拆檔後要變 module-level upvalue
+      或 dependency injection，收益低於風險
+    - 大量操作都是 per-frame 例外處理（不同 Blizzard 版本、不同框架 API
+      差異），拆分不會減少 case 數量
+    - Cleanup 語意已經在 reversible lifecycle 合約內驗證過（/lunar off
+      → Blizzard 動作條全回來）
+
+    重構建議（future work）：
+    - 抽一層 `HiddenObjectRegistry` 把 5 張表合併 + 註冊 restore 策略
+      （目前 5 張表各自散在檔案中、restore 順序固定在 RestoreBlizzardBars
+      函數最後半段）
+    - 把 EditMode no-op override 移到獨立檔，因為它跟「隱藏」無關，是
+      「阻止 Blizzard 在 EditMode 反撲」
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ]]
 
 local _ADDON_NAME, Engine = ...
