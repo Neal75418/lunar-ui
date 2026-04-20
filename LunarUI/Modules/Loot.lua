@@ -42,6 +42,22 @@ local lootFrame
 local lootSlots = {}
 
 --------------------------------------------------------------------------------
+-- 純邏輯輔助
+--------------------------------------------------------------------------------
+
+-- Security S-B8: lootName 來自伺服端，可能含 |T...|t (texture)、|H...|h (hyperlink)、
+-- |cXXXXXXXX...|r (color escape) 控制字元（retail 安全但 PTR / datamined 字串有風險，
+-- 也會影響 layout）。strip 掉還原純文字。
+local function SanitizeLootName(name)
+    if not name or not name:find("|", 1, true) then
+        return name
+    end
+    return name:gsub("|T[^|]*|t", ""):gsub("|H.-|h(.-)|h", "%1"):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+end
+
+LunarUI.SanitizeLootName = SanitizeLootName
+
+--------------------------------------------------------------------------------
 -- 格子建立
 --------------------------------------------------------------------------------
 
@@ -241,19 +257,8 @@ local function UpdateLootFrame()
             local qc = QUALITY_COLORS[lootQuality] or QUALITY_COLORS[1]
             slot.iconBorder:SetVertexColor(qc[1], qc[2], qc[3], 1)
 
-            -- 帶品質顏色的名稱
-            -- Security S-B8: lootName 來自伺服端，可能含 |T...|t (texture) 或
-            -- |H...|h (hyperlink) 控制字元（retail 安全但 PTR/datamined 字串有風險）。
-            -- strip 掉避免影響 layout。
-            local safeName = lootName
-            if safeName and safeName:find("|", 1, true) then
-                safeName = safeName
-                    :gsub("|T[^|]*|t", "")
-                    :gsub("|H.-|h(.-)|h", "%1")
-                    :gsub("|c%x%x%x%x%x%x%x%x", "")
-                    :gsub("|r", "")
-            end
-            slot.name:SetText(safeName or "")
+            -- 帶品質顏色的名稱（逃脫控制字元見 SanitizeLootName）
+            slot.name:SetText(SanitizeLootName(lootName) or "")
             slot.name:SetTextColor(qc[1], qc[2], qc[3], 1)
 
             -- 數量

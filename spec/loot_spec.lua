@@ -146,3 +146,50 @@ describe("Loot cleanup", function()
         assert.is_nil(registeredEvents["LOOT_OPENED"])
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- SanitizeLootName (Security S-B8: strip server-sent control chars)
+--------------------------------------------------------------------------------
+
+describe("SanitizeLootName", function()
+    it("returns nil / empty passthrough untouched", function()
+        assert.is_nil(LunarUI.SanitizeLootName(nil))
+        assert.equals("", LunarUI.SanitizeLootName(""))
+    end)
+
+    it("passes through strings with no escape chars", function()
+        assert.equals("Linen Cloth", LunarUI.SanitizeLootName("Linen Cloth"))
+        assert.equals("[Item with brackets]", LunarUI.SanitizeLootName("[Item with brackets]"))
+    end)
+
+    it("strips |T...|t texture escapes", function()
+        assert.equals("Gold", LunarUI.SanitizeLootName("|TInterface\\icons\\coin:16|tGold"))
+        assert.equals("AB", LunarUI.SanitizeLootName("A|Tpath:16|tB"))
+    end)
+
+    it("unwraps |H...|h(...)|h hyperlinks keeping the display text", function()
+        assert.equals(
+            "Linen Cloth",
+            LunarUI.SanitizeLootName("|cff1eff00|Hitem:2589::::::::1:::::|h[Linen Cloth]|h|r"):gsub("[%[%]]", "")
+        )
+        -- 純 hyperlink 無 color wrap
+        assert.equals("[Sword]", LunarUI.SanitizeLootName("|Hitem:1234|h[Sword]|h"))
+    end)
+
+    it("strips |cXXXXXXXX / |r color escapes", function()
+        assert.equals("red text", LunarUI.SanitizeLootName("|cffff0000red text|r"))
+        assert.equals("ab", LunarUI.SanitizeLootName("|cff00ff00a|r|cff0000ffb|r"))
+    end)
+
+    it("handles combined escape chains (malicious datamined string)", function()
+        -- 混合 texture + hyperlink + color，模擬 PTR / datamined 污染字串
+        local malicious = "|TIcon:16|t|cffff0000|Hitem:x|h[Evil]|h|r"
+        assert.equals("[Evil]", LunarUI.SanitizeLootName(malicious))
+    end)
+
+    it("does not recurse on text that resembles escapes inside safe context", function()
+        -- 單獨的 | 不是 escape，但我們的 fast-path find("|") 會觸發 gsub，
+        -- gsub 無對應 pattern 應該 no-op
+        assert.equals("a | b", LunarUI.SanitizeLootName("a | b"))
+    end)
+end)
