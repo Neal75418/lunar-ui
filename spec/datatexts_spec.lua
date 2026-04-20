@@ -250,3 +250,95 @@ describe("Built-in provider updates", function()
         end)
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- StatusColor — threshold → RGB channel 決策邏輯
+--
+-- 回傳 (r, g) 兩個 channel，搭配 format "|cff%02x%02x00" 變為綠/黃/紅色碼。
+-- invert=true：值越小越好（latency），value <= green = good
+-- invert=false：值越大越好（fps），value >= green = good
+-- nil value：視為 bad（紅色：1, 0.3）
+--------------------------------------------------------------------------------
+
+describe("DataTextsStatusColor", function()
+    local StatusColor
+
+    before_each(function()
+        StatusColor = LunarUI.DataTextsStatusColor
+    end)
+
+    it("returns red (1, 0.3) for nil value", function()
+        local r, g = StatusColor(nil, 60, 30, false)
+        assert.equals(1, r)
+        assert.equals(0.3, g)
+    end)
+
+    describe("ascending mode (invert=false, bigger is better e.g. FPS)", function()
+        it("green when value >= greenThreshold", function()
+            local r, g = StatusColor(60, 60, 30, false)
+            assert.equals(0.3, r)
+            assert.equals(1, g)
+            r, g = StatusColor(120, 60, 30, false)
+            assert.equals(0.3, r)
+            assert.equals(1, g)
+        end)
+
+        it("yellow when value in [yellowThreshold, greenThreshold)", function()
+            local r, g = StatusColor(30, 60, 30, false)
+            assert.equals(1, r)
+            assert.equals(0.8, g)
+            r, g = StatusColor(59, 60, 30, false)
+            assert.equals(1, r)
+            assert.equals(0.8, g)
+        end)
+
+        it("red when value < yellowThreshold", function()
+            local r, g = StatusColor(29, 60, 30, false)
+            assert.equals(1, r)
+            assert.equals(0.3, g)
+            r, g = StatusColor(0, 60, 30, false)
+            assert.equals(1, r)
+            assert.equals(0.3, g)
+        end)
+    end)
+
+    describe("descending mode (invert=true, smaller is better e.g. latency ms)", function()
+        it("green when value <= greenThreshold", function()
+            local r, g = StatusColor(100, 100, 200, true)
+            assert.equals(0.3, r)
+            assert.equals(1, g)
+            r, g = StatusColor(50, 100, 200, true)
+            assert.equals(0.3, r)
+            assert.equals(1, g)
+        end)
+
+        it("yellow when value in (greenThreshold, yellowThreshold]", function()
+            local r, g = StatusColor(101, 100, 200, true)
+            assert.equals(1, r)
+            assert.equals(0.8, g)
+            r, g = StatusColor(200, 100, 200, true)
+            assert.equals(1, r)
+            assert.equals(0.8, g)
+        end)
+
+        it("red when value > yellowThreshold", function()
+            local r, g = StatusColor(201, 100, 200, true)
+            assert.equals(1, r)
+            assert.equals(0.3, g)
+            r, g = StatusColor(999, 100, 200, true)
+            assert.equals(1, r)
+            assert.equals(0.3, g)
+        end)
+    end)
+
+    it("handles zero value in both modes", function()
+        -- 0 FPS = 紅 (0 < 30 yellow threshold)
+        local r, g = StatusColor(0, 60, 30, false)
+        assert.equals(1, r)
+        assert.equals(0.3, g)
+        -- 0 ms latency = 綠 (0 <= 100 green threshold)
+        r, g = StatusColor(0, 100, 200, true)
+        assert.equals(0.3, r)
+        assert.equals(1, g)
+    end)
+end)

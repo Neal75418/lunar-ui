@@ -855,6 +855,7 @@ end
 
 -- 匯出
 LunarUI.InitializeDataTexts = InitializeDataTexts
+LunarUI.DataTextsStatusColor = StatusColor -- 暴露純邏輯給 spec（threshold → RGB channel）
 
 LunarUI:RegisterModule("DataTexts", {
     onEnable = InitializeDataTexts,

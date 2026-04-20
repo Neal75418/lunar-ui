@@ -290,3 +290,72 @@ describe("Chat lifecycle", function()
         LunarUI._modulesEnabled = true
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- FormatURL (Security S-B8: prevent WoW hyperlink injection via URL)
+--
+-- 輸入一段 URL 字串，回傳 `|cff3399ff|HLunarURL:URL|h[URL]|h|r` 形式的可點擊
+-- 彩色超連結。為防止惡意 URL 注入 `|H...|h` 偽造物品/成就連結，所有 `|` 字元
+-- 必須先被 strip 掉。
+--------------------------------------------------------------------------------
+
+describe("ChatFormatURL", function()
+    local FormatURL
+
+    before_each(function()
+        FormatURL = LunarUI.ChatFormatURL
+    end)
+
+    it("wraps plain URL into a clickable LunarURL hyperlink", function()
+        local result = FormatURL("https://example.com")
+        -- 應包含 color code、LunarURL prefix、雙份 URL、正確封閉
+        assert.truthy(result:find("|cff3399ff", 1, true))
+        assert.truthy(result:find("|HLunarURL:https://example.com|h", 1, true))
+        assert.truthy(result:find("[https://example.com]", 1, true))
+        assert.truthy(result:find("|h|r", 1, true))
+    end)
+
+    it("strips pipe chars to prevent hyperlink injection (S-B8)", function()
+        -- 惡意 URL 嘗試注入假物品連結
+        local malicious = "https://x.com|Hitem:1234::::::::1:::::|h[假物品]|h"
+        local result = FormatURL(malicious)
+        -- 輸出中 URL 部分應已無 | 字元（只剩我們自己 wrap 的 |c / |H / |h / |r）
+        -- 取出 LunarURL 裡的 URL 部分
+        local urlInside = result:match("|HLunarURL:([^|]+)|h")
+        assert.truthy(urlInside)
+        assert.is_nil(urlInside:find("|", 1, true))
+        -- 顯示文字內也不應有 | 字元
+        local displayText = result:match("|h%[([^|]*)%]|h")
+        assert.truthy(displayText)
+        assert.is_nil(displayText:find("|", 1, true))
+    end)
+
+    it("handles URLs with colon and path (no special chars)", function()
+        local result = FormatURL("http://foo.bar/path?q=1&r=2")
+        assert.truthy(result:find("|HLunarURL:http://foo.bar/path?q=1&r=2|h", 1, true))
+    end)
+
+    it("handles URLs with multiple pipes", function()
+        local result = FormatURL("a|b|c|d")
+        assert.truthy(result:find("|HLunarURL:abcd|h", 1, true))
+        assert.truthy(result:find("[abcd]", 1, true))
+    end)
+
+    it("handles empty URL without crashing", function()
+        assert.has_no_errors(function()
+            local result = FormatURL("")
+            -- 應產生空 URL 但格式仍正確
+            assert.truthy(result:find("|HLunarURL:|h", 1, true))
+        end)
+    end)
+
+    it("preserves color escape balance in output", function()
+        -- output 必須有一個 |cAARRGGBB 開色 + 一個 |r 關色
+        -- WoW color prefix 是 |c + 8 hex chars（alpha 2 + RGB 6）
+        local result = FormatURL("a")
+        local _, openCount = result:gsub("|c%x%x%x%x%x%x%x%x", "")
+        local _, resetCount = result:gsub("|r", "")
+        assert.equals(1, openCount)
+        assert.equals(1, resetCount)
+    end)
+end)

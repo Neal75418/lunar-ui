@@ -248,6 +248,8 @@ local function FormatURL(url)
     return format("|cff3399ff|HLunarURL:%s|h[%s]|h|r", safeUrl, safeUrl)
 end
 
+LunarUI.ChatFormatURL = FormatURL -- 暴露純邏輯給 spec（Security S-B8: pipe 注入防護）
+
 -- 過濾函數：偵測網址並轉換為可點擊連結
 local function AddURLsToMessage(_self, _event, msg, ...)
     if not msg then
