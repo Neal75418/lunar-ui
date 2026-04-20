@@ -148,6 +148,35 @@ LunarUI.BagsMarkSlotsByBagDirty = MarkSlotsByBagDirty
 -- splitBags=true 時每個 bag 的 slot 佔獨立行區塊（不與上一個 bag 共行），
 -- 需要遍歷所有 bag 計算 padding 後的 layoutIdx 再算行數。
 -- splitBags=false 時直接用 totalSlots / SLOTS_PER_ROW。
+-- 對齊 layoutIdx 到下一列開頭；若已在列首則不動。
+-- 用於 splitBags 模式：不同 bag 的格子必須從新的一列開始。
+local function AlignToNextRow(layoutIdx, slotsPerRow)
+    local currentCol = layoutIdx % slotsPerRow
+    if currentCol ~= 0 then
+        return layoutIdx + (slotsPerRow - currentCol)
+    end
+    return layoutIdx
+end
+
+-- 收集所有背包的 {bag, slot} 資訊，選擇性反轉順序。
+-- 與 CreateFrame 等副作用解耦，可單獨測試。
+local function BuildSlotList(reverse)
+    local slotList = {}
+    for bag = 0, LAST_BAG do
+        local numSlots = C_Container.GetContainerNumSlots(bag) or 0
+        for slot = 1, numSlots do
+            slotList[#slotList + 1] = { bag = bag, slot = slot }
+        end
+    end
+    if reverse then
+        local n = #slotList
+        for i = 1, mathFloor(n / 2) do
+            slotList[i], slotList[n - i + 1] = slotList[n - i + 1], slotList[i]
+        end
+    end
+    return slotList
+end
+
 local function CalculateBagRowCount(splitBags, totalSlots)
     if not splitBags then
         return mathCeil(totalSlots / SLOTS_PER_ROW)
@@ -158,10 +187,7 @@ local function CalculateBagRowCount(splitBags, totalSlots)
         local numBagSlots = C_Container.GetContainerNumSlots(bag)
         if numBagSlots > 0 then
             if prevBag ~= nil then
-                local currentCol = layoutIdx % SLOTS_PER_ROW
-                if currentCol ~= 0 then
-                    layoutIdx = layoutIdx + (SLOTS_PER_ROW - currentCol)
-                end
+                layoutIdx = AlignToNextRow(layoutIdx, SLOTS_PER_ROW)
             end
             prevBag = bag
             layoutIdx = layoutIdx + numBagSlots
@@ -209,6 +235,9 @@ LunarUI.BagsConstants = setmetatable({}, {
 })
 
 LunarUI.BagsLoadSettings = LoadBagSettings
+LunarUI.BagsAlignToNextRow = AlignToNextRow
+LunarUI.BagsBuildSlotList = BuildSlotList
+LunarUI.BagsCalculateBagRowCount = CalculateBagRowCount
 LunarUI.BagsSetSorting = function(value)
     isSorting = value
 end
@@ -1050,20 +1079,7 @@ local function RefreshBagLayout()
 
     local db = GetBagDB()
 
-    -- 收集所有格子的 bag/slot 資料（支援反轉順序）
-    local slotList = {}
-    for bag = 0, LAST_BAG do
-        local numSlots = C_Container.GetContainerNumSlots(bag)
-        for slot = 1, numSlots do
-            slotList[#slotList + 1] = { bag = bag, slot = slot }
-        end
-    end
-    if db and db.reverseBagSlots then
-        local n = #slotList
-        for i = 1, mathFloor(n / 2) do
-            slotList[i], slotList[n - i + 1] = slotList[n - i + 1], slotList[i]
-        end
-    end
+    local slotList = BuildSlotList(db and db.reverseBagSlots)
 
     -- 計算框架大小（共用 CalculateBagRowCount helper）
     local numRows = CalculateBagRowCount(db and db.splitBags, #slotList)

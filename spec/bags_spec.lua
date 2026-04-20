@@ -1005,3 +1005,156 @@ describe("GetLastOccupiedSlotID", function()
         assert.equals(33, LunarUI.GetLastOccupiedSlotID())
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- AlignToNextRow (splitBags 換行對齊 helper)
+--------------------------------------------------------------------------------
+
+describe("BagsAlignToNextRow", function()
+    it("returns layoutIdx unchanged when already at row start", function()
+        assert.equals(0, LunarUI.BagsAlignToNextRow(0, 12))
+        assert.equals(12, LunarUI.BagsAlignToNextRow(12, 12))
+        assert.equals(24, LunarUI.BagsAlignToNextRow(24, 12))
+    end)
+
+    it("pads to next row boundary when mid-row", function()
+        assert.equals(12, LunarUI.BagsAlignToNextRow(5, 12))
+        assert.equals(12, LunarUI.BagsAlignToNextRow(11, 12))
+        assert.equals(24, LunarUI.BagsAlignToNextRow(13, 12))
+    end)
+
+    it("respects custom slotsPerRow", function()
+        assert.equals(8, LunarUI.BagsAlignToNextRow(3, 8))
+        assert.equals(16, LunarUI.BagsAlignToNextRow(9, 8))
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- BuildSlotList (收集 bag/slot 清單，可選反轉)
+--------------------------------------------------------------------------------
+
+describe("BagsBuildSlotList", function()
+    before_each(function()
+        _G.C_Container.GetContainerNumSlots = function()
+            return 0
+        end
+    end)
+
+    it("returns empty list when all bags empty", function()
+        local list = LunarUI.BagsBuildSlotList(false)
+        assert.equals(0, #list)
+    end)
+
+    it("collects slots in bag/slot order", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            if bag == 0 then
+                return 2
+            end
+            if bag == 1 then
+                return 3
+            end
+            return 0
+        end
+        local list = LunarUI.BagsBuildSlotList(false)
+        assert.equals(5, #list)
+        assert.equals(0, list[1].bag)
+        assert.equals(1, list[1].slot)
+        assert.equals(0, list[2].bag)
+        assert.equals(2, list[2].slot)
+        assert.equals(1, list[3].bag)
+        assert.equals(1, list[3].slot)
+        assert.equals(1, list[5].bag)
+        assert.equals(3, list[5].slot)
+    end)
+
+    it("reverses slot order when reverse=true", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            if bag == 0 then
+                return 2
+            end
+            if bag == 1 then
+                return 2
+            end
+            return 0
+        end
+        local list = LunarUI.BagsBuildSlotList(true)
+        assert.equals(4, #list)
+        -- 反轉後，原本最後一格 (bag=1, slot=2) 變第一格
+        assert.equals(1, list[1].bag)
+        assert.equals(2, list[1].slot)
+        assert.equals(0, list[4].bag)
+        assert.equals(1, list[4].slot)
+    end)
+
+    it("handles reagent bag (bag 5)", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            if bag == 5 then
+                return 4
+            end
+            return 0
+        end
+        local list = LunarUI.BagsBuildSlotList(false)
+        assert.equals(4, #list)
+        assert.equals(5, list[1].bag)
+    end)
+
+    it("treats nil numSlots as 0 (defensive)", function()
+        _G.C_Container.GetContainerNumSlots = function()
+            return nil
+        end
+        local list = LunarUI.BagsBuildSlotList(false)
+        assert.equals(0, #list)
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- CalculateBagRowCount (框架列數計算)
+--------------------------------------------------------------------------------
+
+describe("BagsCalculateBagRowCount", function()
+    before_each(function()
+        _G.C_Container.GetContainerNumSlots = function()
+            return 0
+        end
+    end)
+
+    it("non-split: simple ceil(total / slotsPerRow)", function()
+        -- SLOTS_PER_ROW 預設 12；24 -> 2 rows, 25 -> 3 rows
+        assert.equals(2, LunarUI.BagsCalculateBagRowCount(false, 24))
+        assert.equals(3, LunarUI.BagsCalculateBagRowCount(false, 25))
+        assert.equals(0, LunarUI.BagsCalculateBagRowCount(false, 0))
+    end)
+
+    it("split: pads row breaks between different bags", function()
+        -- bag 0 = 16 slots, bag 1 = 5 slots
+        -- 非 split: ceil(21/12) = 2 rows
+        -- split: bag 0 填 12 + 4 = 第 2 列用 4 格，padding 到 12 再放 bag 1 的 5 格 = 17 -> ceil(17/12) = 2 rows
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            if bag == 0 then
+                return 16
+            end
+            if bag == 1 then
+                return 5
+            end
+            return 0
+        end
+        -- bag 0 layoutIdx 0->16，第 2 列有 4 格已用；align to 24；+5 = 29 -> ceil(29/12) = 3 rows
+        assert.equals(3, LunarUI.BagsCalculateBagRowCount(true, 21))
+    end)
+
+    it("split: skips empty bags (no extra row break)", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            if bag == 0 then
+                return 12
+            end
+            -- bag 1-4 為 0
+            if bag == 5 then
+                return 6
+            end
+            return 0
+        end
+        -- bag 0 填滿第 1 列，bag 5 從第 2 列開始
+        -- layoutIdx: 12 -> align(12) = 12 -> +6 = 18 -> ceil(18/12) = 2 rows
+        assert.equals(2, LunarUI.BagsCalculateBagRowCount(true, 18))
+    end)
+end)
