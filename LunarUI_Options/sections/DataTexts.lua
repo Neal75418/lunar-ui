@@ -11,7 +11,15 @@ Private.sections.DataTexts = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
     local LunarUI = ctx.LunarUI
-    local RefreshUI = ctx.RefreshUI
+
+    -- 子面板設定（enabled/height/slot provider）都在 InitializeDataTexts 時讀 DB：
+    -- CreateDataPanel 讀 height、BindSlotToProvider 建立 slot 綁定。改完需 rebuild 才生效。
+    -- 全域 datatexts.enabled=false 時 Init early-return，等同純 cleanup（語意正確）
+    local function rebuild()
+        if LunarUI.RebuildDataTexts then
+            LunarUI.RebuildDataTexts()
+        end
+    end
 
     return {
         order = 10.4,
@@ -44,7 +52,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.enabled = v
-                        LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
+                        rebuild()
                     end,
                     width = "full",
                 },
@@ -58,7 +66,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.panels.bottom.enabled = v
-                        RefreshUI()
+                        rebuild()
                     end,
                 },
                 bottomHeight = {
@@ -73,7 +81,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.panels.bottom.height = v
-                        RefreshUI()
+                        rebuild()
                     end,
                 },
                 bottomLeft = {
@@ -86,7 +94,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.panels.bottom.slots[1] = v
-                        RefreshUI()
+                        rebuild()
                     end,
                 },
                 bottomCenter = {
@@ -99,7 +107,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.panels.bottom.slots[2] = v
-                        RefreshUI()
+                        rebuild()
                     end,
                 },
                 bottomRight = {
@@ -112,7 +120,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.panels.bottom.slots[3] = v
-                        RefreshUI()
+                        rebuild()
                     end,
                 },
                 minimapHeader = {
@@ -129,7 +137,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.panels.minimapBottom.enabled = v
-                        RefreshUI()
+                        rebuild()
                     end,
                 },
                 minimapHeight = {
@@ -144,7 +152,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.panels.minimapBottom.height = v
-                        RefreshUI()
+                        rebuild()
                     end,
                 },
                 minimapLeft = {
@@ -157,7 +165,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.panels.minimapBottom.slots[1] = v
-                        RefreshUI()
+                        rebuild()
                     end,
                 },
                 minimapRight = {
@@ -170,7 +178,7 @@ Private.sections.DataTexts = function(ctx)
                     end,
                     set = function(_, v)
                         GetDB().datatexts.panels.minimapBottom.slots[2] = v
-                        RefreshUI()
+                        rebuild()
                     end,
                 },
             }

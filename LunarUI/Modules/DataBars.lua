@@ -573,6 +573,18 @@ function LunarUI.CleanupDataBars()
     wipe(bars)
 end
 
+-- 重建資料條：供 Options sub-toggle 即時套用設定變更（含新增先前停用的子條、
+-- 套用 height/textFormat 等 spawn-time 設定）。
+-- _modulesEnabled guard 防止使用者 /lunar off 後透過 Options sub-toggle 繞過全域停用
+-- 重新建出 bars（Initialize 只檢 db.databars.enabled，不看全域狀態）
+function LunarUI.RebuildDataBars()
+    LunarUI.CleanupDataBars()
+    if not LunarUI._modulesEnabled then
+        return
+    end
+    InitializeDataBars()
+end
+
 -- 匯出
 LunarUI.InitializeDataBars = InitializeDataBars
 LunarUI.RefreshDataBarsCache = RefreshDataBarsCache -- 供 Options callback 失效快取

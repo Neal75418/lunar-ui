@@ -10,8 +10,16 @@ Private.sections = Private.sections or {}
 Private.sections.DataBars = function(ctx)
     local L = ctx.L
     local GetDB = ctx.GetDB
-    local RefreshUI = ctx.RefreshUI
     local LunarUI = ctx.LunarUI
+
+    -- enabled / textFormat / height 等子條設定都在 CreateDataBar / InitializeDataBars 時讀 DB，
+    -- 必須 teardown + rebuild 才能即時套用（例如 OFF→ON 時 Initialize 已跳過建立 bar，
+    -- 只靠 cache refresh 無法讓 UpdateBar 拿到可見的 frame）
+    local function rebuild()
+        if LunarUI.RebuildDataBars then
+            LunarUI.RebuildDataBars()
+        end
+    end
 
     return {
         order = 10.35,
@@ -30,7 +38,7 @@ Private.sections.DataBars = function(ctx)
                 end,
                 set = function(_, v)
                     GetDB().databars.enabled = v
-                    RefreshUI()
+                    LunarUI:Print(L["RequiresReload"] or "需要重新載入介面才能生效")
                 end,
                 width = "full",
             },
@@ -48,10 +56,7 @@ Private.sections.DataBars = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().databars.experience.enabled = v
-                            if LunarUI.RefreshDataBarsCache then
-                                LunarUI.RefreshDataBarsCache()
-                            end
-                            RefreshUI()
+                            rebuild()
                         end,
                         width = "full",
                     },
@@ -70,10 +75,7 @@ Private.sections.DataBars = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().databars.experience.textFormat = v
-                            if LunarUI.RefreshDataBarsCache then
-                                LunarUI.RefreshDataBarsCache()
-                            end
-                            RefreshUI()
+                            rebuild()
                         end,
                     },
                     height = {
@@ -88,7 +90,7 @@ Private.sections.DataBars = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().databars.experience.height = v
-                            RefreshUI()
+                            rebuild()
                         end,
                     },
                 },
@@ -107,10 +109,7 @@ Private.sections.DataBars = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().databars.reputation.enabled = v
-                            if LunarUI.RefreshDataBarsCache then
-                                LunarUI.RefreshDataBarsCache()
-                            end
-                            RefreshUI()
+                            rebuild()
                         end,
                         width = "full",
                     },
@@ -129,10 +128,7 @@ Private.sections.DataBars = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().databars.reputation.textFormat = v
-                            if LunarUI.RefreshDataBarsCache then
-                                LunarUI.RefreshDataBarsCache()
-                            end
-                            RefreshUI()
+                            rebuild()
                         end,
                     },
                     height = {
@@ -147,7 +143,7 @@ Private.sections.DataBars = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().databars.reputation.height = v
-                            RefreshUI()
+                            rebuild()
                         end,
                     },
                 },
@@ -166,10 +162,7 @@ Private.sections.DataBars = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().databars.honor.enabled = v
-                            if LunarUI.RefreshDataBarsCache then
-                                LunarUI.RefreshDataBarsCache()
-                            end
-                            RefreshUI()
+                            rebuild()
                         end,
                         width = "full",
                     },
@@ -188,10 +181,7 @@ Private.sections.DataBars = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().databars.honor.textFormat = v
-                            if LunarUI.RefreshDataBarsCache then
-                                LunarUI.RefreshDataBarsCache()
-                            end
-                            RefreshUI()
+                            rebuild()
                         end,
                     },
                     height = {
@@ -206,7 +196,7 @@ Private.sections.DataBars = function(ctx)
                         end,
                         set = function(_, v)
                             GetDB().databars.honor.height = v
-                            RefreshUI()
+                            rebuild()
                         end,
                     },
                 },

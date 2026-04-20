@@ -842,6 +842,17 @@ function LunarUI.CleanupDataTexts()
     -- SetupEvents / SetupOnUpdate 會在下次 enable 時重新安裝 scripts 與事件
 end
 
+-- 重建 DataTexts：供 Options sub-setter 即時套用 panel enabled / height / slot 變更。
+-- 無條件 Cleanup 保證 rebuild 即使在 Initialize 的 next(panels) 檢查漏掉的路徑也能清乾淨；
+-- _modulesEnabled guard 防止使用者 /lunar off 後透過 Options 繞過全域停用重啟 panels
+function LunarUI.RebuildDataTexts()
+    LunarUI.CleanupDataTexts()
+    if not LunarUI._modulesEnabled then
+        return
+    end
+    InitializeDataTexts()
+end
+
 -- 匯出
 LunarUI.InitializeDataTexts = InitializeDataTexts
 
