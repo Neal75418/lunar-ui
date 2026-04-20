@@ -1158,3 +1158,202 @@ describe("BagsCalculateBagRowCount", function()
         assert.equals(2, LunarUI.BagsCalculateBagRowCount(true, 18))
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- JunkSelling — SellJunk guards + InvalidateSellJunk
+--
+-- SellJunk 用 generation counter + C_Timer chain 防止重疊販賣鏈。這裡測：
+--   1. 前置 guard（modulesEnabled / autoSellJunk / 空背包）
+--   2. 販賣鏈 early-exit（商人關閉、modulesEnabled 中途切 false、Invalidate 介入）
+--   3. InvalidateSellJunk 遞增 generation 讓飛行中 SellNext 無效化
+--
+-- Mock 策略：C_Timer.After 捕獲 callback 供手動步進，模擬 WoW 遊戲邏輯執行順序
+--------------------------------------------------------------------------------
+
+describe("BagsSellJunk", function()
+    local usedItems
+    local pendingTimer
+    local merchantShown
+
+    before_each(function()
+        usedItems = {}
+        pendingTimer = nil
+        merchantShown = true
+
+        LunarUI._modulesEnabled = true
+        LunarUI.db.profile.bags.autoSellJunk = true
+
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            if bag == 0 then
+                return 2
+            end
+            return 0
+        end
+        -- bag 0 slot 1 = poor quality saleable, slot 2 = poor but hasNoValue
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == 0 and slot == 1 then
+                return { quality = 0, hasNoValue = false, stackCount = 1 }
+            end
+            if bag == 0 and slot == 2 then
+                return { quality = 0, hasNoValue = true, stackCount = 1 }
+            end
+            return nil
+        end
+        _G.C_Container.GetContainerItemLink = function(bag, slot)
+            if bag == 0 and slot == 1 then
+                return "item:junk1"
+            end
+            return nil
+        end
+        _G.C_Container.UseContainerItem = function(bag, slot)
+            usedItems[#usedItems + 1] = { bag = bag, slot = slot }
+        end
+        _G.C_Item.GetItemInfo = function()
+            -- 11th vararg = itemPrice
+            return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, 100
+        end
+        _G.C_Timer = {
+            After = function(_delay, fn)
+                pendingTimer = fn
+            end,
+            NewTimer = function()
+                return { Cancel = function() end }
+            end,
+        }
+        _G.MerchantFrame = {
+            IsShown = function()
+                return merchantShown
+            end,
+        }
+        _G.GetCoinTextureString = function()
+            return "100c"
+        end
+        LunarUI.Print = function() end
+    end)
+
+    it("early-returns when _modulesEnabled is false", function()
+        LunarUI._modulesEnabled = false
+        LunarUI.BagsSellJunk()
+        assert.equals(0, #usedItems)
+        assert.is_nil(pendingTimer)
+    end)
+
+    it("early-returns when autoSellJunk flag is off", function()
+        LunarUI.db.profile.bags.autoSellJunk = false
+        LunarUI.BagsSellJunk()
+        assert.equals(0, #usedItems)
+        assert.is_nil(pendingTimer)
+    end)
+
+    it("does nothing when bags contain no sellable junk", function()
+        _G.C_Container.GetContainerItemInfo = function()
+            return nil
+        end
+        LunarUI.BagsSellJunk()
+        assert.equals(0, #usedItems)
+        assert.is_nil(pendingTimer)
+    end)
+
+    it("skips items with hasNoValue=true (unsaleable greys)", function()
+        LunarUI.BagsSellJunk()
+        -- 只有 slot 1 該賣，slot 2 (hasNoValue) 不該賣
+        assert.equals(1, #usedItems)
+        assert.equals(0, usedItems[1].bag)
+        assert.equals(1, usedItems[1].slot)
+    end)
+
+    it("drives the C_Timer chain until all junk sold", function()
+        -- 多件 junk：bag 0 slot 1, 2（這次都可賣）
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == 0 and (slot == 1 or slot == 2) then
+                return { quality = 0, hasNoValue = false, stackCount = 1 }
+            end
+            return nil
+        end
+        _G.C_Container.GetContainerItemLink = function(bag, slot)
+            if bag == 0 then
+                return "item:junk" .. slot
+            end
+            return nil
+        end
+
+        LunarUI.BagsSellJunk()
+        -- 首次 tick：賣掉 slot 1
+        assert.equals(1, #usedItems)
+        -- 步進一次：賣掉 slot 2
+        pendingTimer()
+        assert.equals(2, #usedItems)
+        -- 步進一次：index > #junkItems → 輸出統計後結束，但 pendingTimer 還指向最後一次排程
+        -- 下個 tick 會 early-exit（index > #junkItems 在 next call 時）
+    end)
+
+    it("aborts chain when MerchantFrame closes mid-sell", function()
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == 0 and (slot == 1 or slot == 2) then
+                return { quality = 0, hasNoValue = false, stackCount = 1 }
+            end
+            return nil
+        end
+        _G.C_Container.GetContainerItemLink = function(bag, slot)
+            if bag == 0 then
+                return "item:junk" .. slot
+            end
+            return nil
+        end
+
+        LunarUI.BagsSellJunk()
+        assert.equals(1, #usedItems)
+
+        -- 玩家關閉商人
+        merchantShown = false
+        pendingTimer()
+        -- 不該再賣下一件
+        assert.equals(1, #usedItems)
+    end)
+
+    it("aborts chain when _modulesEnabled flips to false mid-sell", function()
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == 0 and (slot == 1 or slot == 2) then
+                return { quality = 0, hasNoValue = false, stackCount = 1 }
+            end
+            return nil
+        end
+        _G.C_Container.GetContainerItemLink = function(bag, slot)
+            if bag == 0 then
+                return "item:junk" .. slot
+            end
+            return nil
+        end
+
+        LunarUI.BagsSellJunk()
+        assert.equals(1, #usedItems)
+
+        -- 使用者同時執行 /lunar off
+        LunarUI._modulesEnabled = false
+        pendingTimer()
+        assert.equals(1, #usedItems)
+    end)
+
+    it("InvalidateSellJunk stops an in-flight chain via generation counter", function()
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == 0 and (slot == 1 or slot == 2) then
+                return { quality = 0, hasNoValue = false, stackCount = 1 }
+            end
+            return nil
+        end
+        _G.C_Container.GetContainerItemLink = function(bag, slot)
+            if bag == 0 then
+                return "item:junk" .. slot
+            end
+            return nil
+        end
+
+        LunarUI.BagsSellJunk()
+        assert.equals(1, #usedItems)
+
+        -- CleanupBags 呼叫 InvalidateSellJunk 使飛行中的 SellNext 失效
+        LunarUI.InvalidateSellJunk()
+        pendingTimer()
+        assert.equals(1, #usedItems)
+    end)
+end)
