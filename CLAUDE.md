@@ -3,7 +3,7 @@
 ## 常用指令
 
 ```bash
-make check            # lint + format + locale-check + 920 tests（提交前必跑）
+make check            # lint + format + locale-check + 940 tests（提交前必跑）
 make test             # 僅跑 busted spec/
 make coverage         # 跑覆蓋率 + ratchet 檢查（對照 .coverage-baseline）
 make coverage-update  # 測試覆蓋率上升時更新 baseline
@@ -100,6 +100,12 @@ LunarUI:RegisterModule("ModuleName", {
 --   "reversible"       — onDisable 完全還原 Blizzard 預設狀態（預設值；ActionBars、Minimap、Bags、Tooltip）
 --   "soft_disable"     — 僅隱藏框架，不還原 Blizzard，需 /reload（UnitFrames、Nameplates）
 --   "reload_required"  — 深度修改無法撤銷，需 /reload（Chat、Skins）
+--
+-- Live-toggle 補強（reversible 強化版，非獨立 lifecycle 類型）：
+-- 部分 reversible 模組額外匯出 LunarUI.RebuildXXX() 供 Options 子 toggle 即時套用，
+-- 契約：Cleanup → `if not _modulesEnabled then return` → Initialize。
+-- _modulesEnabled guard 防止使用者 /lunar off 後透過 sub-toggle 繞過全域停用。
+-- 目前採用：DataBars、DataTexts；Tooltip 直接走 Init/Cleanup + 永久 HookScript 內 db.enabled guard
 
 -- 判斷當前模組組合是否需要 /reload（Commands.lua 用於決定是否跳確認對話框）
 LunarUI.RequiresReloadForDisable()  -- 任一 non-reversible 模組即 true

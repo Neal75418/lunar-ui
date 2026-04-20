@@ -3,7 +3,7 @@
   <img src="https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/WoW-12.0.1-0074e0?style=flat-square&logo=battledotnet&logoColor=white" alt="WoW 12.0.1" />
   <img src="https://img.shields.io/badge/Lua-5.1-2C2D72?style=flat-square&logo=lua&logoColor=white" alt="Lua 5.1" />
-  <img src="https://img.shields.io/badge/skins-23-e67e22?style=flat-square" alt="23 Skins" />
+  <img src="https://img.shields.io/badge/skins-22-e67e22?style=flat-square" alt="22 Skins" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square" alt="GPL-3.0" />
 </p>
 
@@ -17,10 +17,11 @@
 ## 特色
 
 - **完整戰鬥 UI** — UnitFrames、Nameplates、ActionBars 等 7 個核心模組（oUF + LibActionButton）
-- **23 個 Blizzard 換膚** — 角色、天賦、任務、拍賣、收藏等原生介面統一深色主題
+- **22 個 Blizzard 換膚** — 角色、天賦、任務、拍賣、收藏等原生介面統一深色主題
 - **整合模組** — Bags（裝等 / 搜尋 / 自動賣灰）、Minimap、Chat、Tooltip 等 9 個功能模組
 - **Phase 狀態機** — 戰鬥前後自動調整顯示策略
 - **完整可配置** — AceConfig GUI、設定匯入匯出、DPS / Tank / Healer 佈局預設
+- **即時生效** — DataBars、DataTexts、Tooltip、HUD 子模組 toggle 無需 /reload 即套用
 - **效能優先** — 框架池回收、材質快取、髒旗標批次處理
 
 > 附帶兩個 LoadOnDemand 插件：`LunarUI_Options`（設定介面）與 `LunarUI_Debug`（Vigor 診斷工具），分別在 `/lunar config` 和 `/lunar debugvigor` 時自動載入。

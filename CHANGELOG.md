@@ -29,6 +29,28 @@ timeline
 
 ## [Unreleased]
 
+### Added
+
+- **Options 即時生效** — DataBars / DataTexts / Tooltip 子 toggle 無需 /reload：
+  - `LunarUI.RebuildDataBars()` / `LunarUI.RebuildDataTexts()` 新 helper，契約 `Cleanup → _modulesEnabled guard → Initialize`
+  - Tooltip 直接走 `Init`/`Cleanup`，永久 HookScript closures 加 `db.enabled` guard 支援 live disable
+- **Reload warning dialog** — `/lunar off` 遇到 non-reversible 模組（Chat、Skins）時跳 `LUNARUI_DISABLE_CONFIRM` 確認對話框；使用者選「不再顯示」後寫入 profile 不再提示
+
+### Changed
+
+- **Bags 重構** — `RefreshBagLayout` 抽出 `AlignToNextRow` / `BuildSlotList` 純函數 helper，消除 splitBags 換行邏輯在 `CalculateBagRowCount` 和 layout 兩處的重複；新增 12 個 spec 測試
+- **Options HUD 整合** — 5 個重複 `if v then Init else Cleanup` block 收斂成 `applyHUDToggle(v, init, cleanup)` helper
+- **Options 誠實化** — ActionBars / Nameplates / UnitFrames / Minimap 把誤導性的 `RefreshUI()` 呼叫改為 `notifyReload()` print，因為這些模組的 slider 設定在 Spawn 時才讀 DB，`RefreshUI` 只套 HUD scale / 字體對它們是假刷新
+
+### Fixed
+
+- **Dead code cleanup** — 移除陳舊 exports、unused local、spec schema drift (`5136a13`)
+
+### Chore
+
+- **Coverage baseline reset** — 54.60% → 48.29%，修正 baseline 長期落後於實際 code shape 的狀況（UI frame-creation 程式碼不適合 mock 測試，避免 test theatre）
+- **Spec 增長** — 920 → 940 tests（+20 新增於 Bags helpers）
+
 ### Planned
 
 - Theme 系統 — 視覺風格切換（lunar / parchment / minimal）
@@ -37,6 +59,7 @@ timeline
 
 - **月相循環已簡化** — v0.8.0 移除 NEW → WAXING → FULL → WANING 循環機制，保留戰鬥狀態驅動。原因：UI 自動變化在實際遊戲中造成干擾而非輔助
 - **自訂月相材質移除** — 品牌特色收益不足以 justify 維護成本
+- **Live-toggle pattern** — 2026-04-20 確立：reversible 模組可選擇性匯出 `LunarUI.RebuildXXX()` 供 Options 子 toggle 即時套用，不獨立為新 lifecycle 類型（details 見 CLAUDE.md 模組系統 API 段落）
 
 ---
 
