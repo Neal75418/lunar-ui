@@ -1,4 +1,4 @@
-.PHONY: test lint format format-fix coverage coverage-update check clean locale-check help
+.PHONY: test lint format format-fix coverage coverage-update check clean locale-check call-syntax-check help
 
 help:
 	@echo "LunarUI Development Commands"
@@ -10,6 +10,7 @@ help:
 	@echo "  make coverage-update  Update .coverage-baseline to current coverage"
 	@echo "  make check            Run all checks (lint + format + locale + test)"
 	@echo "  make locale-check     Check locale key parity"
+	@echo "  make call-syntax-check Check colon/dot call syntax consistency"
 	@echo "  make clean            Remove generated files"
 
 test:
@@ -33,10 +34,13 @@ coverage-update:
 	busted --coverage spec/ && luacov
 	@./scripts/check-coverage.sh --update
 
-check: lint format locale-check test
+check: lint format locale-check call-syntax-check test
 
 locale-check:
 	./scripts/check-locale-keys.sh
+
+call-syntax-check:
+	./scripts/check-call-syntax.sh
 
 clean:
 	rm -f luacov.stats.out luacov.report.out

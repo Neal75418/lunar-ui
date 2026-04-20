@@ -91,6 +91,13 @@ jobs:
       - name: Lint locale key parity
         run: ./scripts/check-locale-keys.sh
 
+      - name: Check call syntax (colon vs dot)
+        # Detects dot-defined LunarUI.X functions called with colon syntax
+        # (LunarUI:X), which silently pass the LunarUI table as an extra first
+        # arg. Works today but becomes a silent bug if anyone adds a first
+        # parameter. See commit 18f2635 for the initial 41-site cleanup.
+        run: ./scripts/check-call-syntax.sh
+
   test:
     name: Test & Coverage
     runs-on: ubuntu-latest
@@ -121,7 +128,10 @@ jobs:
           luacov
           echo "=== Coverage Summary ==="
           tail -30 luacov.report.out || true
-          ./scripts/check-coverage.sh 43
+          # Ratchet mode: reads .coverage-baseline, fails on regression.
+          # Previous hardcoded 43 while baseline was 49 made CI blind to
+          # regressions that local ratchet would have caught.
+          ./scripts/check-coverage.sh
 
       - name: Upload coverage report
         if: always()
