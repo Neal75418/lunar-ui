@@ -21,7 +21,7 @@ Private.sections.Bags = function(ctx)
     -- RebuildBags 副作用 helper：很多 layout 類選項改動後需要重建背包框架
     local function rebuildBags()
         if LunarUI.RebuildBags then
-            LunarUI:RebuildBags()
+            LunarUI.RebuildBags()
         end
     end
     local rebuildOnSet = { onValueSet = rebuildBags }

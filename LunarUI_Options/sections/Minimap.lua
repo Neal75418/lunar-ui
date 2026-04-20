@@ -50,7 +50,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.size = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -67,7 +67,7 @@ Private.sections.Minimap = function(ctx)
                     local c = GetDB().minimap.borderColor
                     c.r, c.g, c.b, c.a = r, g, b, a
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -85,7 +85,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.pinScale = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -106,7 +106,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.showCoords = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -120,7 +120,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.showClock = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -135,7 +135,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.clockFormat = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                     -- 同步 DataTexts clock 快取（P4-perf 快取需要手動失效）
                     if LunarUI.RefreshClockFormat then
@@ -159,7 +159,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.zoneTextDisplay = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -173,7 +173,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.organizeButtons = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -197,7 +197,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.zoneFontSize = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -217,7 +217,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.zoneFontOutline = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -234,7 +234,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.coordFontSize = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -257,7 +257,7 @@ Private.sections.Minimap = function(ctx)
                     -- RefreshMinimap 會重新對 coordText/clockText 呼叫 SetFont 並讀取 outline；
                     -- RefreshUI 只套用 HUD scale 和字體路徑，不會更新 outline flag
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -294,7 +294,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.fadeOnMouseLeave = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -315,7 +315,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.fadeAlpha = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -336,7 +336,7 @@ Private.sections.Minimap = function(ctx)
                 set = function(_, v)
                     GetDB().minimap.fadeDuration = v
                     if LunarUI.RefreshMinimap then
-                        LunarUI:RefreshMinimap()
+                        LunarUI.RefreshMinimap()
                     end
                 end,
             },
@@ -390,7 +390,7 @@ Private.sections.Minimap = function(ctx)
                             set = function(_, v)
                                 GetDB().minimap.icons[iconKey].hide = v
                                 if LunarUI.RefreshMinimap then
-                                    LunarUI:RefreshMinimap()
+                                    LunarUI.RefreshMinimap()
                                 end
                             end,
                         }
@@ -408,7 +408,7 @@ Private.sections.Minimap = function(ctx)
                             set = function(_, v)
                                 GetDB().minimap.icons[iconKey].position = v
                                 if LunarUI.RefreshMinimap then
-                                    LunarUI:RefreshMinimap()
+                                    LunarUI.RefreshMinimap()
                                 end
                             end,
                         }
@@ -428,7 +428,7 @@ Private.sections.Minimap = function(ctx)
                             set = function(_, v)
                                 GetDB().minimap.icons[iconKey].scale = v
                                 if LunarUI.RefreshMinimap then
-                                    LunarUI:RefreshMinimap()
+                                    LunarUI.RefreshMinimap()
                                 end
                             end,
                         }
@@ -448,7 +448,7 @@ Private.sections.Minimap = function(ctx)
                             set = function(_, v)
                                 GetDB().minimap.icons[iconKey].xOffset = v
                                 if LunarUI.RefreshMinimap then
-                                    LunarUI:RefreshMinimap()
+                                    LunarUI.RefreshMinimap()
                                 end
                             end,
                         }
@@ -468,7 +468,7 @@ Private.sections.Minimap = function(ctx)
                             set = function(_, v)
                                 GetDB().minimap.icons[iconKey].yOffset = v
                                 if LunarUI.RefreshMinimap then
-                                    LunarUI:RefreshMinimap()
+                                    LunarUI.RefreshMinimap()
                                 end
                             end,
                         }

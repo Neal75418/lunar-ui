@@ -42,9 +42,9 @@ Private.sections.General = function(ctx)
                 set = function(_, v)
                     GetDB().debug = v
                     if v then
-                        LunarUI:ShowDebugOverlay()
+                        LunarUI.ShowDebugOverlay()
                     else
-                        LunarUI:HideDebugOverlay()
+                        LunarUI.HideDebugOverlay()
                     end
                 end,
                 width = "full",

@@ -174,7 +174,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.auraIconSize = v
                             if LunarUI.RebuildAuraFrames then
-                                LunarUI:RebuildAuraFrames()
+                                LunarUI.RebuildAuraFrames()
                             end
                         end,
                         width = "full",
@@ -193,7 +193,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.auraIconSpacing = v
                             if LunarUI.RebuildAuraFrames then
-                                LunarUI:RebuildAuraFrames()
+                                LunarUI.RebuildAuraFrames()
                             end
                         end,
                         width = "full",
@@ -212,7 +212,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.auraIconsPerRow = v
                             if LunarUI.RebuildAuraFrames then
-                                LunarUI:RebuildAuraFrames()
+                                LunarUI.RebuildAuraFrames()
                             end
                         end,
                         width = "full",
@@ -231,7 +231,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.maxBuffs = v
                             if LunarUI.RebuildAuraFrames then
-                                LunarUI:RebuildAuraFrames()
+                                LunarUI.RebuildAuraFrames()
                             end
                         end,
                         width = "full",
@@ -250,7 +250,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.maxDebuffs = v
                             if LunarUI.RebuildAuraFrames then
-                                LunarUI:RebuildAuraFrames()
+                                LunarUI.RebuildAuraFrames()
                             end
                         end,
                         width = "full",
@@ -269,7 +269,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.auraBarHeight = v
                             if LunarUI.RebuildAuraFrames then
-                                LunarUI:RebuildAuraFrames()
+                                LunarUI.RebuildAuraFrames()
                             end
                         end,
                         width = "full",
@@ -302,7 +302,7 @@ Private.sections.HUD = function(ctx)
                             GetDB().auraWhitelist = v
                             -- 觸發快取重建
                             if LunarUI.RebuildAuraFilterCache then
-                                LunarUI:RebuildAuraFilterCache()
+                                LunarUI.RebuildAuraFilterCache()
                             end
                         end,
                     },
@@ -319,7 +319,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().auraBlacklist = v
                             if LunarUI.RebuildAuraFilterCache then
-                                LunarUI:RebuildAuraFilterCache()
+                                LunarUI.RebuildAuraFilterCache()
                             end
                         end,
                     },
@@ -336,7 +336,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().auraFilters.hidePassive = v
                             if LunarUI.RebuildAuraFilterCache then
-                                LunarUI:RebuildAuraFilterCache()
+                                LunarUI.RebuildAuraFilterCache()
                             end
                         end,
                     },
@@ -351,7 +351,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().auraFilters.showStealable = v
                             if LunarUI.RebuildAuraFilterCache then
-                                LunarUI:RebuildAuraFilterCache()
+                                LunarUI.RebuildAuraFilterCache()
                             end
                         end,
                     },
@@ -372,7 +372,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().auraFilters.sortMethod = v
                             if LunarUI.RebuildAuraFilterCache then
-                                LunarUI:RebuildAuraFilterCache()
+                                LunarUI.RebuildAuraFilterCache()
                             end
                         end,
                     },
@@ -387,7 +387,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().auraFilters.sortReverse = v
                             if LunarUI.RebuildAuraFilterCache then
-                                LunarUI:RebuildAuraFilterCache()
+                                LunarUI.RebuildAuraFilterCache()
                             end
                         end,
                     },
@@ -419,7 +419,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.cdIconSize = v
                             if LunarUI.RebuildCooldownTracker then
-                                LunarUI:RebuildCooldownTracker()
+                                LunarUI.RebuildCooldownTracker()
                             end
                         end,
                         width = "full",
@@ -438,7 +438,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.cdIconSpacing = v
                             if LunarUI.RebuildCooldownTracker then
-                                LunarUI:RebuildCooldownTracker()
+                                LunarUI.RebuildCooldownTracker()
                             end
                         end,
                         width = "full",
@@ -457,7 +457,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.cdMaxIcons = v
                             if LunarUI.RebuildCooldownTracker then
-                                LunarUI:RebuildCooldownTracker()
+                                LunarUI.RebuildCooldownTracker()
                             end
                         end,
                         width = "full",
@@ -490,7 +490,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.crIconSize = v
                             if LunarUI.RebuildClassResources then
-                                LunarUI:RebuildClassResources()
+                                LunarUI.RebuildClassResources()
                             end
                         end,
                         width = "full",
@@ -509,7 +509,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.crIconSpacing = v
                             if LunarUI.RebuildClassResources then
-                                LunarUI:RebuildClassResources()
+                                LunarUI.RebuildClassResources()
                             end
                         end,
                         width = "full",
@@ -528,7 +528,7 @@ Private.sections.HUD = function(ctx)
                         set = function(_, v)
                             GetDB().hud.crBarHeight = v
                             if LunarUI.RebuildClassResources then
-                                LunarUI:RebuildClassResources()
+                                LunarUI.RebuildClassResources()
                             end
                         end,
                         width = "full",

@@ -1487,7 +1487,7 @@ end
 
 -- 匯出
 LunarUI.InitializeMinimap = InitializeMinimap
--- RefreshMinimap 已在上方定義為 LunarUI:RefreshMinimap()
+-- RefreshMinimap 已在上方定義為 LunarUI.RefreshMinimap()（dot-syntax，呼叫時一律用 dot）
 
 LunarUI:RegisterModule("Minimap", {
     onEnable = InitializeMinimap,
