@@ -640,3 +640,71 @@ describe("Section wiring", function()
         assert.is_not_nil(ab.args.stancebar, "missing actionbars.args.stancebar")
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- Search index coverage — regression guard against unsearchable widgets
+--
+-- BuildSearchIndex walks the real options tree; widgets with empty/nil `name`
+-- silently disappear from search. A new section that forgets to wire in, or a
+-- widget author who omits `name`, both produce zero error but break search UX.
+-- These tests run the indexer against the real assembled tree and assert:
+--   1. every top-level section is reachable as a group entry
+--   2. every indexed leaf/group has a non-empty name
+--------------------------------------------------------------------------------
+
+describe("Search index coverage", function()
+    local expectedSectionKeys = {
+        "general",
+        "unitframes",
+        "actionbars",
+        "nameplates",
+        "hud",
+        "minimap",
+        "bags",
+        "chat",
+        "tooltip",
+        "frameMover",
+        "style",
+        "loot",
+        "databars",
+        "datatexts",
+        "automation",
+        "skins",
+    }
+
+    it("real options tree produces a non-empty index", function()
+        local opts = GetOptionsTable()
+        local idx = BuildSearchIndex(opts.args, "", {})
+        assert.is_true(#idx > 0, "real options tree produced empty search index")
+    end)
+
+    it("every section appears as a top-level group in the index", function()
+        local opts = GetOptionsTable()
+        local idx = BuildSearchIndex(opts.args, "", {})
+        local topLevelGroups = {}
+        for _, entry in ipairs(idx) do
+            if entry.isGroup and #entry.path == 1 then
+                topLevelGroups[entry.path[1]] = true
+            end
+        end
+        for _, key in ipairs(expectedSectionKeys) do
+            assert.is_true(topLevelGroups[key], "section '" .. key .. "' not reachable via search")
+        end
+    end)
+
+    it("every indexed entry has a non-empty name", function()
+        local opts = GetOptionsTable()
+        local idx = BuildSearchIndex(opts.args, "", {})
+        local offenders = {}
+        for _, entry in ipairs(idx) do
+            if entry.name == "" then
+                local pathStr = table.concat(entry.path, ".")
+                if pathStr == "" then
+                    pathStr = "<root>"
+                end
+                offenders[#offenders + 1] = pathStr .. " (" .. (entry.isGroup and "group" or "leaf") .. ")"
+            end
+        end
+        assert.equals(0, #offenders, "widgets missing name (unsearchable): " .. table.concat(offenders, ", "))
+    end)
+end)

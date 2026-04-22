@@ -152,6 +152,7 @@ LunarUI.CreateIconBorder(parent, options)
 - LibActionButton：`local LAB = LibStub("LibActionButton-1.0", true)`
 - 字體統一使用 `LunarUI.SetFont(fs, size, flags)`，禁止硬編碼 `STANDARD_TEXT_FONT`
 - DB 存取統一使用 `LunarUI.GetModuleDB(key)`，避免多層 nil 檢查
+- **Defaults schema 變更規範**：刪欄位 / 改欄位名 / 改 nested 結構時，必須同步在 `Core/Config.lua` 的 `OnInitialize` 內加一次性 migration（比對 `self.db.global.version` vs 當前 TOC version，舊版本跑清理）。只改 `Defaults.lua` 不夠——AceDB 只補缺欄位不會刪舊欄位，使用者 SavedVariables 會累積廢資料。單純新增欄位不需要 migration（AceDB 自動用 defaults 填入）
 - stdlib upvalue 統一 camelCase 命名：`mathFloor`、`tableInsert`、`stringUtf8sub`（非 snake_case）
 - FloatingCombatText 預設 opt-in 關閉（`fctEnabled = false`），`LunarUI.Sanitize(val)` 依型別打斷 CLEU taint 鏈（number → `tonumber(tostring())`、string → `tostring()`、boolean → `val == true`）
 - 事件頻率監控：`/lunar profile events on|off`，純計數 + 每秒速率
