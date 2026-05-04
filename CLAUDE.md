@@ -16,7 +16,7 @@ make format-fix       # stylua 自動修格式
 
 ## 專案概要
 
-- **平台**：WoW 12.0.1（Interface: 120001），Lua 5.1（LuaJIT）
+- **平台**：WoW 12.0.5（Midnight，Interface: 120005），Lua 5.1（LuaJIT）
 - **架構**：Ace3 + oUF + LibActionButton + LibSharedMedia
 - **組成**：
   - `LunarUI/` &mdash; 主插件

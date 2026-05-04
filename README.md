@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://img.shields.io/github/actions/workflow/status/Neal75418/lunar-ui/build.yml?branch=main&style=flat-square&label=build" alt="Build" />
   <img src="https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square" alt="Tests" />
-  <img src="https://img.shields.io/badge/WoW-12.0.1-0074e0?style=flat-square&logo=battledotnet&logoColor=white" alt="WoW 12.0.1" />
+  <img src="https://img.shields.io/badge/WoW-12.0.5-0074e0?style=flat-square&logo=battledotnet&logoColor=white" alt="WoW 12.0.5" />
   <img src="https://img.shields.io/badge/Lua-5.1-2C2D72?style=flat-square&logo=lua&logoColor=white" alt="Lua 5.1" />
   <img src="https://img.shields.io/badge/skins-22-e67e22?style=flat-square" alt="22 Skins" />
   <img src="https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square" alt="GPL-3.0" />
@@ -67,7 +67,7 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 
 ## 相容性
 
-- **WoW 12.0.1**（The War Within，Interface 120001）
+- **WoW 12.0.5**（Midnight，Interface 120005）
 - **語言**：English、繁體中文
 - **衝突插件**：不建議與其他完整 UI 套件（ElvUI / TukUI）或功能重疊模組（Bartender、Plater、SUF、Bagnon、Prat 等）同時使用
 

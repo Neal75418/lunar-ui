@@ -34,7 +34,7 @@ ln -s "$(pwd)/LunarUI_Debug" "$ADDONS/LunarUI_Debug"
 
 ## 🎨 Code Style
 
-- **語言**：Lua 5.1（LuaJIT），WoW 12.0.1（Interface: 120001）
+- **語言**：Lua 5.1（LuaJIT），WoW 12.0.5（Midnight，Interface: 120005）
 - **縮排**：4 spaces
 - **行寬**：luacheck 無限制；StyLua 格式化至 120 欄（`.stylua.toml`）
 - **命名**：
