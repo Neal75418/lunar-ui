@@ -217,4 +217,28 @@ describe("AuraFilter", function()
         local result = LunarUI.AuraFilter(nil, "boss1", data)
         assert.is_true(result) -- 無設定 → 預設顯示
     end)
+
+    it("does not crash when isStealable read raises an error (taint-safe)", function()
+        -- 模擬 secret value：__index 會 raise error 的 metatable
+        local data = setmetatable({ isHarmfulAura = false, duration = 10 }, {
+            __index = function()
+                error("secret value access denied")
+            end,
+        })
+        LunarUI.db.profile.auraFilters.showStealable = true
+        LunarUI.RebuildAuraFilterCache()
+        -- pcall 應吸收 error，不應拋出；AuraFilter 本身也有外層 pcall 兜底
+        assert.has_no.errors(function()
+            LunarUI.AuraFilter(nil, "target", data)
+        end)
+    end)
+
+    it("does not show non-stealable enemy buff when showStealable is on", function()
+        LunarUI.db.profile.auraFilters.showStealable = true
+        LunarUI.RebuildAuraFilterCache()
+        -- 非可竊取 buff 應走其他過濾規則（這裡無其他規則命中 → 預設顯示）
+        local data = { isHarmfulAura = false, isStealable = false, isPlayerAura = false, duration = 10 }
+        local result = LunarUI.AuraFilter(nil, "target", data)
+        assert.is_true(result) -- 普通 buff 預設顯示
+    end)
 end)

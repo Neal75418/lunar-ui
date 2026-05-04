@@ -68,6 +68,12 @@ end
 -- 光環過濾器
 --------------------------------------------------------------------------------
 
+-- WoW 12.0: data.isStealable 為 secret boolean，pcall 保護比較
+-- 命名函式供 pcall 呼叫，避免每次建 closure（同 Nameplates.lua CheckIsStealable pattern）
+local function CheckIsStealable(data)
+    return data.isStealable == true
+end
+
 -- P3 效能：提取為命名函式供 pcall 呼叫，避免每次建 closure
 -- 回傳 true = 過濾掉（隱藏），false = 保留（顯示）
 local function AuraFilterBody(data, unit, cachedSettings, filters, blacklist, whitelist)
@@ -78,7 +84,8 @@ local function AuraFilterBody(data, unit, cachedSettings, filters, blacklist, wh
     if spellId and whitelist[spellId] then
         return false
     end
-    if filters.showStealable and data.isStealable and UnitIsEnemy("player", unit) then
+    local stealableOk, stealable = pcall(CheckIsStealable, data)
+    if filters.showStealable and stealableOk and stealable and UnitIsEnemy("player", unit) then
         return false
     end
     if cachedSettings.onlyPlayerDebuffs and data.isHarmfulAura and not data.isPlayerAura then
