@@ -111,8 +111,16 @@ local EQUIP_LOC_TO_SLOT = {
     INVTYPE_RANGEDRIGHT = { 16 },
 }
 
+-- 2H 主手裝備位置：slot 17 邏輯被佔用，不能被當作空槽
+local TWO_HAND_EQUIP_LOCS = {
+    INVTYPE_2HWEAPON = true,
+    INVTYPE_RANGED = true,
+    INVTYPE_RANGEDRIGHT = true,
+}
+
 -- 快取裝備中的物品等級（開啟背包時刷新）
 local equippedItemLevels = {}
+local hasTwoHandedMainHand = false -- 主手為 2H 時 slot 17 邏輯佔用
 local equippedIlvlDirty = true
 
 -- 刷新裝備物品等級快取
@@ -122,12 +130,20 @@ local function RefreshEquippedItemLevels()
     end
     equippedIlvlDirty = false
     wipe(equippedItemLevels)
+    hasTwoHandedMainHand = false
 
     for slotID = 1, 17 do
         local itemLink = GetInventoryItemLink("player", slotID)
         if itemLink then
             local ilvl = select(1, C_Item.GetDetailedItemLevelInfo(itemLink))
             equippedItemLevels[slotID] = ilvl or 0
+            -- 偵測主手是否為 2H 武器（決定 slot 17 是否邏輯佔用）
+            if slotID == 16 then
+                local _, _, _, _, _, _, _, _, equipLoc = C_Item.GetItemInfo(itemLink)
+                if equipLoc and TWO_HAND_EQUIP_LOCS[equipLoc] then
+                    hasTwoHandedMainHand = true
+                end
+            end
         else
             equippedItemLevels[slotID] = 0
         end
@@ -164,6 +180,12 @@ local function IsItemUpgrade(itemLink)
 
     -- 刷新裝備快取
     RefreshEquippedItemLevels()
+
+    -- 2H 主手特殊處理：1H 武器只比較主手 slot 16，避免 slot 17 為空時誤判升級
+    -- 盾牌 / 副手物品 / 副手武器維持原行為——換 build 也可能是有意義的「升級提示」
+    if equipLoc == "INVTYPE_WEAPON" and hasTwoHandedMainHand then
+        slotIDs = { 16 }
+    end
 
     -- 與裝備中的對應槽位比較
     local isUpgrade = false

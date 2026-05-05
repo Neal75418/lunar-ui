@@ -457,6 +457,70 @@ describe("IsItemUpgrade", function()
         -- No equipped items (GetInventoryItemLink returns nil by default)
         assert.is_true(LunarUI.IsItemUpgrade("item:any_helm"))
     end)
+
+    -- 2H 主手場景：slot 17 為空但被 2H 邏輯佔用，1H 武器不該誤標升級
+    it("does not flag 1H weapon as upgrade when 2H main hand is equipped (slot 17 logically occupied)", function()
+        local twoHandLink = "item:equipped_2h_500"
+        local oneHandBagLink = "item:bag_1h_300"
+        _G.C_Item.GetItemInfo = function(link)
+            if link == twoHandLink then
+                return "TwoHand", nil, nil, nil, nil, nil, nil, nil, "INVTYPE_2HWEAPON"
+            elseif link == oneHandBagLink then
+                return "OneHand", nil, nil, nil, nil, nil, nil, nil, "INVTYPE_WEAPON"
+            end
+            return nil
+        end
+        _G.C_Item.GetDetailedItemLevelInfo = function(link)
+            if link == twoHandLink then
+                return 500
+            elseif link == oneHandBagLink then
+                return 300
+            end
+            return nil
+        end
+        _G.GetInventoryItemLink = function(_unit, slot)
+            if slot == 16 then
+                return twoHandLink
+            end
+            return nil -- slot 17 empty (because 2H equipped)
+        end
+        assert.is_false(LunarUI.IsItemUpgrade(oneHandBagLink))
+        _G.GetInventoryItemLink = function()
+            return nil
+        end
+    end)
+
+    -- 1H 主手 + 副手空：應該維持原本「空槽=升級」行為
+    it("flags 1H weapon as upgrade when off-hand is empty and main hand is 1H (no 2H detection)", function()
+        local oneHandMainLink = "item:equipped_1h_300"
+        local oneHandBagLink = "item:bag_1h_400"
+        _G.C_Item.GetItemInfo = function(link)
+            if link == oneHandMainLink then
+                return "MainOneHand", nil, nil, nil, nil, nil, nil, nil, "INVTYPE_WEAPONMAINHAND"
+            elseif link == oneHandBagLink then
+                return "BagOneHand", nil, nil, nil, nil, nil, nil, nil, "INVTYPE_WEAPON"
+            end
+            return nil
+        end
+        _G.C_Item.GetDetailedItemLevelInfo = function(link)
+            if link == oneHandMainLink then
+                return 300
+            elseif link == oneHandBagLink then
+                return 400
+            end
+            return nil
+        end
+        _G.GetInventoryItemLink = function(_unit, slot)
+            if slot == 16 then
+                return oneHandMainLink
+            end
+            return nil -- slot 17 legitimately empty
+        end
+        assert.is_true(LunarUI.IsItemUpgrade(oneHandBagLink)) -- 比 main 高 → 升級
+        _G.GetInventoryItemLink = function()
+            return nil
+        end
+    end)
 end)
 
 --------------------------------------------------------------------------------
