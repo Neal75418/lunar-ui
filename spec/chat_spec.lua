@@ -359,3 +359,55 @@ describe("ChatFormatURL", function()
         assert.equals(1, resetCount)
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- AddURLsToMessage trailing punctuation (H1 fix: 結尾 .,;:!? 不該吃進連結)
+--------------------------------------------------------------------------------
+
+describe("ChatAddURLsToMessage trailing punctuation", function()
+    local AddURLs
+
+    before_each(function()
+        AddURLs = LunarUI.ChatAddURLsToMessage
+    end)
+
+    -- helper：取出 LunarURL 內部的 URL 字串
+    local function extractWrappedURL(msg)
+        return msg:match("|HLunarURL:([^|]+)|h")
+    end
+
+    it("strips trailing comma from URL", function()
+        local _, newMsg = AddURLs(nil, "CHAT_MSG_SAY", "see https://example.com,")
+        local wrapped = extractWrappedURL(newMsg)
+        assert.equals("https://example.com", wrapped) -- 逗號不在連結內
+        assert.truthy(newMsg:find(",$")) -- 訊息結尾仍保留逗號
+    end)
+
+    it("strips trailing period from URL", function()
+        local _, newMsg = AddURLs(nil, "CHAT_MSG_SAY", "go to https://example.com.")
+        local wrapped = extractWrappedURL(newMsg)
+        assert.equals("https://example.com", wrapped)
+        assert.truthy(newMsg:find("%.$"))
+    end)
+
+    it("strips multiple trailing punctuation characters", function()
+        local _, newMsg = AddURLs(nil, "CHAT_MSG_SAY", "what?! https://example.com?!")
+        local wrapped = extractWrappedURL(newMsg)
+        assert.equals("https://example.com", wrapped)
+        assert.truthy(newMsg:find("%?!$"))
+    end)
+
+    it("preserves trailing closing paren (Wikipedia/MDN URL pattern)", function()
+        -- 維基 URL 例：https://en.wikipedia.org/wiki/Foo_(bar) — 括號是 URL 的一部分
+        local _, newMsg = AddURLs(nil, "CHAT_MSG_SAY", "see https://en.wikipedia.org/wiki/Foo_(bar)")
+        local wrapped = extractWrappedURL(newMsg)
+        assert.equals("https://en.wikipedia.org/wiki/Foo_(bar)", wrapped) -- ) 仍在連結內
+    end)
+
+    it("does not strip punctuation in middle of URL", function()
+        -- query string 裡的 , 應該保留：?ids=1,2,3 是合法 URL
+        local _, newMsg = AddURLs(nil, "CHAT_MSG_SAY", "go https://x.com/a?ids=1,2,3 done")
+        local wrapped = extractWrappedURL(newMsg)
+        assert.equals("https://x.com/a?ids=1,2,3", wrapped) -- 中間逗號保留
+    end)
+end)

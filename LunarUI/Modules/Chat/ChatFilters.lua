@@ -272,6 +272,22 @@ local function AddURLsToMessage(_self, _event, msg, ...)
     local newMsg = msg
     for _, pattern in ipairs(URL_PATTERNS) do
         newMsg = newMsg:gsub(pattern, function(url)
+            -- H1 修復：剝離結尾句末標點，避免 "https://x.com," 把逗號吃進連結。
+            -- 只剝 . , ; : ! ?（句末標點）；不剝 ) 因為 Wikipedia/MDN URL 常含括號。
+            local trailing = ""
+            while #url > 0 do
+                local last = url:sub(-1)
+                if last == "." or last == "," or last == ";" or last == ":" or last == "!" or last == "?" then
+                    trailing = last .. trailing
+                    url = url:sub(1, -2)
+                else
+                    break
+                end
+            end
+            if url == "" then -- 整段 match 都是標點（極罕見）
+                return trailing
+            end
+
             -- 檢查此 URL 是否已在超連結內（避免 https://www.* 被雙重替換）
             local pos = newMsg:find(url, 1, true)
             -- Security S-B7: lookbehind 視窗需 ≥ 12 才能完整捕捉 "|HLunarURL:" (11 字元)
@@ -279,10 +295,10 @@ local function AddURLsToMessage(_self, _event, msg, ...)
             if pos and pos > 12 then
                 local before = newMsg:sub(pos - 12, pos - 1)
                 if before:find("|HLunarURL:", 1, true) then
-                    return url -- 已在超連結內，原樣返回
+                    return url .. trailing -- 已在超連結內，原樣返回（含結尾標點）
                 end
             end
-            return FormatURL(url)
+            return FormatURL(url) .. trailing
         end)
     end
 
@@ -292,6 +308,9 @@ local function AddURLsToMessage(_self, _event, msg, ...)
 
     return false, msg, ...
 end
+
+-- 暴露給 spec（H1: trailing punctuation strip 行為驗證）
+LunarUI.ChatAddURLsToMessage = AddURLsToMessage
 
 -- 處理網址超連結點擊
 local function HandleURLClick(_self, link, _text, _button)
