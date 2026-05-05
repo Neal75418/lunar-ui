@@ -248,7 +248,12 @@ local inspectEventFrame = LunarUI.CreateEventHandler({ "INSPECT_READY" }, functi
         if UnitExists(unit) and UnitGUID(unit) == inspectGUID then
             local ilvl = GetInspectItemLevel(unit)
             local spec = GetInspectSpec(unit)
-            CacheInspectData(inspectGUID, ilvl, spec)
+            -- H7 修復：跨服 / 未載入 unit 會回傳 ilvl=nil；若快取會在 30s TTL 內
+            -- 永遠看不到 ilvl（後續 hover 命中快取直接 return，不再重發 request）。
+            -- 只在 ilvl 存在時快取；spec-only 的情境讓下次 hover 重新請求（throttle 1s 已防爆量）。
+            if ilvl then
+                CacheInspectData(inspectGUID, ilvl, spec)
+            end
 
             -- 如果 tooltip 仍在顯示，更新它
             if GameTooltip:IsShown() and GameTooltip.GetUnit then
