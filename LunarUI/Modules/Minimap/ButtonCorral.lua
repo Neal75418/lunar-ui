@@ -23,6 +23,7 @@ local tableSort = table.sort
 local collectedButtons = {}
 local scannedButtonIDs = {}
 local buttonFrame = nil
+local pendingDeferFrame = nil -- H12: 戰鬥中延遲 organize 的 singleton
 
 -- 跳過系統按鈕和由 LunarUI 管理的按鈕（O(1) hash set）
 local SKIP_BUTTONS = {
@@ -158,7 +159,20 @@ local function OrganizeMinimapButtons()
     local spacing = 2
 
     -- 戰鬥中不操作 SetParent（minimap 按鈕可能為 protected frame）
+    -- H12 修復：延遲到 PLAYER_REGEN_ENABLED 重試，避免 loading screen 直入戰鬥的
+    -- 場景下 collectedButtons 永遠不歸位（之前 silent return 沒有 retry）
     if InCombatLockdown() then
+        if not pendingDeferFrame then
+            pendingDeferFrame = CreateFrame("Frame")
+        end
+        if not pendingDeferFrame:IsEventRegistered("PLAYER_REGEN_ENABLED") then
+            pendingDeferFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+            pendingDeferFrame:SetScript("OnEvent", function(self)
+                self:UnregisterEvent("PLAYER_REGEN_ENABLED")
+                self:SetScript("OnEvent", nil)
+                OrganizeMinimapButtons()
+            end)
+        end
         return
     end
 
@@ -260,6 +274,11 @@ local function Reset()
     wipe(collectedButtons)
     wipe(scannedButtonIDs)
     buttonFrame = nil
+    -- H12: 清除 pending defer 事件監聽，避免 cleanup 後仍觸發 retry
+    if pendingDeferFrame then
+        pendingDeferFrame:UnregisterAllEvents()
+        pendingDeferFrame:SetScript("OnEvent", nil)
+    end
 end
 
 LunarUI.MinimapButtons = {
