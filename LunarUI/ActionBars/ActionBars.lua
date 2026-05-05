@@ -426,21 +426,11 @@ local function CreatePetBar()
         bar.buttons[i] = button
     end
 
-    -- 依寵物狀態顯示/隱藏
-    bar:RegisterEvent("UNIT_PET")
-    bar:RegisterEvent("PET_BAR_UPDATE")
-    bar:SetScript("OnEvent", function(self)
-        if UnitExists("pet") and not UnitIsDead("pet") then
-            self:Show()
-        else
-            self:Hide()
-        end
-    end)
-
-    -- 初始狀態
-    if not UnitExists("pet") then
-        bar:Hide()
-    end
+    -- H13 修復：用 RegisterStateDriver 統一處理所有可見性條件，避免 OnEvent
+    -- 與 [vehicleui]/[overridebar]/[possessbar] 的 race（騎乘載具或被附身時 pet
+    -- bar 會疊在原生覆蓋條上）。同 bar1 pattern；[nopet] 處理沒寵物的場景。
+    -- 行為差異：寵物死亡時仍顯示 bar（與 Blizzard 預設一致，方便按下「復活寵物」）。
+    RegisterStateDriver(bar, "visibility", "[overridebar][vehicleui][possessbar][nopet] hide; show")
 
     bars.petbar = bar
     return bar
@@ -527,8 +517,7 @@ local function CleanupActionBars()
 
     -- 清理寵物條事件
     if bars.petbar then
-        bars.petbar:UnregisterAllEvents()
-        bars.petbar:SetScript("OnEvent", nil)
+        UnregisterStateDriver(bars.petbar, "visibility")
         bars.petbar:Hide()
         bars.petbar = nil
     end
