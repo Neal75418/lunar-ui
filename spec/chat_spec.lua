@@ -117,6 +117,8 @@ local LunarUI = {
         return chatDB
     end,
     RegisterFontString = function() end,
+    SkinCloseButton = function() end,
+    SkinScrollBar = function() end,
     EscapePattern = function(s)
         return s:gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
     end,
@@ -409,5 +411,153 @@ describe("ChatAddURLsToMessage trailing punctuation", function()
         local _, newMsg = AddURLs(nil, "CHAT_MSG_SAY", "go https://x.com/a?ids=1,2,3 done")
         local wrapped = extractWrappedURL(newMsg)
         assert.equals("https://x.com/a?ids=1,2,3", wrapped) -- 中間逗號保留
+    end)
+end)
+
+--------------------------------------------------------------------------------
+-- ChatStyling — StyleChatFrame guards + AddCopyOption hook semantics
+--
+-- 本檔不測 StyleChatFrame 完整 frame-creation 流水線（CHANGELOG 規則：
+-- "UI frame-creation 不適合 mock 測試"）— 只測 guard / 冪等 / 右鍵 trigger 等
+-- 純邏輯部分。
+--------------------------------------------------------------------------------
+
+describe("ChatStyleChatFrame guards", function()
+    local setFontCalls
+    local originalSetFont
+
+    before_each(function()
+        LunarUI._chatStyledFrames = {}
+        -- Reviewer 抓的：marker 在 function 結尾無條件設定，光看 marker 不能證明
+        -- early-return。改 spy SetFont call count — StyleChatTab + StyleChatEditBox
+        -- 內無 inner guard、每次跑都會呼叫；二次呼叫若 early-return，count 不增。
+        originalSetFont = LunarUI.SetFont
+        setFontCalls = 0
+        LunarUI.SetFont = function()
+            setFontCalls = setFontCalls + 1
+        end
+    end)
+
+    after_each(function()
+        LunarUI.SetFont = originalSetFont
+    end)
+
+    it("returns without error on nil chatFrame", function()
+        assert.has_no_errors(function()
+            LunarUI.ChatStyleChatFrame(nil)
+        end)
+        -- 沒任何 frame 被標記為 styled
+        local cnt = 0
+        for _ in pairs(LunarUI._chatStyledFrames) do
+            cnt = cnt + 1
+        end
+        assert.equals(0, cnt)
+        assert.equals(0, setFontCalls)
+    end)
+
+    it("marks frame as styled after first call (sets _chatStyledFrames[name])", function()
+        -- 第一次呼叫應該成功完成（不關心內部副作用），_chatStyledFrames 應有對應 key
+        local frame = _G.ChatFrame1
+        assert.has_no_errors(function()
+            LunarUI.ChatStyleChatFrame(frame)
+        end)
+        assert.is_true(LunarUI._chatStyledFrames["ChatFrame1"])
+        assert.is_true(setFontCalls >= 1) -- StyleChatTab + StyleChatEditBox 至少呼叫過
+    end)
+
+    it("is idempotent: second call on same frame is a no-op (proven via SetFont not re-called)", function()
+        local frame = _G.ChatFrame1
+        LunarUI.ChatStyleChatFrame(frame)
+        local firstPassCount = setFontCalls
+        assert.is_true(firstPassCount >= 1, "first call should trigger SetFont at least once")
+        assert.is_true(LunarUI._chatStyledFrames["ChatFrame1"])
+
+        -- 第二次呼叫：若 early-return 移除，body 會重跑、SetFont 會再被呼叫。
+        -- 此 assertion 真正鎖定「marker guard 是 first-line early-return」契約。
+        assert.has_no_errors(function()
+            LunarUI.ChatStyleChatFrame(frame)
+        end)
+        assert.equals(firstPassCount, setFontCalls)
+    end)
+end)
+
+describe("ChatAddCopyOption hook semantics", function()
+    local capturedHandlers
+
+    before_each(function()
+        -- 重置每個 tab 的 _lunarCopyHooked + 攔截 HookScript("OnClick", ...) 取得 handler
+        capturedHandlers = {}
+        for i = 1, 7 do
+            local tab = _G["ChatFrame" .. i .. "Tab"]
+            tab._lunarCopyHooked = nil
+            -- 重置 _scripts（避免上個 test 殘留）
+            rawset(tab, "_scripts", {})
+            local origHookScript = mock_frame.MockFrame.HookScript
+            tab.HookScript = function(self, name, fn)
+                if name == "OnClick" then
+                    capturedHandlers[i] = fn
+                end
+                return origHookScript(self, name, fn)
+            end
+        end
+    end)
+
+    it("sets _lunarCopyHooked = true on every chat tab on first call", function()
+        LunarUI.ChatAddCopyOption()
+        for i = 1, 7 do
+            local tab = _G["ChatFrame" .. i .. "Tab"]
+            assert.is_true(tab._lunarCopyHooked, "ChatFrame" .. i .. "Tab missing _lunarCopyHooked")
+        end
+    end)
+
+    it("is idempotent: second call does not re-hook already-hooked tabs", function()
+        LunarUI.ChatAddCopyOption()
+        -- 清掉 capturedHandlers，看第二次有沒有再 hook
+        local firstPassCount = 0
+        for i = 1, 7 do
+            if capturedHandlers[i] then
+                firstPassCount = firstPassCount + 1
+            end
+        end
+        assert.equals(7, firstPassCount)
+
+        capturedHandlers = {}
+        LunarUI.ChatAddCopyOption()
+        local secondPassCount = 0
+        for i = 1, 7 do
+            if capturedHandlers[i] then
+                secondPassCount = secondPassCount + 1
+            end
+        end
+        assert.equals(0, secondPassCount) -- 第二次完全不該 hook
+    end)
+
+    it("right-button click on tab triggers copy flow (calls GetNumMessages on the chat frame)", function()
+        local gnMsgCalls = 0
+        _G.ChatFrame1.GetNumMessages = function()
+            gnMsgCalls = gnMsgCalls + 1
+            return 0 -- 無訊息 → 空字串 SetText（不關心內容，只關心 trigger）
+        end
+
+        LunarUI.ChatAddCopyOption()
+        local clickHandler = capturedHandlers[1]
+        assert.is_not_nil(clickHandler)
+        -- 右鍵：應觸發 ShowCopyFrame → GetNumMessages 被呼叫
+        clickHandler(_G.ChatFrame1Tab, "RightButton")
+        assert.is_true(gnMsgCalls >= 1)
+    end)
+
+    it("left-button click on tab does NOT trigger copy flow", function()
+        local gnMsgCalls = 0
+        _G.ChatFrame1.GetNumMessages = function()
+            gnMsgCalls = gnMsgCalls + 1
+            return 0
+        end
+
+        LunarUI.ChatAddCopyOption()
+        local clickHandler = capturedHandlers[1]
+        assert.is_not_nil(clickHandler)
+        clickHandler(_G.ChatFrame1Tab, "LeftButton")
+        assert.equals(0, gnMsgCalls)
     end)
 end)
