@@ -92,9 +92,9 @@ Subagent confidence ≥ 80% does **not** mean verified ground truth. Of 18 high-
 
 | File | Lines | Why this order |
 |:---|:---:|:---|
-| `LunarUI/Modules/Bags/BagUtils.lua` | 263 | Smallest, pure data layer, sets template |
+| `LunarUI/Modules/Bags/BagUtils.lua` | 263 | ⚠️ Re-verified 2026-05-11: already mostly covered via `bags_spec.lua` (BagsGetItemLevel / IsEquipment / IsItemUpgrade / GetBagTypeColor). Audit's "no spec" claim was filename-based false positive. Only 5 cache helpers lack direct tests — small scope, low payoff. |
 | `LunarUI/Modules/Bags/JunkSelling.lua` | ~250 | Already has partial coverage in `bags_spec.lua`; minor extension |
-| `LunarUI/Modules/Minimap/ButtonCorral.lua` | 269 | Recently modified by H12, knowledge fresh |
+| `LunarUI/Modules/Minimap/ButtonCorral.lua` | 269 | ✅ Done 2026-05-11 (`96a9920`). 15 cases covering GetButtonPriority / CollectMinimapButton / ClearStaleButtonReferences / Reset. **Deferred gap**: `OrganizeMinimapButtons` combat-defer path (H12 fix) not covered — needs CreateFrame + IsEventRegistered + event dispatch mock. Reviewer flagged worth a follow-up task entry. |
 | `LunarUI/UnitFrames/Indicators.lua` | 341 | Pure factory functions, mockable |
 | `LunarUI/UnitFrames/Elements.lua` | 385 | More PostUpdate closures, mid difficulty |
 | `LunarUI/Modules/Chat/ChatStyling.lua` | 561 | UI side effects, harder to mock |
