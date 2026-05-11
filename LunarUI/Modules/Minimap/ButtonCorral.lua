@@ -286,3 +286,14 @@ LunarUI.MinimapButtons = {
     Scan = Scan,
     Reset = Reset,
 }
+
+-- Test-only exports（spec/buttoncorral_spec.lua 直接驗證純函數與 module state）
+LunarUI.MinimapButtonsGetPriority = GetButtonPriority
+LunarUI.MinimapButtonsCollect = CollectMinimapButton
+LunarUI.MinimapButtonsClearStale = ClearStaleButtonReferences
+LunarUI.MinimapButtonsGetCollectedCount = function()
+    return #collectedButtons
+end
+LunarUI.MinimapButtonsHasScanned = function(name)
+    return scannedButtonIDs[name] == true
+end
