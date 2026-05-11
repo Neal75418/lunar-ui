@@ -1420,4 +1420,125 @@ describe("BagsSellJunk", function()
         pendingTimer()
         assert.equals(1, #usedItems)
     end)
+
+    -- 補強：quality / itemPrice 過濾、bag 5 涵蓋、stackCount 計算、最終 print 統計
+    it("skips items with quality > 0 (only sells quality == 0 / poor)", function()
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == 0 and slot == 1 then
+                -- common/uncommon item — should NEVER be sold by auto-junk
+                return { quality = 1, hasNoValue = false, stackCount = 1 }
+            end
+            return nil
+        end
+        LunarUI.BagsSellJunk()
+        assert.equals(0, #usedItems)
+        assert.is_nil(pendingTimer)
+    end)
+
+    it("skips items whose GetItemInfo reports zero / nil itemPrice", function()
+        -- itemPrice 是 GetItemInfo 第 11 個返回值
+        _G.C_Item.GetItemInfo = function()
+            return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, 0
+        end
+        LunarUI.BagsSellJunk()
+        assert.equals(0, #usedItems)
+
+        -- 同理 nil 應該也被擋
+        _G.C_Item.GetItemInfo = function()
+            return nil
+        end
+        LunarUI.BagsSellJunk()
+        assert.equals(0, #usedItems)
+    end)
+
+    it("scans material bag (bag 5) for junk", function()
+        _G.C_Container.GetContainerNumSlots = function(bag)
+            if bag == 5 then
+                return 1
+            end
+            return 0
+        end
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == 5 and slot == 1 then
+                return { quality = 0, hasNoValue = false, stackCount = 1 }
+            end
+            return nil
+        end
+        _G.C_Container.GetContainerItemLink = function(bag, slot)
+            if bag == 5 and slot == 1 then
+                return "item:material_bag_junk"
+            end
+            return nil
+        end
+        LunarUI.BagsSellJunk()
+        assert.equals(1, #usedItems)
+        assert.equals(5, usedItems[1].bag)
+    end)
+
+    it("computes stack value as itemPrice * stackCount (not just unit price)", function()
+        local printedValue
+        LunarUI.Print = function(_self, msg)
+            -- 我們的 GetCoinTextureString mock 固定回 "100c"，所以無法直接從訊息驗值。
+            -- 改驗：訊息含 GetCoinTextureString 回的字串
+            printedValue = msg
+        end
+        local capturedTotal
+        _G.GetCoinTextureString = function(val)
+            capturedTotal = val
+            return "coin(" .. tostring(val) .. ")"
+        end
+
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == 0 and slot == 1 then
+                -- stackCount = 5, itemPrice = 100 → stackValue = 500
+                return { quality = 0, hasNoValue = false, stackCount = 5 }
+            end
+            return nil
+        end
+        _G.C_Container.GetContainerItemLink = function(bag, slot)
+            if bag == 0 and slot == 1 then
+                return "item:stacked_junk"
+            end
+            return nil
+        end
+
+        LunarUI.BagsSellJunk()
+        assert.equals(1, #usedItems)
+        -- 步進 chain 跑到 index > #junkItems 觸發最終 Print
+        pendingTimer()
+        assert.equals(500, capturedTotal)
+        assert.truthy(printedValue and printedValue:find("coin(500)", 1, true))
+    end)
+
+    it("prints final stats including item count and coin string", function()
+        local printed
+        LunarUI.Print = function(_self, msg)
+            printed = msg
+        end
+        _G.GetCoinTextureString = function()
+            return "TOTAL_COIN"
+        end
+
+        -- 賣 2 件
+        _G.C_Container.GetContainerItemInfo = function(bag, slot)
+            if bag == 0 and (slot == 1 or slot == 2) then
+                return { quality = 0, hasNoValue = false, stackCount = 1 }
+            end
+            return nil
+        end
+        _G.C_Container.GetContainerItemLink = function(bag, slot)
+            if bag == 0 then
+                return "item:j" .. slot
+            end
+            return nil
+        end
+
+        LunarUI.BagsSellJunk()
+        pendingTimer() -- sell slot 2
+        pendingTimer() -- index 超過 → final print
+
+        assert.truthy(printed)
+        assert.truthy(printed:find("2", 1, true)) -- itemCount=2
+        assert.truthy(printed:find("TOTAL_COIN", 1, true))
+    end)
 end)
