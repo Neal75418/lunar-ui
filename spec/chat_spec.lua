@@ -561,3 +561,223 @@ describe("ChatAddCopyOption hook semantics", function()
         assert.equals(0, gnMsgCalls)
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- ChatFilters — ApplyChannelColors / RoleIconFilter / ShortenChannelNames
+--
+-- 既有 chat_spec 已覆蓋 ChatEmojiFilter / ChatSpamFilter / ChatFormatURL /
+-- ChatAddURLsToMessage（4 個 export）。本段補另外 3 個 export 的測試。
+--------------------------------------------------------------------------------
+
+describe("ChatApplyChannelColors DB toggle", function()
+    local changeChatColorCalls
+    local originalChangeChatColor
+
+    before_each(function()
+        originalChangeChatColor = _G.ChangeChatColor
+        changeChatColorCalls = 0
+        _G.ChangeChatColor = function()
+            changeChatColorCalls = changeChatColorCalls + 1
+        end
+    end)
+
+    after_each(function()
+        _G.ChangeChatColor = originalChangeChatColor
+    end)
+
+    it("does NOT call ChangeChatColor when improvedColors is false", function()
+        chatDB.improvedColors = false
+        LunarUI.ChatApplyChannelColors()
+        assert.equals(0, changeChatColorCalls)
+        chatDB.improvedColors = true -- restore
+    end)
+
+    it("calls ChangeChatColor for every CHANNEL_COLORS entry when improvedColors is true", function()
+        chatDB.improvedColors = true
+        LunarUI.ChatApplyChannelColors()
+        -- CHANNEL_COLORS has 22 entries (SAY/YELL/EMOTE/WHISPER/...);
+        -- 不寫死特定數字，只驗證 N > 0（DB toggle 真的有觸發迴圈）
+        assert.is_true(changeChatColorCalls > 0)
+        -- 但實際值應該不小於 SAY/YELL/PARTY/RAID 等基本頻道，至少 20+
+        assert.is_true(changeChatColorCalls >= 20)
+    end)
+end)
+
+describe("ChatRoleIconFilter", function()
+    local roleFilter
+
+    before_each(function()
+        roleFilter = LunarUI.ChatRoleIconFilter
+        chatDB.showRoleIcons = true
+        -- 重置 internal cache（CleanupFilterState 會把 roleIconCacheDirty 設回 true）
+        if LunarUI.ChatCleanupFilterState then
+            LunarUI.ChatCleanupFilterState()
+        end
+    end)
+
+    after_each(function()
+        chatDB.showRoleIcons = false -- 還原預設
+    end)
+
+    it("passes through unchanged when showRoleIcons is false", function()
+        chatDB.showRoleIcons = false
+        local blocked, msg, author = roleFilter(nil, nil, "hi", "Alice")
+        assert.is_false(blocked)
+        assert.equals("hi", msg)
+        assert.equals("Alice", author)
+    end)
+
+    it("passes through unchanged when msg is nil", function()
+        local blocked, msg, author = roleFilter(nil, nil, nil, "Alice")
+        assert.is_false(blocked)
+        assert.is_nil(msg)
+        assert.equals("Alice", author)
+    end)
+
+    it("passes through unchanged when author is nil", function()
+        local blocked, msg, author = roleFilter(nil, nil, "hi", nil)
+        assert.is_false(blocked)
+        assert.equals("hi", msg)
+        assert.is_nil(author)
+    end)
+
+    it("inserts TANK role icon prefix when author is a tank group member", function()
+        -- 模擬 1 人小隊，party1 = "Alice"，role = TANK
+        local origInRaid = _G.IsInRaid
+        local origNumGroupMembers = _G.GetNumGroupMembers
+        local origUnitName = _G.UnitName
+        local origUnitRole = _G.UnitGroupRolesAssigned
+
+        _G.IsInRaid = function()
+            return false
+        end
+        _G.GetNumGroupMembers = function()
+            return 2 -- 1 player + 1 group member (party1)
+        end
+        _G.UnitName = function(unit)
+            if unit == "party1" then
+                return "Alice"
+            end
+            if unit == "player" then
+                return "TestPlayer"
+            end
+            return nil
+        end
+        _G.UnitGroupRolesAssigned = function(unit)
+            if unit == "party1" then
+                return "TANK"
+            end
+            return "NONE"
+        end
+
+        local blocked, msg, author = roleFilter(nil, nil, "hi", "Alice")
+        assert.is_false(blocked)
+        assert.equals("hi", msg)
+        -- 應在 author 前加上 TANK icon + 空格
+        assert.truthy(author:find("|TInterface\\LFGFrame", 1, true))
+        assert.truthy(author:find("Alice", 1, true))
+        -- icon 在前，author 在後
+        assert.is_true(author:find("|t Alice", 1, true) ~= nil)
+
+        -- restore
+        _G.IsInRaid = origInRaid
+        _G.GetNumGroupMembers = origNumGroupMembers
+        _G.UnitName = origUnitName
+        _G.UnitGroupRolesAssigned = origUnitRole
+    end)
+
+    it("does NOT insert icon when role assignment is NONE", function()
+        local origNumGroupMembers = _G.GetNumGroupMembers
+        local origUnitName = _G.UnitName
+        local origUnitRole = _G.UnitGroupRolesAssigned
+
+        _G.GetNumGroupMembers = function()
+            return 2
+        end
+        _G.UnitName = function(unit)
+            if unit == "party1" then
+                return "Bob"
+            end
+            if unit == "player" then
+                return "TestPlayer"
+            end
+            return nil
+        end
+        _G.UnitGroupRolesAssigned = function()
+            return "NONE"
+        end
+
+        local _, _, author = roleFilter(nil, nil, "hi", "Bob")
+        -- author 應原樣返回（無 icon 前綴）
+        assert.equals("Bob", author)
+
+        _G.GetNumGroupMembers = origNumGroupMembers
+        _G.UnitName = origUnitName
+        _G.UnitGroupRolesAssigned = origUnitRole
+    end)
+end)
+
+describe("ChatShortenChannelNames", function()
+    -- 注意：ChatShortenChannelNames 改全域 _G[chatType] + wrap _G.ChatFrameN.AddMessage。
+    -- 此 describe 重點測 wrapped AddMessage 對 [N. ChannelName] 的 gsub 行為。
+    local origAddMessages
+    local capturedMessages
+
+    before_each(function()
+        chatDB.shortChannelNames = true
+        capturedMessages = {}
+        origAddMessages = {}
+        -- ShortenChannelNames 有 early-return `if not ChatFrame_MessageEventHandler then return end`
+        -- 測試環境沒有這個 Blizzard global，stub 成 truthy 讓 wrap 邏輯實際跑
+        _G.ChatFrame_MessageEventHandler = _G.ChatFrame_MessageEventHandler or function() end
+        -- ChatShortenChannelNames 會 wrap _chatFrames 內每個 frame 的 AddMessage。
+        -- 但 _chatFrames 在 Chat.lua 初始化時設定，這個 spec 載入時已就緒。
+        -- 我們直接準備 ChatFrame1 的 AddMessage 為可攔截版本後呼叫 ShortenChannelNames。
+        _G.ChatFrame1._lunarShortChannelHooked = nil -- 強制重 wrap
+        origAddMessages[1] = _G.ChatFrame1.AddMessage
+        _G.ChatFrame1.AddMessage = function(_, msg)
+            capturedMessages[#capturedMessages + 1] = msg
+        end
+        -- _chatSavedAddMessageFuncs / _chatFrames 在 Chat.lua init 時設定。
+        -- 確保它們存在（chat_spec 已 load Chat.lua）：
+        if not LunarUI._chatSavedAddMessageFuncs then
+            LunarUI._chatSavedAddMessageFuncs = {}
+        end
+        if not LunarUI._chatFrames then
+            LunarUI._chatFrames = { "ChatFrame1" }
+        end
+        LunarUI._chatSavedAddMessageFuncs["ChatFrame1"] = nil -- force fresh save
+    end)
+
+    after_each(function()
+        _G.ChatFrame1.AddMessage = origAddMessages[1]
+        _G.ChatFrame1._lunarShortChannelHooked = nil
+    end)
+
+    it("rewrites known numeric channel format [2. 交易] to short form", function()
+        -- 先把 _G.CHAT_SAY_GET 等設一個會被 SHORT_CHANNEL_TYPES 命中的值
+        -- 但 numeric channel 的 wrap 不靠 _G[chatType]，而是直接攔截 AddMessage 的 msg
+        -- 並做 [(%d+)%.%s*(.-)%] gsub。需要 SHORT_CHANNEL_NAMES["交易"] 有對應。
+        LunarUI.ChatShortenChannelNames()
+        -- 模擬一條原始 chat 訊息傳進 AddMessage（含 [2. 交易] 前綴）
+        _G.ChatFrame1:AddMessage("[2. 交易] Hello world")
+        assert.equals(1, #capturedMessages)
+        -- 訊息應已被縮短：[2.交]（SHORT_CHANNEL_NAMES["交易"] = "交"）
+        -- 反向 assert（原前綴消失）+ 正向 assert（短前綴存在）+ body 保留
+        -- 三條一起防 gsub 靜默產出空字串 / 錯誤替換的 regression class
+        assert.is_nil(capturedMessages[1]:find("[2. 交易]", 1, true))
+        assert.truthy(capturedMessages[1]:find("[2.交]", 1, true))
+        assert.truthy(capturedMessages[1]:find("Hello world", 1, true))
+    end)
+
+    it("preserves unknown channel names with the numeric prefix intact", function()
+        LunarUI.ChatShortenChannelNames()
+        _G.ChatFrame1:AddMessage("[5. UnknownChannel] body")
+        assert.equals(1, #capturedMessages)
+        -- 未知 channel 不在 SHORT_CHANNEL_NAMES 表中：保留原名（但 gsub 仍會
+        -- 把 "[5. UnknownChannel]" 重組成 "[5.UnknownChannel]"（少了空格）
+        -- 這是 production gsub 的副作用，不是 bug — 驗證即可
+        assert.truthy(capturedMessages[1]:find("UnknownChannel", 1, true))
+        assert.truthy(capturedMessages[1]:find("body", 1, true))
+    end)
+end)

@@ -912,3 +912,4 @@ LunarUI.ChatCleanupFilterState = CleanupFilterState
 LunarUI.ChatOnRoleIconEvent = OnRoleIconEvent
 LunarUI.ChatEmojiFilter = AddEmojisToMessage
 LunarUI.ChatSpamFilter = FilterSpamMessage
+LunarUI.ChatRoleIconFilter = AddRoleIconToMessage
