@@ -93,13 +93,15 @@ Subagent confidence ≥ 80% does **not** mean verified ground truth. Of 18 high-
 | File | Lines | Why this order |
 |:---|:---:|:---|
 | `LunarUI/Modules/Bags/BagUtils.lua` | 263 | ⚠️ Re-verified 2026-05-11: already mostly covered via `bags_spec.lua` (BagsGetItemLevel / IsEquipment / IsItemUpgrade / GetBagTypeColor). Audit's "no spec" claim was filename-based false positive. Only 5 cache helpers lack direct tests — small scope, low payoff. |
-| `LunarUI/Modules/Bags/JunkSelling.lua` | ~250 | Already has partial coverage in `bags_spec.lua`; minor extension |
+| `LunarUI/Modules/Bags/JunkSelling.lua` | ~250 | ✅ Done 2026-05-11 (`3bd340a`). 5-case extension: quality filter / itemPrice 0 / bag5 / stack value / final stats. |
 | `LunarUI/Modules/Minimap/ButtonCorral.lua` | 269 | ✅ Done 2026-05-11 (`96a9920`). 15 cases covering GetButtonPriority / CollectMinimapButton / ClearStaleButtonReferences / Reset. **Deferred gap**: `OrganizeMinimapButtons` combat-defer path (H12 fix) not covered — needs CreateFrame + IsEventRegistered + event dispatch mock. Reviewer flagged worth a follow-up task entry. |
-| `LunarUI/UnitFrames/Indicators.lua` | 341 | Pure factory functions, mockable |
-| `LunarUI/UnitFrames/Elements.lua` | 385 | More PostUpdate closures, mid difficulty |
-| `LunarUI/Modules/Chat/ChatStyling.lua` | 561 | UI side effects, harder to mock |
-| `LunarUI/Modules/Chat/ChatFilters.lua` | 895 | Largest sub-file, most complex |
-| `LunarUI/Modules/Bags/BankSystem.lua` | 1038 | Largest, async pagination, hardest to mock |
+| `LunarUI/UnitFrames/Indicators.lua` | 341 | ✅ Done 2026-05-11 (`d27eab2`). 13 cases: ClassPower DB toggle / AlternativePower text format / ThreatIndicator color / RangeIndicator values. ClassPower.PostUpdate cache logic deferred (mock cost vs payoff). |
+| `LunarUI/UnitFrames/Elements.lua` | 385 | ✅ Done 2026-05-11 (`5d1ec3b`). 15 cases: StatusBar cache / HealthText early-return / HealPrediction DB toggle / Portrait style branch / HealthBar.PostUpdate Perf B4 cache with all 4 branches. |
+| `LunarUI/Modules/Chat/ChatStyling.lua` | 561 | ✅ Done 2026-05-11 (`1d1a277`). 7 cases: ChatStyleChatFrame guards + AddCopyOption hook semantics. Reviewer pass 2 retroactively confirmed idempotency assertion is mutation-tight via SetFont call-count witness. |
+| `LunarUI/Modules/Chat/ChatFilters.lua` | 895 | ✅ Done 2026-05-12 (`48bba20`). 9 cases: ChatApplyChannelColors DB toggle / ChatRoleIconFilter all 4 early-return + TANK happy path / ChatShortenChannelNames numeric channel gsub with triple-assert (reverse + positive + body-preserved). Followed strict 4-step (Pass 1 → fix → Pass 2 → commit). |
+| `LunarUI/Modules/Bags/BankSystem.lua` | 1038 | ✅ Done 2026-05-14 (`c36e3f4`). ⚠️ Same filename-based-misjudgment as BagUtils: ~24 cases of pure-logic coverage already existed in bags_spec.lua (ResizeBankFrame / ComputeBankLayout / GetTotal* / GetLastOccupiedSlotID / GetViewportCols/Rows). Genuine gap: OpenBank/CloseBank lifecycle entry-point transitions. Added 5 cases + 1 production-side test export (`_SetIsBankOpenForTest` matching existing `_SetBankFrameForTest` pattern). Pass 1 reviewer APPROVED with no high-confidence findings — no Pass 2 needed. |
+
+**Epic A status: 8/8 done as of 2026-05-14**. Final state: tests 981 → 1050 (+69 over 8 commits); 0 luacheck warnings throughout.
 
 **Per-file pattern**:
 1. Read file, list all `LunarUI.X = X` exports + module-local pure functions
