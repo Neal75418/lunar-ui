@@ -1542,3 +1542,119 @@ describe("BagsSellJunk", function()
         assert.truthy(printed:find("TOTAL_COIN", 1, true))
     end)
 end)
+
+--------------------------------------------------------------------------------
+-- BankSystem — OpenBank / CloseBank state transitions
+--
+-- 既有 bags_spec 已覆蓋 BankSystem 的純函數（ResizeBankFrame / ComputeBankLayout
+-- / GetTotalBankSlots / GetTotalBankFreeSlots / GetLastOccupiedSlotID /
+-- GetViewportCols/Rows 共 ~24 cases）。這段補 lifecycle entry point —
+-- OpenBank / CloseBank 對 isBankOpen 旗標的狀態轉換。
+--
+-- 不測 CreateBankFrame / RefreshBankLayout 完整管線（frame creation theatre）。
+-- 用 _SetBankFrameForTest 注入無 slotContainer 的 mock，讓 RefreshBankLayout
+-- 在 OpenBank 內部 early-return，避開所有 layout 計算 + slot 建立。
+--------------------------------------------------------------------------------
+
+describe("BankSystem OpenBank / CloseBank state transitions", function()
+    local mockBankFrame
+    local origInCombat
+
+    before_each(function()
+        -- 清空 BankSystem 殘留狀態（前面測試可能跑過）
+        if LunarUI.BankSystemCleanup then
+            LunarUI.BankSystemCleanup()
+        end
+        LunarUI._SetBankFrameForTest(nil)
+        LunarUI._SetIsBankOpenForTest(false) -- 重置 isBankOpen 旗標
+
+        -- 注入最小 mock bankFrame：Show/Hide + 不要設 slotContainer 讓
+        -- RefreshBankLayout 在 line 826 early-return（不進 layout 重建）。
+        -- 直接 inline 不依賴 spec.mock_frame（bags_spec 未 require 它）。
+        mockBankFrame = { shown = false, scrollFrame = nil }
+        function mockBankFrame:Show()
+            self.shown = true
+        end
+        function mockBankFrame:Hide()
+            self.shown = false
+        end
+        function mockBankFrame:IsShown()
+            return self.shown
+        end
+
+        -- 確保 InCombatLockdown 預設 false
+        origInCombat = _G.InCombatLockdown
+        _G.InCombatLockdown = function()
+            return false
+        end
+
+        -- BagsSetSorting 是 CloseBank 呼叫的；若未定義就 stub
+        LunarUI.BagsSetSorting = LunarUI.BagsSetSorting or function() end
+        -- BagsGetBagFrame 在 OpenBank/CloseBank 都被讀；回 nil 跳過背包並排邏輯
+        LunarUI.BagsGetBagFrame = LunarUI.BagsGetBagFrame or function()
+            return nil
+        end
+    end)
+
+    after_each(function()
+        _G.InCombatLockdown = origInCombat
+        LunarUI._SetBankFrameForTest(nil)
+        if LunarUI.BankSystemCleanup then
+            LunarUI.BankSystemCleanup()
+        end
+    end)
+
+    it("OpenBank skips when InCombatLockdown returns true", function()
+        _G.InCombatLockdown = function()
+            return true
+        end
+        LunarUI._SetBankFrameForTest(mockBankFrame)
+        LunarUI.BagsOpenBank()
+        -- 戰鬥中不應該 Show 或設 isBankOpen
+        assert.is_false(mockBankFrame.shown)
+        assert.is_false(LunarUI.BagsIsBankOpen())
+    end)
+
+    it("OpenBank sets isBankOpen=true and Shows the bank frame", function()
+        LunarUI._SetBankFrameForTest(mockBankFrame)
+        LunarUI.BagsOpenBank()
+        assert.is_true(mockBankFrame.shown)
+        assert.is_true(LunarUI.BagsIsBankOpen())
+    end)
+
+    it("CloseBank early-returns when bankFrame is nil (e.g., before any OpenBank)", function()
+        -- _SetBankFrameForTest 已在 before_each 清空為 nil
+        assert.is_false(LunarUI.BagsIsBankOpen())
+        -- 無 bankFrame 時 CloseBank 應 silent return（不爆）
+        assert.has_no.errors(function()
+            LunarUI.BagsCloseBank()
+        end)
+        assert.is_false(LunarUI.BagsIsBankOpen())
+    end)
+
+    it("Open then Close: isBankOpen transitions true -> false, frame Hidden", function()
+        LunarUI._SetBankFrameForTest(mockBankFrame)
+        LunarUI.BagsOpenBank()
+        assert.is_true(LunarUI.BagsIsBankOpen())
+        assert.is_true(mockBankFrame.shown)
+
+        LunarUI.BagsCloseBank()
+        assert.is_false(LunarUI.BagsIsBankOpen())
+        assert.is_false(mockBankFrame.shown)
+    end)
+
+    it("CloseBank twice: second call is a no-op via the isBankOpen guard", function()
+        LunarUI._SetBankFrameForTest(mockBankFrame)
+        LunarUI.BagsOpenBank()
+        LunarUI.BagsCloseBank()
+        assert.is_false(LunarUI.BagsIsBankOpen())
+
+        -- 第二次呼叫：bankFrame 仍存在但 isBankOpen=false → early-return (line 939)
+        -- 換言之不該重 Hide / 重設搜尋 / 重排背包
+        mockBankFrame.shown = true -- 故意把 frame 標成 shown，確認第二次 Close 不會 Hide 它
+        assert.has_no.errors(function()
+            LunarUI.BagsCloseBank()
+        end)
+        assert.is_true(mockBankFrame.shown) -- 沒被 Hide，證實 early-return 命中
+    end)
+end)

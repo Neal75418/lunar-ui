@@ -1011,6 +1011,9 @@ LunarUI._BANK_VIEWPORT_MAX = BANK_VIEWPORT_MAX
 LunarUI._SetBankFrameForTest = function(f)
     bankFrame = f
 end
+LunarUI._SetIsBankOpenForTest = function(v)
+    isBankOpen = v
+end
 
 -- 供 RebuildBags 使用的清理函數
 LunarUI.BankSystemCleanup = function()
