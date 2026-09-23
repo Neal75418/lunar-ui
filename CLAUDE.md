@@ -3,7 +3,7 @@
 ## 常用指令
 
 ```bash
-make check            # lint + format + locale-check + 940 tests（提交前必跑）
+make check            # lint + format + locale-check + call-syntax-check + tests（提交前必跑）
 make test             # 僅跑 busted spec/
 make coverage         # 跑覆蓋率 + ratchet 檢查（對照 .coverage-baseline）
 make coverage-update  # 測試覆蓋率上升時更新 baseline
@@ -29,60 +29,6 @@ make format-fix       # stylua 自動修格式
 - **模組存取**：`local _ADDON_NAME, Engine = ...` → `Engine.LunarUI`
 - **Skin 模組**：22 個 Blizzard 介面換膚（`LunarUI/Modules/Skins/`）
 - **Sub-module pattern**：`LunarUI/Modules/<Parent>/<Sub>.lua`（如 `Minimap/ButtonCorral.lua`），由 parent module 以 `LunarUI.<SubName>.Init/Scan/Reset` 形式協作
-
----
-
-## TOC 載入順序
-
-```mermaid
-graph LR
-    subgraph Locale["語系"]
-        L["Locales/enUS.lua<br/>Locales/zhTW.lua"]
-    end
-
-    subgraph Boot["啟動"]
-        Init["Core/Init.lua"]
-        Tokens["Core/Tokens.lua"]
-        Defaults["Core/Defaults.lua"]
-        Config["Core/Config.lua"]
-        Utils["Core/Utils.lua"]
-    end
-
-    subgraph CoreLate["Core 後段"]
-        Presets["Core/Presets.lua"]
-        Serial["Core/Serialization.lua"]
-        Wizard["Core/InstallWizard.lua"]
-        Cmds["Core/Commands.lua"]
-    end
-
-    subgraph Media["媒體"]
-        CoreMedia["Core/Media.lua"]
-        MediaLua["Media/Media.lua"]
-    end
-
-    subgraph UI["UI 模組"]
-        UF["UnitFrames"]
-        NP["Nameplates"]
-        AB["ActionBars"]
-        HUD["HUD/*"]
-        Mods["Modules/*"]
-    end
-
-    L --> Init --> Tokens --> Defaults --> Config --> Utils
-    Utils --> Presets --> Serial --> Wizard --> Cmds
-    Cmds --> CoreMedia --> MediaLua
-    MediaLua --> UI
-
-    style Locale fill:#36331b,stroke:#6c7a89,color:#e0e0e0
-    style Boot fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
-    style CoreLate fill:#36331b,stroke:#6c7a89,color:#e0e0e0
-    style Media fill:#2d1b36,stroke:#6c7a89,color:#e0e0e0
-    style UI fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
-```
-
-> TOC 載入順序重要 &mdash; Locales 先載入，所有模組依賴 `Init.lua` 建立的 Engine。
-> 圖中省略了 Profiler、Debug、Tags 等輔助檔案。
-> LunarUI_Options 和 LunarUI_Debug 為 LoadOnDemand，不在主 TOC 中。
 
 ---
 
@@ -197,20 +143,6 @@ LunarUI.CreateIconBorder(parent, options)
 
 ## 測試框架
 
-```mermaid
-graph LR
-    TypeDef["wow_api.def.lua / busted.def.lua<br/>EmmyLua 型別定義"] -.-> Mock
-    Mock["wow_mock.lua<br/>WoW API Stub"] --> Loader["loader.lua<br/>Engine 建立"]
-    Loader --> Spec["*_spec.lua<br/>測試案例（34 檔）"]
-    Spec --> Busted["busted<br/>執行測試"]
-    Busted --> Cov["luacov<br/>ratchet 檢查<br/>（.coverage-baseline）"]
-
-    style TypeDef fill:#2d2d44,stroke:#6c7a89,color:#e0e0e0
-    style Mock fill:#1a1a2e,stroke:#6c7a89,color:#e0e0e0
-    style Busted fill:#1b362d,stroke:#6c7a89,color:#e0e0e0
-    style Cov fill:#36331b,stroke:#6c7a89,color:#e0e0e0
-```
-
 | 項目          | 說明                                                                                               |
 |:------------|:-------------------------------------------------------------------------------------------------|
 | **工具**      | busted + luacov，設定檔 `.busted` / `.luacov`                                                        |
@@ -218,7 +150,7 @@ graph LR
 | **匯出慣例**    | `LunarUI.FnName = localFn`，讓 local 純函數可被測試存取                                                     |
 | **命名衝突**    | 多模組有同名 local 函數時用前綴區分（如 `BagsGetItemLevel` vs `GetItemLevel`）                                    |
 | **Mock 要點** | 模組層級有副作用時（`CreateFrame`、`RegisterModule`），需在 spec 內提供完整 stub                                     |
-| **驗證**      | 每次修改後跑 `make check`（等同 `luacheck .` + `stylua --check .` + `locale-check` + `busted spec/`）      |
+| **驗證**      | 每次修改後跑 `make check`（等同 `luacheck .` + `stylua --check .` + `locale-check` + `call-syntax-check` + `busted spec/`）      |
 
 ---
 
